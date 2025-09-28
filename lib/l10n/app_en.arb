@@ -1,0 +1,15 @@
+{
+  "appTitle": "GratiStellar",
+  "appSubtitle": "Your personal universe of gratitude",
+  "loadingMessage": "Preparing your personal universe...",
+  "createStarModalTitle": "Birth a New Star",
+  "createStarHint": "What lights up your heart today?",
+  "createStarButton": "Create Star",
+  "cancelButton": "Cancel",
+  "closeButton": "Close",
+  "statsTotal": "Total",
+  "statsThisWeek": "This Week",
+  "statsToday": "Today",
+  "emptyStateTitle": "Your constellation awaits",
+  "emptyStateSubtitle": "Tap the + button to birth your first star"
+}

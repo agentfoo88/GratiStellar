@@ -67,9 +67,6 @@ class GratitudeScreen extends StatefulWidget {
 class _GratitudeScreenState extends State<GratitudeScreen>
     with TickerProviderStateMixin {
   // Layer parallax configuration
-  static const double _backgroundParallax = 0.05;
-  static const double _nebulaParallax = 0.1;
-  static const double _vanGoghParallax = 0.15;
   final TextEditingController _gratitudeController = TextEditingController();
   List<GratitudeStar> gratitudeStars = [];
   List<OrganicNebulaRegion> _organicNebulaRegions = [];
@@ -85,6 +82,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   List<Paint> _glowPatterns = [];
   List<Paint> _backgroundGradients = [];
   Size? _lastVanGoghSize;
+  Size? _lastNebulaSize;
 
   @override
   void initState() {
@@ -358,9 +356,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     // Regenerate nebula regions with actual screen size (only when screen size changes)
     final currentSize = MediaQuery.of(context).size;
-    if (_organicNebulaRegions.isEmpty ||
-        (_organicNebulaRegions.isNotEmpty && (_organicNebulaRegions[0].basePosition.dx.abs() < currentSize.width))) {
+    if (_organicNebulaRegions.isEmpty || _lastNebulaSize != currentSize) {
       _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(currentSize);
+      _lastNebulaSize = currentSize;
     }
 
     if (_vanGoghStars.isEmpty || _lastVanGoghSize != currentSize) {
@@ -420,7 +418,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 animation: _cameraController,
                 builder: (context, child) {
                   return Transform(
-                    transform: _cameraController.getLayerTransform(_backgroundParallax),
+                    transform: _cameraController.getBackgroundTransform(),
                     child: CustomPaint(
                       painter: StaticBackgroundPainter(_staticStars),
                       size: Size.infinite,
@@ -436,7 +434,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 animation: Listenable.merge([_backgroundController, _cameraController]),
                 builder: (context, child) {
                   return Transform(
-                    transform: _cameraController.getLayerTransform(_nebulaParallax),
+                    transform: _cameraController.getNebulaTransform(currentSize),
                     child: OrganicNebulaWidget(
                       regions: _organicNebulaRegions,
                       animationValue: _backgroundController.value,
@@ -452,7 +450,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 animation: _cameraController,
                 builder: (context, child) {
                   return Transform(
-                    transform: _cameraController.getLayerTransform(_vanGoghParallax),
+                    transform: _cameraController.getVanGoghTransform(currentSize),
                     child: CustomPaint(
                       painter: VanGoghMidgroundPainter(_vanGoghStars),
                       size: Size.infinite,

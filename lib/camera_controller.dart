@@ -10,12 +10,25 @@ import 'storage.dart'; // Import for GratitudeStar
 class CameraController extends ChangeNotifier {
   // Camera state
   Offset _position = Offset.zero;
+  Offset _parallaxPosition = Offset.zero;  // NEW: Clean position for parallax layers
   double _scale = 1.0;
 
   // Constraints
   static const double minScale = 0.3;
   static const double maxScale = 5.0;
   static const double maxPanDistance = 3000.0;
+
+// ========================================
+// LAYER TRANSFORM CONFIGURATION
+// ========================================
+  static const double backgroundParallax = 0.00;
+  static const double backgroundZoom = 0.0;
+
+  static const double nebulaParallax = 0.05;
+  static const double nebulaZoom = 0.05;
+
+  static const double vanGoghParallax = 0.08;
+  static const double vanGoghZoom = 0.05;
 
   // Animation
   AnimationController? _animationController;
@@ -33,11 +46,32 @@ class CameraController extends ChangeNotifier {
       ..translateByVector3(Vector3(_position.dx, _position.dy, 0.0))
       ..setDiagonal(Vector4(_scale, _scale, 1.0, 1.0));
   }
-  // Layer-specific transforms with configurable parallax
-  Matrix4 getLayerTransform(double parallaxFactor) {
+// Layer-specific transforms with configurable parallax
+  Matrix4 getBackgroundTransform() {
     return Matrix4.identity()
-      ..translateByVector3(Vector3(_position.dx * parallaxFactor, _position.dy * parallaxFactor, 0.0))
-      ..setDiagonal(Vector4(_scale, _scale, 1.0, 1.0));
+      ..translateByVector3(Vector3(
+          _parallaxPosition.dx * backgroundParallax,  // Use _parallaxPosition instead
+          _parallaxPosition.dy * backgroundParallax,  // Use _parallaxPosition instead
+          0.0
+      ));
+  }
+
+  Matrix4 getNebulaTransform(Size screenSize) {
+    return Matrix4.identity()
+      ..translateByVector3(Vector3(
+          _parallaxPosition.dx * nebulaParallax,
+          _parallaxPosition.dy * nebulaParallax,
+          0.0
+      ));
+  }
+
+  Matrix4 getVanGoghTransform(Size screenSize) {
+    return Matrix4.identity()
+      ..translateByVector3(Vector3(
+          _parallaxPosition.dx * vanGoghParallax,
+          _parallaxPosition.dy * vanGoghParallax,
+          0.0
+      ));
   }
 
   // Inverse transform for converting screen to world coordinates
@@ -53,7 +87,10 @@ class CameraController extends ChangeNotifier {
 
   // Update camera position during drag
   void updatePosition(Offset delta) {
+    print('Before update: _parallaxPosition = $_parallaxPosition, delta = $delta'); // DEBUG
+
     final newPosition = _position + delta;
+    final newParallaxPosition = _parallaxPosition + delta;
 
     // Apply boundary constraints
     final constrainedPosition = Offset(
@@ -61,8 +98,15 @@ class CameraController extends ChangeNotifier {
       math.max(-maxPanDistance, math.min(maxPanDistance, newPosition.dy)),
     );
 
+    final constrainedParallaxPosition = Offset(
+      math.max(-maxPanDistance, math.min(maxPanDistance, newParallaxPosition.dx)),
+      math.max(-maxPanDistance, math.min(maxPanDistance, newParallaxPosition.dy)),
+    );
+
     if (constrainedPosition != _position) {
       _position = constrainedPosition;
+      _parallaxPosition = constrainedParallaxPosition;
+      print('After update: _parallaxPosition = $_parallaxPosition'); // DEBUG
       notifyListeners();
     }
   }

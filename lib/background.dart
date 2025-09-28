@@ -140,13 +140,13 @@ class BackgroundService {
         x = _gaussianRandom(staticRandom, BackgroundConfig.gaussianCenterX, BackgroundConfig.gaussianSpread);
         y = _gaussianRandom(staticRandom, BackgroundConfig.gaussianCenterY, BackgroundConfig.gaussianSpread);
 
-        // Clamp to screen bounds
-        x = x.clamp(0.0, 1.0);
-        y = y.clamp(0.0, 1.0);
+        // Clamp to expanded bounds
+        x = x.clamp(-1.5, 2.5);
+        y = y.clamp(-1.5, 2.5);
       } else {
-        // Uniform distribution
-        x = staticRandom.nextDouble();
-        y = staticRandom.nextDouble();
+        // Uniform distribution with 400% coverage for zoom-out safety
+        x = staticRandom.nextDouble() * 4.0 - 1.5;
+        y = staticRandom.nextDouble() * 4.0 - 1.5;
       }
 
       final size = BackgroundConfig.starSizeMin +

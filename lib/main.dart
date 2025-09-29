@@ -75,6 +75,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   late CameraController _cameraController;
   bool _isLoading = true;
   bool _showBranding = true;
+  bool _isAnimating = false;
+  AnimationController? _birthController;
+  GratitudeStar? _animatingStar;
   final math.Random _random = math.Random();
   DateTime? _lastScrollTime;
   List<VanGoghStar> _vanGoghStars = [];
@@ -84,6 +87,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   Size? _lastVanGoghSize;
   Size? _lastNebulaSize;
   Size? _lastBackgroundSize;
+  // Animation state
+
 
   @override
   void initState() {
@@ -101,6 +106,17 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       duration: Duration(seconds: 8),
       vsync: this,
     )..repeat();
+
+    _birthController = AnimationController(
+      duration: Duration(milliseconds: 1500), // Will be adjusted dynamically
+      vsync: this,
+    );
+
+    _birthController!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _completeBirthAnimation();
+      }
+    });
 
     print('🎭 Animation controllers created');
 
@@ -160,30 +176,93 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _backgroundController.dispose();
     _starController.dispose();
     _gratitudeController.dispose();
+    _birthController?.dispose();
     super.dispose();
   }
 
   void _addGratitude() async {
-    if (_gratitudeController.text.isNotEmpty) {
-      final screenSize = MediaQuery.of(context).size;
-      final newStar = GratitudeStarService.createStar(
-        _gratitudeController.text,
-        screenSize,
-        _random,
-        gratitudeStars, // Pass existing stars for overlap prevention
-      );
+    if (_gratitudeController.text.isEmpty) return;
 
-      if (mounted) {
-        setState(() {
-          gratitudeStars.add(newStar);
-          _gratitudeController.clear();
-        });
-      }
-      await _saveGratitudes();
+    final screenSize = MediaQuery.of(context).size;
+    final newStar = GratitudeStarService.createStar(
+      _gratitudeController.text,
+      screenSize,
+      _random,
+      gratitudeStars,
+    );
+
+    // Clear the text field
+    _gratitudeController.clear();
+
+    // Start animation
+    setState(() {
+      _isAnimating = true;
+      _animatingStar = newStar;
+    });
+
+    // Adjust camera to show destination
+    await _adjustCameraForDestination(newStar, screenSize);
+
+    // Calculate travel distance and duration
+    final startScreen = Offset(screenSize.width / 2, screenSize.height);
+    final endWorld = Offset(newStar.worldX * screenSize.width, newStar.worldY * screenSize.height);
+    final endScreen = _cameraController.worldToScreen(endWorld);
+
+    final distance = (endScreen - startScreen).distance;
+    final duration = (distance / StarBirthConfig.travelBaseSpeed * 1000)
+        .clamp(StarBirthConfig.travelDurationMin.toDouble(),
+        StarBirthConfig.travelDurationMax.toDouble())
+        .toInt();
+
+    _birthController!.duration = Duration(milliseconds: duration);
+    _birthController!.forward(from: 0.0);
+  }
+
+  void _completeBirthAnimation() {
+    if (_animatingStar != null) {
+      setState(() {
+        gratitudeStars.add(_animatingStar!);
+        _animatingStar = null;
+        _isAnimating = false;
+      });
+      _saveGratitudes();
+      _birthController!.reset();
     }
   }
 
+  Future<void> _adjustCameraForDestination(GratitudeStar star, Size screenSize) async {
+    // At high zoom levels, always center the star instead of checking if it's "close enough"
+    // This prevents coordinate explosion issues
+
+    // Calculate where we want the star to appear on screen (center)
+    final targetScreenPos = Offset(screenSize.width / 2, screenSize.height / 2);
+
+    // Calculate where the star currently is in world-pixel coordinates
+    final worldPosPixels = Offset(star.worldX * screenSize.width, star.worldY * screenSize.height);
+
+    // The camera position that would place worldPosPixels at targetScreenPos is:
+    // targetScreenPos = worldPosPixels * scale + cameraPosition
+    // Therefore: cameraPosition = targetScreenPos - (worldPosPixels * scale)
+    final targetCameraPosition = targetScreenPos - (worldPosPixels * _cameraController.scale);
+
+    print('🎯 Centering star at scale ${_cameraController.scale}');
+    print('World pos: $worldPosPixels, Target screen: $targetScreenPos');
+    print('Target camera position: $targetCameraPosition');
+
+    // Animate camera to new position
+    _cameraController.animateTo(
+      targetPosition: targetCameraPosition,
+      duration: Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    // Wait for camera animation to mostly complete
+    await Future.delayed(Duration(milliseconds: 400));
+  }
+
   void _showAddGratitudeModal() {
+    if (_isAnimating) return;
+
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.7),
@@ -488,18 +567,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           },
                           child: GestureDetector(
                             // Screen-level pan (high priority - works anywhere)
-                            onPanStart: (details) {
+                            onPanStart: _isAnimating ? null : (details) {
                               // Camera pan start
                             },
-                            onPanUpdate: (details) {
+                            onPanUpdate: _isAnimating ? null : (details) {
                               _cameraController.updatePosition(details.delta);
                             },
-                            onPanEnd: (details) {
+                            onPanEnd: _isAnimating ? null : (details) {
                               // Camera pan end
                             },
 
                             // Star tap detection (lower priority - doesn't interfere with camera)
-                            onTapDown: (details) => _handleStarTap(details),
+                            onTapDown: _isAnimating ? null : (details) => _handleStarTap(details),
 
                             child: AnimatedBuilder(
                               animation: _cameraController,
@@ -515,8 +594,27 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     },
                   ),
                 ),
+                ),
               ),
-            ),
+
+            // Animated star birth layer
+            if (_isAnimating && _animatingStar != null)
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([_birthController!, _cameraController]),
+                  builder: (context, child) {
+                    return Transform(
+                      transform: _cameraController.transform,
+                      child: AnimatedStarBirth(
+                        star: _animatingStar!,
+                        animation: _birthController!,
+                        cameraController: _cameraController,
+                        screenSize: MediaQuery.of(context).size,
+                      ),
+                    );
+                  },
+                ),
+              ),
 
             // Branding overlay
             if (_showBranding)
@@ -591,14 +689,16 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 right: 0,
                 child: Center(
                   child: GestureDetector(
-                    onTap: _showAddGratitudeModal,
+                    onTap: _isAnimating ? null : _showAddGratitudeModal,
                     child: Container(
                       width: FontScaling.getResponsiveSpacing(context, 70),
                       height: FontScaling.getResponsiveSpacing(context, 70),
                       decoration: BoxDecoration(
-                        color: Color(0xFFFFE135),
+                        color: _isAnimating
+                            ? Color(0xFFFFE135).withValues(alpha: 0.5)
+                            : Color(0xFFFFE135),
                         borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 35)),
-                        boxShadow: [
+                        boxShadow: _isAnimating ? [] : [
                           BoxShadow(
                             color: Color(0xFFFFE135).withValues(alpha: 0.4),
                             blurRadius: 20,

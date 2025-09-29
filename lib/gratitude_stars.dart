@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'storage.dart';
+import 'camera_controller.dart';
 
 // ========================================
 // STAR APPEARANCE CONFIGURATION
@@ -37,6 +38,48 @@ class StarConfig {
   // Glow Opacity Settings
   static const double outerGlowOpacity = 0.05;  // Outer glow center opacity
   static const double innerGlowOpacity = 0.5;   // Inner glow center opacity
+}
+
+// ========================================
+// STAR BIRTH ANIMATION CONFIGURATION
+// ========================================
+class StarBirthConfig {
+  // Travel Animation
+  static const double travelBaseSpeed = 350.0;      // pixels per second (was 800)
+  static const int travelDurationMin = 2000;        // milliseconds (was 800)
+  static const int travelDurationMax = 3000;        // milliseconds (was 2000)
+  static const double travelPhaseEnd = 0.9;         // When travel ends (0.0-1.0)
+
+  // Protostar Appearance (traveling star)
+  static const double protostarGlowSize = 5.0;      // Glow size multiplier (was 6.0)
+  static const double protostarCoreSize = 0.3;      // Core size multiplier (was 2.0)
+  static const double protostarPointSize = 0.1;     // Bright point size (was 0.8)
+  static const double protostarPulseSpeed = 2.0;    // Pulse frequency
+  static const double protostarPulseMin = 0.2;      // Minimum pulse brightness
+  static const double protostarPulseMax = 1.0;      // Maximum pulse brightness
+
+// Protostar opacity
+  static const double protostarOuterOpacity = 0.1;  // Outer glow opacity
+  static const double protostarMidOpacity = 0.3;    // Mid glow opacity
+  static const double protostarCoreOpacity = 0.7;   // Core opacity
+
+// Burst Effect
+  static const int burstRingCount = 3;              // Number of expanding rings (was 3)
+  static const double burstRadiusMultiplier = 15.0; // Burst size (was 15.0)
+  static const double burstOpacity = 0.6;           // Maximum burst opacity
+  static const double burstRingDelay = 0.1;         // Delay between rings (was 0.15)
+  static const double burstFlashSize = 8.0;        // Central flash size (was 8.0)
+
+// Burst twinkle rays
+  static const int burstTwinkleCount = 8;          // Number of rays shooting out
+  static const double burstTwinkleLength = 15.0;    // Ray length (x star size)
+  static const double burstTwinkleWidth = 1.5;      // Ray width
+  static const double burstTwinkleOpacity = 0.9;    // Ray opacity
+
+  // Color Transition
+  static const double colorTransitionStart = 0.3;   // When color fade begins (0.0-1.0)
+  static const double coloredGlowSize = 4.0;        // Colored glow radius
+  static const double coloredCoreSize = 0.5;        // Colored core radius
 }
 
 // Expanded Van Gogh inspired color palette with more variety
@@ -435,6 +478,238 @@ class GratitudeStarPainter extends CustomPainter {
 
     path.close();
     canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+// Widget for animating star birth
+class AnimatedStarBirth extends StatelessWidget {
+  final GratitudeStar star;
+  final Animation<double> animation;
+  final CameraController cameraController;
+  final Size screenSize;
+
+  const AnimatedStarBirth({
+    super.key,
+    required this.star,
+    required this.animation,
+    required this.cameraController,
+    required this.screenSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: StarBirthPainter(
+        star: star,
+        progress: animation.value,
+        cameraController: cameraController,
+        screenSize: screenSize,
+      ),
+      size: Size.infinite,
+    );
+  }
+}
+
+// Painter for star birth animation
+class StarBirthPainter extends CustomPainter {
+  final GratitudeStar star;
+  final double progress;
+  final CameraController cameraController;
+  final Size screenSize;
+
+  StarBirthPainter({
+    required this.star,
+    required this.progress,
+    required this.cameraController,
+    required this.screenSize,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Work in world coordinates - Transform wrapper handles camera conversion
+    // Start position: bottom-center in world space
+    final startWorld = Offset(size.width / 2, size.height);
+
+    // End position: star's world position in pixels
+    final endWorld = Offset(star.worldX * size.width, star.worldY * size.height);
+
+    final travelProgress = (progress / StarBirthConfig.travelPhaseEnd).clamp(0.0, 1.0);
+    final currentWorld = Offset.lerp(startWorld, endWorld, travelProgress)!;
+
+    if (progress < StarBirthConfig.travelPhaseEnd) {
+      _paintTravelingStar(canvas, currentWorld);
+    } else {
+      final burstProgress = (progress - StarBirthConfig.travelPhaseEnd) / (1.0 - StarBirthConfig.travelPhaseEnd);
+      _paintBurstEffect(canvas, endWorld, burstProgress);
+    }
+  }
+
+  void _paintTravelingStar(Canvas canvas, Offset position) {
+    final paint = Paint();
+
+    // Multi-frequency organic pulsing
+    final time = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    final pulse1 = math.sin(time * StarBirthConfig.protostarPulseSpeed);
+    final pulse2 = math.sin(time * StarBirthConfig.protostarPulseSpeed * 0.7 + 1.3);
+    final pulse3 = math.sin(time * StarBirthConfig.protostarPulseSpeed * 1.3 + 2.7);
+    final organicPulse = StarBirthConfig.protostarPulseMin +
+        ((pulse1 + pulse2 * 0.5 + pulse3 * 0.3) / 2.8) *
+            (StarBirthConfig.protostarPulseMax - StarBirthConfig.protostarPulseMin);
+
+    // Outer glow - matches gratitude star style with irregular falloff
+    final outerGlowRadius = star.size * StarBirthConfig.protostarGlowSize * organicPulse;
+    final outerGradient = RadialGradient(
+      colors: [
+        Colors.white.withValues(alpha: StarBirthConfig.protostarOuterOpacity * organicPulse),
+        Colors.white.withValues(alpha: StarBirthConfig.protostarOuterOpacity * 0.5 * organicPulse),
+        Colors.white.withValues(alpha: 0.0),
+      ],
+      stops: [0.0, 0.6, 1.0],
+    );
+
+    paint.shader = outerGradient.createShader(
+        Rect.fromCircle(center: position, radius: outerGlowRadius)
+    );
+    canvas.drawCircle(position, outerGlowRadius, paint);
+
+    // Inner glow - tighter and brighter, matches gratitude star inner glow
+    final innerGlowRadius = star.size * (StarBirthConfig.protostarGlowSize * 0.25) * organicPulse;
+    final innerGradient = RadialGradient(
+      colors: [
+        Colors.white.withValues(alpha: StarBirthConfig.protostarMidOpacity * organicPulse),
+        Colors.white.withValues(alpha: StarBirthConfig.protostarMidOpacity * 0.5 * organicPulse),
+        Colors.white.withValues(alpha: 0.0),
+      ],
+      stops: [0.0, 0.5, 1.0],
+    );
+
+    paint.shader = innerGradient.createShader(
+        Rect.fromCircle(center: position, radius: innerGlowRadius)
+    );
+    canvas.drawCircle(position, innerGlowRadius, paint);
+
+    // Core with secondary pulse
+    paint.shader = null;
+    final corePulse = 0.85 + pulse2 * 0.15;
+    paint.color = Colors.white.withValues(alpha: StarBirthConfig.protostarCoreOpacity * corePulse);
+    canvas.drawCircle(position, star.size * StarBirthConfig.protostarCoreSize * organicPulse, paint);
+
+    // Bright center point
+    paint.color = Colors.white;
+    canvas.drawCircle(position, star.size * StarBirthConfig.protostarPointSize, paint);
+  }
+
+  void _paintBurstEffect(Canvas canvas, Offset position, double burstProgress) {
+    final paint = Paint();
+
+    // Ease out the burst expansion
+    final easedProgress = 1.0 - math.pow(1.0 - burstProgress, 3.0);
+
+    // Expanding burst wave
+    final burstRadius = star.size * StarBirthConfig.burstRadiusMultiplier * easedProgress;
+    final burstOpacity = (1.0 - easedProgress) * StarBirthConfig.burstOpacity;
+
+// Multiple expanding rings with soft, fuzzy edges
+    for (int ring = 0; ring < StarBirthConfig.burstRingCount; ring++) {
+      final ringDelay = ring * StarBirthConfig.burstRingDelay;
+      final ringProgress = (easedProgress - ringDelay).clamp(0.0, 1.0);
+      final ringRadius = burstRadius * ringProgress;
+
+      final ringGradient = RadialGradient(
+        colors: [
+          Colors.white.withValues(alpha: burstOpacity * (1.0 - ringProgress) * 0.6),
+          Colors.white.withValues(alpha: burstOpacity * (1.0 - ringProgress) * 0.3),
+          Colors.white.withValues(alpha: 0.0),
+        ],
+        stops: [0.0, 0.5, 1.0],
+      );
+
+      paint.shader = ringGradient.createShader(
+          Rect.fromCircle(center: position, radius: ringRadius)
+      );
+
+      // Add fuzzy blur to match gratitude stars
+      paint.maskFilter = MaskFilter.blur(BlurStyle.normal, star.size * 0.8);
+
+      canvas.drawCircle(position, ringRadius, paint);
+    }
+
+// Clear mask filter for subsequent drawing
+    paint.maskFilter = null;
+
+    // Twinkle rays shooting outward (only in first half of burst)
+    if (burstProgress < 0.5) {
+      paint.shader = null;
+      final rayProgress = burstProgress / 0.5;
+      final rayLength = star.size * StarBirthConfig.burstTwinkleLength * rayProgress;
+      final rayOpacity = StarBirthConfig.burstTwinkleOpacity * (1.0 - rayProgress);
+
+      for (int i = 0; i < StarBirthConfig.burstTwinkleCount; i++) {
+        final angle = (i / StarBirthConfig.burstTwinkleCount) * 2 * math.pi;
+        final endPoint = Offset(
+          position.dx + math.cos(angle) * rayLength,
+          position.dy + math.sin(angle) * rayLength,
+        );
+
+        // Draw ray as gradient line
+        final rayGradient = LinearGradient(
+          begin: Alignment.center,
+          end: Alignment.centerRight,
+          colors: [
+            Colors.white.withValues(alpha: rayOpacity),
+            Colors.white.withValues(alpha: 0.0),
+          ],
+        );
+
+        paint.shader = rayGradient.createShader(
+            Rect.fromPoints(position, endPoint)
+        );
+        paint.strokeWidth = StarBirthConfig.burstTwinkleWidth;
+        paint.strokeCap = StrokeCap.round;
+        canvas.drawLine(position, endPoint, paint);
+      }
+    }
+
+// Flash of light at burst center with soft edges
+    paint.shader = null;
+    paint.style = PaintingStyle.fill;
+    paint.maskFilter = MaskFilter.blur(BlurStyle.normal, star.size * 1.2);
+    final flashOpacity = (1.0 - burstProgress) * 0.9;
+    paint.color = Colors.white.withValues(alpha: flashOpacity);
+    canvas.drawCircle(position, star.size * StarBirthConfig.burstFlashSize * (1.0 - easedProgress), paint);
+
+// Clear mask filter
+    paint.maskFilter = null;
+
+    // Transition to colored star
+    if (burstProgress > StarBirthConfig.colorTransitionStart) {
+      final colorProgress = (burstProgress - StarBirthConfig.colorTransitionStart) /
+          (1.0 - StarBirthConfig.colorTransitionStart);
+      final starColor = StarColors.getColor(star.colorIndex);
+
+      // Colored glow emerging
+      final coloredGlowRadius = star.size * StarBirthConfig.coloredGlowSize;
+      final coloredGradient = RadialGradient(
+        colors: [
+          Color.lerp(Colors.white, starColor, colorProgress)!.withValues(alpha: 0.4 * colorProgress),
+          Color.lerp(Colors.white, starColor, colorProgress)!.withValues(alpha: 0.2 * colorProgress),
+          Colors.transparent,
+        ],
+        stops: [0.0, 0.6, 1.0],
+      );
+
+      paint.shader = coloredGradient.createShader(
+          Rect.fromCircle(center: position, radius: coloredGlowRadius)
+      );
+      canvas.drawCircle(position, coloredGlowRadius, paint);
+
+      // Core appearing
+      paint.shader = null;
+      paint.color = Color.lerp(Colors.white, starColor, colorProgress)!.withValues(alpha: 0.8 * colorProgress);
+      canvas.drawCircle(position, star.size * StarBirthConfig.coloredCoreSize, paint);
+    }
   }
 
   @override

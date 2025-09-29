@@ -6,7 +6,7 @@ class OrganicNebulaConfig {
   static const int nebulaCount = 3; // Fewer but more complex nebulae
   static const double baseNebulaSize = 250.0;
   static const double nebulaSizeVariation = 300.0;
-  static const double nebulaOpacity = 0.1;
+  static const double nebulaOpacity = 0.05;
 
   // Organic shape parameters
   static const int shapeNodes = 12; // Points defining irregular boundary

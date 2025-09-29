@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';  // Add this line
+import 'package:flutter/gestures.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector4, Matrix4;
 import 'dart:math' as math;
 import 'storage.dart';
@@ -11,12 +11,73 @@ import 'nebula_regions.dart';
 import 'font_scaling.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:async';
+
+// Floating label widget for displaying gratitude text
+class FloatingGratitudeLabel extends StatelessWidget {
+  final GratitudeStar star;
+  final Size screenSize;
+
+  const FloatingGratitudeLabel({
+    super.key,
+    required this.star,
+    required this.screenSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Convert normalized world coordinates to screen pixels
+    final starX = star.worldX * screenSize.width;
+    final starY = star.worldY * screenSize.height;
+
+    // Position label to the right of the star with some offset
+    final labelOffset = Offset(starX + 20, starY - 10);
+
+    return Positioned(
+      left: labelOffset.dx,
+      top: labelOffset.dy,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: screenSize.width * 0.3, // 30% max width
+        ),
+        padding: EdgeInsets.symmetric(
+          horizontal: FontScaling.getResponsiveSpacing(context, 12),
+          vertical: FontScaling.getResponsiveSpacing(context, 8),
+        ),
+        decoration: BoxDecoration(
+          color: Color(0xFF1A2238).withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.5),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.2),
+              blurRadius: 8,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Text(
+          star.text,
+          style: FontScaling.getBodySmall(context).copyWith(
+            color: Colors.white.withValues(alpha: 0.9),
+          ),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+}
 
 void main() async {
   print('🚀 App starting...');
   WidgetsFlutterBinding.ensureInitialized();
   print('📦 Loading textures...');
-  await BackgroundService.loadTextures(); // Load background textures
+  await BackgroundService.loadTextures();
   print('✅ Textures loaded, starting app');
   runApp(GratiStellarApp());
 }
@@ -29,7 +90,6 @@ class GratiStellarApp extends StatelessWidget {
     print('🏗️ Building GratiStellarApp');
     return MaterialApp(
       title: 'GratiStellar',
-      // Add localization support
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -37,17 +97,16 @@ class GratiStellarApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en'), // English
-        Locale('es'), // Spanish (add more languages as needed)
-        Locale('fr'), // French
+        Locale('en'),
+        Locale('es'),
+        Locale('fr'),
       ],
       theme: ThemeData(
         primarySwatch: Colors.indigo,
         fontFamily: 'serif',
-        // Set default text theme for consistency
         textTheme: TextTheme(
           bodyMedium: TextStyle(
-            fontSize: 22.0, // Your requested default for large screens
+            fontSize: 22.0,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -66,7 +125,6 @@ class GratitudeScreen extends StatefulWidget {
 
 class _GratitudeScreenState extends State<GratitudeScreen>
     with TickerProviderStateMixin {
-  // Layer parallax configuration
   final TextEditingController _gratitudeController = TextEditingController();
   List<GratitudeStar> gratitudeStars = [];
   List<OrganicNebulaRegion> _organicNebulaRegions = [];
@@ -87,8 +145,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   Size? _lastVanGoghSize;
   Size? _lastNebulaSize;
   Size? _lastBackgroundSize;
-  // Animation state
-
+  bool _showAllGratitudes = false;
+  bool _mindfulnessMode = false;
+  int _mindfulnessInterval = 5;
+  Timer? _mindfulnessTimer;
+  GratitudeStar? _activeMindfulnessStar;
 
   @override
   void initState() {
@@ -108,7 +169,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     )..repeat();
 
     _birthController = AnimationController(
-      duration: Duration(milliseconds: 1500), // Will be adjusted dynamically
+      duration: Duration(milliseconds: 1500),
       vsync: this,
     );
 
@@ -130,7 +191,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     _loadGratitudes();
 
-    // Hide branding after 3 seconds
     Future.delayed(Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
@@ -149,7 +209,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _backgroundGradients = BackgroundService.generateBackgroundGradients();
     print('🎨 Generated ${_backgroundGradients.length} background gradients');
 
-    // Add VanGogh stars generation with placeholder size
     _vanGoghStars = VanGoghStarService.generateVanGoghStars(Size(800, 600));
     print('🌌 Generated ${_vanGoghStars.length} Van Gogh stars');
   }
@@ -177,6 +236,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _starController.dispose();
     _gratitudeController.dispose();
     _birthController?.dispose();
+    _mindfulnessTimer?.cancel();
     super.dispose();
   }
 
@@ -191,19 +251,15 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       gratitudeStars,
     );
 
-    // Clear the text field
     _gratitudeController.clear();
 
-    // Start animation
     setState(() {
       _isAnimating = true;
       _animatingStar = newStar;
     });
 
-    // Adjust camera to show destination
     await _adjustCameraForDestination(newStar, screenSize);
 
-    // Calculate travel distance and duration
     final startScreen = Offset(screenSize.width / 2, screenSize.height);
     final endWorld = Offset(newStar.worldX * screenSize.width, newStar.worldY * screenSize.height);
     final endScreen = _cameraController.worldToScreen(endWorld);
@@ -231,32 +287,20 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   Future<void> _adjustCameraForDestination(GratitudeStar star, Size screenSize) async {
-    // At high zoom levels, always center the star instead of checking if it's "close enough"
-    // This prevents coordinate explosion issues
-
-    // Calculate where we want the star to appear on screen (center)
     final targetScreenPos = Offset(screenSize.width / 2, screenSize.height / 2);
-
-    // Calculate where the star currently is in world-pixel coordinates
     final worldPosPixels = Offset(star.worldX * screenSize.width, star.worldY * screenSize.height);
-
-    // The camera position that would place worldPosPixels at targetScreenPos is:
-    // targetScreenPos = worldPosPixels * scale + cameraPosition
-    // Therefore: cameraPosition = targetScreenPos - (worldPosPixels * scale)
     final targetCameraPosition = targetScreenPos - (worldPosPixels * _cameraController.scale);
 
     print('🎯 Centering star at scale ${_cameraController.scale}');
     print('World pos: $worldPosPixels, Target screen: $targetScreenPos');
     print('Target camera position: $targetCameraPosition');
 
-    // Animate camera to new position
     _cameraController.animateTo(
       targetPosition: targetCameraPosition,
       duration: Duration(milliseconds: 600),
       vsync: this,
     );
 
-    // Wait for camera animation to mostly complete
     await Future.delayed(Duration(milliseconds: 400));
   }
 
@@ -425,11 +469,163 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
+  void _handleStarTap(TapDownDetails details) {
+    final screenSize = MediaQuery.of(context).size;
+
+    final tappedStar = StarHitTester.findStarAtScreenPosition(
+      details.localPosition,
+      gratitudeStars,
+      screenSize,
+      cameraPosition: _cameraController.position,
+      cameraScale: _cameraController.scale,
+    );
+
+    if (tappedStar != null) {
+      _showStarDetails(tappedStar);
+    }
+  }
+
+  // Helper widget builders
+  Widget _buildAddStarButton() {
+    return GestureDetector(
+      onTap: _isAnimating ? null : _showAddGratitudeModal,
+      child: Container(
+        width: FontScaling.getResponsiveSpacing(context, 70),
+        height: FontScaling.getResponsiveSpacing(context, 70),
+        decoration: BoxDecoration(
+          color: _isAnimating
+              ? Color(0xFFFFE135).withValues(alpha: 0.5)
+              : Color(0xFFFFE135),
+          borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 35)),
+          boxShadow: _isAnimating ? [] : [
+            BoxShadow(
+              color: Color(0xFFFFE135).withValues(alpha: 0.4),
+              blurRadius: 20,
+              spreadRadius: 5,
+            ),
+          ],
+        ),
+        child: Center(
+          child: SvgPicture.asset(
+            'assets/icon_star.svg',
+            width: FontScaling.getResponsiveSpacing(context, 40),
+            height: FontScaling.getResponsiveSpacing(context, 40),
+            fit: BoxFit.contain,
+            // Remove colorFilter since the SVG already has white star on transparent
+            // The dark circle in SVG should be removed from the file itself
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomButtonRow() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildActionButton(
+          icon: Icons.visibility,
+          isActive: _showAllGratitudes,
+          onTap: _toggleShowAll,
+        ),
+        SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
+        _buildAddStarButton(),
+        SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
+        _buildActionButton(
+          icon: Icons.self_improvement,
+          isActive: _mindfulnessMode,
+          onTap: _toggleMindfulness,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: _isAnimating ? null : onTap,
+      child: Container(
+        width: FontScaling.getResponsiveSpacing(context, 56),
+        height: FontScaling.getResponsiveSpacing(context, 56),
+        decoration: BoxDecoration(
+          color: isActive
+              ? Color(0xFFFFE135).withValues(alpha: 0.9)
+              : Color(0xFF1A2238).withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 28)),
+          border: Border.all(
+            color: Color(0xFFFFE135).withValues(alpha: isActive ? 1.0 : 0.3),
+            width: 2,
+          ),
+        ),
+        child: Icon(
+          icon,
+          color: isActive ? Color(0xFF1A2238) : Colors.white.withValues(alpha: 0.8),
+          size: FontScaling.getResponsiveIconSize(context, 24),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          color: Color(0xFFFFE135),
+          size: FontScaling.getResponsiveIconSize(context, 20),
+        ),
+        SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),
+        Text(
+          label,
+          style: FontScaling.getStatsLabel(context),
+        ),
+        if (value.isNotEmpty)
+          Text(
+            value,
+            style: FontScaling.getStatsNumber(context),
+          ),
+      ],
+    );
+  }
+
+  // Toggle methods
+  void _toggleShowAll() {
+    setState(() {
+      _showAllGratitudes = !_showAllGratitudes;
+    });
+  }
+
+  void _toggleMindfulness() {
+    setState(() {
+      _mindfulnessMode = !_mindfulnessMode;
+    });
+
+    if (_mindfulnessMode) {
+      _startMindfulnessMode();
+    } else {
+      _stopMindfulnessMode();
+    }
+  }
+
+  void _startMindfulnessMode() {
+    // TODO: Implement in Phase 4
+    print('Mindfulness mode started');
+  }
+
+  void _stopMindfulnessMode() {
+    _mindfulnessTimer?.cancel();
+    _mindfulnessTimer = null;
+    _activeMindfulnessStar = null;
+    print('Mindfulness mode stopped');
+  }
+
   @override
   Widget build(BuildContext context) {
     print('🏗️ Building GratitudeScreen, _isLoading: $_isLoading, stars: ${_staticStars.length}');
 
-    // Regenerate nebula regions with actual screen size (only when screen size changes)
     final currentSize = MediaQuery.of(context).size;
     if (_organicNebulaRegions.isEmpty || _lastNebulaSize != currentSize) {
       _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(currentSize);
@@ -492,8 +688,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         height: double.infinity,
         child: Stack(
           children: [
-
-            // Layer 1: Static background with subtle parallax
+            // Layer 1: Static background
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: _cameraController,
@@ -509,7 +704,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               ),
             ),
 
-            // Layer 2: Nebula with moderate parallax
+            // Layer 2: Nebula
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: Listenable.merge([_backgroundController, _cameraController]),
@@ -525,7 +720,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               ),
             ),
 
-            // Layer 2.5: Van Gogh stars with stronger parallax
+            // Layer 2.5: Van Gogh stars
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: _cameraController,
@@ -541,61 +736,70 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               ),
             ),
 
-            // Layer 3: Screen-level camera controls with secondary star interaction
-                      Positioned.fill(
-                        child: Listener(
-                          // Screen-level zoom (highest priority - works anywhere)
-                          onPointerSignal: (pointerSignal) {
-                            if (pointerSignal is PointerScrollEvent) {
-                              final now = DateTime.now();
-                              if (_lastScrollTime != null && now.difference(_lastScrollTime!).inMilliseconds < 16) {
-                                return; // Throttle to ~60fps
-                              }
-                              _lastScrollTime = now;
+            // Layer 3: Interactive starfield
+            Positioned.fill(
+              child: Listener(
+                onPointerSignal: (pointerSignal) {
+                  if (pointerSignal is PointerScrollEvent) {
+                    final now = DateTime.now();
+                    if (_lastScrollTime != null && now.difference(_lastScrollTime!).inMilliseconds < 16) {
+                      return;
+                    }
+                    _lastScrollTime = now;
 
-                              final scrollEvent = pointerSignal;
-                              final delta = scrollEvent.scrollDelta.dy;
-                              final screenSize = MediaQuery.of(context).size;
-                              final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
+                    final scrollEvent = pointerSignal;
+                    final delta = scrollEvent.scrollDelta.dy;
+                    final screenSize = MediaQuery.of(context).size;
+                    final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
 
-                              if (delta > 0) {
-                                _cameraController.zoomOut(1.1, screenCenter);
-                              } else {
-                                _cameraController.zoomIn(1.1, screenCenter);
-                              }
-                            }
-                          },
-                          child: GestureDetector(
-                            // Screen-level pan (high priority - works anywhere)
-                            onPanStart: _isAnimating ? null : (details) {
-                              // Camera pan start
-                            },
-                            onPanUpdate: _isAnimating ? null : (details) {
-                              _cameraController.updatePosition(details.delta);
-                            },
-                            onPanEnd: _isAnimating ? null : (details) {
-                              // Camera pan end
-                            },
-
-                            // Star tap detection (lower priority - doesn't interfere with camera)
-                            onTapDown: _isAnimating ? null : (details) => _handleStarTap(details),
-
-                            child: AnimatedBuilder(
-                              animation: _cameraController,
-                              builder: (context, child) {
-                                return Transform(
-                                  transform: _cameraController.transform,
-                                  child: StarfieldCanvas(
-                                    stars: gratitudeStars,
-                                    animationController: _starController,
-                                    glowPatterns: _glowPatterns,
-                                  ),
-                                );
+                    if (delta > 0) {
+                      _cameraController.zoomOut(1.1, screenCenter);
+                    } else {
+                      _cameraController.zoomIn(1.1, screenCenter);
+                    }
+                  }
+                },
+                child: GestureDetector(
+                  onPanStart: _isAnimating ? null : (details) {},
+                  onPanUpdate: _isAnimating ? null : (details) {
+                    _cameraController.updatePosition(details.delta);
+                  },
+                  onPanEnd: _isAnimating ? null : (details) {},
+                  onTapDown: _isAnimating ? null : (details) => _handleStarTap(details),
+                  child: AnimatedBuilder(
+                    animation: _cameraController,
+                    builder: (context, child) {
+                      return Stack(
+                        children: [
+                          // Stars layer
+                          Transform(
+                            transform: _cameraController.transform,
+                            child: StarfieldCanvas(
+                              stars: gratitudeStars,
+                              animationController: _starController,
+                              glowPatterns: _glowPatterns,
+                            ),
+                          ),
+                          // Floating labels layer (when Show All is active)
+                          if (_showAllGratitudes)
+                            Transform(
+                              transform: _cameraController.transform,
+                              child: Stack(
+                                children: gratitudeStars.map((star) {
+                                  return FloatingGratitudeLabel(
+                                    star: star,
+                                    screenSize: currentSize,
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                        ],
+                      );
                     },
                   ),
                 ),
-                ),
               ),
+            ),
 
             // Animated star birth layer
             if (_isAnimating && _animatingStar != null)
@@ -640,7 +844,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 ),
               ),
 
-// Stats card at top
+            // Stats card
             if (!_showBranding)
               Positioned(
                 top: 50,
@@ -681,38 +885,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 ),
               ),
 
-            // Add gratitude button
+            // Bottom button row with all 3 buttons
             if (!_showBranding)
               Positioned(
                 bottom: 50,
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: GestureDetector(
-                    onTap: _isAnimating ? null : _showAddGratitudeModal,
-                    child: Container(
-                      width: FontScaling.getResponsiveSpacing(context, 70),
-                      height: FontScaling.getResponsiveSpacing(context, 70),
-                      decoration: BoxDecoration(
-                        color: _isAnimating
-                            ? Color(0xFFFFE135).withValues(alpha: 0.5)
-                            : Color(0xFFFFE135),
-                        borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 35)),
-                        boxShadow: _isAnimating ? [] : [
-                          BoxShadow(
-                            color: Color(0xFFFFE135).withValues(alpha: 0.4),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.add,
-                        color: Color(0xFF1A2238),
-                        size: FontScaling.getResponsiveIconSize(context, 32),
-                      ),
-                    ),
-                  ),
+                  child: _buildBottomButtonRow(),
                 ),
               ),
 
@@ -742,56 +922,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   ),
                 ),
               ),
-            // Camera controls overlay (add this after your existing overlays)
+
+            // Camera controls overlay
             if (!_showBranding)
               CameraControlsOverlay(
                 cameraController: _cameraController,
                 stars: gratitudeStars,
                 screenSize: MediaQuery.of(context).size,
                 vsync: this,
-              ),],
+              ),
+          ],
         ),
       ),
-    );
-  }
-
-  void _handleStarTap(TapDownDetails details) {
-    final screenSize = MediaQuery.of(context).size;
-
-    // Use the new hit tester with camera-aware coordinates
-    final tappedStar = StarHitTester.findStarAtScreenPosition(
-      details.localPosition,
-      gratitudeStars,
-      screenSize,
-      cameraPosition: _cameraController.position,
-      cameraScale: _cameraController.scale,
-    );
-
-    if (tappedStar != null) {
-      _showStarDetails(tappedStar);
-    }
-    // If no star found, tap does nothing (camera controls already handled)
-  }
-
-  Widget _buildStatItem(IconData icon, String label, String value) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          color: Color(0xFFFFE135),
-          size: FontScaling.getResponsiveIconSize(context, 20),
-        ),
-        SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),
-        Text(
-          label,
-          style: FontScaling.getStatsLabel(context),
-        ),
-        if (value.isNotEmpty)
-          Text(
-            value,
-            style: FontScaling.getStatsNumber(context),
-          ),
-      ],
     );
   }
 }

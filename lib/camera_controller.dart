@@ -14,7 +14,7 @@ class CameraController extends ChangeNotifier {
   double _scale = 1.0;
 
   // Constraints
-  static const double minScale = 0.3;
+  static const double minScale = 0.4;
   static const double maxScale = 5.0;
   static const double maxPanDistance = 3000.0;
 
@@ -24,10 +24,10 @@ class CameraController extends ChangeNotifier {
   static const double backgroundParallax = 0.00;
   static const double backgroundZoom = 0.0;
 
-  static const double nebulaParallax = 0.05;
+  static const double nebulaParallax = 0.08;
   static const double nebulaZoom = 0.05;
 
-  static const double vanGoghParallax = 0.08;
+  static const double vanGoghParallax = 0.1;
   static const double vanGoghZoom = 0.05;
 
   // Animation
@@ -57,21 +57,31 @@ class CameraController extends ChangeNotifier {
   }
 
   Matrix4 getNebulaTransform(Size screenSize) {
-    return Matrix4.identity()
-      ..translateByVector3(Vector3(
-          _parallaxPosition.dx * nebulaParallax,
-          _parallaxPosition.dy * nebulaParallax,
-          0.0
-      ));
+    final minimalZoom = 1.0 + ((_scale - 1.0) * nebulaZoom);
+    final transform = Matrix4.identity();
+    transform.translateByVector3(Vector3(screenSize.width / 2, screenSize.height / 2, 0.0));
+    transform.setDiagonal(Vector4(minimalZoom, minimalZoom, 1.0, 1.0));
+    transform.translateByVector3(Vector3(-screenSize.width / 2, -screenSize.height / 2, 0.0));
+    transform.translateByVector3(Vector3(
+        _parallaxPosition.dx * nebulaParallax,
+        _parallaxPosition.dy * nebulaParallax,
+        0.0
+    ));
+    return transform;
   }
 
   Matrix4 getVanGoghTransform(Size screenSize) {
-    return Matrix4.identity()
-      ..translateByVector3(Vector3(
-          _parallaxPosition.dx * vanGoghParallax,
-          _parallaxPosition.dy * vanGoghParallax,
-          0.0
-      ));
+    final minimalZoom = 1.0 + ((_scale - 1.0) * vanGoghZoom);
+    final transform = Matrix4.identity();
+    transform.translateByVector3(Vector3(screenSize.width / 2, screenSize.height / 2, 0.0));
+    transform.setDiagonal(Vector4(minimalZoom, minimalZoom, 1.0, 1.0));
+    transform.translateByVector3(Vector3(-screenSize.width / 2, -screenSize.height / 2, 0.0));
+    transform.translateByVector3(Vector3(
+        _parallaxPosition.dx * vanGoghParallax,
+        _parallaxPosition.dy * vanGoghParallax,
+        0.0
+    ));
+    return transform;
   }
 
   // Inverse transform for converting screen to world coordinates

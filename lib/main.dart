@@ -83,6 +83,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   List<Paint> _backgroundGradients = [];
   Size? _lastVanGoghSize;
   Size? _lastNebulaSize;
+  Size? _lastBackgroundSize;
 
   @override
   void initState() {
@@ -106,10 +107,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     try {
       _initializePrecomputedElements();
       print('✅ Precomputed elements initialized');
-
-      // Initialize with default size - will be regenerated in build()
       _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(Size(800, 600));
-
     } catch (e) {
       print('❌ Error in initialization: $e');
     }
@@ -127,9 +125,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _initializePrecomputedElements() {
-    print('🌟 Starting star generation...');
-    _staticStars = BackgroundService.generateStaticStars();
-    print('⭐ Generated ${_staticStars.length} background stars');
+    print('🌟 Starting initialization...');
 
     _glowPatterns = GratitudeStarService.generateGlowPatterns();
     print('✨ Generated ${_glowPatterns.length} glow patterns');
@@ -137,7 +133,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _backgroundGradients = BackgroundService.generateBackgroundGradients();
     print('🎨 Generated ${_backgroundGradients.length} background gradients');
 
-    // Add VanGogh stars generation
+    // Add VanGogh stars generation with placeholder size
     _vanGoghStars = VanGoghStarService.generateVanGoghStars(Size(800, 600));
     print('🌌 Generated ${_vanGoghStars.length} Van Gogh stars');
   }
@@ -365,6 +361,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       _vanGoghStars = VanGoghStarService.generateVanGoghStars(currentSize);
       _lastVanGoghSize = currentSize;
       print('🌌 Regenerated ${_vanGoghStars.length} Van Gogh stars for new screen size');
+    }
+
+    if (_staticStars.isEmpty || _lastBackgroundSize != currentSize) {
+      _staticStars = BackgroundService.generateStaticStars(currentSize);
+      _lastBackgroundSize = currentSize;
+      print('⭐ Regenerated ${_staticStars.length} background stars for size $currentSize');
     }
 
     if (_isLoading) {

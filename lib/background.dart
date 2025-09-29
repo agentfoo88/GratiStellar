@@ -8,6 +8,16 @@ import 'dart:ui' as ui;
 // ========================================
 // Adjust these values to fine-tune background appearance and behavior
 class BackgroundConfig {
+  // Reference configuration for density calculation
+  static const Size referenceScreenSize = Size(1920, 1080);
+  static const int referenceStarCount = 2500;
+  static const double expansionFactor = 4.0;
+
+  // Calculate target density (stars per square pixel)
+  static double get referenceDensity =>
+      (referenceStarCount * expansionFactor * expansionFactor) /
+          (referenceScreenSize.width * referenceScreenSize.height * expansionFactor * expansionFactor);
+
   // Star Generation Settings
   static const int starCount = 2500;                    // Total number of background stars
   static const double starSizeMin = 0.1;              // Minimum star size
@@ -114,7 +124,17 @@ class BackgroundService {
   }
 
   // Configurable star generation with multiple distribution options
-  static List<BackgroundStar> generateStaticStars() {
+  static List<BackgroundStar> generateStaticStars([Size? screenSize]) {
+    final size = screenSize ?? const Size(1920, 1080);
+
+    // Calculate star count for this screen size with expansion
+    final expandedArea = (size.width * BackgroundConfig.expansionFactor) *
+        (size.height * BackgroundConfig.expansionFactor);
+    final calculatedStarCount = (expandedArea * BackgroundConfig.referenceDensity).round();
+
+    // Use calculated count instead of static starCount
+    final starCount = calculatedStarCount;
+
     final now = DateTime.now();
 
     // Create personalized seed based on configuration
@@ -129,10 +149,9 @@ class BackgroundService {
     }
 
     final staticRandom = math.Random(userSeed);
-
     final stars = <BackgroundStar>[];
 
-    for (int i = 0; i < BackgroundConfig.starCount; i++) {
+    for (int i = 0; i < starCount; i++) {
       double x, y;
 
       if (BackgroundConfig.useGaussianDistribution) {
@@ -149,13 +168,13 @@ class BackgroundService {
         y = staticRandom.nextDouble() * 4.0 - 1.5;
       }
 
-      final size = BackgroundConfig.starSizeMin +
+      final starSize = BackgroundConfig.starSizeMin +
           staticRandom.nextDouble() * (BackgroundConfig.starSizeMax - BackgroundConfig.starSizeMin);
 
       final brightness = BackgroundConfig.starBrightnessMin +
           staticRandom.nextDouble() * (BackgroundConfig.starBrightnessMax - BackgroundConfig.starBrightnessMin);
 
-      stars.add(BackgroundStar(x, y, size, brightness));
+      stars.add(BackgroundStar(x, y, starSize, brightness));
     }
 
     return stars;
@@ -220,9 +239,9 @@ class StaticBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Configure anti-aliasing
-    if (BackgroundConfig.enableAntiAliasing) {
-      canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height), doAntiAlias: true);
-    }
+    //if (BackgroundConfig.enableAntiAliasing) {
+      //canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height), doAntiAlias: true);
+    //}
 
     // Paint configurable Van Gogh gradient
     List<Color> gradientColors;

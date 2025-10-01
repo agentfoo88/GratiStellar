@@ -46,4 +46,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emptyStateSubtitle => 'Tap the + button to birth your first star';
+
+  @override
+  String get editButton => 'Edit';
+
+  @override
+  String get shareButton => 'Share';
+
+  @override
+  String get deleteButton => 'Delete';
+
+  @override
+  String get saveButton => 'Save';
+
+  @override
+  String get changeColorButton => 'Change Color';
+
+  @override
+  String get editGratitudeHint => 'Edit your gratitude...';
+
+  @override
+  String get deleteConfirmTitle => 'Delete this gratitude?';
+
+  @override
+  String get deleteWarning => 'This action cannot be undone.';
+
+  @override
+  String get exitTitle => 'Exit GratiStellar?';
+
+  @override
+  String get exitMessage => 'Are you sure you want to exit the app?';
+
+  @override
+  String get exitButton => 'Exit';
+
+  @override
+  String get comingSoonTitle => 'Coming Soon';
+
+  @override
+  String get colorPreviewTitle => 'Color Preview';
+
+  @override
+  String get presetColorsTitle => 'Preset Colors';
+
+  @override
+  String get customColorTitle => 'Custom Color';
+
+  @override
+  String get hexColorLabel => 'Hex Color';
+
+  @override
+  String get hexColorHint => '#FFE135';
+
+  @override
+  String get applyButton => 'Apply';
+
+  @override
+  String get loginMenuItem => 'Login';
+
+  @override
+  String get listViewMenuItem => 'List View';
+
+  @override
+  String get mindfulnessIntervalLabel => 'Interval (seconds)';
+
+  @override
+  String get mindfulnessNoStarsTitle => 'No stars yet';
+
+  @override
+  String get mindfulnessNoStarsMessage =>
+      'Add a star first to use mindfulness mode';
 }

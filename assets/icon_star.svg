@@ -1,21 +1,37 @@
-<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-  <!-- Outer 4 points: larger scale -->
-  <path d="
-    M 200,50
-    C 200,150 210,190 290,200
-    C 210,210 200,250 200,350
-    C 200,250 190,210 110,200
-    C 190,190 200,150 200,50
-    Z
-  " fill="#1A2238"/>
+<svg viewBox="170 170 50 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Large star on left - bigger (scale 1.15x) and moved right to center better -->
+  <g transform="translate(192, 200) scale(1.15)">
+    <path d="
+      M 0,-26.18
+      C 0,-3 3,0 16.18,0
+      C 3,0 0,3 0,26.18
+      C 0,3 -3,0 -16.18,0
+      C -3,0 0,-3 0,-26.18
+      Z
+    " fill="black"/>
+  </g>
 
-  <!-- Inner 4 diagonal points -->
-  <path d="
-    M 270,130
-    C 220,180 220,220 270,270
-    C 220,220 180,220 130,270
-    C 180,220 180,180 130,130
-    C 180,180 220,180 270,130
-    Z
-  " fill="#1A2238"/>
+  <!-- Medium star - upper right, moved 2px more right -->
+  <g transform="translate(206, 185) scale(0.5)">
+    <path d="
+      M 0,-26.18
+      C 0,-3 3,0 16.18,0
+      C 3,0 0,3 0,26.18
+      C 0,3 -3,0 -16.18,0
+      C -3,0 0,-3 0,-26.18
+      Z
+    " fill="black"/>
+  </g>
+
+  <!-- Small star - lower right, moved 2px left -->
+  <g transform="translate(203, 215) scale(0.35)">
+    <path d="
+      M 0,-26.18
+      C 0,-3 3,0 16.18,0
+      C 3,0 0,3 0,26.18
+      C 0,3 -3,0 -16.18,0
+      C -3,0 0,-3 0,-26.18
+      Z
+    " fill="black"/>
+  </g>
 </svg>

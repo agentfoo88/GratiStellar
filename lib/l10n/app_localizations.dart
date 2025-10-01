@@ -171,6 +171,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap the + button to birth your first star'**
   String get emptyStateSubtitle;
+
+  /// No description provided for @editButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editButton;
+
+  /// No description provided for @shareButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareButton;
+
+  /// No description provided for @deleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteButton;
+
+  /// No description provided for @saveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveButton;
+
+  /// No description provided for @changeColorButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Color'**
+  String get changeColorButton;
+
+  /// No description provided for @editGratitudeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit your gratitude...'**
+  String get editGratitudeHint;
+
+  /// No description provided for @deleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this gratitude?'**
+  String get deleteConfirmTitle;
+
+  /// No description provided for @deleteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get deleteWarning;
+
+  /// No description provided for @exitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit GratiStellar?'**
+  String get exitTitle;
+
+  /// No description provided for @exitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to exit the app?'**
+  String get exitMessage;
+
+  /// No description provided for @exitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get exitButton;
+
+  /// No description provided for @comingSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon'**
+  String get comingSoonTitle;
+
+  /// No description provided for @colorPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Color Preview'**
+  String get colorPreviewTitle;
+
+  /// No description provided for @presetColorsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset Colors'**
+  String get presetColorsTitle;
+
+  /// No description provided for @customColorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Color'**
+  String get customColorTitle;
+
+  /// No description provided for @hexColorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex Color'**
+  String get hexColorLabel;
+
+  /// No description provided for @hexColorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'#FFE135'**
+  String get hexColorHint;
+
+  /// No description provided for @applyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get applyButton;
+
+  /// No description provided for @loginMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get loginMenuItem;
+
+  /// No description provided for @listViewMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'List View'**
+  String get listViewMenuItem;
+
+  /// No description provided for @mindfulnessIntervalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Interval (seconds)'**
+  String get mindfulnessIntervalLabel;
+
+  /// No description provided for @mindfulnessNoStarsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No stars yet'**
+  String get mindfulnessNoStarsTitle;
+
+  /// No description provided for @mindfulnessNoStarsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a star first to use mindfulness mode'**
+  String get mindfulnessNoStarsMessage;
 }
 
 class _AppLocalizationsDelegate

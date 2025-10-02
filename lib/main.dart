@@ -14,6 +14,14 @@ import 'l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'package:share_plus/share_plus.dart';
+import 'modal_dialogs.dart';
+
+// ========================================
+// UI SCALE CONFIGURATION
+// ========================================
+const double universalUIScale = 0.75;
+const double labelBackgroundAlpha = 0.85;
+const double statsLabelTextScale = 1.15;
 
 // Floating label widget for displaying gratitude text
 class FloatingGratitudeLabel extends StatelessWidget {
@@ -49,7 +57,7 @@ class FloatingGratitudeLabel extends StatelessWidget {
             vertical: FontScaling.getResponsiveSpacing(context, 8),
           ),
           decoration: BoxDecoration(
-            color: Color(0xFF1A2238).withValues(alpha: 0.85),
+            color: Color(0xFF1A2238).withValues(alpha: labelBackgroundAlpha),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.5),
@@ -130,12 +138,6 @@ class GratitudeScreen extends StatefulWidget {
 
 class _GratitudeScreenState extends State<GratitudeScreen>
     with TickerProviderStateMixin {
-  // ========================================
-  // UI SCALE CONFIGURATION
-  // ========================================
-  static const double universalUIScale = 0.75;
-  static const double labelBackgroundAlpha = 0.85;
-  static const double statsLabelTextScale = 1.15;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _gratitudeController = TextEditingController();
@@ -168,13 +170,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   Size? _lastBackgroundSize;
   bool _showAllGratitudes = false;
   bool _mindfulnessMode = false;
-  int _mindfulnessInterval = 5;
+  int _mindfulnessInterval = 3;
   Timer? _mindfulnessTimer;
   GratitudeStar? _activeMindfulnessStar;
 
   // Phase 4 additions
   final String _userName = "A friend";
-  String? _editingStarId;
   bool _isEditMode = false;
   Color? _previewColor;
 
@@ -269,7 +270,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _blueController.dispose();
     _birthController?.dispose();
     _mindfulnessTimer?.cancel();
-    _labelFadeController.dispose();  // ADD THIS LINE
+    _labelFadeController.dispose();
     super.dispose();
   }
 
@@ -342,126 +343,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     await Future.delayed(Duration(milliseconds: 400));
   }
 
-  void _showAddGratitudeModal() {
-    if (_isAnimating) return;
-
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
-            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
-            decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.createStarModalTitle,
-                  style: FontScaling.getModalTitle(context),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                TextField(
-                  controller: _gratitudeController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)!.createStarHint,
-                    hintStyle: FontScaling.getInputHint(context),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: Color(0xFFFFE135),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  style: FontScaling.getInputText(context),
-                  maxLines: 4,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        _gratitudeController.clear();
-                        Navigator.of(context).pop();
-                      },
-                      child: Text(
-                        AppLocalizations.of(context)!.cancelButton,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
-                    ElevatedButton(
-                      onPressed: () {
-                        _addGratitude();
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFE135),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: FontScaling.getResponsiveSpacing(context, 24),
-                          vertical: FontScaling.getResponsiveSpacing(context, 12),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context)!.createStarButton,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Color(0xFF1A2238),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   void _showStarDetails(GratitudeStar star) {
     setState(() {
       _isEditMode = false;
-      _editingStarId = star.id;
       _editTextController.text = star.text;
     });
 
@@ -529,7 +413,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildModalIconButton(
+                          GratitudeDialogs.buildModalIconButton(
+                            context: context,
                             icon: Icons.edit,
                             label: AppLocalizations.of(context)!.editButton,
                             onTap: () {
@@ -538,12 +423,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                               });
                             },
                           ),
-                          _buildModalIconButton(
+                          GratitudeDialogs.buildModalIconButton(
+                            context: context,
                             icon: Icons.share,
                             label: AppLocalizations.of(context)!.shareButton,
                             onTap: () => _shareStar(star),
                           ),
-                          _buildModalIconButton(
+                          GratitudeDialogs.buildModalIconButton(
+                            context: context,
                             icon: Icons.close,
                             label: AppLocalizations.of(context)!.closeButton,
                             onTap: () => Navigator.of(context).pop(),
@@ -581,7 +468,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                             children: [
                               ElevatedButton.icon(
                                 onPressed: () {
-                                  _showDeleteConfirmation(star, context);
+                                  GratitudeDialogs.showDeleteConfirmation(
+                                    context: context,
+                                    modalContext: context,
+                                    star: star,
+                                    onDelete: _deleteStar,
+                                  );
                                 },
                                 icon: Icon(Icons.close, size: FontScaling.getResponsiveIconSize(context, 18)),
                                 label: Text(
@@ -655,40 +547,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       // Clean up when dialog closes
       setState(() {
         _isEditMode = false;
-        _editingStarId = null;
       });
     });
-  }
-
-  Widget _buildModalIconButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 8)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: Color(0xFFFFE135),
-              size: FontScaling.getResponsiveIconSize(context, 28),
-            ),
-            SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),
-            Text(
-              label,
-              style: FontScaling.getCaption(context).copyWith(
-                color: Colors.white.withValues(alpha: 0.8),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   void _shareStar(GratitudeStar star) {
@@ -708,120 +568,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       });
       _saveGratitudes();
     }
-  }
-
-  void _showDeleteConfirmation(GratitudeStar star, BuildContext modalContext) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
-            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
-            decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.red.withValues(alpha: 0.5),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.red,
-                  size: FontScaling.getResponsiveIconSize(context, 48),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                Text(
-                  AppLocalizations.of(context)!.deleteConfirmTitle,
-                  style: FontScaling.getModalTitle(context).copyWith(
-                    color: Colors.red,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                Container(
-                  padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 12)),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '"${star.text}"',
-                    style: FontScaling.getBodySmall(context).copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontStyle: FontStyle.italic,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                Text(
-                  AppLocalizations.of(context)!.deleteWarning,
-                  style: FontScaling.getBodySmall(context).copyWith(
-                    color: Colors.red.withValues(alpha: 0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 20)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(
-                        AppLocalizations.of(context)!.cancelButton,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        _deleteStar(star);
-                        Navigator.of(context).pop(); // Close confirmation
-                        Navigator.of(modalContext).pop(); // Close edit modal
-                      },
-                      icon: Icon(Icons.close, size: FontScaling.getResponsiveIconSize(context, 18)),
-                      label: Text(
-                        AppLocalizations.of(context)!.deleteButton,
-                        style: FontScaling.getButtonText(context),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: FontScaling.getResponsiveSpacing(context, 20),
-                          vertical: FontScaling.getResponsiveSpacing(context, 12),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 0,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   void _deleteStar(GratitudeStar star) {
@@ -981,7 +727,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                             child: TextField(
                               controller: _greenController,
                               decoration: InputDecoration(
-                                labelText: 'G',  // CHANGED: was 'B'
+                                labelText: 'G',
                                 filled: true,
                                 fillColor: Colors.white.withValues(alpha: 0.1),
                                 border: OutlineInputBorder(
@@ -1160,7 +906,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   void _toggleMindfulness() {
     // Check if there are any stars
     if (gratitudeStars.isEmpty) {
-      _showMindfulnessNoStarsDialog();
+      GratitudeDialogs.showMindfulnessNoStars(context);
       return;
     }
 
@@ -1234,7 +980,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   void _navigateToMindfulnessStar(GratitudeStar star) {
     final screenSize = MediaQuery.of(context).size;
-    final targetScale = 2.5; // Zoom in closer for mindfulness
+    final targetScale = 2.25; // Zoom in closer for mindfulness
 
     // Convert star's normalized world coordinates to pixels
     final starWorldX = star.worldX * screenSize.width;
@@ -1261,71 +1007,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  void _showMindfulnessNoStarsDialog() {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
-            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
-            decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.self_improvement,
-                  color: Color(0xFFFFE135),
-                  size: FontScaling.getResponsiveIconSize(context, 48),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                Text(
-                  AppLocalizations.of(context)!.mindfulnessNoStarsTitle,
-                  style: FontScaling.getModalTitle(context),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                Text(
-                  AppLocalizations.of(context)!.mindfulnessNoStarsMessage,
-                  style: FontScaling.getBodyMedium(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    AppLocalizations.of(context)!.closeButton,
-                    style: FontScaling.getButtonText(context).copyWith(
-                      color: Color(0xFFFFE135),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   void _onMindfulnessIntervalChanged(double value) {
     setState(() {
       _mindfulnessInterval = value.round();
@@ -1335,162 +1016,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     if (_mindfulnessMode && _mindfulnessTimer != null) {
       _scheduleNextStar();  // ✅ Use the correct method that includes camera delay
     }
-  }
-
-  // Phase 3: Dialog methods
-  void _showComingSoonDialog(String feature) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
-            decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Color(0xFFFFE135),
-                  size: FontScaling.getResponsiveIconSize(context, 48),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                Text(
-                  feature,
-                  style: FontScaling.getModalTitle(context),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                Text(
-                  AppLocalizations.of(context)!.comingSoonTitle,
-                  style: FontScaling.getBodyMedium(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    AppLocalizations.of(context)!.closeButton,
-                    style: FontScaling.getButtonText(context).copyWith(
-                      color: Color(0xFFFFE135),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showQuitConfirmationDialog() {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
-            decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.logout,
-                  color: Color(0xFFFFE135),
-                  size: FontScaling.getResponsiveIconSize(context, 48),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                Text(
-                  AppLocalizations.of(context)!.exitTitle,
-                  style: FontScaling.getModalTitle(context),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                Text(
-                  AppLocalizations.of(context)!.exitMessage,
-                  style: FontScaling.getBodyMedium(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(
-                        AppLocalizations.of(context)!.cancelButton,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        SystemNavigator.pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFE135),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: FontScaling.getResponsiveSpacing(context, 24),
-                          vertical: FontScaling.getResponsiveSpacing(context, 12),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context)!.exitButton,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Color(0xFF1A2238),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   // Helper widget builders
@@ -1558,7 +1083,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             ),
             onTap: () {
               Navigator.pop(context);
-              _showComingSoonDialog('Login');
+              GratitudeDialogs.showComingSoon(context, 'Login');
             },
           ),
           Divider(
@@ -1579,7 +1104,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             ),
             onTap: () {
               Navigator.pop(context);
-              _showComingSoonDialog('List View');
+              GratitudeDialogs.showComingSoon(context, 'List View');
             },
           ),
           Divider(
@@ -1600,11 +1125,20 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             ),
             onTap: () {
               Navigator.pop(context);
-              _showQuitConfirmationDialog();
+              GratitudeDialogs.showQuitConfirmation(context);
             },
           ),
         ],
       ),
+    );
+  }
+
+  void _showAddGratitudeModal() {
+    GratitudeDialogs.showAddGratitude(
+      context: context,
+      controller: _gratitudeController,
+      onAdd: _addGratitude,
+      isAnimating: _isAnimating,
     );
   }
 
@@ -1979,7 +1513,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                                             vertical: FontScaling.getResponsiveSpacing(context, 8),
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Color(0xFF1A2238).withValues(alpha: 0.85),
+                                            color: Color(0xFF1A2238).withValues(alpha: labelBackgroundAlpha),
                                             borderRadius: BorderRadius.circular(12),
                                             border: Border.all(
                                               color: StarColors.getColor(_activeMindfulnessStar!.colorIndex).withValues(alpha: 0.5),

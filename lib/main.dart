@@ -206,11 +206,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       }
     });
 
-    _labelFadeController = AnimationController(
-      duration: Duration(milliseconds: 800),
-      vsync: this,
-    );
-
     print('🎭 Animation controllers created');
 
     try {
@@ -1227,11 +1222,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     print('🧘 Mindfulness: Selected star "${selectedStar.text}"');
     print('🧘 Star position: (${selectedStar.worldX}, ${selectedStar.worldY})');
 
-    _labelFadeController.reverse().then((_) {
-      setState(() {
-        _activeMindfulnessStar = selectedStar;
-      });
-      _labelFadeController.forward();
+    // Update star - AnimatedSwitcher handles the animation
+    setState(() {
+      _activeMindfulnessStar = selectedStar;
     });
 
     print('🧘 Active mindfulness star set: ${_activeMindfulnessStar?.text}');
@@ -1969,18 +1962,49 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                                     );
                                   }),
 
-                                // Mindfulness mode - single star
+                                // Mindfulness mode - single star with animated transitions
                                 if (_mindfulnessMode && _activeMindfulnessStar != null)
-                                  Builder(
-                                    builder: (context) {
-                                      print('🏷️ Rendering mindfulness label for: ${_activeMindfulnessStar!.text}');
-                                      print('🏷️ Camera position: ${_cameraController.position}');
-                                      print('🏷️ Camera scale: ${_cameraController.scale}');
-                                      return FloatingGratitudeLabel(
-                                        star: _activeMindfulnessStar!,
-                                        screenSize: currentSize,
-                                      );
-                                    },
+                                  Positioned(
+                                    left: _activeMindfulnessStar!.worldX * currentSize.width,
+                                    top: _activeMindfulnessStar!.worldY * currentSize.height - 70.0,
+                                    child: FractionalTranslation(
+                                      translation: Offset(-0.5, 0),
+                                      child: AnimatedSwitcher(
+                                        duration: Duration(milliseconds: 800),
+                                        child: Container(
+                                          key: ValueKey(_activeMindfulnessStar!.id),
+                                          constraints: BoxConstraints(maxWidth: currentSize.width * 0.4),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: FontScaling.getResponsiveSpacing(context, 12),
+                                            vertical: FontScaling.getResponsiveSpacing(context, 8),
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF1A2238).withValues(alpha: 0.85),
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: StarColors.getColor(_activeMindfulnessStar!.colorIndex).withValues(alpha: 0.5),
+                                              width: 1.5,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: StarColors.getColor(_activeMindfulnessStar!.colorIndex).withValues(alpha: 0.2),
+                                                blurRadius: 8,
+                                                spreadRadius: 2,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
+                                            _activeMindfulnessStar!.text,
+                                            style: FontScaling.getBodySmall(context).copyWith(
+                                              color: Colors.white.withValues(alpha: 0.9),
+                                            ),
+                                            maxLines: 3,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                               ],
                             ),

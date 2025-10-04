@@ -309,6 +309,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a star first to use mindfulness mode'**
   String get mindfulnessNoStarsMessage;
+
+  /// No description provided for @listViewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Gratitude Stars'**
+  String get listViewTitle;
+
+  /// No description provided for @jumpToStarButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to Star'**
+  String get jumpToStarButton;
+
+  /// No description provided for @todayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayLabel;
+
+  /// No description provided for @yesterdayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterdayLabel;
+
+  /// No description provided for @daysAgoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String daysAgoLabel(int count);
 }
 
 class _AppLocalizationsDelegate

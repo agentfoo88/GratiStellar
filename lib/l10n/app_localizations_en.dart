@@ -116,4 +116,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get mindfulnessNoStarsMessage =>
       'Add a star first to use mindfulness mode';
+
+  @override
+  String get listViewTitle => 'Your Gratitude Stars';
+
+  @override
+  String get jumpToStarButton => 'Jump to Star';
+
+  @override
+  String get todayLabel => 'Today';
+
+  @override
+  String get yesterdayLabel => 'Yesterday';
+
+  @override
+  String daysAgoLabel(int count) {
+    return '$count days ago';
+  }
 }

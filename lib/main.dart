@@ -15,6 +15,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 import 'package:share_plus/share_plus.dart';
 import 'modal_dialogs.dart';
+import 'list_view_screen.dart';
 
 // ========================================
 // UI SCALE CONFIGURATION
@@ -119,8 +120,8 @@ class GratiStellarApp extends StatelessWidget {
         fontFamily: 'JosefinSans',
         textTheme: TextTheme(
           bodyMedium: TextStyle(
-            fontSize: 22.0,
-            fontWeight: FontWeight.w400,
+            fontSize: 24.0,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
@@ -980,7 +981,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   void _navigateToMindfulnessStar(GratitudeStar star) {
     final screenSize = MediaQuery.of(context).size;
-    final targetScale = 2.25; // Zoom in closer for mindfulness
+    final targetScale = CameraController.focusZoomLevel;
 
     // Convert star's normalized world coordinates to pixels
     final starWorldX = star.worldX * screenSize.width;
@@ -1018,6 +1019,76 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
+  void _navigateToListView() async {
+    final result = await Navigator.push<GratitudeStar>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ListViewScreen(
+          stars: gratitudeStars,
+          onStarTap: (star) => _showStarDetailsFromList(star),
+          onJumpToStar: (star) {
+            // This won't be called from ListViewScreen directly
+            // Instead, we pass null and handle jump in the modal
+          },
+        ),
+      ),
+    );
+
+    // If a star was returned, navigate to it
+    if (result != null) {
+      _jumpToStar(result);
+    }
+  }
+
+  void _showStarDetailsFromList(GratitudeStar star) {
+    setState(() {
+      _isEditMode = false;
+      _editTextController.text = star.text;
+    });
+
+    GratitudeDialogs.showStarDetailsWithJump(
+      context: context,
+      star: star,
+      editTextController: _editTextController,
+      hexColorController: _hexColorController,
+      redController: _redController,
+      greenController: _greenController,
+      blueController: _blueController,
+      onShowColorPicker: _showColorPicker,
+      onSaveEdits: _saveStarEdits,
+      onDelete: _deleteStar,
+      onShare: _shareStar,
+      onJumpToStar: () {
+        // Close list view and navigate to star
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        _jumpToStar(star);
+      },
+    );
+  }
+
+  void _jumpToStar(GratitudeStar star) {
+    final screenSize = MediaQuery.of(context).size;
+    final targetScale = CameraController.focusZoomLevel;
+
+    // Convert star's normalized world coordinates to pixels
+    final starWorldX = star.worldX * screenSize.width;
+    final starWorldY = star.worldY * screenSize.height;
+
+    // Calculate camera position to center the star at the new scale
+    final targetPosition = Offset(
+      screenSize.width / 2 - starWorldX * targetScale,
+      screenSize.height / 2 - starWorldY * targetScale,
+    );
+
+    _cameraController.animateTo(
+      targetPosition: targetPosition,
+      targetScale: targetScale,
+      duration: Duration(milliseconds: 1500),
+      curve: Curves.easeInOutCubic,
+      vsync: this,
+    );
+  }
+
   // Helper widget builders
   Widget _buildHamburgerButton() {
     return GestureDetector(
@@ -1053,10 +1124,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(
-                  Icons.auto_awesome,
-                  color: Color(0xFFFFE135),
-                  size: FontScaling.getResponsiveIconSize(context, 48) * universalUIScale,
+                SvgPicture.asset(
+                  'assets/icon_star.svg',
+                  width: FontScaling.getResponsiveIconSize(context, 48) * universalUIScale,
+                  height: FontScaling.getResponsiveIconSize(context, 48) * universalUIScale,
+                  colorFilter: ColorFilter.mode(Color(0xFFFFE135), BlendMode.srcIn),
                 ),
                 SizedBox(height: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale),
                 Text(
@@ -1103,8 +1175,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               ),
             ),
             onTap: () {
-              Navigator.pop(context);
-              GratitudeDialogs.showComingSoon(context, 'List View');
+              Navigator.pop(context); // Close drawer
+              _navigateToListView();
             },
           ),
           Divider(

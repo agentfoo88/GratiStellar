@@ -11,13 +11,13 @@ class FontScaling {
   static const double desktopBreakpoint = 1200.0;
 
   // Base font sizes for different screen categories
-  static const double mobileBaseFontSize = 14.0;
+  static const double mobileBaseFontSize = 22.0;
   static const double tabletBaseFontSize = 18.0;
-  static const double desktopBaseFontSize = 22.0; // Your requested 22pt minimum
+  static const double desktopBaseFontSize = 24.0;
 
   // Font weight constants
   static const FontWeight lightWeight = FontWeight.w300;
-  static const FontWeight normalWeight = FontWeight.w400; // Your requested default
+  static const FontWeight normalWeight = FontWeight.w500; // Your requested default
   static const FontWeight mediumWeight = FontWeight.w500;
   static const FontWeight semiBoldWeight = FontWeight.w600;
   static const FontWeight boldWeight = FontWeight.w700;

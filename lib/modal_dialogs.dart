@@ -352,6 +352,252 @@ class GratitudeDialogs {
     );
   }
 
+  static void showStarDetailsWithJump({
+    required BuildContext context,
+    required GratitudeStar star,
+    required TextEditingController editTextController,
+    required TextEditingController hexColorController,
+    required TextEditingController redController,
+    required TextEditingController greenController,
+    required TextEditingController blueController,
+    required Function(GratitudeStar, StateSetter) onShowColorPicker,
+    required Function(GratitudeStar) onSaveEdits,
+    required Function(GratitudeStar) onDelete,
+    required Function(GratitudeStar) onShare,
+    required VoidCallback? onJumpToStar,
+  }) {
+    bool isEditMode = false;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
+                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1A2238).withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      color: StarColors.getColor(star.colorIndex),
+                      size: FontScaling.getResponsiveIconSize(context, 48),
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+
+                    // Text display or edit mode
+                    if (!isEditMode)
+                      Text(
+                        star.text,
+                        style: FontScaling.getBodyLarge(context).copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                        textAlign: TextAlign.center,
+                      )
+                    else
+                      TextField(
+                        controller: editTextController,
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)!.editGratitudeHint,
+                          hintStyle: FontScaling.getInputHint(context),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                            ),
+                          ),
+                        ),
+                        style: FontScaling.getInputText(context),
+                        maxLines: 4,
+                      ),
+
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+
+                    // Action buttons
+                    if (!isEditMode)
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              buildModalIconButton(
+                                context: context,
+                                icon: Icons.edit,
+                                label: AppLocalizations.of(context)!.editButton,
+                                onTap: () {
+                                  setState(() {
+                                    isEditMode = true;
+                                  });
+                                },
+                              ),
+                              buildModalIconButton(
+                                context: context,
+                                icon: Icons.share,
+                                label: AppLocalizations.of(context)!.shareButton,
+                                onTap: () => onShare(star),
+                              ),
+                              buildModalIconButton(
+                                context: context,
+                                icon: Icons.close,
+                                label: AppLocalizations.of(context)!.closeButton,
+                                onTap: () => Navigator.of(context).pop(),
+                              ),
+                            ],
+                          ),
+                          // Jump to Star button (only if callback provided)
+                          if (onJumpToStar != null) ...[
+                            SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                onJumpToStar();
+                              },
+                              icon: Icon(Icons.my_location, size: FontScaling.getResponsiveIconSize(context, 20)),
+                              label: Text(
+                                AppLocalizations.of(context)!.jumpToStarButton,
+                                style: FontScaling.getButtonText(context).copyWith(
+                                  color: Color(0xFF1A2238), // Black text on yellow button
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFFFFE135),
+                                foregroundColor: Color(0xFF1A2238),
+                                minimumSize: Size(double.infinity, 48),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: FontScaling.getResponsiveSpacing(context, 20),
+                                  vertical: FontScaling.getResponsiveSpacing(context, 12),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
+                    else
+                      Column(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              onShowColorPicker(star, setState);
+                            },
+                            icon: Icon(Icons.palette, size: FontScaling.getResponsiveIconSize(context, 20)),
+                            label: Text(
+                              AppLocalizations.of(context)!.changeColorButton,
+                              style: FontScaling.getButtonText(context),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.2),
+                              foregroundColor: Color(0xFFFFE135),
+                              minimumSize: Size(double.infinity, 48),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: FontScaling.getResponsiveSpacing(context, 20),
+                                vertical: FontScaling.getResponsiveSpacing(context, 12),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  showDeleteConfirmation(
+                                    context: context,
+                                    modalContext: dialogContext,
+                                    star: star,
+                                    onDelete: onDelete,
+                                  );
+                                },
+                                icon: Icon(Icons.close, size: FontScaling.getResponsiveIconSize(context, 18)),
+                                label: Text(
+                                  AppLocalizations.of(context)!.deleteButton,
+                                  style: FontScaling.getButtonText(context),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                                    vertical: FontScaling.getResponsiveSpacing(context, 10),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 0,
+                                ),
+                              ),
+                              SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    isEditMode = false;
+                                    editTextController.text = star.text;
+                                  });
+                                },
+                                child: Text(
+                                  AppLocalizations.of(context)!.cancelButton,
+                                  style: FontScaling.getButtonText(context).copyWith(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                              ElevatedButton(
+                                onPressed: () {
+                                  onSaveEdits(star);
+                                  Navigator.of(context).pop();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFFFFE135),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: FontScaling.getResponsiveSpacing(context, 20),
+                                    vertical: FontScaling.getResponsiveSpacing(context, 12),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  AppLocalizations.of(context)!.saveButton,
+                                  style: FontScaling.getButtonText(context).copyWith(
+                                    color: Color(0xFF1A2238),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   static void showAddGratitude({
     required BuildContext context,
     required TextEditingController controller,

@@ -34,5 +34,17 @@
   "listViewMenuItem": "List View",
   "mindfulnessIntervalLabel": "Interval (seconds)",
   "mindfulnessNoStarsTitle": "No stars yet",
-  "mindfulnessNoStarsMessage": "Add a star first to use mindfulness mode"
+  "mindfulnessNoStarsMessage": "Add a star first to use mindfulness mode",
+  "listViewTitle": "Your Gratitude Stars",
+  "jumpToStarButton": "Jump to Star",
+  "todayLabel": "Today",
+  "yesterdayLabel": "Yesterday",
+  "daysAgoLabel": "{count} days ago",
+  "@daysAgoLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

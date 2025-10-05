@@ -2,7 +2,6 @@
 // Comprehensive font scaling system for GratiStellar
 
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 class FontScaling {
   // Screen size breakpoints

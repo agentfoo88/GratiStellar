@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'storage.dart';
 import 'gratitude_stars.dart';
 import 'font_scaling.dart';
@@ -399,10 +400,11 @@ class GratitudeDialogs {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: currentStar.color,
-                      size: FontScaling.getResponsiveIconSize(context, 48),
+                    SvgPicture.asset(
+                      'assets/icon_star.svg',
+                      width: FontScaling.getResponsiveIconSize(context, 64),
+                      height: FontScaling.getResponsiveIconSize(context, 64),
+                      colorFilter: ColorFilter.mode(star.color, BlendMode.srcIn),
                     ),
                     SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
 

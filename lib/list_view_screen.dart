@@ -4,6 +4,7 @@ import 'gratitude_stars.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ListViewScreen extends StatefulWidget {  // CHANGED: StatefulWidget
   final List<GratitudeStar> stars;
@@ -122,10 +123,11 @@ class _ListViewScreenState extends State<ListViewScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.auto_awesome,
-            color: Colors.white.withValues(alpha: 0.3),
-            size: FontScaling.getResponsiveIconSize(context, 64),
+          SvgPicture.asset(
+            'assets/icon_star.svg',
+            width: FontScaling.getResponsiveIconSize(context, 64),
+            height: FontScaling.getResponsiveIconSize(context, 64),
+            colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.3), BlendMode.srcIn),
           ),
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
           Text(
@@ -171,10 +173,11 @@ class _ListViewScreenState extends State<ListViewScreen> {
               width: 2,
             ),
           ),
-          child: Icon(
-            Icons.auto_awesome,
-            color: star.color,
-            size: FontScaling.getResponsiveIconSize(context, 20),
+          child: SvgPicture.asset(
+            'assets/icon_star.svg',
+            width: FontScaling.getResponsiveIconSize(context, 20),
+            height: FontScaling.getResponsiveIconSize(context, 20),
+            colorFilter: ColorFilter.mode(star.color, BlendMode.srcIn),
           ),
         ),
         title: Text(

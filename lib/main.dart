@@ -424,10 +424,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: currentStar.color,
-                      size: FontScaling.getResponsiveIconSize(context, 48),
+                    SvgPicture.asset(
+                      'assets/icon_star.svg',
+                      width: FontScaling.getResponsiveIconSize(context, 48),
+                      height: FontScaling.getResponsiveIconSize(context, 48),
+                      colorFilter: ColorFilter.mode(currentStar.color, BlendMode.srcIn),
                     ),
                     SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
 
@@ -708,10 +709,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           color: Colors.black.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Icon(
-                          Icons.auto_awesome,
-                          color: _previewColor,
-                          size: FontScaling.getResponsiveIconSize(context, 64),
+                        child: SvgPicture.asset(  // ADD 'child:' here
+                          'assets/icon_star.svg',
+                          width: FontScaling.getResponsiveIconSize(context, 64),
+                          height: FontScaling.getResponsiveIconSize(context, 64),
+                          colorFilter: ColorFilter.mode(_previewColor!, BlendMode.srcIn),
                         ),
                       ),
                       SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
@@ -1564,10 +1566,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.auto_awesome,
-                  color: Color(0xFFFFE135),
-                  size: FontScaling.getResponsiveIconSize(context, 48),
+                SvgPicture.asset(
+                  'assets/icon_star.svg',
+                  width: FontScaling.getResponsiveIconSize(context, 64),
+                  height: FontScaling.getResponsiveIconSize(context, 64),
+                  colorFilter: ColorFilter.mode(_previewColor ?? Colors.white, BlendMode.srcIn),
                 ),
                 SizedBox(height: FontScaling.getResponsiveSpacing(context, 20)),
                 Text(
@@ -1670,7 +1673,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   }
                 },
                 child: GestureDetector(
-                  onPanStart: _isAnimating ? null : (details) {
+                  onScaleStart: _isAnimating ? null : (details) {
                     if (_mindfulnessMode) {
                       _stopMindfulnessMode();
                       setState(() {
@@ -1678,16 +1681,26 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       });
                     }
                   },
-                  onPanUpdate: _isAnimating ? null : (details) {
+                  onScaleUpdate: _isAnimating ? null : (details) {
                     if (_mindfulnessMode) {
                       _stopMindfulnessMode();
                       setState(() {
                         _mindfulnessMode = false;
                       });
                     }
-                    _cameraController.updatePosition(details.delta);
+
+                    // Handle pinch zoom
+                    if (details.scale != 1.0) {
+                      final newScale = _cameraController.scale * details.scale;
+                      _cameraController.updateScale(newScale, details.focalPoint);
+                    }
+
+                    // Handle pan (when not pinching)
+                    if (details.scale == 1.0) {
+                      _cameraController.updatePosition(details.focalPointDelta);
+                    }
                   },
-                  onPanEnd: _isAnimating ? null : (details) {},
+                  onScaleEnd: _isAnimating ? null : (details) {},
                   onTapDown: _isAnimating ? null : (details) => _handleStarTap(details),
                   child: AnimatedBuilder(
                     animation: _cameraController,
@@ -1823,15 +1836,15 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             // Hamburger menu button (top-left)
             if (!_showBranding)
               Positioned(
-                top: 50 * universalUIScale,
-                left: 16 * universalUIScale,
+                top: MediaQuery.of(context).padding.top + 16,
+                left: 16,
                 child: _buildHamburgerButton(),
               ),
 
             // Stats card
             if (!_showBranding)
               Positioned(
-                top: 50 * universalUIScale,
+                top: MediaQuery.of(context).padding.top + 16,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -1872,7 +1885,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             // Bottom button row with slider integrated
             if (!_showBranding)
               Positioned(
-                bottom: 50 * universalUIScale,
+                bottom: MediaQuery.of(context).padding.bottom + 50,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -1887,10 +1900,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        color: Colors.white.withValues(alpha: 0.3),
-                        size: FontScaling.getResponsiveIconSize(context, 64) * universalUIScale,
+                      SvgPicture.asset(
+                        'assets/icon_star.svg',
+                        width: FontScaling.getResponsiveIconSize(context, 64) * universalUIScale,
+                        height: FontScaling.getResponsiveIconSize(context, 64) * universalUIScale,
+                        colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.3), BlendMode.srcIn),
                       ),
                       SizedBox(height: FontScaling.getResponsiveSpacing(context, 24) * universalUIScale),
                       Text(
@@ -1918,6 +1932,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 stars: gratitudeStars,
                 screenSize: MediaQuery.of(context).size,
                 vsync: this,
+                safeAreaPadding: MediaQuery.of(context).padding,
               ),
           ],
         ),

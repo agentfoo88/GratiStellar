@@ -291,6 +291,7 @@ class CameraControlsOverlay extends StatelessWidget {
   final List<GratitudeStar> stars;
   final Size screenSize;
   final TickerProvider vsync;
+  final EdgeInsets safeAreaPadding;
 
   const CameraControlsOverlay({
     super.key,
@@ -298,6 +299,7 @@ class CameraControlsOverlay extends StatelessWidget {
     required this.stars,
     required this.screenSize,
     required this.vsync,
+    required this.safeAreaPadding,
   });
 
   @override
@@ -306,13 +308,13 @@ class CameraControlsOverlay extends StatelessWidget {
     final isTablet = screenSize.width > 600;
 
     // Responsive sizing
-    final controlSize = isMobile ? 40.0 : (isTablet ? 50.0 : 45.0);
+    final controlSize = isMobile ? 48.0 : (isTablet ? 50.0 : 48.0);
     final fontSize = isMobile ? 12.0 : 14.0;
     final padding = isMobile ? 8.0 : 12.0;
 
     // FIXED: Better responsive positioning for narrow screens
     final rightMargin = isMobile ? math.min(8.0, screenSize.width * 0.02) : 16.0;
-    final bottomMargin = isMobile ? 80.0 : 120.0;
+    final bottomMargin = (isMobile ? 80.0 : 120.0) + safeAreaPadding.bottom;
 
     // FIXED: Ensure controls don't go off-screen on very narrow windows
     final maxControlWidth = controlSize + padding * 2;

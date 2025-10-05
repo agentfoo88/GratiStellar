@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:flutter/material.dart';  // ADD THIS - provides Color class
+import 'gratitude_stars.dart';  // ADD THIS - provides StarColors
 
 // Extension to add Gaussian distribution to Random
 extension RandomGaussian on math.Random {
@@ -23,16 +25,21 @@ class GratitudeStar {
   final double worldX; // Normalized coordinate 0.0-1.0
   final double worldY; // Normalized coordinate 0.0-1.0
   final int colorIndex; // Store index instead of Color for serialization
+  final Color? customColor;  // Optional custom color
   final double size;
   final String id;
   final DateTime createdAt;
   final int glowPatternIndex;
+
+  // Getter for actual color (custom or palette)
+  Color get color => customColor ?? StarColors.getColor(colorIndex);
 
   GratitudeStar({
     required this.text,
     required this.worldX,
     required this.worldY,
     required this.colorIndex,
+    this.customColor,
     this.size = 8.0,
     required this.id,
     required this.createdAt,
@@ -45,6 +52,8 @@ class GratitudeStar {
     double? worldX,
     double? worldY,
     int? colorIndex,
+    Color? customColor,
+    bool clearCustomColor = false,  // NEW: explicit flag to clear
     double? size,
     String? id,
     DateTime? createdAt,
@@ -55,6 +64,7 @@ class GratitudeStar {
       worldX: worldX ?? this.worldX,
       worldY: worldY ?? this.worldY,
       colorIndex: colorIndex ?? this.colorIndex,
+      customColor: clearCustomColor ? null : (customColor ?? this.customColor),  // FIXED
       size: size ?? this.size,
       id: id ?? this.id,
       createdAt: createdAt ?? this.createdAt,
@@ -68,6 +78,7 @@ class GratitudeStar {
       'worldX': worldX,
       'worldY': worldY,
       'colorIndex': colorIndex,
+      'customColor': customColor?.value,
       'size': size,
       'id': id,
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -81,6 +92,9 @@ class GratitudeStar {
       worldX: json['worldX'],
       worldY: json['worldY'],
       colorIndex: json['colorIndex'] ?? 0,
+      customColor: json['customColor'] != null
+          ? Color(json['customColor'])
+          : null,
       size: json['size'] ?? 8.0,
       id: json['id'],
       createdAt: DateTime.fromMillisecondsSinceEpoch(

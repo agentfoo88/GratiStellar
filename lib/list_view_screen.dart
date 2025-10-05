@@ -5,9 +5,9 @@ import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
-class ListViewScreen extends StatelessWidget {
+class ListViewScreen extends StatefulWidget {  // CHANGED: StatefulWidget
   final List<GratitudeStar> stars;
-  final Function(GratitudeStar) onStarTap;
+  final Function(GratitudeStar, VoidCallback) onStarTap;  // CHANGED: Added VoidCallback param
   final Function(GratitudeStar) onJumpToStar;
 
   const ListViewScreen({
@@ -16,6 +16,37 @@ class ListViewScreen extends StatelessWidget {
     required this.onStarTap,
     required this.onJumpToStar,
   });
+
+  @override
+  State<ListViewScreen> createState() => _ListViewScreenState();  // NEW
+}
+
+class _ListViewScreenState extends State<ListViewScreen> {
+  // NEW class
+  late List<GratitudeStar> _currentStars;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentStars = List<GratitudeStar>.from(widget.stars);
+  }
+
+  @override
+  void didUpdateWidget(ListViewScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.stars != oldWidget.stars) {
+      setState(() {
+        _currentStars = List<GratitudeStar>.from(widget.stars);
+      });
+    }
+  }
+
+  void _refreshList() {
+    // NEW method
+    setState(() {
+      _currentStars = List<GratitudeStar>.from(widget.stars);
+    });
+  }
 
   String _formatDate(BuildContext context, DateTime date) {
     final now = DateTime.now();
@@ -28,7 +59,6 @@ class ListViewScreen extends StatelessWidget {
     } else if (difference.inDays <= 7) {
       return AppLocalizations.of(context)!.daysAgoLabel(difference.inDays);
     } else {
-      // Format as YYYY/MMM/DD
       return DateFormat('yyyy/MMM/dd').format(date);
     }
   }
@@ -40,8 +70,8 @@ class ListViewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Sort stars by creation date (newest first)
-    final sortedStars = List<GratitudeStar>.from(stars)
+    final sortedStars = List<GratitudeStar>.from(
+        _currentStars) // CHANGED: Use _currentStars
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Scaffold(
@@ -121,7 +151,7 @@ class ListViewScreen extends StatelessWidget {
         color: Color(0xFF0A0B1E).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.3),
+          color: star.color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -135,15 +165,15 @@ class ListViewScreen extends StatelessWidget {
           height: FontScaling.getResponsiveIconSize(context, 40),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.2),
+            color: star.color.withValues(alpha: 0.2),
             border: Border.all(
-              color: StarColors.getColor(star.colorIndex),
+              color: star.color,
               width: 2,
             ),
           ),
           child: Icon(
             Icons.auto_awesome,
-            color: StarColors.getColor(star.colorIndex),
+            color: star.color,
             size: FontScaling.getResponsiveIconSize(context, 20),
           ),
         ),
@@ -171,7 +201,7 @@ class ListViewScreen extends StatelessWidget {
           color: Colors.white.withValues(alpha: 0.5),
           size: FontScaling.getResponsiveIconSize(context, 24),
         ),
-        onTap: () => onStarTap(star),
+        onTap: () => widget.onStarTap(star, _refreshList),
       ),
     );
   }

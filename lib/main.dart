@@ -20,9 +20,14 @@ import 'list_view_screen.dart';
 // ========================================
 // UI SCALE CONFIGURATION
 // ========================================
-const double universalUIScale = 0.75;
+const double universalUIScale = 1.0;
 const double labelBackgroundAlpha = 0.85;
 const double statsLabelTextScale = 1.15;
+
+// ========================================
+// ANIMATION CONFIGURATION
+// ========================================
+const int mindfulnessTransitionMs = 2000;  // Duration for camera movement and label animation
 
 // Floating label widget for displaying gratitude text
 class FloatingGratitudeLabel extends StatelessWidget {
@@ -43,12 +48,32 @@ class FloatingGratitudeLabel extends StatelessWidget {
 
     final maxLabelWidth = screenSize.width * 0.4;
     const verticalOffset = 70.0;
+    const edgePadding = 8.0; // Minimum distance from screen edges
+
+    // Calculate desired centered position
+    double horizontalTranslation = -0.5;
+
+    // Check if label would overflow left edge
+    final labelLeftEdge = starX - (maxLabelWidth / 2);
+    if (labelLeftEdge < edgePadding) {
+      // Shift right to prevent left overflow
+      final shiftRight = edgePadding - labelLeftEdge;
+      horizontalTranslation = -0.5 + (shiftRight / maxLabelWidth);
+    }
+
+    // Check if label would overflow right edge
+    final labelRightEdge = starX + (maxLabelWidth / 2);
+    if (labelRightEdge > screenSize.width - edgePadding) {
+      // Shift left to prevent right overflow
+      final overhang = labelRightEdge - (screenSize.width - edgePadding);
+      horizontalTranslation = -0.5 - (overhang / maxLabelWidth);
+    }
 
     return Positioned(
       left: starX,
       top: starY - verticalOffset,
       child: FractionalTranslation(
-        translation: Offset(-0.5, 0), // Shift left by 50% of actual width
+        translation: Offset(horizontalTranslation, 0),
         child: Container(
           constraints: BoxConstraints(
             maxWidth: maxLabelWidth,
@@ -61,12 +86,12 @@ class FloatingGratitudeLabel extends StatelessWidget {
             color: Color(0xFF1A2238).withValues(alpha: labelBackgroundAlpha),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.5),
+              color: star.color.withValues(alpha: 0.5),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.2),
+                color: star.color.withValues(alpha: 0.2),
                 blurRadius: 8,
                 spreadRadius: 2,
               ),
@@ -174,11 +199,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   int _mindfulnessInterval = 3;
   Timer? _mindfulnessTimer;
   GratitudeStar? _activeMindfulnessStar;
-
-  // Phase 4 additions
   final String _userName = "A friend";
   bool _isEditMode = false;
   Color? _previewColor;
+  Color? _tempColorPreview;  // Temporary color during editing
+  int? _tempColorIndexPreview;  // Temporary index during editing
 
   @override
   void initState() {
@@ -345,6 +370,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _showStarDetails(GratitudeStar star) {
+    final starId = star.id; // Store the ID, not the star reference
+
     setState(() {
       _isEditMode = false;
       _editTextController.text = star.text;
@@ -356,6 +383,31 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setState) {
+            // Look up the current star by ID on every rebuild
+            var currentStar = gratitudeStars.firstWhere(
+                  (s) => s.id == starId,
+              orElse: () => star, // Fallback to original if somehow deleted
+            );
+
+            // Apply temporary color preview if exists
+            if (_tempColorPreview != null || _tempColorIndexPreview != null) {
+              print('DEBUG EDIT MODAL: Applying temp color - _tempColorPreview: $_tempColorPreview, _tempColorIndexPreview: $_tempColorIndexPreview');
+              if (_tempColorIndexPreview != null) {
+                // Preset color preview
+                currentStar = currentStar.copyWith(
+                  colorIndex: _tempColorIndexPreview,
+                  clearCustomColor: true,
+                );
+              } else {
+                // Custom color preview
+                currentStar = currentStar.copyWith(
+                  customColor: _tempColorPreview,
+                );
+              }
+            } else {
+              print('DEBUG EDIT MODAL: No temp color to apply');
+            }
+
             return Dialog(
               backgroundColor: Colors.transparent,
               child: Container(
@@ -365,7 +417,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   color: Color(0xFF1A2238).withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.5),
+                    color: currentStar.color.withValues(alpha: 0.5),
                     width: 2,
                   ),
                 ),
@@ -374,7 +426,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   children: [
                     Icon(
                       Icons.auto_awesome,
-                      color: StarColors.getColor(star.colorIndex),
+                      color: currentStar.color,
                       size: FontScaling.getResponsiveIconSize(context, 48),
                     ),
                     SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
@@ -382,7 +434,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     // Text display or edit mode
                     if (!_isEditMode)
                       Text(
-                        star.text,
+                        currentStar.text,
                         style: FontScaling.getBodyLarge(context).copyWith(
                           color: Colors.white.withValues(alpha: 0.9),
                         ),
@@ -428,7 +480,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                             context: context,
                             icon: Icons.share,
                             label: AppLocalizations.of(context)!.shareButton,
-                            onTap: () => _shareStar(star),
+                            onTap: () => _shareStar(currentStar),
                           ),
                           GratitudeDialogs.buildModalIconButton(
                             context: context,
@@ -443,7 +495,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         children: [
                           ElevatedButton.icon(
                             onPressed: () {
-                              _showColorPicker(star, setState);
+                              _showColorPicker(currentStar, setState);
                             },
                             icon: Icon(Icons.palette, size: FontScaling.getResponsiveIconSize(context, 20)),
                             label: Text(
@@ -472,7 +524,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                                   GratitudeDialogs.showDeleteConfirmation(
                                     context: context,
                                     modalContext: context,
-                                    star: star,
+                                    star: currentStar,
                                     onDelete: _deleteStar,
                                   );
                                 },
@@ -499,7 +551,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                                 onPressed: () {
                                   setState(() {
                                     _isEditMode = false;
-                                    _editTextController.text = star.text;
+                                    _editTextController.text = currentStar.text;
+                                    // Clear temp color previews when canceling edit
+                                    _tempColorPreview = null;
+                                    _tempColorIndexPreview = null;
                                   });
                                 },
                                 child: Text(
@@ -512,7 +567,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                               SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
                               ElevatedButton(
                                 onPressed: () {
-                                  _saveStarEdits(star);
+                                  _saveStarEdits(currentStar);
                                   Navigator.of(context).pop();
                                 },
                                 style: ElevatedButton.styleFrom(
@@ -548,6 +603,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       // Clean up when dialog closes
       setState(() {
         _isEditMode = false;
+        _tempColorPreview = null;  // Clear temp preview
+        _tempColorIndexPreview = null;  // Clear temp preview
       });
     });
   }
@@ -563,9 +620,27 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final index = gratitudeStars.indexWhere((s) => s.id == star.id);
     if (index != -1) {
       setState(() {
-        gratitudeStars[index] = star.copyWith(
+        var updatedStar = star.copyWith(
           text: _editTextController.text,
         );
+
+        // Apply temporary color changes if any
+        if (_tempColorIndexPreview != null) {
+          updatedStar = updatedStar.copyWith(
+            colorIndex: _tempColorIndexPreview,
+            clearCustomColor: true,
+          );
+        } else if (_tempColorPreview != null) {
+          updatedStar = updatedStar.copyWith(
+            customColor: _tempColorPreview,
+          );
+        }
+
+        gratitudeStars[index] = updatedStar;
+
+        // Clear temporary preview
+        _tempColorPreview = null;
+        _tempColorIndexPreview = null;
       });
       _saveGratitudes();
     }
@@ -580,8 +655,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   void _showColorPicker(GratitudeStar star, StateSetter modalSetState) {
     // Initialize preview color and controllers
-    _previewColor = StarColors.getColor(star.colorIndex);
-    final currentColor = StarColors.getColor(star.colorIndex);
+    _previewColor = star.color;
+    final currentColor = star.color;
     final r = (currentColor.r * 255).round();
     final g = (currentColor.g * 255).round();
     final b = (currentColor.b * 255).round();
@@ -590,14 +665,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _greenController.text = g.toString();
     _blueController.text = b.toString();
 
-    int selectedColorIndex = star.colorIndex;
+    int? selectedColorIndex = star.customColor == null ? star.colorIndex : null;
 
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setStateColorPicker) {
             return Dialog(
               backgroundColor: Colors.transparent,
               child: Container(
@@ -647,8 +722,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         style: FontScaling.getBodyMedium(context),
                       ),
                       SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                      _buildColorGrid(selectedColorIndex, (index) {
-                        setState(() {
+                      _buildColorGrid(selectedColorIndex ?? -1, (index) {
+                        setStateColorPicker(() {
                           selectedColorIndex = index;
                           _previewColor = StarColors.getColor(index);
                           final color = StarColors.getColor(index);
@@ -686,11 +761,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         ),
                         style: FontScaling.getInputText(context),
                         onChanged: (value) {
-                          if (value.length == 7 && value.startsWith('#')) {
+                          // Auto-add # if missing
+                          String hexValue = value;
+                          if (!hexValue.startsWith('#') && hexValue.length >= 6) {
+                            hexValue = '#$hexValue';
+                            _hexColorController.value = TextEditingValue(
+                              text: hexValue,
+                              selection: TextSelection.collapsed(offset: hexValue.length),
+                            );
+                          }
+
+                          if (hexValue.length == 7 && hexValue.startsWith('#')) {
                             try {
-                              final color = Color(int.parse(value.substring(1), radix: 16) + 0xFF000000);
-                              setState(() {
+                              final color = Color(int.parse(hexValue.substring(1), radix: 16) + 0xFF000000);
+                              setStateColorPicker(() {
                                 _previewColor = color;
+                                selectedColorIndex = null;
                                 _redController.text = ((color.r * 255).round()).toString();
                                 _greenController.text = ((color.g * 255).round()).toString();
                                 _blueController.text = ((color.b * 255).round()).toString();
@@ -720,7 +806,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                               ),
                               style: FontScaling.getInputText(context),
                               keyboardType: TextInputType.number,
-                              onChanged: (value) => _updateFromRGB(setState),
+                              onChanged: (value) {
+                                try {
+                                  final r = int.parse(_redController.text).clamp(0, 255);
+                                  final g = int.parse(_greenController.text).clamp(0, 255);
+                                  final b = int.parse(_blueController.text).clamp(0, 255);
+
+                                  final color = Color.fromARGB(255, r, g, b);
+                                  setStateColorPicker(() {
+                                    _previewColor = color;
+                                    selectedColorIndex = null;
+                                    _hexColorController.text = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+                                  });
+                                } catch (e) {
+                                  // Invalid RGB input
+                                }
+                              },
                             ),
                           ),
                           SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
@@ -737,7 +838,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                               ),
                               style: FontScaling.getInputText(context),
                               keyboardType: TextInputType.number,
-                              onChanged: (value) => _updateFromRGB(setState),
+                              onChanged: (value) {
+                                try {
+                                  final r = int.parse(_redController.text).clamp(0, 255);
+                                  final g = int.parse(_greenController.text).clamp(0, 255);
+                                  final b = int.parse(_blueController.text).clamp(0, 255);
+
+                                  final color = Color.fromARGB(255, r, g, b);
+                                  setStateColorPicker(() {
+                                    _previewColor = color;
+                                    selectedColorIndex = null;
+                                    _hexColorController.text = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+                                  });
+                                } catch (e) {
+                                  // Invalid RGB input
+                                }
+                              },
                             ),
                           ),
                           SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
@@ -754,7 +870,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                               ),
                               style: FontScaling.getInputText(context),
                               keyboardType: TextInputType.number,
-                              onChanged: (value) => _updateFromRGB(setState),
+                              onChanged: (value) {
+                                try {
+                                  final r = int.parse(_redController.text).clamp(0, 255);
+                                  final g = int.parse(_greenController.text).clamp(0, 255);
+                                  final b = int.parse(_blueController.text).clamp(0, 255);
+
+                                  final color = Color.fromARGB(255, r, g, b);
+                                  setStateColorPicker(() {
+                                    _previewColor = color;
+                                    selectedColorIndex = null;
+                                    _hexColorController.text = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+                                  });
+                                } catch (e) {
+                                  // Invalid RGB input
+                                }
+                              },
                             ),
                           ),
                         ],
@@ -777,8 +908,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           ),
                           ElevatedButton(
                             onPressed: () {
+                              // Only apply changes when Apply is clicked
                               _applyColorChange(star, selectedColorIndex, modalSetState);
-                              Navigator.of(context).pop();
+                              Navigator.of(context).pop(true);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xFFFFE135),
@@ -806,10 +938,21 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               ),
             );
           },
-        );
-      },
-    );
-  }
+        );  // ← Close StatefulBuilder
+      },  // ← Close showDialog builder function
+    ).then((result) {
+      print('DEBUG COLOR PICKER CLOSED: result = $result');
+      // Clear temp colors if dialog was closed without clicking Apply
+      if (result != true) {
+        print('DEBUG: Clearing temp colors');
+        setState(() {
+          _tempColorPreview = null;
+          _tempColorIndexPreview = null;
+        });
+        modalSetState(() {});  // Refresh edit modal
+      }
+    });
+  }  // ← Close _showColorPicker method
 
   Widget _buildColorGrid(int selectedIndex, Function(int) onColorTap) {
     return GridView.builder(
@@ -868,17 +1011,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
-  void _applyColorChange(GratitudeStar star, int colorIndex, StateSetter modalSetState) {
-    final index = gratitudeStars.indexWhere((s) => s.id == star.id);
-    if (index != -1) {
-      setState(() {
-        gratitudeStars[index] = star.copyWith(colorIndex: colorIndex);
-      });
-      modalSetState(() {
-        // Update the modal's star reference
-      });
-      _saveGratitudes();
+  void _applyColorChange(GratitudeStar star, int? colorIndex, StateSetter modalSetState) {
+    // Store temporarily - don't commit to gratitudeStars yet
+    if (colorIndex != null) {
+      _tempColorIndexPreview = colorIndex;
+      _tempColorPreview = null;  // Clear custom color
+    } else {
+      _tempColorPreview = _previewColor;
+      _tempColorIndexPreview = null;
     }
+
+    // Trigger modal rebuild to show new color in edit modal icon
+    modalSetState(() {});
   }
 
   void _handleStarTap(TapDownDetails details) {
@@ -901,6 +1045,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   void _toggleShowAll() {
     setState(() {
       _showAllGratitudes = !_showAllGratitudes;
+      // Disable mindfulness mode when enabling show all
+      if (_showAllGratitudes && _mindfulnessMode) {
+        _stopMindfulnessMode();
+        _mindfulnessMode = false;
+      }
     });
   }
 
@@ -913,6 +1062,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     setState(() {
       _mindfulnessMode = !_mindfulnessMode;
+      // Disable show all mode when enabling mindfulness
+      if (_mindfulnessMode && _showAllGratitudes) {
+        _showAllGratitudes = false;
+      }
     });
 
     if (_mindfulnessMode) {
@@ -1002,7 +1155,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _cameraController.animateTo(
       targetPosition: targetPosition,
       targetScale: targetScale,
-      duration: Duration(milliseconds: 2000),  // Slower: 800ms → 1500ms
+      duration: Duration(milliseconds: mindfulnessTransitionMs),
       curve: Curves.easeInOutCubic,  // Smooth speed ramp at start and end
       vsync: this,
     );
@@ -1020,27 +1173,21 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _navigateToListView() async {
-    final result = await Navigator.push<GratitudeStar>(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ListViewScreen(
           stars: gratitudeStars,
-          onStarTap: (star) => _showStarDetailsFromList(star),
-          onJumpToStar: (star) {
-            // This won't be called from ListViewScreen directly
-            // Instead, we pass null and handle jump in the modal
-          },
+          onStarTap: (star, refreshList) => _showStarDetailsFromList(star, refreshList),
+          onJumpToStar: (star) {},
         ),
       ),
     );
-
-    // If a star was returned, navigate to it
-    if (result != null) {
-      _jumpToStar(result);
-    }
   }
 
-  void _showStarDetailsFromList(GratitudeStar star) {
+  void _showStarDetailsFromList(GratitudeStar star, VoidCallback refreshList) {
+    final starId = star.id; // Store the ID, not the star reference
+
     setState(() {
       _isEditMode = false;
       _editTextController.text = star.text;
@@ -1049,6 +1196,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     GratitudeDialogs.showStarDetailsWithJump(
       context: context,
       star: star,
+      starId: starId,  // Pass the star ID
+      gratitudeStars: gratitudeStars,  // Pass the list for lookup
       editTextController: _editTextController,
       hexColorController: _hexColorController,
       redController: _redController,
@@ -1059,10 +1208,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       onDelete: _deleteStar,
       onShare: _shareStar,
       onJumpToStar: () {
-        // Close list view and navigate to star
         Navigator.of(context).popUntil((route) => route.isFirst);
         _jumpToStar(star);
       },
+      onListRefresh: refreshList,
     );
   }
 
@@ -1570,7 +1719,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
                                 // Mindfulness mode - single star with animated transitions
                                 if (_mindfulnessMode && _activeMindfulnessStar != null)
-                                  Positioned(
+                                  AnimatedPositioned(
+                                    duration: Duration(milliseconds: mindfulnessTransitionMs),
+                                    curve: Curves.easeInOutCubic,
                                     left: _activeMindfulnessStar!.worldX * currentSize.width,
                                     top: _activeMindfulnessStar!.worldY * currentSize.height - 70.0,
                                     child: FractionalTranslation(
@@ -1588,12 +1739,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                                             color: Color(0xFF1A2238).withValues(alpha: labelBackgroundAlpha),
                                             borderRadius: BorderRadius.circular(12),
                                             border: Border.all(
-                                              color: StarColors.getColor(_activeMindfulnessStar!.colorIndex).withValues(alpha: 0.5),
+                                              color: _activeMindfulnessStar!.color.withValues(alpha: 0.5),
                                               width: 1.5,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: StarColors.getColor(_activeMindfulnessStar!.colorIndex).withValues(alpha: 0.2),
+                                                color: _activeMindfulnessStar!.color.withValues(alpha: 0.2),
                                                 blurRadius: 8,
                                                 spreadRadius: 2,
                                               ),

@@ -10,71 +10,48 @@ class FontScaling {
   static const double tabletBreakpoint = 900.0;
   static const double desktopBreakpoint = 1200.0;
 
-  // Base font sizes for different screen categories
-  static const double mobileBaseFontSize = 22.0;
-  static const double tabletBaseFontSize = 18.0;
-  static const double desktopBaseFontSize = 24.0;
+// Font sizes per Material Design (+2px)
+// Mobile (< 500px)
+  static const double mobileHeadline = 34.0;  // 32 + 2
+  static const double mobileTitle = 24.0;     // 22 + 2
+  static const double mobileBody = 18.0;      // 16 + 2
+  static const double mobileCaption = 16.0;   // 14 + 2
+  static const double mobileButton = 16.0;    // 14 + 2
+
+// Tablet (500-900px)
+  static const double tabletHeadline = 30.0;  // 28 + 2
+  static const double tabletTitle = 22.0;     // 20 + 2
+  static const double tabletBody = 16.0;      // 14 + 2
+  static const double tabletCaption = 14.0;   // 12 + 2
+  static const double tabletButton = 14.0;    // 12 + 2
+
+// Desktop (> 900px)
+  static const double desktopHeadline = 26.0; // 24 + 2
+  static const double desktopTitle = 20.0;    // 18 + 2
+  static const double desktopBody = 16.0;     // 14 + 2
+  static const double desktopCaption = 13.0;  // 11 + 2
+  static const double desktopButton = 13.0;   // 11 + 2
 
   // Font weight constants
-  static const FontWeight lightWeight = FontWeight.w300;
-  static const FontWeight normalWeight = FontWeight.w500; // Your requested default
-  static const FontWeight mediumWeight = FontWeight.w500;
-  static const FontWeight semiBoldWeight = FontWeight.w600;
-  static const FontWeight boldWeight = FontWeight.w700;
-
-  // Get device category
-  static DeviceCategory getDeviceCategory(double screenWidth) {
-    if (screenWidth < mobileBreakpoint) return DeviceCategory.mobile;
-    if (screenWidth < tabletBreakpoint) return DeviceCategory.tablet;
-    if (screenWidth < desktopBreakpoint) return DeviceCategory.desktop;
-    return DeviceCategory.largeDesktop;
-  }
-
-  // Get base font size for screen
-  static double getBaseFontSize(double screenWidth) {
-    final category = getDeviceCategory(screenWidth);
-    switch (category) {
-      case DeviceCategory.mobile:
-        return mobileBaseFontSize;
-      case DeviceCategory.tablet:
-        return tabletBaseFontSize;
-      case DeviceCategory.desktop:
-      case DeviceCategory.largeDesktop:
-        return desktopBaseFontSize;
-    }
-  }
-
-  // Scale factor for smooth transitions between breakpoints
-  static double getScaleFactor(double screenWidth) {
-    if (screenWidth < mobileBreakpoint) {
-      // Mobile: scale from 0.8 to 1.0
-      return math.max(0.8, math.min(1.0, screenWidth / mobileBreakpoint));
-    } else if (screenWidth < tabletBreakpoint) {
-      // Tablet: scale from 1.0 to 1.2
-      final progress = (screenWidth - mobileBreakpoint) / (tabletBreakpoint - mobileBreakpoint);
-      return 1.0 + (progress * 0.2);
-    } else if (screenWidth < desktopBreakpoint) {
-      // Desktop: scale from 1.2 to 1.4
-      final progress = (screenWidth - tabletBreakpoint) / (desktopBreakpoint - tabletBreakpoint);
-      return 1.2 + (progress * 0.2);
-    } else {
-      // Large desktop: cap at 1.5x
-      return math.min(1.5, 1.4 + (screenWidth - desktopBreakpoint) / 1000);
-    }
-  }
-
-  // Calculate responsive font size
-  static double responsiveSize(double baseSize, double screenWidth) {
-    final deviceBaseFontSize = getBaseFontSize(screenWidth);
-    final scaleFactor = getScaleFactor(screenWidth);
-    return (baseSize * (deviceBaseFontSize / desktopBaseFontSize)) * scaleFactor;
-  }
+  static const FontWeight lightWeight = FontWeight.w500;     // Medium
+  static const FontWeight normalWeight = FontWeight.w600;    // Semi-bold
+  static const FontWeight mediumWeight = FontWeight.w700;    // Bold
+  static const FontWeight boldWeight = FontWeight.w800;      // Extra-bold
 
   // Predefined text styles with responsive sizing
   static TextStyle getHeadingLarge(BuildContext context, {Color? color}) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileHeadline
+        : screenWidth < tabletBreakpoint
+        ? tabletHeadline
+        : desktopHeadline;
+
     return TextStyle(
-      fontSize: responsiveSize(48.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: lightWeight,
       color: color ?? Colors.white,
       letterSpacing: 2.0,
@@ -82,76 +59,144 @@ class FontScaling {
   }
 
   static TextStyle getHeadingMedium(BuildContext context, {Color? color}) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileTitle
+        : screenWidth < tabletBreakpoint
+        ? tabletTitle
+        : desktopTitle;
+
     return TextStyle(
-      fontSize: responsiveSize(32.0, screenWidth),
-      fontWeight: normalWeight,
+      fontSize: fontSize,
+      fontWeight: mediumWeight,
       color: color ?? Colors.white,
-      letterSpacing: 1.0,
     );
   }
 
   static TextStyle getHeadingSmall(BuildContext context, {Color? color}) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileTitle
+        : screenWidth < tabletBreakpoint
+        ? tabletTitle
+        : desktopTitle;
+
     return TextStyle(
-      fontSize: responsiveSize(24.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: mediumWeight,
       color: color ?? Colors.white,
     );
   }
 
   static TextStyle getBodyLarge(BuildContext context, {Color? color}) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileBody
+        : screenWidth < tabletBreakpoint
+        ? tabletBody
+        : desktopBody;
+
     return TextStyle(
-      fontSize: responsiveSize(18.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: normalWeight,
       color: color ?? Colors.white,
-      height: 1.4,
     );
   }
 
   static TextStyle getBodyMedium(BuildContext context, {Color? color}) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileBody
+        : screenWidth < tabletBreakpoint
+        ? tabletBody
+        : desktopBody;
+
     return TextStyle(
-      fontSize: responsiveSize(16.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: normalWeight,
       color: color ?? Colors.white,
-      height: 1.4,
     );
   }
 
   static TextStyle getBodySmall(BuildContext context, {Color? color}) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileBody
+        : screenWidth < tabletBreakpoint
+        ? tabletBody
+        : desktopBody;
+
     return TextStyle(
-      fontSize: responsiveSize(14.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: normalWeight,
       color: color ?? Colors.white,
-      height: 1.3,
     );
   }
 
   static TextStyle getCaption(BuildContext context, {Color? color}) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileCaption
+        : screenWidth < tabletBreakpoint
+        ? tabletCaption
+        : desktopCaption;
+
     return TextStyle(
-      fontSize: responsiveSize(12.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: normalWeight,
       color: color ?? Colors.white.withValues(alpha: 0.7),
     );
   }
 
   static TextStyle getButtonText(BuildContext context, {Color? color}) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileButton
+        : screenWidth < tabletBreakpoint
+        ? tabletButton
+        : desktopButton;
+
     return TextStyle(
-      fontSize: responsiveSize(16.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: mediumWeight,
       color: color ?? Colors.white,
     );
   }
 
   static TextStyle getLabel(BuildContext context, {Color? color}) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileCaption
+        : screenWidth < tabletBreakpoint
+        ? tabletCaption
+        : desktopCaption;
+
     return TextStyle(
-      fontSize: responsiveSize(14.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: mediumWeight,
       color: color ?? Colors.white,
     );
@@ -159,9 +204,18 @@ class FontScaling {
 
   // Special styles for app-specific elements
   static TextStyle getAppTitle(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileHeadline
+        : screenWidth < tabletBreakpoint
+        ? tabletHeadline
+        : desktopHeadline;
+
     return TextStyle(
-      fontSize: responsiveSize(48.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: lightWeight,
       color: Color(0xFFFFE135),
       letterSpacing: 3.0,
@@ -169,9 +223,18 @@ class FontScaling {
   }
 
   static TextStyle getSubtitle(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileBody
+        : screenWidth < tabletBreakpoint
+        ? tabletBody
+        : desktopBody;
+
     return TextStyle(
-      fontSize: responsiveSize(18.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white.withValues(alpha: 0.8),
       fontStyle: FontStyle.italic,
@@ -179,63 +242,126 @@ class FontScaling {
   }
 
   static TextStyle getStatsNumber(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileTitle
+        : screenWidth < tabletBreakpoint
+        ? tabletTitle
+        : desktopTitle;
+
     return TextStyle(
-      fontSize: responsiveSize(20.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: mediumWeight,
       color: Colors.white.withValues(alpha: 0.9),
     );
   }
 
   static TextStyle getStatsLabel(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileCaption
+        : screenWidth < tabletBreakpoint
+        ? tabletCaption
+        : desktopCaption;
+
     return TextStyle(
-      fontSize: responsiveSize(12.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white.withValues(alpha: 0.6),
     );
   }
 
   static TextStyle getModalTitle(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileTitle
+        : screenWidth < tabletBreakpoint
+        ? tabletTitle
+        : desktopTitle;
+
     return TextStyle(
-      fontSize: responsiveSize(24.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: lightWeight,
       color: Color(0xFFFFE135),
     );
   }
 
   static TextStyle getInputHint(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileBody
+        : screenWidth < tabletBreakpoint
+        ? tabletBody
+        : desktopBody;
+
     return TextStyle(
-      fontSize: responsiveSize(16.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white.withValues(alpha: 0.4),
     );
   }
 
   static TextStyle getInputText(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileBody
+        : screenWidth < tabletBreakpoint
+        ? tabletBody
+        : desktopBody;
+
     return TextStyle(
-      fontSize: responsiveSize(16.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white,
     );
   }
 
   static TextStyle getEmptyStateTitle(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileTitle
+        : screenWidth < tabletBreakpoint
+        ? tabletTitle
+        : desktopTitle;
+
     return TextStyle(
-      fontSize: responsiveSize(24.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: lightWeight,
       color: Colors.white.withValues(alpha: 0.6),
     );
   }
 
   static TextStyle getEmptyStateSubtitle(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileBody
+        : screenWidth < tabletBreakpoint
+        ? tabletBody
+        : desktopBody;
+
     return TextStyle(
-      fontSize: responsiveSize(16.0, screenWidth),
+      fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white.withValues(alpha: 0.4),
     );
@@ -243,22 +369,35 @@ class FontScaling {
 
   // Utility method to get responsive padding/spacing
   static double getResponsiveSpacing(BuildContext context, double baseSpacing) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final scaleFactor = getScaleFactor(screenWidth);
-    return baseSpacing * scaleFactor;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+
+    // Simple multiplier based on screen size
+    if (screenWidth < mobileBreakpoint) {
+      return baseSpacing * 0.9; // Slightly smaller on mobile
+    } else if (screenWidth < tabletBreakpoint) {
+      return baseSpacing * 1.0; // Base size on tablet
+    } else {
+      return baseSpacing * 1.1; // Slightly larger on desktop
+    }
   }
 
   // Utility method to get responsive icon size
   static double getResponsiveIconSize(BuildContext context, double baseSize) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final scaleFactor = getScaleFactor(screenWidth);
-    return baseSize * scaleFactor;
-  }
-}
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
 
-enum DeviceCategory {
-  mobile,
-  tablet,
-  desktop,
-  largeDesktop,
+    // Simple multiplier based on screen size
+    if (screenWidth < mobileBreakpoint) {
+      return baseSize * 0.9; // Slightly smaller on mobile
+    } else if (screenWidth < tabletBreakpoint) {
+      return baseSize * 1.0; // Base size on tablet
+    } else {
+      return baseSize * 1.1; // Slightly larger on desktop
+    }
+  }
 }

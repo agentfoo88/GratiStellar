@@ -17,7 +17,7 @@ class CameraController extends ChangeNotifier {
   static const double minScale = 0.4;
   static const double maxScale = 5.0;
   static const double maxPanDistance = 3000.0;
-  static const double focusZoomLevel = 2.25;
+  static const double focusZoomLevel = 2.0;
 
 // ========================================
 // LAYER TRANSFORM CONFIGURATION

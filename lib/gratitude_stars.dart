@@ -241,6 +241,7 @@ class GratitudeStarService {
       worldX: worldX,
       worldY: worldY,
       colorIndex: random.nextInt(StarColors.palette.length),
+      customColor: null,
       size: 8.0 + random.nextDouble() * 6.0,
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       createdAt: DateTime.now(),
@@ -309,7 +310,7 @@ class GratitudeStarPainter extends CustomPainter {
       final brightness = 0.7 + math.sin(animationValue * 2 * math.pi + i * 0.5) * 0.3;
 
       // Layer 1: Dual overlaid glows - scaled to star size
-      final glowColor = StarColors.getColor(star.colorIndex);
+      final glowColor = star.color;
 
       // Scale glow to star size with configurable variation
       final glowMultiplier = StarConfig.glowSizeMin + starRandom.nextDouble() * (StarConfig.glowSizeMax - StarConfig.glowSizeMin);

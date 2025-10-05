@@ -355,6 +355,8 @@ class GratitudeDialogs {
   static void showStarDetailsWithJump({
     required BuildContext context,
     required GratitudeStar star,
+    required String starId,  // NEW: Track by ID
+    required List<GratitudeStar> gratitudeStars,  // NEW: For lookup
     required TextEditingController editTextController,
     required TextEditingController hexColorController,
     required TextEditingController redController,
@@ -365,6 +367,7 @@ class GratitudeDialogs {
     required Function(GratitudeStar) onDelete,
     required Function(GratitudeStar) onShare,
     required VoidCallback? onJumpToStar,
+    VoidCallback? onListRefresh,
   }) {
     bool isEditMode = false;
 
@@ -374,6 +377,12 @@ class GratitudeDialogs {
       builder: (BuildContext dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
+            // Look up the current star by ID on every rebuild
+            final currentStar = gratitudeStars.firstWhere(
+                  (s) => s.id == starId,
+              orElse: () => star, // Fallback to original if somehow deleted
+            );
+
             return Dialog(
               backgroundColor: Colors.transparent,
               child: Container(
@@ -383,7 +392,7 @@ class GratitudeDialogs {
                   color: Color(0xFF1A2238).withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: StarColors.getColor(star.colorIndex).withValues(alpha: 0.5),
+                    color: currentStar.color.withValues(alpha: 0.5),
                     width: 2,
                   ),
                 ),
@@ -392,7 +401,7 @@ class GratitudeDialogs {
                   children: [
                     Icon(
                       Icons.auto_awesome,
-                      color: StarColors.getColor(star.colorIndex),
+                      color: currentStar.color,
                       size: FontScaling.getResponsiveIconSize(context, 48),
                     ),
                     SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
@@ -400,7 +409,7 @@ class GratitudeDialogs {
                     // Text display or edit mode
                     if (!isEditMode)
                       Text(
-                        star.text,
+                        currentStar.text,
                         style: FontScaling.getBodyLarge(context).copyWith(
                           color: Colors.white.withValues(alpha: 0.9),
                         ),
@@ -448,7 +457,7 @@ class GratitudeDialogs {
                                 context: context,
                                 icon: Icons.share,
                                 label: AppLocalizations.of(context)!.shareButton,
-                                onTap: () => onShare(star),
+                                onTap: () => onShare(currentStar),
                               ),
                               buildModalIconButton(
                                 context: context,
@@ -494,7 +503,7 @@ class GratitudeDialogs {
                         children: [
                           ElevatedButton.icon(
                             onPressed: () {
-                              onShowColorPicker(star, setState);
+                              onShowColorPicker(currentStar, setState);
                             },
                             icon: Icon(Icons.palette, size: FontScaling.getResponsiveIconSize(context, 20)),
                             label: Text(
@@ -523,8 +532,11 @@ class GratitudeDialogs {
                                   showDeleteConfirmation(
                                     context: context,
                                     modalContext: dialogContext,
-                                    star: star,
-                                    onDelete: onDelete,
+                                    star: currentStar,
+                                    onDelete: (deletedStar) {
+                                      onDelete(deletedStar);
+                                      onListRefresh?.call();
+                                    },
                                   );
                                 },
                                 icon: Icon(Icons.close, size: FontScaling.getResponsiveIconSize(context, 18)),
@@ -550,7 +562,7 @@ class GratitudeDialogs {
                                 onPressed: () {
                                   setState(() {
                                     isEditMode = false;
-                                    editTextController.text = star.text;
+                                    editTextController.text = currentStar.text;
                                   });
                                 },
                                 child: Text(
@@ -563,7 +575,7 @@ class GratitudeDialogs {
                               SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
                               ElevatedButton(
                                 onPressed: () {
-                                  onSaveEdits(star);
+                                  onSaveEdits(currentStar);
                                   Navigator.of(context).pop();
                                 },
                                 style: ElevatedButton.styleFrom(
@@ -597,6 +609,10 @@ class GratitudeDialogs {
       },
     );
   }
+
+  // ========================================
+  // HELPER WIDGETS
+  // ========================================
 
   static void showAddGratitude({
     required BuildContext context,
@@ -718,10 +734,6 @@ class GratitudeDialogs {
       },
     );
   }
-
-  // ========================================
-  // HELPER WIDGETS
-  // ========================================
 
   static Widget buildModalIconButton({
     required BuildContext context,

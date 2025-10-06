@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'storage.dart';
 import 'background.dart';
@@ -162,7 +163,7 @@ class GratitudeScreen extends StatefulWidget {
 }
 
 class _GratitudeScreenState extends State<GratitudeScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _gratitudeController = TextEditingController();
@@ -178,10 +179,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   late AnimationController _starController;
   late CameraController _cameraController;
   late AnimationController _labelFadeController;
-  late Animation<double> _labelFadeAnimation;
   bool _isLoading = true;
   bool _showBranding = true;
   bool _isAnimating = false;
+  bool _isAppInBackground = false;
   AnimationController? _birthController;
   GratitudeStar? _animatingStar;
   final math.Random _random = math.Random();
@@ -205,7 +206,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   void initState() {
     print('🎬 GratitudeScreen initState starting...');
     super.initState();
-
+    WidgetsBinding.instance.addObserver(this);
     _cameraController = CameraController();
 
     _backgroundController = AnimationController(
@@ -295,6 +296,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cameraController.dispose();
     _backgroundController.dispose();
     _starController.dispose();
@@ -308,6 +310,44 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _mindfulnessTimer?.cancel();
     _labelFadeController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      // App going to background
+        if (!_isAppInBackground) {
+          _isAppInBackground = true;
+          _backgroundController.stop();
+          _starController.stop();
+          _birthController?.stop();
+          _mindfulnessTimer?.cancel();
+        }
+        break;
+
+      case AppLifecycleState.resumed:
+      // App coming back to foreground
+        if (_isAppInBackground) {
+          _isAppInBackground = false;
+          _backgroundController.repeat();
+          _starController.repeat();
+
+          // Restart mindfulness timer if it was active
+          if (_mindfulnessMode) {
+            _scheduleNextStar();
+          }
+        }
+        break;
+
+      case AppLifecycleState.hidden:
+      // Do nothing for now
+        break;
+    }
   }
 
   void _addGratitude() async {
@@ -351,6 +391,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   void _completeBirthAnimation() {
     if (_animatingStar != null) {
+      HapticFeedback.mediumImpact();
       setState(() {
         gratitudeStars.add(_animatingStar!);
         _animatingStar = null;
@@ -621,6 +662,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _shareStar(GratitudeStar star) {
+    HapticFeedback.mediumImpact();
     final shareText = '$_userName shared their gratitude with you:\n${star.text}\n\n- GratiStellar - your universe of thankfulness';
     SharePlus.instance.share(
         ShareParams(text: shareText)
@@ -630,6 +672,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   void _saveStarEdits(GratitudeStar star) {
     final index = gratitudeStars.indexWhere((s) => s.id == star.id);
     if (index != -1) {
+      HapticFeedback.mediumImpact();
       setState(() {
         var updatedStar = star.copyWith(
           text: _editTextController.text,
@@ -658,6 +701,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _deleteStar(GratitudeStar star) {
+    HapticFeedback.heavyImpact();
     setState(() {
       gratitudeStars.removeWhere((s) => s.id == star.id);
     });
@@ -1049,12 +1093,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
 
     if (tappedStar != null) {
+      HapticFeedback.lightImpact();
       _showStarDetails(tappedStar);
     }
   }
 
   // Toggle methods
   void _toggleShowAll() {
+    HapticFeedback.lightImpact();
     setState(() {
       _showAllGratitudes = !_showAllGratitudes;
       // Disable mindfulness mode when enabling show all
@@ -1072,6 +1118,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       return;
     }
 
+    HapticFeedback.lightImpact();
     setState(() {
       _mindfulnessMode = !_mindfulnessMode;
       // Disable show all mode when enabling mindfulness
@@ -1133,6 +1180,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     print('🧘 Mindfulness: Selected star "${selectedStar.text}"');
     print('🧘 Star position: (${selectedStar.worldX}, ${selectedStar.worldY})');
+
+    HapticFeedback.lightImpact();
 
     // Update star - AnimatedSwitcher handles the animation
     setState(() {
@@ -1521,7 +1570,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         Text(
           label,
           style: FontScaling.getStatsLabel(context).copyWith(
-            fontSize: FontScaling.getStatsLabel(context).fontSize! * universalUIScale * statsLabelTextScale,
+            fontSize: FontScaling.getStatsLabel(context).fontSize! * statsLabelTextScale,
           ),
         ),
         if (value.isNotEmpty)
@@ -1589,50 +1638,56 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         child: Stack(
           children: [
             // Layer 1: Static background
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: _cameraController,
-                builder: (context, child) {
-                  return Transform(
-                    transform: _cameraController.getBackgroundTransform(),
-                    child: CustomPaint(
-                      painter: StaticBackgroundPainter(_staticStars),
-                      size: Size.infinite,
-                    ),
-                  );
-                },
+            RepaintBoundary(
+              child: Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _cameraController,
+                  builder: (context, child) {
+                    return Transform(
+                      transform: _cameraController.getBackgroundTransform(),
+                      child: CustomPaint(
+                        painter: StaticBackgroundPainter(_staticStars),
+                        size: Size.infinite,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
 
             // Layer 2: Nebula
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: Listenable.merge([_backgroundController, _cameraController]),
-                builder: (context, child) {
-                  return Transform(
-                    transform: _cameraController.getNebulaTransform(currentSize),
-                    child: OrganicNebulaWidget(
-                      regions: _organicNebulaRegions,
-                      animationValue: _backgroundController.value,
-                    ),
-                  );
-                },
+            RepaintBoundary(
+              child: Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([_backgroundController, _cameraController]),
+                  builder: (context, child) {
+                    return Transform(
+                      transform: _cameraController.getNebulaTransform(currentSize),
+                      child: OrganicNebulaWidget(
+                        regions: _organicNebulaRegions,
+                        animationValue: _backgroundController.value,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
 
             // Layer 2.5: Van Gogh stars
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: _cameraController,
-                builder: (context, child) {
-                  return Transform(
-                    transform: _cameraController.getVanGoghTransform(currentSize),
-                    child: CustomPaint(
-                      painter: VanGoghMidgroundPainter(_vanGoghStars),
-                      size: Size.infinite,
-                    ),
-                  );
-                },
+            RepaintBoundary(
+              child: Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _cameraController,
+                  builder: (context, child) {
+                    return Transform(
+                      transform: _cameraController.getVanGoghTransform(currentSize),
+                      child: CustomPaint(
+                        painter: VanGoghMidgroundPainter(_vanGoghStars),
+                        size: Size.infinite,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
 
@@ -1921,7 +1976,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
             // Camera controls overlay
             if (!_showBranding)
-              CameraControlsOverlay(
+              CameraControlsOverlay(  // REMOVE RepaintBoundary wrapper here
                 cameraController: _cameraController,
                 stars: gratitudeStars,
                 screenSize: MediaQuery.of(context).size,

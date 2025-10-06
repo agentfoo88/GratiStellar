@@ -312,150 +312,149 @@ class CameraControlsOverlay extends StatelessWidget {
     final fontSize = isMobile ? 12.0 : 14.0;
     final padding = isMobile ? 8.0 : 12.0;
 
-    // FIXED: Better responsive positioning for narrow screens
     final rightMargin = isMobile ? math.min(8.0, screenSize.width * 0.02) : 16.0;
     final bottomMargin = (isMobile ? 80.0 : 120.0) + safeAreaPadding.bottom;
 
-    // FIXED: Ensure controls don't go off-screen on very narrow windows
     final maxControlWidth = controlSize + padding * 2;
     final safeRightMargin = math.max(rightMargin, 4.0);
     final adjustedRightMargin = (rightMargin + maxControlWidth > screenSize.width * 0.25)
-        ? screenSize.width * 0.02 // Use 2% of screen width on very narrow screens
+        ? screenSize.width * 0.02
         : safeRightMargin;
 
     return Positioned(
       bottom: bottomMargin,
       right: adjustedRightMargin,
-      child: AnimatedBuilder(
-        animation: cameraController,
-        builder: (context, child) {
-          // FIXED: Wrap in IgnorePointer for areas that shouldn't block gestures
-          return IgnorePointer(
-            ignoring: false, // Allow interactions with the controls themselves
-            child: IntrinsicWidth( // FIXED: Only take the width actually needed
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Zoom percentage indicator
-                  Material( // FIXED: Wrap in Material to ensure proper hit testing
-                    color: Colors.transparent,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.7),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                          width: 1,
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: cameraController,
+          builder: (context, child) {
+            return IgnorePointer(
+              ignoring: false,
+              child: IntrinsicWidth(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Zoom percentage indicator
+                    Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                            width: 1,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        '${cameraController.zoomPercentage}%',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: padding),
-
-                  // Zoom controls
-                  Material( // FIXED: Wrap in Material for proper hit testing
-                    color: Colors.transparent,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(controlSize / 2),
-                        border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: IntrinsicHeight( // FIXED: Only take needed height
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Zoom In
-                            SizedBox(
-                              width: controlSize,
-                              height: controlSize,
-                              child: Material( // FIXED: Individual Material for each button
-                                color: Colors.transparent,
-                                child: InkWell( // FIXED: Use InkWell for better touch feedback
-                                  borderRadius: BorderRadius.circular(controlSize / 2),
-                                  onTap: () {
-                                    final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
-                                    cameraController.zoomIn(1.5, screenCenter);
-                                  },
-                                  child: Icon(Icons.zoom_in,
-                                    color: Colors.white,
-                                    size: controlSize * 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            // Zoom Out
-                            SizedBox(
-                              width: controlSize,
-                              height: controlSize,
-                              child: Material( // FIXED: Individual Material for each button
-                                color: Colors.transparent,
-                                child: InkWell( // FIXED: Use InkWell for better touch feedback
-                                  borderRadius: BorderRadius.circular(controlSize / 2),
-                                  onTap: () {
-                                    final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
-                                    cameraController.zoomOut(1.5, screenCenter);
-                                  },
-                                  child: Icon(Icons.zoom_out,
-                                    color: Colors.white,
-                                    size: controlSize * 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          '${cameraController.zoomPercentage}%',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  SizedBox(height: padding),
+                    SizedBox(height: padding),
 
-                  // 100% Zoom button
-                  Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(controlSize / 2),
-                        border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                          width: 1,
+                    // Zoom controls
+                    Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(controlSize / 2),
+                          border: Border.all(
+                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Zoom In
+                              SizedBox(
+                                width: controlSize,
+                                height: controlSize,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(controlSize / 2),
+                                    onTap: () {
+                                      final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
+                                      cameraController.zoomIn(1.5, screenCenter);
+                                    },
+                                    child: Icon(Icons.zoom_in,
+                                      color: Colors.white,
+                                      size: controlSize * 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Zoom Out
+                              SizedBox(
+                                width: controlSize,
+                                height: controlSize,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(controlSize / 2),
+                                    onTap: () {
+                                      final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
+                                      cameraController.zoomOut(1.5, screenCenter);
+                                    },
+                                    child: Icon(Icons.zoom_out,
+                                      color: Colors.white,
+                                      size: controlSize * 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      child: SizedBox(
-                        width: controlSize,
-                        height: controlSize,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(controlSize / 2),
-                            onTap: () {
-                              final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
-                              cameraController.zoomTo100Percent(screenCenter);
-                            },
-                            child: Center(
-                              child: Text(
-                                '100%',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: fontSize * 0.75,
-                                  fontWeight: FontWeight.w500,
+                    ),
+
+                    SizedBox(height: padding),
+
+                    // 100% Zoom button
+                    Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(controlSize / 2),
+                          border: Border.all(
+                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: SizedBox(
+                          width: controlSize,
+                          height: controlSize,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(controlSize / 2),
+                              onTap: () {
+                                final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
+                                cameraController.zoomTo100Percent(screenCenter);
+                              },
+                              child: Center(
+                                child: Text(
+                                  '100%',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: fontSize * 0.75,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ),
@@ -463,46 +462,46 @@ class CameraControlsOverlay extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
 
-                  SizedBox(height: padding),
+                    SizedBox(height: padding),
 
-                  // Fit All button
-                  Material( // FIXED: Wrap in Material for proper hit testing
-                    color: Colors.transparent,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(controlSize / 2),
-                        border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                          width: 1,
+                    // Fit All button
+                    Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(controlSize / 2),
+                          border: Border.all(
+                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                            width: 1,
+                          ),
                         ),
-                      ),
-                      child: SizedBox(
-                        width: controlSize,
-                        height: controlSize,
-                        child: Material( // FIXED: Individual Material for button
-                          color: Colors.transparent,
-                          child: InkWell( // FIXED: Use InkWell for better touch feedback
-                            borderRadius: BorderRadius.circular(controlSize / 2),
-                            onTap: () {
-                              cameraController.fitAllStars(stars, screenSize, vsync);
-                            },
-                            child: Icon(Icons.fit_screen,
-                              color: Colors.white,
-                              size: controlSize * 0.5,
+                        child: SizedBox(
+                          width: controlSize,
+                          height: controlSize,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(controlSize / 2),
+                              onTap: () {
+                                cameraController.fitAllStars(stars, screenSize, vsync);
+                              },
+                              child: Icon(Icons.fit_screen,
+                                color: Colors.white,
+                                size: controlSize * 0.5,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

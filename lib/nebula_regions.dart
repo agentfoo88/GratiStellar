@@ -101,7 +101,7 @@ class OrganicNebulaService {
 
     for (int i = 0; i < nebulaCount; i++) {
       final centerX = 0.5;  // Normalized center
-      final centerY = 0.5;I b
+      final centerY = 0.5;
       final maxRadius = 0.3;  // 30% of screen in normalized space
 
       // Use polar coordinates for better center clustering

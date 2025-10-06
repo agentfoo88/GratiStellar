@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'storage.dart';
 import 'background.dart';
@@ -191,9 +190,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   List<BackgroundStar> _staticStars = [];
   List<Paint> _glowPatterns = [];
   List<Paint> _backgroundGradients = [];
-  Size? _lastVanGoghSize;
-  Size? _lastNebulaSize;
-  Size? _lastBackgroundSize;
   bool _showAllGratitudes = false;
   bool _mindfulnessMode = false;
   int _mindfulnessInterval = 3;
@@ -235,10 +231,27 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     print('🎭 Animation controllers created');
 
+// Generate static universe based on full screen size
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    final screenSize = view.physicalSize / view.devicePixelRatio;
+
+// Layer-specific universe sizes (starting conservative, will adjust if needed)
+    final backgroundSize = screenSize;  // No padding - doesn't zoom/pan
+    final nebulaSize = screenSize;      // Starting at 1.0x - test if nebulae stay visible
+    final vanGoghSize = screenSize;     // Starting at 1.0x - test if spiral stays centered
+
+    _staticStars = BackgroundService.generateStaticStars(backgroundSize);
+    _vanGoghStars = VanGoghStarService.generateVanGoghStars(vanGoghSize);
+    _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(nebulaSize);
+
+    print('📐 Generated universe - Screen: ${screenSize.width.round()}x${screenSize.height.round()}');
+    print('   Background: ${backgroundSize.width.round()}x${backgroundSize.height.round()} (${_staticStars.length} stars)');
+    print('   Nebula: ${nebulaSize.width.round()}x${nebulaSize.height.round()} (${_organicNebulaRegions.length} regions)');
+    print('   Van Gogh: ${vanGoghSize.width.round()}x${vanGoghSize.height.round()} (${_vanGoghStars.length} stars)');
+
     try {
       _initializePrecomputedElements();
       print('✅ Precomputed elements initialized');
-      _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(Size(800, 600));
     } catch (e) {
       print('❌ Error in initialization: $e');
     }
@@ -262,9 +275,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     _backgroundGradients = BackgroundService.generateBackgroundGradients();
     print('🎨 Generated ${_backgroundGradients.length} background gradients');
-
-    _vanGoghStars = VanGoghStarService.generateVanGoghStars(Size(800, 600));
-    print('🌌 Generated ${_vanGoghStars.length} Van Gogh stars');
   }
 
   Future<void> _loadGratitudes() async {
@@ -1530,22 +1540,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     print('🏗️ Building GratitudeScreen, _isLoading: $_isLoading, stars: ${_staticStars.length}');
 
     final currentSize = MediaQuery.of(context).size;
-    if (_organicNebulaRegions.isEmpty || _lastNebulaSize != currentSize) {
-      _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(currentSize);
-      _lastNebulaSize = currentSize;
-    }
-
-    if (_vanGoghStars.isEmpty || _lastVanGoghSize != currentSize) {
-      _vanGoghStars = VanGoghStarService.generateVanGoghStars(currentSize);
-      _lastVanGoghSize = currentSize;
-      print('🌌 Regenerated ${_vanGoghStars.length} Van Gogh stars for new screen size');
-    }
-
-    if (_staticStars.isEmpty || _lastBackgroundSize != currentSize) {
-      _staticStars = BackgroundService.generateStaticStars(currentSize);
-      _lastBackgroundSize = currentSize;
-      print('⭐ Regenerated ${_staticStars.length} background stars for size $currentSize');
-    }
 
     if (_isLoading) {
       return Scaffold(

@@ -3,9 +3,16 @@ import 'dart:math' as math;
 
 // Enhanced configuration for organic nebula shapes
 class OrganicNebulaConfig {
-  static const int nebulaCount = 3; // Fewer but more complex nebulae
-  static const double baseNebulaSize = 250.0;
-  static const double nebulaSizeVariation = 300.0;
+  // Reference configuration
+  static const Size referenceScreenSize = Size(1920, 1080);
+  static const int referenceNebulaCount = 6;
+
+  // Scale nebula count by screen area
+  static const bool useScaledCount = true;
+
+  // Nebula size as percentage of screen (instead of fixed pixels)
+  static const double baseSizePercent = 0.13;  // 13% of screen width
+  static const double sizeVariationPercent = 0.16;  // +/- 16% variation
   static const double nebulaOpacity = 0.05;
 
   // Organic shape parameters
@@ -82,22 +89,32 @@ class OrganicNebulaService {
     final regions = <OrganicNebulaRegion>[];
     final random = math.Random(42);
 
-    for (int i = 0; i < OrganicNebulaConfig.nebulaCount; i++) {
-      // FIXED: Position closer to screen center with tighter clustering
-      final centerX = screenSize.width * 0.5;
-      final centerY = screenSize.height * 0.5;
-      final maxRadius = math.min(screenSize.width, screenSize.height) * 0.3; // Constrain to center area
+    // Calculate nebula count based on screen size
+    final screenArea = screenSize.width * screenSize.height;
+    final referenceArea = OrganicNebulaConfig.referenceScreenSize.width *
+        OrganicNebulaConfig.referenceScreenSize.height;
+    final areaRatio = screenArea / referenceArea;
+
+    final nebulaCount = OrganicNebulaConfig.useScaledCount
+        ? (OrganicNebulaConfig.referenceNebulaCount * areaRatio).round().clamp(3, 6)
+        : OrganicNebulaConfig.referenceNebulaCount;
+
+    for (int i = 0; i < nebulaCount; i++) {
+      final centerX = 0.5;  // Normalized center
+      final centerY = 0.5;I b
+      final maxRadius = 0.3;  // 30% of screen in normalized space
 
       // Use polar coordinates for better center clustering
-      final angle = (i / OrganicNebulaConfig.nebulaCount) * 2 * math.pi + random.nextDouble() * 0.5;
+      final angle = (i / nebulaCount) * 2 * math.pi + random.nextDouble() * 0.5;
       final distance = random.nextDouble() * maxRadius;
 
       final x = centerX + math.cos(angle) * distance;
       final y = centerY + math.sin(angle) * distance;
 
-      // Variable size
-      final size = OrganicNebulaConfig.baseNebulaSize +
-          (random.nextDouble() - 0.5) * OrganicNebulaConfig.nebulaSizeVariation;
+      // Variable size based on screen dimensions
+      final baseSize = screenSize.width * OrganicNebulaConfig.baseSizePercent;
+      final sizeVariation = screenSize.width * OrganicNebulaConfig.sizeVariationPercent;
+      final size = baseSize + (random.nextDouble() - 0.5) * sizeVariation;
 
       // Random palette
       final paletteIndex = i % OrganicNebulaConfig.nebulaPalettes.length;
@@ -148,7 +165,7 @@ class OrganicNebulaService {
     final cloudlets = <NebulaCloudlet>[];
     final cloudletRandom = math.Random(nebulaIndex * 54321);
 
-    for (int i = 0; i < OrganicNebulaConfig.internalClouds; i++) {
+    for (int j = 0; j < OrganicNebulaConfig.internalClouds; j++) {
       // Position within nebula bounds
       final angle = cloudletRandom.nextDouble() * 2 * math.pi;
       final distance = _gaussianRandom(cloudletRandom) * nebulaSize * 0.3;
@@ -168,7 +185,7 @@ class OrganicNebulaService {
 
       cloudlets.add(NebulaCloudlet(
         relativePosition: position,
-        size: size.clamp(50.0, nebulaSize * 0.4),
+        size: math.max(50.0, math.min(size, nebulaSize * 0.4)),
         primaryColor: palette[primaryIndex],
         secondaryColor: palette[secondaryIndex],
         density: 0.6 + cloudletRandom.nextDouble() * 0.4,
@@ -245,7 +262,12 @@ class OrganicNebulaPainter extends CustomPainter {
       math.sin(driftPhase * 0.8) * 15.0,
     );
 
-    final position = region.basePosition + drift;
+    // Convert normalized position to screen pixels
+    final pixelPosition = Offset(
+      region.basePosition.dx * screenSize.width,
+      region.basePosition.dy * screenSize.height,
+    );
+    final position = pixelPosition + drift;
 
     // Calculate rotation
     final rotation = time * OrganicNebulaConfig.driftSpeed * 0.5 + region.rotationOffset;

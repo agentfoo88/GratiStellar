@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'dart:math';  // ADD THIS if not present
+import 'dart:math' as math;  // OR if using 'as math'
 import 'background.dart';
 
 // Simple noise implementation to replace FastNoise
@@ -37,6 +38,10 @@ class VanGoghConfig {
   // Star Generation
   static const int starCount = 200;
   static const double parallaxFactor = 0.15;
+
+  // Density-based generation (instead of fixed count)
+  static const double starDensity = 0.00010;  // 12x less dense than background
+  static const bool useDensityBasedCount = true;  // Toggle for density vs fixed count
 
   // Clustering - spiral galaxy pattern
   static const double clusterRadius = 0.4;
@@ -97,7 +102,13 @@ class VanGoghStarService {
     final centerX = 0.5;
     final centerY = 0.5;
 
-    for (int i = 0; i < VanGoghConfig.starCount && i < backgroundStars.length; i++) {
+    // Calculate star count based on screen size
+    final calculatedStarCount = VanGoghConfig.useDensityBasedCount
+        ? (screenSize.width * screenSize.height * VanGoghConfig.starDensity).round()
+        : VanGoghConfig.starCount;
+    final actualStarCount = math.min(calculatedStarCount, backgroundStars.length);
+
+    for (int i = 0; i < actualStarCount; i++) {
       final backgroundStar = backgroundStars[i];
 
       // Generate spiral galaxy positioning
@@ -105,7 +116,7 @@ class VanGoghStarService {
       final armAngle = (armIndex / VanGoghConfig.spiralArms) * 2 * pi;
 
       // Distance from center with some randomness
-      final normalizedDistance = (i / VanGoghConfig.starCount).clamp(0.0, 1.0);
+      final normalizedDistance = (i / actualStarCount).clamp(0.0, 1.0);
       final baseRadius = normalizedDistance * VanGoghConfig.clusterRadius;
       final radiusVariation = (random.nextDouble() - 0.5) * VanGoghConfig.spiralRandomness;
       final radius = (baseRadius + radiusVariation).clamp(0.0, VanGoghConfig.clusterRadius);

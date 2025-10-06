@@ -11,12 +11,10 @@ class BackgroundConfig {
   // Reference configuration for density calculation
   static const Size referenceScreenSize = Size(1920, 1080);
   static const int referenceStarCount = 2500;
-  static const double expansionFactor = 4.0;
 
-  // Calculate target density (stars per square pixel)
+// Calculate target density (stars per square pixel)
   static double get referenceDensity =>
-      (referenceStarCount * expansionFactor * expansionFactor) /
-          (referenceScreenSize.width * referenceScreenSize.height * expansionFactor * expansionFactor);
+      referenceStarCount / (referenceScreenSize.width * referenceScreenSize.height);
 
   // Star Generation Settings
   static const int starCount = 2500;                    // Total number of background stars
@@ -127,12 +125,11 @@ class BackgroundService {
   static List<BackgroundStar> generateStaticStars([Size? screenSize]) {
     final size = screenSize ?? const Size(1920, 1080);
 
-    // Calculate star count for this screen size with expansion
-    final expandedArea = (size.width * BackgroundConfig.expansionFactor) *
-        (size.height * BackgroundConfig.expansionFactor);
-    final calculatedStarCount = (expandedArea * BackgroundConfig.referenceDensity).round();
+    // Calculate star count for this screen size at consistent density
+    final screenArea = size.width * size.height;
+    final calculatedStarCount = (screenArea * BackgroundConfig.referenceDensity).round();
 
-    // Use calculated count instead of static starCount
+// Use calculated count
     final starCount = calculatedStarCount;
 
     final now = DateTime.now();
@@ -159,13 +156,13 @@ class BackgroundService {
         x = _gaussianRandom(staticRandom, BackgroundConfig.gaussianCenterX, BackgroundConfig.gaussianSpread);
         y = _gaussianRandom(staticRandom, BackgroundConfig.gaussianCenterY, BackgroundConfig.gaussianSpread);
 
-        // Clamp to expanded bounds
-        x = x.clamp(-1.5, 2.5);
-        y = y.clamp(-1.5, 2.5);
+        // Clamp to screen bounds
+        x = x.clamp(0.0, 1.0);
+        y = y.clamp(0.0, 1.0);
       } else {
-        // Uniform distribution with 400% coverage for zoom-out safety
-        x = staticRandom.nextDouble() * 4.0 - 1.5;
-        y = staticRandom.nextDouble() * 4.0 - 1.5;
+        // Uniform distribution across screen (0.0 to 1.0)
+        x = staticRandom.nextDouble();
+        y = staticRandom.nextDouble();
       }
 
       final starSize = BackgroundConfig.starSizeMin +

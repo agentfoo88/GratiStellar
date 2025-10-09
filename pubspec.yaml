@@ -32,12 +32,16 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: ^0.20.2
+  intl: any
   shared_preferences: ^2.2.2
   share_plus: ^12.0.0  # NEW - for sharing gratitudes
-  flutter_svg: ^2.0.10  # NEW - for SVG icon support
-
+  flutter_svg: ^2.0.10
+  firebase_core: ^4.1.1
+  firebase_auth: ^6.1.0
+  cloud_firestore: ^6.0.2
+  google_sign_in: ^7.2.0
   vector_math: any
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -133,4 +133,167 @@ class AppLocalizationsEn extends AppLocalizations {
   String daysAgoLabel(int count) {
     return '$count days ago';
   }
+
+  @override
+  String get semanticOpenMenu => 'Open menu';
+
+  @override
+  String get semanticOpenMenuHint => 'Opens navigation drawer';
+
+  @override
+  String get semanticAddStar => 'Add new gratitude star';
+
+  @override
+  String get semanticAddStarHint => 'Opens dialog to create a new gratitude';
+
+  @override
+  String get semanticShowAll => 'Show all gratitudes';
+
+  @override
+  String get semanticMindfulness => 'Mindfulness mode';
+
+  @override
+  String get semanticToggleActive => 'Currently active, tap to disable';
+
+  @override
+  String get semanticToggleInactive => 'Tap to enable';
+
+  @override
+  String semanticStatLabel(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String semanticStatIndicator(String label) {
+    return '$label indicator';
+  }
+
+  @override
+  String semanticGratitude(String text) {
+    return 'Gratitude: $text';
+  }
+
+  @override
+  String get semanticEmptyState =>
+      'No gratitude stars yet. Tap the add button to create your first star.';
+
+  @override
+  String get semanticZoomIn => 'Zoom in';
+
+  @override
+  String get semanticZoomInHint => 'Increase zoom level';
+
+  @override
+  String get semanticZoomOut => 'Zoom out';
+
+  @override
+  String get semanticZoomOutHint => 'Decrease zoom level';
+
+  @override
+  String get semanticZoomReset => 'Reset zoom to 100 percent';
+
+  @override
+  String get semanticFitAll => 'Fit all stars in view';
+
+  @override
+  String get signInTitle => 'Sign In';
+
+  @override
+  String get signUpTitle => 'Create Account';
+
+  @override
+  String get signInSubtitle => 'Sign in to sync your data across devices';
+
+  @override
+  String get signUpSubtitle => 'Link your email to backup your gratitude stars';
+
+  @override
+  String get emailLabel => 'Email';
+
+  @override
+  String get emailHint => 'your@email.com';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get passwordHint => 'At least 6 characters';
+
+  @override
+  String get signInButton => 'Sign In';
+
+  @override
+  String get signUpButton => 'Create Account';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account?';
+
+  @override
+  String get needToLinkAccount => 'No account with this email?';
+
+  @override
+  String get signInToggle => 'Sign In';
+
+  @override
+  String get signUpToggle => 'Create Account';
+
+  @override
+  String get accountCreatedSuccess =>
+      'Account created! Your data is now backed up.';
+
+  @override
+  String get signInSuccess => 'Signed in successfully!';
+
+  @override
+  String get errorEmailPassword => 'Please enter both email and password';
+
+  @override
+  String get errorValidEmail => 'Please enter a valid email address';
+
+  @override
+  String get errorPasswordLength => 'Password must be at least 6 characters';
+
+  @override
+  String get errorEmailInUse =>
+      'This email is already registered. Try signing in instead.';
+
+  @override
+  String get errorInvalidEmail => 'Invalid email address format.';
+
+  @override
+  String get errorWeakPassword =>
+      'Password is too weak. Use at least 6 characters.';
+
+  @override
+  String get errorUserNotFound =>
+      'No account found with this email.\n\nTap \"Create Account\" below to link your data.';
+
+  @override
+  String get errorWrongPassword => 'Incorrect password. Please try again.';
+
+  @override
+  String get errorInvalidCredential =>
+      'No account found with this email.\n\nTap \"Create Account\" below to link your data.';
+
+  @override
+  String get errorCredentialInUse =>
+      'This email is already linked to another account.';
+
+  @override
+  String get errorTooManyRequests =>
+      'Too many failed attempts. Please try again later.';
+
+  @override
+  String get errorNetworkFailed =>
+      'Network error. Check your internet connection.';
+
+  @override
+  String get errorNoUserSignedIn => 'Session expired. Please restart the app.';
+
+  @override
+  String get errorAlreadyLinked =>
+      'Your account is already linked to an email address.';
+
+  @override
+  String get errorGeneric => 'An error occurred. Please try again.';
 }

@@ -324,7 +324,7 @@ class CameraControlsOverlay extends StatelessWidget {
     return Positioned(
       bottom: bottomMargin,
       right: adjustedRightMargin,
-      child: RepaintBoundary(
+      // child: RepaintBoundary(
         child: AnimatedBuilder(
           animation: cameraController,
           builder: (context, child) {
@@ -501,7 +501,7 @@ class CameraControlsOverlay extends StatelessWidget {
               ),
             );
           },
-        ),
+      //  ),
       ),
     );
   }

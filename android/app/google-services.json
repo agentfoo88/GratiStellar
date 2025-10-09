@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "416336168755",
+    "project_id": "gratistellar",
+    "storage_bucket": "gratistellar.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416336168755:android:12621fccc7dfe466c9a046",
+        "android_client_info": {
+          "package_name": "grati.stellar.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAw_oG1UJ1hj8ySoVg5PLTjHoeqgghbff4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

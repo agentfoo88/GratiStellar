@@ -1,4 +1,4 @@
-package com.example.gratistellar
+package grati.stellar.app
 
 import io.flutter.embedding.android.FlutterActivity
 

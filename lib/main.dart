@@ -16,6 +16,12 @@ import 'dart:async';
 import 'package:share_plus/share_plus.dart';
 import 'modal_dialogs.dart';
 import 'list_view_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'services/auth_service.dart';
+import 'screens/welcome_screen.dart';
+import 'screens/sign_in_screen.dart';
+import 'widgets/app_dialog.dart';
 
 // ========================================
 // UI SCALE CONFIGURATION
@@ -115,9 +121,14 @@ class FloatingGratitudeLabel extends StatelessWidget {
 void main() async {
   print('🚀 App starting...');
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
   print('📦 Loading textures...');
   await BackgroundService.loadTextures();
   print('✅ Textures loaded, starting app');
+
   runApp(GratiStellarApp());
 }
 
@@ -150,7 +161,44 @@ class GratiStellarApp extends StatelessWidget {
           ),
         ),
       ),
-      home: GratitudeScreen(),
+      // Auth-aware routing
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          // Show loading while checking auth state
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              body: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF4A6FA5),
+                      Color(0xFF166088),
+                      Color(0xFF0B1426),
+                      Color(0xFF2C3E50),
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFFFFE135),
+                  ),
+                ),
+              ),
+            );
+          }
+
+          // If user is signed in, show main app
+          if (snapshot.hasData) {
+            return GratitudeScreen();
+          }
+
+          // Otherwise, show welcome screen
+          return WelcomeScreen();
+        },
+      ),
     );
   }
 }
@@ -172,6 +220,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   final TextEditingController _redController = TextEditingController();
   final TextEditingController _greenController = TextEditingController();
   final TextEditingController _blueController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   List<GratitudeStar> gratitudeStars = [];
   List<OrganicNebulaRegion> _organicNebulaRegions = [];
@@ -1353,19 +1402,77 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           ),
           ListTile(
             leading: Icon(
-              Icons.login,
+              _authService.hasEmailAccount ? Icons.account_circle : Icons.login,
               color: Color(0xFFFFE135),
               size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
             ),
             title: Text(
-              AppLocalizations.of(context)!.loginMenuItem,
+              _authService.hasEmailAccount ? 'Account' : 'Sign In with Email',
               style: FontScaling.getBodyMedium(context).copyWith(
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * universalUIScale,
               ),
             ),
+            subtitle: _authService.hasEmailAccount
+                ? Text(
+              _authService.currentUser?.email ?? '',
+              style: FontScaling.getCaption(context),
+            )
+                : null,
             onTap: () {
-              Navigator.pop(context);
-              GratitudeDialogs.showComingSoon(context, 'Login');
+              Navigator.pop(context); // Close drawer
+              if (_authService.hasEmailAccount) {
+                // Show account info dialog with new styling
+                AppDialog.show(
+                  context: context,
+                  title: 'Account',
+                  icon: Icons.account_circle,
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 12)),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.email,
+                              color: Color(0xFFFFE135),
+                              size: FontScaling.getResponsiveIconSize(context, 20),
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _authService.currentUser?.email ?? '',
+                                style: FontScaling.getBodyMedium(context).copyWith(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    AppDialogAction(
+                      text: 'Close',
+                      isPrimary: true,
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                );
+              } else {
+                // Navigate to sign-in screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SignInScreen(),
+                  ),
+                );
+              }
             },
           ),
           Divider(
@@ -1638,8 +1745,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         child: Stack(
           children: [
             // Layer 1: Static background
-            RepaintBoundary(
-              child: Positioned.fill(
+            // RepaintBoundary(
+              // child:
+              Positioned.fill(
                 child: AnimatedBuilder(
                   animation: _cameraController,
                   builder: (context, child) {
@@ -1652,12 +1760,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     );
                   },
                 ),
-              ),
+              //),
             ),
 
             // Layer 2: Nebula
-            RepaintBoundary(
-              child: Positioned.fill(
+            // RepaintBoundary(
+              // child:
+              Positioned.fill(
                 child: AnimatedBuilder(
                   animation: Listenable.merge([_backgroundController, _cameraController]),
                   builder: (context, child) {
@@ -1669,13 +1778,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       ),
                     );
                   },
-                ),
+               // ),
               ),
             ),
 
             // Layer 2.5: Van Gogh stars
-            RepaintBoundary(
-              child: Positioned.fill(
+            // RepaintBoundary(
+              // child:
+              Positioned.fill(
                 child: AnimatedBuilder(
                   animation: _cameraController,
                   builder: (context, child) {
@@ -1688,7 +1798,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     );
                   },
                 ),
-              ),
+              // ),
             ),
 
             // Layer 3: Interactive starfield

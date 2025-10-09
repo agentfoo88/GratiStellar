@@ -94,13 +94,13 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
-  /// No description provided for @appTitle.
+  /// The app title
   ///
   /// In en, this message translates to:
   /// **'GratiStellar'**
   String get appTitle;
 
-  /// No description provided for @appSubtitle.
+  /// The app subtitle
   ///
   /// In en, this message translates to:
   /// **'Your personal universe of gratitude'**
@@ -339,6 +339,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} days ago'**
   String daysAgoLabel(int count);
+
+  /// No description provided for @semanticOpenMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Open menu'**
+  String get semanticOpenMenu;
+
+  /// No description provided for @semanticOpenMenuHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens navigation drawer'**
+  String get semanticOpenMenuHint;
+
+  /// No description provided for @semanticAddStar.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new gratitude star'**
+  String get semanticAddStar;
+
+  /// No description provided for @semanticAddStarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens dialog to create a new gratitude'**
+  String get semanticAddStarHint;
+
+  /// No description provided for @semanticShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all gratitudes'**
+  String get semanticShowAll;
+
+  /// No description provided for @semanticMindfulness.
+  ///
+  /// In en, this message translates to:
+  /// **'Mindfulness mode'**
+  String get semanticMindfulness;
+
+  /// No description provided for @semanticToggleActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently active, tap to disable'**
+  String get semanticToggleActive;
+
+  /// No description provided for @semanticToggleInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to enable'**
+  String get semanticToggleInactive;
+
+  /// No description provided for @semanticStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {value}'**
+  String semanticStatLabel(String label, String value);
+
+  /// No description provided for @semanticStatIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} indicator'**
+  String semanticStatIndicator(String label);
+
+  /// No description provided for @semanticGratitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Gratitude: {text}'**
+  String semanticGratitude(String text);
+
+  /// No description provided for @semanticEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'No gratitude stars yet. Tap the add button to create your first star.'**
+  String get semanticEmptyState;
+
+  /// No description provided for @semanticZoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get semanticZoomIn;
+
+  /// No description provided for @semanticZoomInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase zoom level'**
+  String get semanticZoomInHint;
+
+  /// No description provided for @semanticZoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get semanticZoomOut;
+
+  /// No description provided for @semanticZoomOutHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease zoom level'**
+  String get semanticZoomOutHint;
+
+  /// No description provided for @semanticZoomReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset zoom to 100 percent'**
+  String get semanticZoomReset;
+
+  /// No description provided for @semanticFitAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit all stars in view'**
+  String get semanticFitAll;
+
+  /// Title for sign in screen
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get signInTitle;
+
+  /// Title for sign up screen
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get signUpTitle;
+
+  /// Subtitle for sign in screen
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to sync your data across devices'**
+  String get signInSubtitle;
+
+  /// Subtitle for sign up screen
+  ///
+  /// In en, this message translates to:
+  /// **'Link your email to backup your gratitude stars'**
+  String get signUpSubtitle;
+
+  /// Label for email input field
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailLabel;
+
+  /// Hint text for email input
+  ///
+  /// In en, this message translates to:
+  /// **'your@email.com'**
+  String get emailHint;
+
+  /// Label for password input field
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordLabel;
+
+  /// Hint text for password input
+  ///
+  /// In en, this message translates to:
+  /// **'At least 6 characters'**
+  String get passwordHint;
+
+  /// Button text for sign in
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get signInButton;
+
+  /// Button text for sign up
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get signUpButton;
+
+  /// Text asking if user has account
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get alreadyHaveAccount;
+
+  /// Text asking if user needs to create account
+  ///
+  /// In en, this message translates to:
+  /// **'No account with this email?'**
+  String get needToLinkAccount;
+
+  /// Toggle button text to switch to sign in
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get signInToggle;
+
+  /// Toggle button text to switch to sign up
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get signUpToggle;
+
+  /// Success message after creating account
+  ///
+  /// In en, this message translates to:
+  /// **'Account created! Your data is now backed up.'**
+  String get accountCreatedSuccess;
+
+  /// Success message after signing in
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in successfully!'**
+  String get signInSuccess;
+
+  /// Error when email or password is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter both email and password'**
+  String get errorEmailPassword;
+
+  /// Error when email format is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get errorValidEmail;
+
+  /// Error when password is too short
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get errorPasswordLength;
+
+  /// Error when email is already in use
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered. Try signing in instead.'**
+  String get errorEmailInUse;
+
+  /// Error for invalid email format
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email address format.'**
+  String get errorInvalidEmail;
+
+  /// Error for weak password
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak. Use at least 6 characters.'**
+  String get errorWeakPassword;
+
+  /// Error when user account not found
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this email.\n\nTap \"Create Account\" below to link your data.'**
+  String get errorUserNotFound;
+
+  /// Error for wrong password
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password. Please try again.'**
+  String get errorWrongPassword;
+
+  /// Error for invalid credentials
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this email.\n\nTap \"Create Account\" below to link your data.'**
+  String get errorInvalidCredential;
+
+  /// Error when credential already in use
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already linked to another account.'**
+  String get errorCredentialInUse;
+
+  /// Error for too many requests
+  ///
+  /// In en, this message translates to:
+  /// **'Too many failed attempts. Please try again later.'**
+  String get errorTooManyRequests;
+
+  /// Error for network failure
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Check your internet connection.'**
+  String get errorNetworkFailed;
+
+  /// Error when no user is signed in
+  ///
+  /// In en, this message translates to:
+  /// **'Session expired. Please restart the app.'**
+  String get errorNoUserSignedIn;
+
+  /// Error when account already linked
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is already linked to an email address.'**
+  String get errorAlreadyLinked;
+
+  /// Generic error message
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred. Please try again.'**
+  String get errorGeneric;
 }
 
 class _AppLocalizationsDelegate

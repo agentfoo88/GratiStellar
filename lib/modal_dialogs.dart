@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'storage.dart';
-import 'gratitude_stars.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
+import 'widgets/app_dialog.dart';
 
 /// Centralized dialogs for GratiStellar app
 /// All modal dialogs are static methods that accept callbacks for actions
@@ -15,158 +15,28 @@ class GratitudeDialogs {
   // ========================================
 
   static void showComingSoon(BuildContext context, String feature) {
-    showDialog(
+    AppDialog.showInfo(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
-            decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Color(0xFFFFE135),
-                  size: FontScaling.getResponsiveIconSize(context, 48),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                Text(
-                  feature,
-                  style: FontScaling.getModalTitle(context),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                Text(
-                  AppLocalizations.of(context)!.comingSoonTitle,
-                  style: FontScaling.getBodyMedium(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    AppLocalizations.of(context)!.closeButton,
-                    style: FontScaling.getButtonText(context).copyWith(
-                      color: Color(0xFFFFE135),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      title: feature,
+      message: AppLocalizations.of(context)!.comingSoonTitle,
+      icon: Icons.info_outline,
     );
   }
 
   static void showQuitConfirmation(BuildContext context) {
-    showDialog(
+    AppDialog.showConfirmation(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
-            decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.logout,
-                  color: Color(0xFFFFE135),
-                  size: FontScaling.getResponsiveIconSize(context, 48),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                Text(
-                  AppLocalizations.of(context)!.exitTitle,
-                  style: FontScaling.getModalTitle(context),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                Text(
-                  AppLocalizations.of(context)!.exitMessage,
-                  style: FontScaling.getBodyMedium(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(
-                        AppLocalizations.of(context)!.cancelButton,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        SystemNavigator.pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFE135),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: FontScaling.getResponsiveSpacing(context, 24),
-                          vertical: FontScaling.getResponsiveSpacing(context, 12),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context)!.exitButton,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Color(0xFF1A2238),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+      title: AppLocalizations.of(context)!.exitTitle,
+      message: AppLocalizations.of(context)!.exitMessage,
+      icon: Icons.logout,
+      confirmText: AppLocalizations.of(context)!.exitButton,
+      cancelText: AppLocalizations.of(context)!.cancelButton,
+      isDestructive: true,
+    ).then((confirmed) {
+      if (confirmed == true) {
+        SystemNavigator.pop();
+      }
+    });
   }
 
   static void showMindfulnessNoStars(BuildContext context) {

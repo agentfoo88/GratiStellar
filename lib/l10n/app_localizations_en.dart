@@ -296,4 +296,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorGeneric => 'An error occurred. Please try again.';
+
+  @override
+  String get signOutButton => 'Sign Out';
+
+  @override
+  String get signOutTitle => 'Sign Out';
+
+  @override
+  String get signOutMessage =>
+      'Are you sure you want to sign out?\n\nYour data will remain synced to your account.';
+
+  @override
+  String get accountMenuItem => 'Account';
+
+  @override
+  String get signInWithEmailMenuItem => 'Sign In with Email';
+
+  @override
+  String get defaultUserName => 'User';
+
+  @override
+  String get accountTitle => 'Account';
+
+  @override
+  String get displayNameLabel => 'Display Name';
+
+  @override
+  String get changeDisplayName => 'Change Display Name';
+
+  @override
+  String get updateButton => 'Update';
+
+  @override
+  String get displayNameUpdated => 'Display name updated successfully!';
+
+  @override
+  String get sortNewestFirst => 'Newest First';
+
+  @override
+  String get sortOldestFirst => 'Oldest First';
+
+  @override
+  String get sortAlphabeticalAZ => 'A → Z';
+
+  @override
+  String get sortAlphabeticalZA => 'Z → A';
+
+  @override
+  String get sortByColor => 'By Color';
 }

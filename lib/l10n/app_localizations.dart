@@ -633,6 +633,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An error occurred. Please try again.'**
   String get errorGeneric;
+
+  /// Button to sign out
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOutButton;
+
+  /// Title for sign out confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOutTitle;
+
+  /// Message for sign out confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to sign out?\n\nYour data will remain synced to your account.'**
+  String get signOutMessage;
+
+  /// Menu item for account settings
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountMenuItem;
+
+  /// Menu item to sign in with email
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In with Email'**
+  String get signInWithEmailMenuItem;
+
+  /// Default display name when user has no name set
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get defaultUserName;
+
+  /// Title for account section
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountTitle;
+
+  /// Label for display name field
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
+  String get displayNameLabel;
+
+  /// Button to change display name
+  ///
+  /// In en, this message translates to:
+  /// **'Change Display Name'**
+  String get changeDisplayName;
+
+  /// Button to update information
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateButton;
+
+  /// Success message after updating display name
+  ///
+  /// In en, this message translates to:
+  /// **'Display name updated successfully!'**
+  String get displayNameUpdated;
+
+  /// Sort option to display gratitude stars from newest to oldest
+  ///
+  /// In en, this message translates to:
+  /// **'Newest First'**
+  String get sortNewestFirst;
+
+  /// Sort option to display gratitude stars from oldest to newest
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest First'**
+  String get sortOldestFirst;
+
+  /// Sort option to display gratitude stars alphabetically from A to Z
+  ///
+  /// In en, this message translates to:
+  /// **'A → Z'**
+  String get sortAlphabeticalAZ;
+
+  /// Sort option to display gratitude stars alphabetically from Z to A
+  ///
+  /// In en, this message translates to:
+  /// **'Z → A'**
+  String get sortAlphabeticalZA;
+
+  /// Sort option to display gratitude stars grouped by color
+  ///
+  /// In en, this message translates to:
+  /// **'By Color'**
+  String get sortByColor;
 }
 
 class _AppLocalizationsDelegate

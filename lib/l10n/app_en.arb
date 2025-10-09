@@ -218,5 +218,69 @@
   "errorGeneric": "An error occurred. Please try again.",
   "@errorGeneric": {
     "description": "Generic error message"
+  },
+  "signOutButton": "Sign Out",
+  "@signOutButton": {
+    "description": "Button to sign out"
+  },
+  "signOutTitle": "Sign Out",
+  "@signOutTitle": {
+    "description": "Title for sign out confirmation"
+  },
+  "signOutMessage": "Are you sure you want to sign out?\n\nYour data will remain synced to your account.",
+  "@signOutMessage": {
+    "description": "Message for sign out confirmation"
+  },
+  "accountMenuItem": "Account",
+  "@accountMenuItem": {
+    "description": "Menu item for account settings"
+  },
+  "signInWithEmailMenuItem": "Sign In with Email",
+  "@signInWithEmailMenuItem": {
+    "description": "Menu item to sign in with email"
+  },
+  "defaultUserName": "User",
+  "@defaultUserName": {
+    "description": "Default display name when user has no name set"
+  },
+  "accountTitle": "Account",
+  "@accountTitle": {
+    "description": "Title for account section"
+  },
+  "displayNameLabel": "Display Name",
+  "@displayNameLabel": {
+    "description": "Label for display name field"
+  },
+  "changeDisplayName": "Change Display Name",
+  "@changeDisplayName": {
+    "description": "Button to change display name"
+  },
+  "updateButton": "Update",
+  "@updateButton": {
+    "description": "Button to update information"
+  },
+  "displayNameUpdated": "Display name updated successfully!",
+  "@displayNameUpdated": {
+    "description": "Success message after updating display name"
+  },
+  "sortNewestFirst": "Newest First",
+  "@sortNewestFirst": {
+    "description": "Sort option to display gratitude stars from newest to oldest"
+  },
+  "sortOldestFirst": "Oldest First",
+  "@sortOldestFirst": {
+    "description": "Sort option to display gratitude stars from oldest to newest"
+  },
+  "sortAlphabeticalAZ": "A → Z",
+  "@sortAlphabeticalAZ": {
+    "description": "Sort option to display gratitude stars alphabetically from A to Z"
+  },
+  "sortAlphabeticalZA": "Z → A",
+  "@sortAlphabeticalZA": {
+    "description": "Sort option to display gratitude stars alphabetically from Z to A"
+  },
+  "sortByColor": "By Color",
+  "@sortByColor": {
+    "description": "Sort option to display gratitude stars grouped by color"
   }
 }

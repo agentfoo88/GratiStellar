@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'storage.dart';
+import 'gratitude_stars.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class ListViewScreen extends StatefulWidget {  // CHANGED: StatefulWidget
+class ListViewScreen extends StatefulWidget {
   final List<GratitudeStar> stars;
-  final Function(GratitudeStar, VoidCallback) onStarTap;  // CHANGED: Added VoidCallback param
+  final Function(GratitudeStar, VoidCallback) onStarTap;
   final Function(GratitudeStar) onJumpToStar;
 
   const ListViewScreen({
@@ -18,12 +19,12 @@ class ListViewScreen extends StatefulWidget {  // CHANGED: StatefulWidget
   });
 
   @override
-  State<ListViewScreen> createState() => _ListViewScreenState();  // NEW
+  State<ListViewScreen> createState() => _ListViewScreenState();
 }
 
 class _ListViewScreenState extends State<ListViewScreen> {
-  // NEW class
   late List<GratitudeStar> _currentStars;
+  String _sortMethod = 'newest';
 
   @override
   void initState() {
@@ -42,10 +43,38 @@ class _ListViewScreenState extends State<ListViewScreen> {
   }
 
   void _refreshList() {
-    // NEW method
     setState(() {
       _currentStars = List<GratitudeStar>.from(widget.stars);
     });
+  }
+
+  List<GratitudeStar> _getSortedStars() {
+    final stars = List<GratitudeStar>.from(_currentStars);
+
+    switch (_sortMethod) {
+      case 'newest':
+        stars.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        break;
+      case 'oldest':
+        stars.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        break;
+      case 'alpha_az':
+        stars.sort((a, b) => a.text.toLowerCase().compareTo(b.text.toLowerCase()));
+        break;
+      case 'alpha_za':
+        stars.sort((a, b) => b.text.toLowerCase().compareTo(a.text.toLowerCase()));
+        break;
+      case 'color':
+        stars.sort((a, b) {
+          // Sort by color index, then by creation date within same color
+          final colorCompare = a.colorIndex.compareTo(b.colorIndex);
+          if (colorCompare != 0) return colorCompare;
+          return b.createdAt.compareTo(a.createdAt);
+        });
+        break;
+    }
+
+    return stars;
   }
 
   String _formatDate(BuildContext context, DateTime date) {
@@ -70,9 +99,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sortedStars = List<GratitudeStar>.from(
-        _currentStars) // CHANGED: Use _currentStars
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final sortedStars = _getSortedStars();
 
     return Scaffold(
       backgroundColor: Color(0xFF1A2238),
@@ -93,6 +120,128 @@ class _ListViewScreenState extends State<ListViewScreen> {
             color: Color(0xFFFFE135),
           ),
         ),
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: PopupMenuButton<String>(
+              icon: Icon(
+                Icons.sort,
+                color: Color(0xFFFFE135),
+                size: FontScaling.getResponsiveIconSize(context, 24),
+              ),
+              color: Color(0xFF1A2238).withValues(alpha: 0.98),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              onSelected: (value) {
+                setState(() {
+                  _sortMethod = value;
+                });
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'newest',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.arrow_downward,
+                        color: _sortMethod == 'newest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        AppLocalizations.of(context)!.sortNewestFirst,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: _sortMethod == 'newest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'oldest',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.arrow_upward,
+                        color: _sortMethod == 'oldest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        AppLocalizations.of(context)!.sortOldestFirst,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: _sortMethod == 'oldest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'alpha_az',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.sort_by_alpha,
+                        color: _sortMethod == 'alpha_az' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        AppLocalizations.of(context)!.sortAlphabeticalAZ,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: _sortMethod == 'alpha_az' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'alpha_za',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.sort_by_alpha,
+                        color: _sortMethod == 'alpha_za' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        AppLocalizations.of(context)!.sortAlphabeticalZA,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: _sortMethod == 'alpha_za' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'color',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.palette,
+                        color: _sortMethod == 'color' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        AppLocalizations.of(context)!.sortByColor,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: _sortMethod == 'color' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Container(

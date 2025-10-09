@@ -39,11 +39,15 @@ const int mindfulnessTransitionMs = 2000;  // Duration for camera movement and l
 class FloatingGratitudeLabel extends StatelessWidget {
   final GratitudeStar star;
   final Size screenSize;
+  final double cameraScale;  // ADD THIS
+  final Offset cameraPosition;  // ADD THIS
 
   const FloatingGratitudeLabel({
     super.key,
     required this.star,
     required this.screenSize,
+    required this.cameraScale,  // ADD THIS
+    required this.cameraPosition,  // ADD THIS
   });
 
   @override
@@ -54,24 +58,28 @@ class FloatingGratitudeLabel extends StatelessWidget {
 
     final maxLabelWidth = screenSize.width * 0.4;
     const verticalOffset = 70.0;
-    const edgePadding = 8.0; // Minimum distance from screen edges
+
+    // Enhanced edge padding that accounts for zoom level
+    // More padding needed when zoomed out
+    final dynamicEdgePadding = 8.0 + (40.0 / cameraScale.clamp(0.5, 2.0));
 
     // Calculate desired centered position
     double horizontalTranslation = -0.5;
 
+    // Convert star world position to screen position
+    final starScreenX = (starX * cameraScale) + cameraPosition.dx;
+
     // Check if label would overflow left edge
-    final labelLeftEdge = starX - (maxLabelWidth / 2);
-    if (labelLeftEdge < edgePadding) {
-      // Shift right to prevent left overflow
-      final shiftRight = edgePadding - labelLeftEdge;
+    final labelLeftEdge = starScreenX - (maxLabelWidth / 2);
+    if (labelLeftEdge < dynamicEdgePadding) {
+      final shiftRight = dynamicEdgePadding - labelLeftEdge;
       horizontalTranslation = -0.5 + (shiftRight / maxLabelWidth);
     }
 
     // Check if label would overflow right edge
-    final labelRightEdge = starX + (maxLabelWidth / 2);
-    if (labelRightEdge > screenSize.width - edgePadding) {
-      // Shift left to prevent right overflow
-      final overhang = labelRightEdge - (screenSize.width - edgePadding);
+    final labelRightEdge = starScreenX + (maxLabelWidth / 2);
+    if (labelRightEdge > screenSize.width - dynamicEdgePadding) {
+      final overhang = labelRightEdge - (screenSize.width - dynamicEdgePadding);
       horizontalTranslation = -0.5 - (overhang / maxLabelWidth);
     }
 
@@ -400,6 +408,21 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _addGratitude() async {
+    // Cancel mindfulness mode if active
+    if (_mindfulnessMode) {
+      _stopMindfulnessMode();
+      setState(() {
+        _mindfulnessMode = false;
+      });
+    }
+
+    // Cancel show all mode if active
+    if (_showAllGratitudes) {
+      setState(() {
+        _showAllGratitudes = false;
+      });
+    }
+
     // Trim whitespace, newlines, and collapse multiple spaces
     final trimmedText = _gratitudeController.text
         .trim()                           // Remove leading/trailing whitespace
@@ -1363,12 +1386,21 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   Widget _buildDrawer() {
+    final l10n = AppLocalizations.of(context)!;
+
     return Drawer(
       backgroundColor: Color(0xFF1A2238).withValues(alpha: 0.98),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeader(
+          // Header with Icon and Title side-by-side
+          Container(
+            padding: EdgeInsets.fromLTRB(
+              FontScaling.getResponsiveSpacing(context, 16),
+              MediaQuery.of(context).padding.top + FontScaling.getResponsiveSpacing(context, 16),
+              FontScaling.getResponsiveSpacing(context, 16),
+              FontScaling.getResponsiveSpacing(context, 16),
+            ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -1379,9 +1411,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
+            child: Row(
               children: [
                 SvgPicture.asset(
                   'assets/icon_star.svg',
@@ -1389,17 +1419,21 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   height: FontScaling.getResponsiveIconSize(context, 48) * universalUIScale,
                   colorFilter: ColorFilter.mode(Color(0xFFFFE135), BlendMode.srcIn),
                 ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale),
-                Text(
-                  AppLocalizations.of(context)!.appTitle,
-                  style: FontScaling.getHeadingMedium(context).copyWith(
-                    fontSize: FontScaling.getHeadingMedium(context).fontSize! * universalUIScale,
-                    color: Color(0xFFFFE135),
+                SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
+                Expanded(
+                  child: Text(
+                    l10n.appTitle,
+                    style: FontScaling.getHeadingMedium(context).copyWith(
+                      fontSize: FontScaling.getHeadingMedium(context).fontSize! * universalUIScale,
+                      color: Color(0xFFFFE135),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+
+          // Account section
           ListTile(
             leading: Icon(
               _authService.hasEmailAccount ? Icons.account_circle : Icons.login,
@@ -1407,65 +1441,24 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
             ),
             title: Text(
-              _authService.hasEmailAccount ? 'Account' : 'Sign In with Email',
+              _authService.hasEmailAccount
+                  ? l10n.accountMenuItem
+                  : l10n.signInWithEmailMenuItem,
               style: FontScaling.getBodyMedium(context).copyWith(
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * universalUIScale,
               ),
             ),
             subtitle: _authService.hasEmailAccount
                 ? Text(
-              _authService.currentUser?.email ?? '',
+              _authService.currentUser?.displayName ?? l10n.defaultUserName,
               style: FontScaling.getCaption(context),
             )
                 : null,
             onTap: () {
-              Navigator.pop(context); // Close drawer
+              Navigator.pop(context);
               if (_authService.hasEmailAccount) {
-                // Show account info dialog with new styling
-                AppDialog.show(
-                  context: context,
-                  title: 'Account',
-                  icon: Icons.account_circle,
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 12)),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.email,
-                              color: Color(0xFFFFE135),
-                              size: FontScaling.getResponsiveIconSize(context, 20),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _authService.currentUser?.email ?? '',
-                                style: FontScaling.getBodyMedium(context).copyWith(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    AppDialogAction(
-                      text: 'Close',
-                      isPrimary: true,
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                );
+                _showAccountDialog();
               } else {
-                // Navigate to sign-in screen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -1475,10 +1468,15 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               }
             },
           ),
+
+          // Heavy divider
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
-            height: 1,
+            color: Color(0xFFFFE135).withValues(alpha: 0.5),
+            thickness: 2,
+            height: 2,
           ),
+
+          // List View
           ListTile(
             leading: Icon(
               Icons.list,
@@ -1486,28 +1484,31 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
             ),
             title: Text(
-              AppLocalizations.of(context)!.listViewMenuItem,
+              l10n.listViewMenuItem,
               style: FontScaling.getBodyMedium(context).copyWith(
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * universalUIScale,
               ),
             ),
             onTap: () {
-              Navigator.pop(context); // Close drawer
+              Navigator.pop(context);
               _navigateToListView();
             },
           ),
+
           Divider(
             color: Color(0xFFFFE135).withValues(alpha: 0.2),
             height: 1,
           ),
+
+          // Exit
           ListTile(
             leading: Icon(
-              Icons.logout,
+              Icons.close,
               color: Color(0xFFFFE135),
               size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
             ),
             title: Text(
-              AppLocalizations.of(context)!.exitButton,
+              l10n.exitButton,
               style: FontScaling.getBodyMedium(context).copyWith(
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * universalUIScale,
               ),
@@ -1562,34 +1563,102 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
+  // Bottom row UI buttons
   Widget _buildBottomButtonRow() {
-    return Row(
+    // Calculate button row dimensions
+    final buttonSize = FontScaling.getResponsiveSpacing(context, 56) * universalUIScale;
+    final spacing = FontScaling.getResponsiveSpacing(context, 16) * universalUIScale;
+    final addStarSize = FontScaling.getResponsiveSpacing(context, 70) * universalUIScale;
+
+    // Total row width
+    final rowWidth = buttonSize + spacing + addStarSize + spacing + buttonSize;
+
+    // Offset from center to mindfulness button center
+    // Need to go right by: half of add star + spacing + half of button
+    final connectorOffset = (addStarSize / 2) + spacing + (buttonSize / 2);
+
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildActionButton(
-          icon: Icons.visibility,
-          isActive: _showAllGratitudes,
-          onTap: _toggleShowAll,
+        // Horizontal slider appears above buttons when mindfulness is active
+        AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          height: _mindfulnessMode ? null : 0,
+          child: AnimatedOpacity(
+            duration: Duration(milliseconds: 300),
+            opacity: _mindfulnessMode ? 1.0 : 0.0,
+            child: _mindfulnessMode ? _buildMindfulnessSlider() : SizedBox.shrink(),
+          ),
         ),
-        SizedBox(width: FontScaling.getResponsiveSpacing(context, 16) * universalUIScale),
-        _buildAddStarButton(),
-        SizedBox(width: FontScaling.getResponsiveSpacing(context, 16) * universalUIScale),
-        _buildActionButton(
-          icon: Icons.self_improvement,
-          isActive: _mindfulnessMode,
-          onTap: _toggleMindfulness,
+
+        // Connector line from slider to mindfulness button
+        if (_mindfulnessMode)
+          SizedBox(
+            height: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale,
+            width: rowWidth,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  left: (rowWidth / 2) + connectorOffset - 1,  // Center + offset - half line width
+                  child: AnimatedOpacity(
+                    duration: Duration(milliseconds: 300),
+                    opacity: _mindfulnessMode ? 1.0 : 0.0,
+                    child: Container(
+                      width: 2,
+                      height: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Color(0xFFFFE135).withValues(alpha: 0.5),
+                            Color(0xFFFFE135).withValues(alpha: 0.2),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Stable 3-button row (never moves)
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildActionButton(
+              icon: Icons.visibility,
+              isActive: _showAllGratitudes,
+              onTap: _toggleShowAll,
+            ),
+            SizedBox(width: spacing),
+            _buildAddStarButton(),
+            SizedBox(width: spacing),
+            _buildActionButton(
+              icon: Icons.self_improvement,
+              isActive: _mindfulnessMode,
+              onTap: _toggleMindfulness,
+            ),
+          ],
         ),
-        // Slider appears to the right of Mindfulness button when active
-        if (_mindfulnessMode) ...[
-          SizedBox(width: FontScaling.getResponsiveSpacing(context, 16) * universalUIScale),
-          _buildMindfulnessSlider(),
-        ],
       ],
     );
   }
 
   Widget _buildMindfulnessSlider() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 500;
+
+    // Calculate responsive width
+    final sliderWidth = isMobile
+        ? math.min(220.0, screenWidth * 0.6)  // Max 220px or 60% of screen (whichever is smaller)
+        : 200.0;  // Compact on larger screens too
+
     return Container(
+      width: sliderWidth,
       padding: EdgeInsets.symmetric(
         horizontal: FontScaling.getResponsiveSpacing(context, 16) * universalUIScale,
         vertical: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale,
@@ -1607,28 +1676,31 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         children: [
           Text(
             '${AppLocalizations.of(context)!.mindfulnessIntervalLabel}: ${_mindfulnessInterval}s',
-            style: FontScaling.getBodySmall(context).copyWith(
+            style: FontScaling.getCaption(context).copyWith(
               fontSize: FontScaling.getBodySmall(context).fontSize! * universalUIScale,
             ),
           ),
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 8) * universalUIScale),
-          SizedBox(
-            width: 200 * universalUIScale,
-            child: SliderTheme(
-              data: SliderThemeData(
-                activeTrackColor: Color(0xFFFFE135),
-                inactiveTrackColor: Color(0xFFFFE135).withValues(alpha: 0.3),
-                thumbColor: Color(0xFFFFE135),
-                overlayColor: Color(0xFFFFE135).withValues(alpha: 0.2),
-                trackHeight: 4 * universalUIScale,
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: Color(0xFFFFE135),
+              inactiveTrackColor: Color(0xFFFFE135).withValues(alpha: 0.3),
+              thumbColor: Color(0xFFFFE135),
+              overlayColor: Color(0xFFFFE135).withValues(alpha: 0.2),
+              trackHeight: 4 * universalUIScale,
+              thumbShape: RoundSliderThumbShape(
+                enabledThumbRadius: 12 * universalUIScale,  // Larger thumb for mobile
               ),
-              child: Slider(
-                value: _mindfulnessInterval.toDouble(),
-                min: 2,
-                max: 20,
-                divisions: 18,
-                onChanged: _onMindfulnessIntervalChanged,
+              overlayShape: RoundSliderOverlayShape(
+                overlayRadius: 24 * universalUIScale,  // Larger tap target
               ),
+            ),
+            child: Slider(
+              value: _mindfulnessInterval.toDouble(),
+              min: 2,
+              max: 20,
+              divisions: 18,
+              onChanged: _onMindfulnessIntervalChanged,
             ),
           ),
         ],
@@ -1689,6 +1761,207 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           ),
       ],
     );
+  }
+
+  void _showAccountDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    final displayNameController = TextEditingController(
+      text: _authService.currentUser?.displayName ?? l10n.defaultUserName,
+    );
+
+    AppDialog.show(
+      context: context,
+      title: l10n.accountTitle,
+      icon: Icons.account_circle,
+      content: StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Account Name and Icon
+              Container(
+                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 16)),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    // Avatar placeholder (for future)
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.2),
+                      child: Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Color(0xFFFFE135),
+                      ),
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+
+                    // Display name field
+                    TextField(
+                      controller: displayNameController,
+                      style: FontScaling.getInputText(context),
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                        labelText: l10n.displayNameLabel,
+                        labelStyle: FontScaling.getBodySmall(context),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFFE135),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+
+                    // Update button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final newName = displayNameController.text.trim();
+                          if (newName.isNotEmpty && newName != _authService.currentUser?.displayName) {
+                            await _authService.updateDisplayName(newName);
+
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      Icon(Icons.check_circle, color: Colors.white),
+                                      SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          l10n.displayNameUpdated,
+                                          style: FontScaling.getBodySmall(context).copyWith(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  backgroundColor: Color(0xFF4CAF50),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  margin: EdgeInsets.all(16),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+
+                              // Refresh the UI
+                              setState(() {});
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFFFE135),
+                          padding: EdgeInsets.symmetric(
+                            vertical: FontScaling.getResponsiveSpacing(context, 12),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Text(
+                          l10n.updateButton,
+                          style: FontScaling.getButtonText(context).copyWith(
+                            color: Color(0xFF1A2238),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+
+              // Email (read-only)
+              Container(
+                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 12)),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.email,
+                      color: Color(0xFFFFE135),
+                      size: FontScaling.getResponsiveIconSize(context, 20),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _authService.currentUser?.email ?? '',
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+      actions: [
+        AppDialogAction(
+          text: l10n.signOutButton,
+          isDestructive: true,
+          onPressed: () {
+            Navigator.pop(context); // Close account dialog
+            _showSignOutConfirmation();
+          },
+        ),
+        AppDialogAction(
+          text: l10n.closeButton,
+          isPrimary: true,
+          onPressed: () => Navigator.pop(context),
+        ),
+      ],
+    );
+  }
+
+  void _showSignOutConfirmation() {
+    final l10n = AppLocalizations.of(context)!;
+
+    AppDialog.showConfirmation(
+      context: context,
+      title: l10n.signOutTitle,
+      message: l10n.signOutMessage,
+      icon: Icons.logout,
+      iconColor: Colors.red.withValues(alpha: 0.8),
+      confirmText: l10n.signOutButton,
+      cancelText: l10n.cancelButton,
+      isDestructive: true,
+    ).then((confirmed) async {
+      if (confirmed == true) {
+        await _authService.signOut();
+      }
+    });
   }
 
   @override
@@ -1848,10 +2121,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       });
                     }
 
-                    // Handle pinch zoom
+                    // Handle pinch zoom with threshold to reduce sensitivity
                     if (details.scale != 1.0) {
-                      final newScale = _cameraController.scale * details.scale;
-                      _cameraController.updateScale(newScale, details.focalPoint);
+                      final scaleChange = (details.scale - 1.0).abs();
+                      if (scaleChange > 0.01) {  // ADD THIS THRESHOLD
+                        final newScale = _cameraController.scale * details.scale;
+                        _cameraController.updateScale(newScale, details.focalPoint);
+                      }
                     }
 
                     // Handle pan (when not pinching)
@@ -1886,6 +2162,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                                     return FloatingGratitudeLabel(
                                       star: star,
                                       screenSize: currentSize,
+                                      cameraScale: _cameraController.scale,  // ADD
+                                      cameraPosition: _cameraController.position,  // ADD
                                     );
                                   }),
 

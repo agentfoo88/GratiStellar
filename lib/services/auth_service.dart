@@ -63,16 +63,35 @@ class AuthService {
         password: password,
       );
 
-      final userCredential = await user.linkWithCredential(credential);
+      try {
+        final userCredential = await user.linkWithCredential(credential);
 
-      // Update Firestore profile
-      await _firestore.collection('users').doc(user.uid).update({
-        'email': email,
-        'isAnonymous': false,
-        'linkedAt': FieldValue.serverTimestamp(),
-      });
+        // Update Firestore profile
+        await _firestore.collection('users').doc(user.uid).update({
+          'email': email,
+          'isAnonymous': false,
+          'linkedAt': FieldValue.serverTimestamp(),
+        });
 
-      return userCredential.user;
+        return userCredential.user;
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          // Email exists - sign in with it instead and merge data
+          print('Email already in use, attempting to sign in...');
+          final signInCredential = await _auth.signInWithEmailAndPassword(
+            email: email,
+            password: password,
+          );
+
+          // Update last seen
+          await _firestore.collection('users').doc(signInCredential.user!.uid).update({
+            'lastSeen': FieldValue.serverTimestamp(),
+          });
+
+          return signInCredential.user;
+        }
+        rethrow;
+      }
     } catch (e) {
       print('Error linking email/password: $e');
       rethrow;
@@ -128,12 +147,25 @@ class AuthService {
 
   // Update display name
   Future<void> updateDisplayName(String displayName) async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('No user signed in');
+      }
 
-    await user.updateDisplayName(displayName);
-    await _firestore.collection('users').doc(user.uid).update({
-      'displayName': displayName,
-    });
+      await user.updateDisplayName(displayName);
+      await user.reload();
+
+      // Also update in Firestore
+      await _firestore.collection('users').doc(user.uid).update({
+        'displayName': displayName,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      print('✅ Display name updated to: $displayName');
+    } catch (e) {
+      print('❌ Error updating display name: $e');
+      rethrow;
+    }
   }
 }

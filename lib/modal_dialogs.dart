@@ -226,8 +226,8 @@ class GratitudeDialogs {
   static void showStarDetailsWithJump({
     required BuildContext context,
     required GratitudeStar star,
-    required String starId,  // NEW: Track by ID
-    required List<GratitudeStar> gratitudeStars,  // NEW: For lookup
+    required String starId,
+    required List<GratitudeStar> gratitudeStars,
     required TextEditingController editTextController,
     required TextEditingController hexColorController,
     required TextEditingController redController,
@@ -241,6 +241,8 @@ class GratitudeDialogs {
     VoidCallback? onListRefresh,
   }) {
     bool isEditMode = false;
+    Color? tempColorPreview;  // ADD THIS
+    int? tempColorIndexPreview;  // ADD THIS
 
     showDialog(
       context: context,
@@ -248,11 +250,24 @@ class GratitudeDialogs {
       builder: (BuildContext dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
-            // Look up the current star by ID on every rebuild
-            final currentStar = gratitudeStars.firstWhere(
+            var currentStar = gratitudeStars.firstWhere(
                   (s) => s.id == starId,
-              orElse: () => star, // Fallback to original if somehow deleted
+              orElse: () => star,
             );
+
+            // Apply temporary color preview if exists
+            if (tempColorPreview != null || tempColorIndexPreview != null) {
+              if (tempColorIndexPreview != null) {
+                currentStar = currentStar.copyWith(
+                  colorIndex: tempColorIndexPreview,
+                  clearCustomColor: true,
+                );
+              } else {
+                currentStar = currentStar.copyWith(
+                  customColor: tempColorPreview,
+                );
+              }
+            }
 
             return Dialog(
               backgroundColor: Colors.transparent,
@@ -274,11 +289,10 @@ class GratitudeDialogs {
                       'assets/icon_star.svg',
                       width: FontScaling.getResponsiveIconSize(context, 64),
                       height: FontScaling.getResponsiveIconSize(context, 64),
-                      colorFilter: ColorFilter.mode(star.color, BlendMode.srcIn),
+                      colorFilter: ColorFilter.mode(currentStar.color, BlendMode.srcIn),
                     ),
                     SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
 
-                    // Text display or edit mode
                     if (!isEditMode)
                       Text(
                         currentStar.text,
@@ -308,7 +322,6 @@ class GratitudeDialogs {
 
                     SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
 
-                    // Action buttons
                     if (!isEditMode)
                       Column(
                         children: [
@@ -339,7 +352,6 @@ class GratitudeDialogs {
                               ),
                             ],
                           ),
-                          // Jump to Star button (only if callback provided)
                           if (onJumpToStar != null) ...[
                             SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
                             ElevatedButton.icon(
@@ -351,7 +363,7 @@ class GratitudeDialogs {
                               label: Text(
                                 AppLocalizations.of(context)!.jumpToStarButton,
                                 style: FontScaling.getButtonText(context).copyWith(
-                                  color: Color(0xFF1A2238), // Black text on yellow button
+                                  color: Color(0xFF1A2238),
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
@@ -375,7 +387,12 @@ class GratitudeDialogs {
                         children: [
                           ElevatedButton.icon(
                             onPressed: () {
-                              onShowColorPicker(currentStar, setState);
+                              // Pass the setState and temp variables correctly
+                              onShowColorPicker(currentStar, (fn) {
+                                setState(() {
+                                  fn();
+                                });
+                              });
                             },
                             icon: Icon(Icons.palette, size: FontScaling.getResponsiveIconSize(context, 20)),
                             label: Text(
@@ -435,6 +452,8 @@ class GratitudeDialogs {
                                   setState(() {
                                     isEditMode = false;
                                     editTextController.text = currentStar.text;
+                                    tempColorPreview = null;
+                                    tempColorIndexPreview = null;
                                   });
                                 },
                                 child: Text(
@@ -479,7 +498,11 @@ class GratitudeDialogs {
           },
         );
       },
-    );
+    ).then((_) {
+      // Clean up temp variables when dialog closes
+      tempColorPreview = null;
+      tempColorIndexPreview = null;
+    });
   }
 
   // ========================================

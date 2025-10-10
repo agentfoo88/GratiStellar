@@ -45,7 +45,7 @@ class AuthService {
     }
   }
 
-  // Link anonymous account to email/password
+  // Link anonymous account to email/password OR sign in if account exists
   Future<User?> linkEmailPassword(String email, String password) async {
     try {
       final user = _auth.currentUser;
@@ -64,36 +64,67 @@ class AuthService {
       );
 
       try {
+        // Try to link the credential
         final userCredential = await user.linkWithCredential(credential);
 
         // Update Firestore profile
-        await _firestore.collection('users').doc(user.uid).update({
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'email': email,
+          'displayName': userCredential.user!.displayName,
           'isAnonymous': false,
           'linkedAt': FieldValue.serverTimestamp(),
-        });
+          'createdAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
 
+        print('✅ Successfully linked anonymous account to email');
         return userCredential.user;
+
       } on FirebaseAuthException catch (e) {
-        if (e.code == 'email-already-in-use') {
-          // Email exists - sign in with it instead and merge data
-          print('Email already in use, attempting to sign in...');
-          final signInCredential = await _auth.signInWithEmailAndPassword(
+        if (e.code == 'email-already-in-use' || e.code == 'credential-already-in-use') {
+          // Email already exists - we need to merge data
+          print('⚠️ Email already in use. Attempting to merge data...');
+
+          // Save current anonymous user's data reference
+          final anonymousUid = user.uid;
+          final anonymousDisplayName = user.displayName;
+
+          // Sign in with the existing email account
+          final existingAccountCredential = await _auth.signInWithEmailAndPassword(
             email: email,
             password: password,
           );
 
-          // Update last seen
-          await _firestore.collection('users').doc(signInCredential.user!.uid).update({
-            'lastSeen': FieldValue.serverTimestamp(),
-          });
+          print('✅ Signed into existing account: ${existingAccountCredential.user!.uid}');
 
-          return signInCredential.user;
+          // If anonymous user had a display name and existing account doesn't, transfer it
+          if (anonymousDisplayName != null &&
+              anonymousDisplayName.isNotEmpty &&
+              existingAccountCredential.user!.displayName == null) {
+            await existingAccountCredential.user!.updateDisplayName(anonymousDisplayName);
+            await _firestore.collection('users').doc(existingAccountCredential.user!.uid).set({
+              'displayName': anonymousDisplayName,
+              'updatedAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+          }
+
+          // Update last seen
+          await _firestore.collection('users').doc(existingAccountCredential.user!.uid).set({
+            'lastSeen': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+          // Note: We'll merge the stars in the next step using FirestoreService
+          // Store the old anonymous UID for data migration
+          await _firestore.collection('users').doc(existingAccountCredential.user!.uid).set({
+            'mergedFromAnonymous': anonymousUid,
+            'mergedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+          return existingAccountCredential.user;
         }
         rethrow;
       }
     } catch (e) {
-      print('Error linking email/password: $e');
+      print('❌ Error linking email/password: $e');
       rethrow;
     }
   }
@@ -108,9 +139,9 @@ class AuthService {
 
       // Update last seen
       if (userCredential.user != null) {
-        await _firestore.collection('users').doc(userCredential.user!.uid).update({
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'lastSeen': FieldValue.serverTimestamp(),
-        });
+        }, SetOptions(merge: true));
       }
 
       return userCredential.user;

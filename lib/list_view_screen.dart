@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'storage.dart';
-import 'gratitude_stars.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'package:intl/intl.dart';

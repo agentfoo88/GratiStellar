@@ -18,10 +18,12 @@ import 'modal_dialogs.dart';
 import 'list_view_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'services/firestore_service.dart';
 import 'services/auth_service.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'widgets/app_dialog.dart';
+import 'firebase_options.dart';
 
 // ========================================
 // UI SCALE CONFIGURATION
@@ -39,15 +41,15 @@ const int mindfulnessTransitionMs = 2000;  // Duration for camera movement and l
 class FloatingGratitudeLabel extends StatelessWidget {
   final GratitudeStar star;
   final Size screenSize;
-  final double cameraScale;  // ADD THIS
-  final Offset cameraPosition;  // ADD THIS
+  final double cameraScale;
+  final Offset cameraPosition;
 
   const FloatingGratitudeLabel({
     super.key,
     required this.star,
     required this.screenSize,
-    required this.cameraScale,  // ADD THIS
-    required this.cameraPosition,  // ADD THIS
+    required this.cameraScale,
+    required this.cameraPosition,
   });
 
   @override
@@ -60,7 +62,6 @@ class FloatingGratitudeLabel extends StatelessWidget {
     const verticalOffset = 70.0;
 
     // Enhanced edge padding that accounts for zoom level
-    // More padding needed when zoomed out
     final dynamicEdgePadding = 8.0 + (40.0 / cameraScale.clamp(0.5, 2.0));
 
     // Calculate desired centered position
@@ -111,14 +112,23 @@ class FloatingGratitudeLabel extends StatelessWidget {
               ),
             ],
           ),
-          child: Text(
-            star.text,
-            style: FontScaling.getBodySmall(context).copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: maxLabelWidth - FontScaling.getResponsiveSpacing(context, 24),
+              ),
+              child: Text(
+                star.text,
+                style: FontScaling.getBodySmall(context).copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
             ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
           ),
         ),
       ),
@@ -130,13 +140,14 @@ void main() async {
   print('🚀 App starting...');
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
+  // Initialize Firebase with generated options
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   print('📦 Loading textures...');
   await BackgroundService.loadTextures();
   print('✅ Textures loaded, starting app');
-
   runApp(GratiStellarApp());
 }
 
@@ -229,13 +240,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   final TextEditingController _greenController = TextEditingController();
   final TextEditingController _blueController = TextEditingController();
   final AuthService _authService = AuthService();
+  final FirestoreService _firestoreService = FirestoreService();
 
   List<GratitudeStar> gratitudeStars = [];
   List<OrganicNebulaRegion> _organicNebulaRegions = [];
   late AnimationController _backgroundController;
   late AnimationController _starController;
   late CameraController _cameraController;
-  late AnimationController _labelFadeController;
   bool _isLoading = true;
   bool _showBranding = true;
   bool _isAnimating = false;
@@ -258,6 +269,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   Color? _previewColor;
   Color? _tempColorPreview;  // Temporary color during editing
   int? _tempColorIndexPreview;  // Temporary index during editing
+  StreamSubscription<User?>? _authSubscription;
 
   @override
   void initState() {
@@ -265,6 +277,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _cameraController = CameraController();
+
+    // Monitor auth state changes
+    _authSubscription = _authService.authStateChanges.listen((user) {
+      if (mounted && user != null && _authService.hasEmailAccount) {
+        print('👤 Auth state changed, reloading gratitudes...');
+        _loadGratitudes();
+      }
+    });
 
     _backgroundController = AnimationController(
       duration: Duration(seconds: 30),
@@ -338,12 +358,50 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   Future<void> _loadGratitudes() async {
     print('💾 Loading gratitudes...');
     final stars = await StorageService.loadGratitudeStars();
+
     if (mounted) {
       setState(() {
         gratitudeStars = stars;
         _isLoading = false;
         print('🎯 Loaded ${stars.length} gratitude stars, _isLoading = false');
       });
+
+      // If user is signed in with email, sync with cloud AFTER local load
+      if (_authService.hasEmailAccount) {
+        print('🔄 User has email account, starting cloud sync...');
+        await _syncWithCloud();
+      }
+    }
+  }
+
+  Future<void> _syncWithCloud() async {
+    try {
+      print('🔄 Starting cloud sync...');
+
+      // Check if user has cloud data
+      final hasCloudData = await _firestoreService.hasCloudData();
+
+      if (hasCloudData) {
+        // Sync and merge data
+        print('📥 Cloud data exists, syncing...');
+        final mergedStars = await _firestoreService.syncStars(gratitudeStars);
+
+        if (mounted) {
+          setState(() {
+            gratitudeStars = mergedStars;
+          });
+          await _saveGratitudes();
+          print('✅ Sync complete! Total stars: ${mergedStars.length}');
+        }
+      } else {
+        // First time - upload local stars to cloud
+        print('📤 No cloud data, uploading local stars...');
+        await _firestoreService.uploadStars(gratitudeStars);
+        print('✅ Local stars uploaded to cloud');
+      }
+    } catch (e) {
+      print('⚠️ Sync failed: $e');
+      // Don't show error to user - local data is still safe
     }
   }
 
@@ -354,6 +412,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _authSubscription?.cancel();  // ADD THIS LINE
     _cameraController.dispose();
     _backgroundController.dispose();
     _starController.dispose();
@@ -365,7 +424,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _blueController.dispose();
     _birthController?.dispose();
     _mindfulnessTimer?.cancel();
-    _labelFadeController.dispose();
     super.dispose();
   }
 
@@ -393,6 +451,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           _isAppInBackground = false;
           _backgroundController.repeat();
           _starController.repeat();
+
+          // Reload gratitudes when app resumes (will sync if signed in)
+          if (_authService.hasEmailAccount) {
+            _loadGratitudes();
+          }
 
           // Restart mindfulness timer if it was active
           if (_mindfulnessMode) {
@@ -470,6 +533,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         _isAnimating = false;
       });
       _saveGratitudes();
+
+      // Sync to cloud if signed in
+      if (_authService.hasEmailAccount) {
+        _firestoreService.addStar(gratitudeStars.last).catchError((e) {
+          print('⚠️ Failed to sync new star to cloud: $e');
+        });
+      }
+
       _birthController!.reset();
     }
   }
@@ -769,15 +840,32 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         _tempColorIndexPreview = null;
       });
       _saveGratitudes();
+
+      // Sync to cloud if signed in
+      if (_authService.hasEmailAccount) {
+        _firestoreService.updateStar(gratitudeStars[index]).catchError((e) {
+          print('⚠️ Failed to sync star edit to cloud: $e');
+        });
+      }
     }
   }
 
   void _deleteStar(GratitudeStar star) {
     HapticFeedback.heavyImpact();
+
+    final starId = star.id; // Save ID before removing
+
     setState(() {
       gratitudeStars.removeWhere((s) => s.id == star.id);
     });
     _saveGratitudes();
+
+    // Sync deletion to cloud if signed in
+    if (_authService.hasEmailAccount) {
+      _firestoreService.deleteStar(starId).catchError((e) {
+        print('⚠️ Failed to sync star deletion to cloud: $e');
+      });
+    }
   }
 
   void _showColorPicker(GratitudeStar star, StateSetter modalSetState) {
@@ -2018,8 +2106,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         child: Stack(
           children: [
             // Layer 1: Static background
-            // RepaintBoundary(
-              // child:
               Positioned.fill(
                 child: AnimatedBuilder(
                   animation: _cameraController,
@@ -2033,12 +2119,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     );
                   },
                 ),
-              //),
             ),
 
             // Layer 2: Nebula
-            // RepaintBoundary(
-              // child:
               Positioned.fill(
                 child: AnimatedBuilder(
                   animation: Listenable.merge([_backgroundController, _cameraController]),
@@ -2051,13 +2134,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       ),
                     );
                   },
-               // ),
               ),
             ),
 
             // Layer 2.5: Van Gogh stars
-            // RepaintBoundary(
-              // child:
               Positioned.fill(
                 child: AnimatedBuilder(
                   animation: _cameraController,
@@ -2071,7 +2151,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     );
                   },
                 ),
-              // ),
             ),
 
             // Layer 3: Interactive starfield
@@ -2124,8 +2203,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     // Handle pinch zoom with threshold to reduce sensitivity
                     if (details.scale != 1.0) {
                       final scaleChange = (details.scale - 1.0).abs();
-                      if (scaleChange > 0.01) {  // ADD THIS THRESHOLD
-                        final newScale = _cameraController.scale * details.scale;
+                      if (scaleChange > 0.01) {
+                        // Dampen the scale change to make it less sensitive
+                        // Instead of applying full scale change, only apply a fraction
+                        final dampingFactor = 0.25;  // Adjust this (0.1 = very slow, 1.0 = full speed)
+                        final dampenedScale = 1.0 + ((details.scale - 1.0) * dampingFactor);
+                        final newScale = _cameraController.scale * dampenedScale;
                         _cameraController.updateScale(newScale, details.focalPoint);
                       }
                     }

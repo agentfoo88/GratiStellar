@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
+import '../storage.dart';
 import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -23,6 +27,58 @@ class _SignInScreenState extends State<SignInScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _triggerCloudSync(List<GratitudeStar> localStars) async {
+    final firestoreService = FirestoreService();
+
+    try {
+      print('🔄 Triggering cloud sync with ${localStars.length} local stars');
+
+      // Check if there's an old anonymous account to merge
+      final mergedFromUid = await _checkForMergedAccount();
+
+      if (mergedFromUid != null) {
+        print('🔀 Merging data from anonymous account: $mergedFromUid');
+        await firestoreService.mergeStarsFromAnonymousAccount(mergedFromUid, localStars);
+      } else {
+        // Check if cloud has data
+        final hasCloudData = await firestoreService.hasCloudData();
+
+        if (hasCloudData) {
+          print('📥 Cloud has data, syncing...');
+          // Don't just upload - sync to merge
+          final mergedStars = await firestoreService.syncStars(localStars);
+          await StorageService.saveGratitudeStars(mergedStars);
+          print('✅ Synced ${mergedStars.length} stars');
+        } else {
+          print('📤 No cloud data, uploading local stars...');
+          await firestoreService.uploadStars(localStars);
+        }
+      }
+
+      print('✅ Cloud sync complete');
+    } catch (e) {
+      print('⚠️ Sync failed: $e');
+      // Don't show error to user - local data is still safe
+    }
+  }
+
+  Future<String?> _checkForMergedAccount() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      return userDoc.data()?['mergedFromAnonymous'] as String?;
+    } catch (e) {
+      print('⚠️ Error checking for merged account: $e');
+      return null;
+    }
   }
 
   void _showSuccessSnackBar(String message) {
@@ -86,11 +142,19 @@ class _SignInScreenState extends State<SignInScreen> {
 
     try {
       if (_isSignUp) {
+        // Get local stars before linking
+        final localStars = await StorageService.loadGratitudeStars();
+
         await _authService.linkEmailPassword(email, password);
 
         if (mounted) {
           Navigator.of(context).pop();
+
+          // Pass local stars to sync
           _showSuccessSnackBar(l10n.accountCreatedSuccess);
+
+          // Trigger sync in the background
+          _triggerCloudSync(localStars);
         }
       } else {
         await _authService.signInWithEmail(email, password);
@@ -98,9 +162,12 @@ class _SignInScreenState extends State<SignInScreen> {
         if (mounted) {
           Navigator.of(context).pop();
           _showSuccessSnackBar(l10n.signInSuccess);
+
+          // Trigger sync in the background
+          _triggerCloudSync(await StorageService.loadGratitudeStars());
         }
       }
-    } catch (e) {
+    } catch (e) {  // ADDED catch block
       if (mounted) {
         setState(() {
           _errorMessage = _getErrorMessage(e.toString());

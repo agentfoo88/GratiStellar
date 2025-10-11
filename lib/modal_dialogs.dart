@@ -517,117 +517,469 @@ class GratitudeDialogs {
   }) {
     if (isAnimating) return;
 
+    const int maxCharacters = 300; // Set character limit
+
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
-            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
-            decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.createStarModalTitle,
-                  style: FontScaling.getModalTitle(context),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)!.createStarHint,
-                    hintStyle: FontScaling.getInputHint(context),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: Color(0xFFFFE135),
-                        width: 2,
-                      ),
-                    ),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final remainingChars = maxCharacters - controller.text.length;
+            final isOverLimit = remainingChars < 0;
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
+                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1A2238).withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                    width: 2,
                   ),
-                  style: FontScaling.getInputText(context),
-                  maxLines: 4,
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        controller.clear();
-                        Navigator.of(context).pop();
-                      },
-                      child: Text(
-                        AppLocalizations.of(context)!.cancelButton,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
-                    ElevatedButton(
-                      onPressed: () {
-                        onAdd();
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFE135),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: FontScaling.getResponsiveSpacing(context, 24),
-                          vertical: FontScaling.getResponsiveSpacing(context, 12),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context)!.createStarButton,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Color(0xFF1A2238),
-                        ),
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 20,
+                      spreadRadius: 5,
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.createStarModalTitle,
+                      style: FontScaling.getModalTitle(context),
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+
+                    // Scrollable text field with character counter
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: 200),
+                      child: Scrollbar(
+                        child: TextField(
+                          controller: controller,
+                          autofocus: true,
+                          maxLength: maxCharacters,
+                          maxLines: null, // Allow unlimited lines
+                          keyboardType: TextInputType.multiline,
+                          decoration: InputDecoration(
+                            hintText: AppLocalizations.of(context)!.createStarHint,
+                            hintStyle: FontScaling.getInputHint(context),
+                            filled: true,
+                            fillColor: Colors.white.withValues(alpha: 0.1),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: isOverLimit
+                                    ? Colors.red
+                                    : Color(0xFFFFE135).withValues(alpha: 0.3),
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: Color(0xFFFFE135),
+                                width: 2,
+                              ),
+                            ),
+                            counterStyle: FontScaling.getCaption(context).copyWith(
+                              color: isOverLimit
+                                  ? Colors.red
+                                  : Colors.white.withValues(alpha: 0.6),
+                            ),
+                          ),
+                          style: FontScaling.getInputText(context),
+                          onChanged: (value) {
+                            setState(() {}); // Rebuild to update counter color
+                          },
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            controller.clear();
+                            Navigator.of(context).pop();
+                          },
+                          child: Text(
+                            AppLocalizations.of(context)!.cancelButton,
+                            style: FontScaling.getButtonText(context).copyWith(
+                              color: Colors.white.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
+                        ElevatedButton(
+                          onPressed: isOverLimit ? null : () {
+                            onAdd();
+                            Navigator.of(context).pop();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFFFFE135),
+                            disabledBackgroundColor: Colors.grey,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: FontScaling.getResponsiveSpacing(context, 24),
+                              vertical: FontScaling.getResponsiveSpacing(context, 12),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            AppLocalizations.of(context)!.createStarButton,
+                            style: FontScaling.getButtonText(context).copyWith(
+                              color: Color(0xFF1A2238),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
+  }
+
+  // ========================================
+  // STAR EDIT DIALOG (Unified Implementation)
+  // ========================================
+
+  /// Shows a dialog to view and edit a gratitude star.
+  ///
+  /// This is the single source of truth for star editing - used by both
+  /// tap-to-edit and list view. The dialog manages its own state and controllers.
+  ///
+  /// [star] - The star to display/edit
+  /// [allStars] - Full list for ID lookup (handles updates during editing)
+  /// [onSave] - Called when user saves changes
+  /// [onDelete] - Called when user deletes the star
+  /// [onShare] - Called when user shares the star
+  /// [onJumpToStar] - Optional callback to jump to star (shows button if provided)
+  static void showEditStar({
+    required BuildContext context,
+    required GratitudeStar star,
+    required List<GratitudeStar> allStars,
+    required Function(GratitudeStar) onSave,
+    required Function(GratitudeStar) onDelete,
+    required Function(GratitudeStar) onShare,
+    VoidCallback? onJumpToStar,
+  }) {
+    // Dialog owns its state (not shared with parent widget)
+    bool isEditMode = false;
+    Color? tempColorPreview;
+    int? tempColorIndexPreview;
+
+    // Dialog owns its controllers (disposed when dialog closes)
+    final editTextController = TextEditingController(text: star.text);
+    final hexColorController = TextEditingController();
+    final redController = TextEditingController();
+    final greenController = TextEditingController();
+    final blueController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // Look up current star by ID (handles updates from other sources)
+            var currentStar = allStars.firstWhere(
+                  (s) => s.id == star.id,
+              orElse: () => star,
+            );
+
+            // Apply temporary color preview if exists
+            if (tempColorPreview != null || tempColorIndexPreview != null) {
+              if (tempColorIndexPreview != null) {
+                currentStar = currentStar.copyWith(
+                  colorIndex: tempColorIndexPreview,
+                  clearCustomColor: true,
+                );
+              } else {
+                currentStar = currentStar.copyWith(
+                  customColor: tempColorPreview,
+                );
+              }
+            }
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
+                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1A2238).withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: currentStar.color.withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Star icon preview
+                    SvgPicture.asset(
+                      'assets/icon_star.svg',
+                      width: FontScaling.getResponsiveIconSize(context, 48),
+                      height: FontScaling.getResponsiveIconSize(context, 48),
+                      colorFilter: ColorFilter.mode(currentStar.color, BlendMode.srcIn),
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+
+                    // Text display or edit mode
+                    if (!isEditMode)
+                      Text(
+                        currentStar.text,
+                        style: FontScaling.getBodyLarge(context).copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                        textAlign: TextAlign.center,
+                      )
+                    else
+                      TextField(
+                        controller: editTextController,
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)!.editGratitudeHint,
+                          hintStyle: FontScaling.getInputHint(context),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                            ),
+                          ),
+                        ),
+                        style: FontScaling.getInputText(context),
+                        maxLines: 4,
+                      ),
+
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+
+                    // View mode buttons
+                    if (!isEditMode)
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              buildModalIconButton(
+                                context: context,
+                                icon: Icons.edit,
+                                label: AppLocalizations.of(context)!.editButton,
+                                onTap: () {
+                                  setState(() {
+                                    isEditMode = true;
+                                  });
+                                },
+                              ),
+                              buildModalIconButton(
+                                context: context,
+                                icon: Icons.share,
+                                label: AppLocalizations.of(context)!.shareButton,
+                                onTap: () => onShare(currentStar),
+                              ),
+                              buildModalIconButton(
+                                context: context,
+                                icon: Icons.close,
+                                label: AppLocalizations.of(context)!.closeButton,
+                                onTap: () => Navigator.of(context).pop(),
+                              ),
+                            ],
+                          ),
+                          // Jump button (only shown if callback provided)
+                          if (onJumpToStar != null) ...[
+                            SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                onJumpToStar();
+                              },
+                              icon: Icon(Icons.my_location, size: FontScaling.getResponsiveIconSize(context, 20)),
+                              label: Text(
+                                AppLocalizations.of(context)!.jumpToStarButton,
+                                style: FontScaling.getButtonText(context).copyWith(
+                                  color: Color(0xFF1A2238),
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFFFFE135),
+                                foregroundColor: Color(0xFF1A2238),
+                                minimumSize: Size(double.infinity, 48),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: FontScaling.getResponsiveSpacing(context, 20),
+                                  vertical: FontScaling.getResponsiveSpacing(context, 12),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
+                    else
+                    // Edit mode buttons
+                      Column(
+                        children: [
+                          // Change color button
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // TODO: We'll implement color picker next
+                              // For now, show a placeholder
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Color picker coming next!')),
+                              );
+                            },
+                            icon: Icon(Icons.palette, size: FontScaling.getResponsiveIconSize(context, 20)),
+                            label: Text(
+                              AppLocalizations.of(context)!.changeColorButton,
+                              style: FontScaling.getButtonText(context),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.2),
+                              foregroundColor: Color(0xFFFFE135),
+                              minimumSize: Size(double.infinity, 48),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: FontScaling.getResponsiveSpacing(context, 20),
+                                vertical: FontScaling.getResponsiveSpacing(context, 12),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+
+                          // Delete, Cancel, Save row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  showDeleteConfirmation(
+                                    context: context,
+                                    modalContext: dialogContext,
+                                    star: currentStar,
+                                    onDelete: onDelete,
+                                  );
+                                },
+                                icon: Icon(Icons.close, size: FontScaling.getResponsiveIconSize(context, 18)),
+                                label: Text(
+                                  AppLocalizations.of(context)!.deleteButton,
+                                  style: FontScaling.getButtonText(context),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                                    vertical: FontScaling.getResponsiveSpacing(context, 10),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 0,
+                                ),
+                              ),
+                              SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    isEditMode = false;
+                                    editTextController.text = currentStar.text;
+                                    tempColorPreview = null;
+                                    tempColorIndexPreview = null;
+                                  });
+                                },
+                                child: Text(
+                                  AppLocalizations.of(context)!.cancelButton,
+                                  style: FontScaling.getButtonText(context).copyWith(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Build updated star with all changes
+                                  var updatedStar = currentStar.copyWith(
+                                    text: editTextController.text,
+                                  );
+
+                                  // Apply color changes if any
+                                  if (tempColorIndexPreview != null) {
+                                    updatedStar = updatedStar.copyWith(
+                                      colorIndex: tempColorIndexPreview,
+                                      clearCustomColor: true,
+                                    );
+                                  } else if (tempColorPreview != null) {
+                                    updatedStar = updatedStar.copyWith(
+                                      customColor: tempColorPreview,
+                                    );
+                                  }
+
+                                  onSave(updatedStar);
+                                  Navigator.of(context).pop();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFFFFE135),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: FontScaling.getResponsiveSpacing(context, 20),
+                                    vertical: FontScaling.getResponsiveSpacing(context, 12),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  AppLocalizations.of(context)!.saveButton,
+                                  style: FontScaling.getButtonText(context).copyWith(
+                                    color: Color(0xFF1A2238),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      // Clean up controllers when dialog closes
+      editTextController.dispose();
+      hexColorController.dispose();
+      redController.dispose();
+      greenController.dispose();
+      blueController.dispose();
+    });
   }
 
   static Widget buildModalIconButton({

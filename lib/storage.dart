@@ -1,8 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';  // ADD THIS - provides Color class
-import 'gratitude_stars.dart';  // ADD THIS - provides StarColors
+import 'package:flutter/material.dart';
+import 'gratitude_stars.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // Extension to add Gaussian distribution to Random
 extension RandomGaussian on math.Random {
@@ -77,7 +78,7 @@ class GratitudeStar {
       'worldX': worldX,
       'worldY': worldY,
       'colorIndex': colorIndex,
-      'customColor': customColor?.value,
+      'customColor': customColor?.toARGB32(),
       'size': size,
       'id': id,
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -104,43 +105,122 @@ class GratitudeStar {
   }
 }
 
-// Storage service for handling data persistence
+// Storage service for handling data persistence with encryption
 class StorageService {
   static const String _starsKey = 'gratitude_stars';
 
-  // Load gratitude stars from storage
+  // Secure storage for encryption
+  static const _secureStorage = FlutterSecureStorage(
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock,
+    ),
+  );
+
+  // Load gratitude stars from encrypted storage
   static Future<List<GratitudeStar>> loadGratitudeStars() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final starsJson = prefs.getStringList(_starsKey) ?? [];
+      // Try secure storage first (encrypted)
+      final encryptedData = await _secureStorage.read(key: _starsKey);
 
-      return starsJson.map((starString) {
-        final starData = json.decode(starString);
-        return GratitudeStar.fromJson(starData);
-      }).toList();
+      if (encryptedData != null) {
+        // Decrypt and parse
+        final starsJsonList = json.decode(encryptedData) as List;
+        return starsJsonList.map((starJson) {
+          return GratitudeStar.fromJson(starJson);
+        }).toList();
+      }
+
+      // Fallback: Check old unencrypted storage for migration
+      final prefs = await SharedPreferences.getInstance();
+      final oldStarsJson = prefs.getStringList(_starsKey);
+
+      if (oldStarsJson != null && oldStarsJson.isNotEmpty) {
+        print('📦 Migrating ${oldStarsJson.length} stars from unencrypted to encrypted storage');
+
+        // Parse old data
+        final stars = oldStarsJson.map((starString) {
+          final starData = json.decode(starString);
+          return GratitudeStar.fromJson(starData);
+        }).toList();
+
+        // SAFETY CHECK 1: Verify save succeeded
+        final saveSucceeded = await saveGratitudeStars(stars);
+
+        if (!saveSucceeded) {
+          print('⚠️ Migration failed - keeping old data as backup');
+          return stars;
+        }
+
+        // SAFETY CHECK 2: Verify we can read back encrypted data
+        try {
+          final encryptedData = await _secureStorage.read(key: _starsKey);
+          if (encryptedData == null || encryptedData.isEmpty) {
+            print('⚠️ Could not verify encrypted data - keeping old data as backup');
+            return stars;
+          }
+
+          // Verify it parses correctly
+          final verification = json.decode(encryptedData) as List;
+          if (verification.length != stars.length) {
+            print('⚠️ Encrypted data mismatch - keeping old data as backup');
+            return stars;
+          }
+        } catch (e) {
+          print('⚠️ Verification failed: $e - keeping old data as backup');
+          return stars;
+        }
+
+        // ONLY NOW delete old unencrypted data
+        await prefs.remove(_starsKey);
+        print('✅ Migration complete - old data removed');
+
+        return stars;
+      }
+
+      // No data found
+      return [];
     } catch (e) {
-      // Using debugPrint for better Flutter integration
-      debugPrint('Error loading gratitude stars: $e');
+      debugPrint('❌ Error loading gratitude stars: $e');
       return [];
     }
   }
 
-  // Save gratitude stars to storage
+  // Save gratitude stars to encrypted storage
   static Future<bool> saveGratitudeStars(List<GratitudeStar> stars) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final starsJson = stars.map((star) {
-        return json.encode(star.toJson());
-      }).toList();
-      await prefs.setStringList(_starsKey, starsJson);
+      // Convert to JSON
+      final starsJsonList = stars.map((star) => star.toJson()).toList();
+      final jsonString = json.encode(starsJsonList);
+
+      // Save encrypted
+      await _secureStorage.write(key: _starsKey, value: jsonString);
+
       return true;
     } catch (e) {
-      debugPrint('Error saving gratitude stars: $e');
+      debugPrint('❌ Error saving gratitude stars: $e');
       return false;
     }
   }
 
-  // Calculate statistics
+  // Clear all encrypted data (called on sign out)
+  static Future<void> clearAllData() async {
+    try {
+      await _secureStorage.delete(key: _starsKey);
+
+      // Also clear SharedPreferences as backup
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_starsKey);
+      await prefs.remove('last_synced_at');
+      await prefs.remove('anonymous_uid');
+      await prefs.remove('local_data_owner_uid');
+
+      print('🗑️ Cleared all local storage');
+    } catch (e) {
+      debugPrint('⚠️ Error clearing storage: $e');
+    }
+  }
+
+  // Calculate statistics (unchanged)
   static int getTotalStars(List<GratitudeStar> stars) => stars.length;
 
   static int getThisWeekStars(List<GratitudeStar> stars) {

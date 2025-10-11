@@ -6,6 +6,7 @@ import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -29,10 +30,14 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  void _triggerCloudSync(List<GratitudeStar> localStars) async {
+  Future<void> _triggerCloudSync() async {
     final firestoreService = FirestoreService();
 
     try {
+      // Load stars FRESH from storage to avoid race conditions
+      // (User might have added stars between auth and sync)
+      final localStars = await StorageService.loadGratitudeStars();
+
       print('🔄 Triggering cloud sync with ${localStars.length} local stars');
 
       // Check if there's an old anonymous account to merge
@@ -142,19 +147,18 @@ class _SignInScreenState extends State<SignInScreen> {
 
     try {
       if (_isSignUp) {
-        // Get local stars before linking
-        final localStars = await StorageService.loadGratitudeStars();
-
+        // Authenticate first, load stars inside sync to avoid race condition
         await _authService.linkEmailPassword(email, password);
 
         if (mounted) {
           Navigator.of(context).pop();
-
-          // Pass local stars to sync
           _showSuccessSnackBar(l10n.accountCreatedSuccess);
 
-          // Trigger sync in the background
-          _triggerCloudSync(localStars);
+          // Mark current user as local data owner
+          await _setLocalDataOwner();
+
+          // Trigger sync - stars loaded fresh inside sync function
+          _triggerCloudSync();
         }
       } else {
         await _authService.signInWithEmail(email, password);
@@ -163,8 +167,11 @@ class _SignInScreenState extends State<SignInScreen> {
           Navigator.of(context).pop();
           _showSuccessSnackBar(l10n.signInSuccess);
 
-          // Trigger sync in the background
-          _triggerCloudSync(await StorageService.loadGratitudeStars());
+          // Mark current user as local data owner
+          await _setLocalDataOwner();
+
+          // Trigger sync - stars loaded fresh inside sync function
+          _triggerCloudSync();
         }
       }
     } catch (e) {  // ADDED catch block
@@ -210,6 +217,21 @@ class _SignInScreenState extends State<SignInScreen> {
 
   bool _isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  // Mark current user as owner of local data
+  Future<void> _setLocalDataOwner() async {
+    try {
+      final user = _authService.currentUser;
+      if (user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('local_data_owner_uid', user.uid);
+        print('✅ Set local data owner: ${user.uid}');
+      }
+    } catch (e) {
+      print('⚠️ Error setting data owner: $e');
+      // Non-critical, continue anyway
+    }
   }
 
   @override

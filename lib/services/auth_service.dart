@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../storage.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -151,9 +152,35 @@ class AuthService {
     }
   }
 
-  // Sign out
+  // Sign out - clear all local user data for privacy
   Future<void> signOut() async {
-    await _auth.signOut();
+    try {
+      // Clear local data BEFORE signing out
+      // This prevents next user from seeing previous user's data
+      await _clearLocalUserData();
+
+      // Sign out from Firebase
+      await _auth.signOut();
+
+      print('✅ Signed out and cleared local data');
+    } catch (e) {
+      print('⚠️ Error during sign out: $e');
+      // Still attempt sign out even if clear fails
+      await _auth.signOut();
+    }
+  }
+
+// Helper method to clear all local user data
+  Future<void> _clearLocalUserData() async {
+    try {
+      // Use StorageService's centralized clear method
+      await StorageService.clearAllData();
+
+      print('🗑️ Cleared all local user data');
+    } catch (e) {
+      print('⚠️ Error clearing local data: $e');
+      rethrow;
+    }
   }
 
   // Get user display name

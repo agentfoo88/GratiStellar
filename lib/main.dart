@@ -24,6 +24,8 @@ import 'screens/welcome_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'widgets/app_dialog.dart';
 import 'firebase_options.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ========================================
 // UI SCALE CONFIGURATION
@@ -64,11 +66,20 @@ class FloatingGratitudeLabel extends StatelessWidget {
     // Enhanced edge padding that accounts for zoom level
     final dynamicEdgePadding = 8.0 + (40.0 / cameraScale.clamp(0.5, 2.0));
 
-    // Calculate desired centered position
-    double horizontalTranslation = -0.5;
-
     // Convert star world position to screen position
     final starScreenX = (starX * cameraScale) + cameraPosition.dx;
+    final starScreenY = (starY * cameraScale) + cameraPosition.dy - (verticalOffset * cameraScale);
+
+    // Hide label if star is off-screen
+    if (starScreenX < -maxLabelWidth ||
+        starScreenX > screenSize.width + maxLabelWidth ||
+        starScreenY < -100 ||
+        starScreenY > screenSize.height + 100) {
+      return SizedBox.shrink(); // Don't render off-screen labels
+    }
+
+    // Calculate desired centered position
+    double horizontalTranslation = -0.5;
 
     // Check if label would overflow left edge
     final labelLeftEdge = starScreenX - (maxLabelWidth / 2);
@@ -83,6 +94,9 @@ class FloatingGratitudeLabel extends StatelessWidget {
       final overhang = labelRightEdge - (screenSize.width - dynamicEdgePadding);
       horizontalTranslation = -0.5 - (overhang / maxLabelWidth);
     }
+
+    // Clamp translation to prevent over-shifting
+    horizontalTranslation = horizontalTranslation.clamp(-0.9, -0.1);
 
     return Positioned(
       left: starX,
@@ -121,7 +135,7 @@ class FloatingGratitudeLabel extends StatelessWidget {
               ),
               child: Text(
                 star.text,
-                style: FontScaling.getBodySmall(context).copyWith(
+                style: FontScaling.getCaption(context).copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                 ),
                 maxLines: 3,
@@ -244,6 +258,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   List<GratitudeStar> gratitudeStars = [];
   List<OrganicNebulaRegion> _organicNebulaRegions = [];
+  List<VanGoghStar> _vanGoghStars = [];
+  List<BackgroundStar> _staticStars = [];
+  List<Paint> _glowPatterns = [];
+  List<Paint> _backgroundGradients = [];
   late AnimationController _backgroundController;
   late AnimationController _starController;
   late CameraController _cameraController;
@@ -251,21 +269,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   bool _showBranding = true;
   bool _isAnimating = false;
   bool _isAppInBackground = false;
+  bool _showAllGratitudes = false;
+  bool _mindfulnessMode = false;
+  bool _isMultiFingerGesture = false;
+  bool _isEditMode = false;
   AnimationController? _birthController;
   GratitudeStar? _animatingStar;
   final math.Random _random = math.Random();
   DateTime? _lastScrollTime;
-  List<VanGoghStar> _vanGoghStars = [];
-  List<BackgroundStar> _staticStars = [];
-  List<Paint> _glowPatterns = [];
-  List<Paint> _backgroundGradients = [];
-  bool _showAllGratitudes = false;
-  bool _mindfulnessMode = false;
   int _mindfulnessInterval = 3;
   Timer? _mindfulnessTimer;
   GratitudeStar? _activeMindfulnessStar;
   final String _userName = "A friend";
-  bool _isEditMode = false;
   Color? _previewColor;
   Color? _tempColorPreview;  // Temporary color during editing
   int? _tempColorIndexPreview;  // Temporary index during editing
@@ -336,13 +351,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     _loadGratitudes();
 
-    Future.delayed(Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _showBranding = false;
-        });
-      }
-    });
+    _startSplashTimer();
   }
 
   void _initializePrecomputedElements() {
@@ -355,8 +364,62 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     print('🎨 Generated ${_backgroundGradients.length} background gradients');
   }
 
+  void _startSplashTimer() {
+    Future.delayed(Duration(seconds: 3), () {
+      if (mounted && _showBranding) {
+        setState(() {
+          _showBranding = false;
+        });
+      }
+    });
+  }
+
+  void _skipSplash() {
+    if (_showBranding) {
+      setState(() {
+        _showBranding = false;
+      });
+    }
+  }
+
   Future<void> _loadGratitudes() async {
     print('💾 Loading gratitudes...');
+
+    // Check if this is first run after install/reinstall
+    await _checkFirstRun();
+
+    // Safety check: If signed in, verify local data belongs to current user
+    if (_authService.isSignedIn) {
+      final currentUid = _authService.currentUser?.uid;
+      final prefs = await SharedPreferences.getInstance();
+      final localDataOwner = prefs.getString('local_data_owner_uid');
+
+      if (localDataOwner != null && localDataOwner != currentUid) {
+        // Local data belongs to different user - clear ALL data!
+        print('⚠️ Local data belongs to different user. Clearing...');
+        await StorageService.clearAllData();  // ← Use centralized clear
+        await prefs.setString('local_data_owner_uid', currentUid!);
+
+        // Load empty list, will sync from cloud
+        if (mounted) {
+          setState(() {
+            gratitudeStars = [];
+            _isLoading = false;
+          });
+        }
+
+        // Sync from cloud
+        if (_authService.hasEmailAccount) {
+          _syncWithCloud();
+        }
+        return; // Exit early
+      }
+
+      // Store current user as owner if not set
+      if (localDataOwner == null && currentUid != null) {
+        await prefs.setString('local_data_owner_uid', currentUid);
+      }
+    }
     final stars = await StorageService.loadGratitudeStars();
 
     if (mounted) {
@@ -1211,22 +1274,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  void _updateFromRGB(StateSetter setState) {
-    try {
-      final r = int.parse(_redController.text).clamp(0, 255);
-      final g = int.parse(_greenController.text).clamp(0, 255);
-      final b = int.parse(_blueController.text).clamp(0, 255);
-
-      final color = Color.fromARGB(255, r, g, b);
-      setState(() {
-        _previewColor = color;
-        _hexColorController.text = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
-      });
-    } catch (e) {
-      // Invalid RGB input
-    }
-  }
-
   void _applyColorChange(GratitudeStar star, int? colorIndex, StateSetter modalSetState) {
     // Store temporarily - don't commit to gratitudeStars yet
     if (colorIndex != null) {
@@ -1604,6 +1651,31 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             onTap: () {
               Navigator.pop(context);
               GratitudeDialogs.showQuitConfirmation(context);
+            },
+          ),
+          Divider(
+            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            height: 1,
+          ),
+
+// Version number at bottom
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final version = snapshot.data?.version ?? '1.0.0';
+              final buildNumber = snapshot.data?.buildNumber ?? '1';
+
+              return Padding(
+                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 16)),
+                child: Center(
+                  child: Text(
+                    'Version $version ($buildNumber)',
+                    style: FontScaling.getCaption(context).copyWith(
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
+                  ),
+                ),
+              );
             },
           ),
         ],
@@ -2052,6 +2124,29 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     });
   }
 
+  // Check if this is the first run after install and clear stale data
+  Future<void> _checkFirstRun() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasRunBefore = prefs.getBool('has_run_before') ?? false;
+
+      if (!hasRunBefore) {
+        print('🆕 First run detected - clearing any stale data');
+
+        // Clear all local data to ensure fresh start
+        await StorageService.clearAllData();
+
+        // Mark that app has run
+        await prefs.setBool('has_run_before', true);
+
+        print('✅ First run setup complete');
+      }
+    } catch (e) {
+      print('⚠️ Error checking first run: $e');
+      // Non-critical, continue anyway
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     print('🏗️ Building GratitudeScreen, _isLoading: $_isLoading, stars: ${_staticStars.length}');
@@ -2191,6 +2286,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         _mindfulnessMode = false;
                       });
                     }
+
+                    // Detect if this is a multi-finger gesture
+                    _isMultiFingerGesture = details.pointerCount > 1;
                   },
                   onScaleUpdate: _isAnimating ? null : (details) {
                     if (_mindfulnessMode) {
@@ -2204,9 +2302,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     if (details.scale != 1.0) {
                       final scaleChange = (details.scale - 1.0).abs();
                       if (scaleChange > 0.01) {
-                        // Dampen the scale change to make it less sensitive
-                        // Instead of applying full scale change, only apply a fraction
-                        final dampingFactor = 0.25;  // Adjust this (0.1 = very slow, 1.0 = full speed)
+                        // Very gentle zoom
+                        final dampingFactor = 0.1;
                         final dampenedScale = 1.0 + ((details.scale - 1.0) * dampingFactor);
                         final newScale = _cameraController.scale * dampenedScale;
                         _cameraController.updateScale(newScale, details.focalPoint);
@@ -2218,8 +2315,16 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       _cameraController.updatePosition(details.focalPointDelta);
                     }
                   },
-                  onScaleEnd: _isAnimating ? null : (details) {},
-                  onTapDown: _isAnimating ? null : (details) => _handleStarTap(details),
+                  onScaleEnd: _isAnimating ? null : (details) {
+                    // Reset multi-finger flag when gesture ends
+                    _isMultiFingerGesture = false;
+                  },
+                  onTapDown: _isAnimating ? null : (details) {
+                    // Only handle tap if it wasn't a multi-finger gesture
+                    if (!_isMultiFingerGesture) {
+                      _handleStarTap(details);
+                    }
+                  },
                   child: AnimatedBuilder(
                     animation: _cameraController,
                     builder: (context, child) {
@@ -2328,26 +2433,37 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             // Branding overlay
             if (_showBranding)
               Positioned.fill(
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.7),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.appTitle,
-                          style: FontScaling.getAppTitle(context).copyWith(
-                            fontSize: FontScaling.getAppTitle(context).fontSize! * universalUIScale,
+                child: GestureDetector(
+                  onTap: _skipSplash,  // ADD THIS
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.appTitle,
+                            style: FontScaling.getAppTitle(context).copyWith(
+                              fontSize: FontScaling.getAppTitle(context).fontSize! * universalUIScale,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: FontScaling.getResponsiveSpacing(context, 16) * universalUIScale),
-                        Text(
-                          AppLocalizations.of(context)!.appSubtitle,
-                          style: FontScaling.getSubtitle(context).copyWith(
-                            fontSize: FontScaling.getSubtitle(context).fontSize! * universalUIScale,
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 16) * universalUIScale),
+                          Text(
+                            AppLocalizations.of(context)!.appSubtitle,
+                            style: FontScaling.getSubtitle(context).copyWith(
+                              fontSize: FontScaling.getSubtitle(context).fontSize! * universalUIScale,
+                            ),
                           ),
-                        ),
-                      ],
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 32) * universalUIScale),
+                          // Add skip hint
+                          Text(
+                            'Tap to skip',
+                            style: FontScaling.getCaption(context).copyWith(
+                              color: Colors.white.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

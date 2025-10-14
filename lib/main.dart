@@ -248,11 +248,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _gratitudeController = TextEditingController();
-  final TextEditingController _editTextController = TextEditingController();
-  final TextEditingController _hexColorController = TextEditingController();
-  final TextEditingController _redController = TextEditingController();
-  final TextEditingController _greenController = TextEditingController();
-  final TextEditingController _blueController = TextEditingController();
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
 
@@ -272,8 +267,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   bool _showAllGratitudes = false;
   bool _mindfulnessMode = false;
   bool _isMultiFingerGesture = false;
-  bool _isEditMode = false;
-  AnimationController? _birthController;
+    AnimationController? _birthController;
   GratitudeStar? _animatingStar;
   final math.Random _random = math.Random();
   DateTime? _lastScrollTime;
@@ -282,8 +276,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   GratitudeStar? _activeMindfulnessStar;
   final String _userName = "A friend";
   Color? _previewColor;
-  Color? _tempColorPreview;  // Temporary color during editing
-  int? _tempColorIndexPreview;  // Temporary index during editing
   StreamSubscription<User?>? _authSubscription;
 
   @override
@@ -388,6 +380,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // Check if this is first run after install/reinstall
     await _checkFirstRun();
 
+    // Restore anonymous session if exists
+    await _restoreAnonymousSessionIfNeeded();
+
     // Safety check: If signed in, verify local data belongs to current user
     if (_authService.isSignedIn) {
       final currentUid = _authService.currentUser?.uid;
@@ -437,6 +432,39 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
+  Future<void> _restoreAnonymousSessionIfNeeded() async {
+    try {
+      // Only restore if not currently signed in
+      if (_authService.isSignedIn) {
+        print('✓ User already signed in, skipping session restoration');
+        return;
+      }
+
+      // Check if we have a saved anonymous UID
+      final savedUid = await _authService.getSavedAnonymousUid();
+
+      if (savedUid != null) {
+        print('🔄 Found saved anonymous UID: $savedUid');
+
+        // Firebase will auto-restore anonymous sessions if valid
+        // We just need to wait a moment for Firebase to initialize
+        await Future.delayed(Duration(milliseconds: 500));
+
+        // Check if session was restored
+        if (_authService.isSignedIn && _authService.currentUser?.uid == savedUid) {
+          print('✅ Anonymous session restored successfully');
+        } else {
+          print('⚠️ Saved session expired or invalid, will create new session on welcome screen');
+        }
+      } else {
+        print('ℹ️ No saved anonymous UID found');
+      }
+    } catch (e) {
+      print('⚠️ Error restoring anonymous session: $e');
+      // Continue normally - user will create new session
+    }
+  }
+
   Future<void> _syncWithCloud() async {
     try {
       print('🔄 Starting cloud sync...');
@@ -480,11 +508,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _backgroundController.dispose();
     _starController.dispose();
     _gratitudeController.dispose();
-    _editTextController.dispose();
-    _hexColorController.dispose();
-    _redController.dispose();
-    _greenController.dispose();
-    _blueController.dispose();
     _birthController?.dispose();
     _mindfulnessTimer?.cancel();
     super.dispose();
@@ -626,245 +649,24 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     await Future.delayed(Duration(milliseconds: 400));
   }
 
-  void _showStarDetails(GratitudeStar star) {
-    final starId = star.id; // Store the ID, not the star reference
-
-    setState(() {
-      _isEditMode = false;
-      _editTextController.text = star.text;
-    });
-
-    showDialog(
+  /// Shows the edit dialog for a star (delegates to modal_dialogs.dart)
+  void _showStarDetails(
+      GratitudeStar star, {
+        VoidCallback? onJumpToStar,
+        VoidCallback? onAfterSave,
+        VoidCallback? onAfterDelete,
+      }) {
+    GratitudeDialogs.showEditStar(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            // Look up the current star by ID on every rebuild
-            var currentStar = gratitudeStars.firstWhere(
-                  (s) => s.id == starId,
-              orElse: () => star, // Fallback to original if somehow deleted
-            );
-
-            // Apply temporary color preview if exists
-            if (_tempColorPreview != null || _tempColorIndexPreview != null) {
-              print('DEBUG EDIT MODAL: Applying temp color - _tempColorPreview: $_tempColorPreview, _tempColorIndexPreview: $_tempColorIndexPreview');
-              if (_tempColorIndexPreview != null) {
-                // Preset color preview
-                currentStar = currentStar.copyWith(
-                  colorIndex: _tempColorIndexPreview,
-                  clearCustomColor: true,
-                );
-              } else {
-                // Custom color preview
-                currentStar = currentStar.copyWith(
-                  customColor: _tempColorPreview,
-                );
-              }
-            } else {
-              print('DEBUG EDIT MODAL: No temp color to apply');
-            }
-
-            return Dialog(
-              backgroundColor: Colors.transparent,
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
-                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
-                decoration: BoxDecoration(
-                  color: Color(0xFF1A2238).withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: currentStar.color.withValues(alpha: 0.5),
-                    width: 2,
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SvgPicture.asset(
-                      'assets/icon_star.svg',
-                      width: FontScaling.getResponsiveIconSize(context, 48),
-                      height: FontScaling.getResponsiveIconSize(context, 48),
-                      colorFilter: ColorFilter.mode(currentStar.color, BlendMode.srcIn),
-                    ),
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-
-                    // Text display or edit mode
-                    if (!_isEditMode)
-                      Text(
-                        currentStar.text,
-                        style: FontScaling.getBodyLarge(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                        textAlign: TextAlign.center,
-                      )
-                    else
-                      TextField(
-                        controller: _editTextController,
-                        decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!.editGratitudeHint,
-                          hintStyle: FontScaling.getInputHint(context),
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(
-                              color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                            ),
-                          ),
-                        ),
-                        style: FontScaling.getInputText(context),
-                        maxLines: 4,
-                      ),
-
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-
-                    // Action buttons
-                    if (!_isEditMode)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          GratitudeDialogs.buildModalIconButton(
-                            context: context,
-                            icon: Icons.edit,
-                            label: AppLocalizations.of(context)!.editButton,
-                            onTap: () {
-                              setState(() {
-                                _isEditMode = true;
-                              });
-                            },
-                          ),
-                          GratitudeDialogs.buildModalIconButton(
-                            context: context,
-                            icon: Icons.share,
-                            label: AppLocalizations.of(context)!.shareButton,
-                            onTap: () => _shareStar(currentStar),
-                          ),
-                          GratitudeDialogs.buildModalIconButton(
-                            context: context,
-                            icon: Icons.close,
-                            label: AppLocalizations.of(context)!.closeButton,
-                            onTap: () => Navigator.of(context).pop(),
-                          ),
-                        ],
-                      )
-                    else
-                      Column(
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              _showColorPicker(currentStar, setState);
-                            },
-                            icon: Icon(Icons.palette, size: FontScaling.getResponsiveIconSize(context, 20)),
-                            label: Text(
-                              AppLocalizations.of(context)!.changeColorButton,
-                              style: FontScaling.getButtonText(context),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.2),
-                              foregroundColor: Color(0xFFFFE135),
-                              minimumSize: Size(double.infinity, 48),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: FontScaling.getResponsiveSpacing(context, 20),
-                                vertical: FontScaling.getResponsiveSpacing(context, 12),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  GratitudeDialogs.showDeleteConfirmation(
-                                    context: context,
-                                    modalContext: context,
-                                    star: currentStar,
-                                    onDelete: _deleteStar,
-                                  );
-                                },
-                                icon: Icon(Icons.close, size: FontScaling.getResponsiveIconSize(context, 18)),
-                                label: Text(
-                                  AppLocalizations.of(context)!.deleteButton,
-                                  style: FontScaling.getButtonText(context),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: FontScaling.getResponsiveSpacing(context, 16),
-                                    vertical: FontScaling.getResponsiveSpacing(context, 10),
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  elevation: 0,
-                                ),
-                              ),
-                              SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _isEditMode = false;
-                                    _editTextController.text = currentStar.text;
-                                    // Clear temp color previews when canceling edit
-                                    _tempColorPreview = null;
-                                    _tempColorIndexPreview = null;
-                                  });
-                                },
-                                child: Text(
-                                  AppLocalizations.of(context)!.cancelButton,
-                                  style: FontScaling.getButtonText(context).copyWith(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
-                              ElevatedButton(
-                                onPressed: () {
-                                  _saveStarEdits(currentStar);
-                                  Navigator.of(context).pop();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color(0xFFFFE135),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: FontScaling.getResponsiveSpacing(context, 20),
-                                    vertical: FontScaling.getResponsiveSpacing(context, 12),
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: Text(
-                                  AppLocalizations.of(context)!.saveButton,
-                                  style: FontScaling.getButtonText(context).copyWith(
-                                    color: Color(0xFF1A2238),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    ).then((_) {
-      // Clean up when dialog closes
-      setState(() {
-        _isEditMode = false;
-        _tempColorPreview = null;  // Clear temp preview
-        _tempColorIndexPreview = null;  // Clear temp preview
-      });
-    });
+      star: star,
+      allStars: gratitudeStars,
+      onSave: _saveStarEdits,
+      onDelete: _deleteStar,
+      onShare: _shareStar,
+      onJumpToStar: onJumpToStar,
+      onAfterSave: onAfterSave,       // ← Add this
+      onAfterDelete: onAfterDelete,   // ← Add this
+    );
   }
 
   void _shareStar(GratitudeStar star) {
@@ -875,41 +677,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  void _saveStarEdits(GratitudeStar star) {
-    final index = gratitudeStars.indexWhere((s) => s.id == star.id);
+  void _saveStarEdits(GratitudeStar updatedStar) {
+    final index = gratitudeStars.indexWhere((s) => s.id == updatedStar.id);
     if (index != -1) {
       HapticFeedback.mediumImpact();
       setState(() {
-        var updatedStar = star.copyWith(
-          text: _editTextController.text,
-        );
-
-        // Apply temporary color changes if any
-        if (_tempColorIndexPreview != null) {
-          updatedStar = updatedStar.copyWith(
-            colorIndex: _tempColorIndexPreview,
-            clearCustomColor: true,
-          );
-        } else if (_tempColorPreview != null) {
-          updatedStar = updatedStar.copyWith(
-            customColor: _tempColorPreview,
-          );
-        }
-
         gratitudeStars[index] = updatedStar;
-
-        // Clear temporary preview
-        _tempColorPreview = null;
-        _tempColorIndexPreview = null;
       });
       _saveGratitudes();
-
-      // Sync to cloud if signed in
-      if (_authService.hasEmailAccount) {
-        _firestoreService.updateStar(gratitudeStars[index]).catchError((e) {
-          print('⚠️ Failed to sync star edit to cloud: $e');
-        });
-      }
     }
   }
 
@@ -929,363 +704,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         print('⚠️ Failed to sync star deletion to cloud: $e');
       });
     }
-  }
-
-  void _showColorPicker(GratitudeStar star, StateSetter modalSetState) {
-    // Initialize preview color and controllers
-    _previewColor = star.color;
-    final currentColor = star.color;
-    final r = (currentColor.r * 255).round();
-    final g = (currentColor.g * 255).round();
-    final b = (currentColor.b * 255).round();
-    _hexColorController.text = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
-    _redController.text = r.toString();
-    _greenController.text = g.toString();
-    _blueController.text = b.toString();
-
-    int? selectedColorIndex = star.customColor == null ? star.colorIndex : null;
-
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setStateColorPicker) {
-            return Dialog(
-              backgroundColor: Colors.transparent,
-              child: Container(
-                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
-                decoration: BoxDecoration(
-                  color: Color(0xFF1A2238).withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Live preview star
-                      Text(
-                        AppLocalizations.of(context)!.colorPreviewTitle,
-                        style: FontScaling.getModalTitle(context),
-                      ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                      Container(
-                        padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: SvgPicture.asset(  // ADD 'child:' here
-                          'assets/icon_star.svg',
-                          width: FontScaling.getResponsiveIconSize(context, 64),
-                          height: FontScaling.getResponsiveIconSize(context, 64),
-                          colorFilter: ColorFilter.mode(_previewColor!, BlendMode.srcIn),
-                        ),
-                      ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-
-                      // Color grid
-                      Text(
-                        AppLocalizations.of(context)!.presetColorsTitle,
-                        style: FontScaling.getBodyMedium(context),
-                      ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                      _buildColorGrid(selectedColorIndex ?? -1, (index) {
-                        setStateColorPicker(() {
-                          selectedColorIndex = index;
-                          _previewColor = StarColors.getColor(index);
-                          final color = StarColors.getColor(index);
-                          final r = (color.r * 255).round();
-                          final g = (color.g * 255).round();
-                          final b = (color.b * 255).round();
-                          _hexColorController.text = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
-                          _redController.text = r.toString();
-                          _greenController.text = g.toString();
-                          _blueController.text = b.toString();
-                        });
-                      }),
-
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-
-                      // Custom color section
-                      Text(
-                        AppLocalizations.of(context)!.customColorTitle,
-                        style: FontScaling.getBodyMedium(context),
-                      ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-
-                      // Hex input
-                      TextField(
-                        controller: _hexColorController,
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)!.hexColorLabel,
-                          hintText: AppLocalizations.of(context)!.hexColorHint,
-                          hintStyle: FontScaling.getInputHint(context),
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        style: FontScaling.getInputText(context),
-                        onChanged: (value) {
-                          // Auto-add # if missing
-                          String hexValue = value;
-                          if (!hexValue.startsWith('#') && hexValue.length >= 6) {
-                            hexValue = '#$hexValue';
-                            _hexColorController.value = TextEditingValue(
-                              text: hexValue,
-                              selection: TextSelection.collapsed(offset: hexValue.length),
-                            );
-                          }
-
-                          if (hexValue.length == 7 && hexValue.startsWith('#')) {
-                            try {
-                              final color = Color(int.parse(hexValue.substring(1), radix: 16) + 0xFF000000);
-                              setStateColorPicker(() {
-                                _previewColor = color;
-                                selectedColorIndex = null;
-                                _redController.text = ((color.r * 255).round()).toString();
-                                _greenController.text = ((color.g * 255).round()).toString();
-                                _blueController.text = ((color.b * 255).round()).toString();
-                              });
-                            } catch (e) {
-                              // Invalid hex input
-                            }
-                          }
-                        },
-                      ),
-
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-
-                      // RGB inputs
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _redController,
-                              decoration: InputDecoration(
-                                labelText: 'R',
-                                filled: true,
-                                fillColor: Colors.white.withValues(alpha: 0.1),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              style: FontScaling.getInputText(context),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) {
-                                try {
-                                  final r = int.parse(_redController.text).clamp(0, 255);
-                                  final g = int.parse(_greenController.text).clamp(0, 255);
-                                  final b = int.parse(_blueController.text).clamp(0, 255);
-
-                                  final color = Color.fromARGB(255, r, g, b);
-                                  setStateColorPicker(() {
-                                    _previewColor = color;
-                                    selectedColorIndex = null;
-                                    _hexColorController.text = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
-                                  });
-                                } catch (e) {
-                                  // Invalid RGB input
-                                }
-                              },
-                            ),
-                          ),
-                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
-                          Expanded(
-                            child: TextField(
-                              controller: _greenController,
-                              decoration: InputDecoration(
-                                labelText: 'G',
-                                filled: true,
-                                fillColor: Colors.white.withValues(alpha: 0.1),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              style: FontScaling.getInputText(context),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) {
-                                try {
-                                  final r = int.parse(_redController.text).clamp(0, 255);
-                                  final g = int.parse(_greenController.text).clamp(0, 255);
-                                  final b = int.parse(_blueController.text).clamp(0, 255);
-
-                                  final color = Color.fromARGB(255, r, g, b);
-                                  setStateColorPicker(() {
-                                    _previewColor = color;
-                                    selectedColorIndex = null;
-                                    _hexColorController.text = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
-                                  });
-                                } catch (e) {
-                                  // Invalid RGB input
-                                }
-                              },
-                            ),
-                          ),
-                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
-                          Expanded(
-                            child: TextField(
-                              controller: _blueController,
-                              decoration: InputDecoration(
-                                labelText: 'B',
-                                filled: true,
-                                fillColor: Colors.white.withValues(alpha: 0.1),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              style: FontScaling.getInputText(context),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) {
-                                try {
-                                  final r = int.parse(_redController.text).clamp(0, 255);
-                                  final g = int.parse(_greenController.text).clamp(0, 255);
-                                  final b = int.parse(_blueController.text).clamp(0, 255);
-
-                                  final color = Color.fromARGB(255, r, g, b);
-                                  setStateColorPicker(() {
-                                    _previewColor = color;
-                                    selectedColorIndex = null;
-                                    _hexColorController.text = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
-                                  });
-                                } catch (e) {
-                                  // Invalid RGB input
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-
-                      // Action buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: Text(
-                              AppLocalizations.of(context)!.cancelButton,
-                              style: FontScaling.getButtonText(context).copyWith(
-                                color: Colors.white.withValues(alpha: 0.6),
-                              ),
-                            ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              // Only apply changes when Apply is clicked
-                              _applyColorChange(star, selectedColorIndex, modalSetState);
-                              Navigator.of(context).pop(true);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFFFFE135),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: FontScaling.getResponsiveSpacing(context, 24),
-                                vertical: FontScaling.getResponsiveSpacing(context, 12),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              AppLocalizations.of(context)!.applyButton,
-                              style: FontScaling.getButtonText(context).copyWith(
-                                color: Color(0xFF1A2238),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );  // ← Close StatefulBuilder
-      },  // ← Close showDialog builder function
-    ).then((result) {
-      print('DEBUG COLOR PICKER CLOSED: result = $result');
-      // Clear temp colors if dialog was closed without clicking Apply
-      if (result != true) {
-        print('DEBUG: Clearing temp colors');
-        setState(() {
-          _tempColorPreview = null;
-          _tempColorIndexPreview = null;
-        });
-        modalSetState(() {});  // Refresh edit modal
-      }
-    });
-  }  // ← Close _showColorPicker method
-
-  Widget _buildColorGrid(int selectedIndex, Function(int) onColorTap) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 8,
-        crossAxisSpacing: FontScaling.getResponsiveSpacing(context, 8),
-        mainAxisSpacing: FontScaling.getResponsiveSpacing(context, 8),
-      ),
-      itemCount: StarColors.palette.length,
-      itemBuilder: (context, index) {
-        final isSelected = index == selectedIndex;
-        return GestureDetector(
-          onTap: () => onColorTap(index),
-          child: Container(
-            decoration: BoxDecoration(
-              color: StarColors.palette[index],
-              shape: BoxShape.circle,
-              border: isSelected ? Border.all(
-                color: Colors.white,
-                width: 3,
-              ) : null,
-              boxShadow: isSelected ? [
-                BoxShadow(
-                  color: StarColors.palette[index].withValues(alpha: 0.5),
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                ),
-              ] : null,
-            ),
-            child: isSelected ? Icon(
-              Icons.check,
-              color: Colors.white,
-              size: FontScaling.getResponsiveIconSize(context, 16),
-            ) : null,
-          ),
-        );
-      },
-    );
-  }
-
-  void _applyColorChange(GratitudeStar star, int? colorIndex, StateSetter modalSetState) {
-    // Store temporarily - don't commit to gratitudeStars yet
-    if (colorIndex != null) {
-      _tempColorIndexPreview = colorIndex;
-      _tempColorPreview = null;  // Clear custom color
-    } else {
-      _tempColorPreview = _previewColor;
-      _tempColorIndexPreview = null;
-    }
-
-    // Trigger modal rebuild to show new color in edit modal icon
-    modalSetState(() {});
   }
 
   void _handleStarTap(TapDownDetails details) {
@@ -1454,32 +872,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _showStarDetailsFromList(GratitudeStar star, VoidCallback refreshList) {
-    final starId = star.id; // Store the ID, not the star reference
-
-    setState(() {
-      _isEditMode = false;
-      _editTextController.text = star.text;
-    });
-
-    GratitudeDialogs.showStarDetailsWithJump(
-      context: context,
-      star: star,
-      starId: starId,  // Pass the star ID
-      gratitudeStars: gratitudeStars,  // Pass the list for lookup
-      editTextController: _editTextController,
-      hexColorController: _hexColorController,
-      redController: _redController,
-      greenController: _greenController,
-      blueController: _blueController,
-      onShowColorPicker: _showColorPicker,
-      onSaveEdits: _saveStarEdits,
-      onDelete: _deleteStar,
-      onShare: _shareStar,
+    _showStarDetails(
+      star,
       onJumpToStar: () {
         Navigator.of(context).popUntil((route) => route.isFirst);
         _jumpToStar(star);
       },
-      onListRefresh: refreshList,
+      onAfterSave: refreshList,     // ← Add this
+      onAfterDelete: refreshList,   // ← Add this
     );
   }
 

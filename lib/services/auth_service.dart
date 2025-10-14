@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -27,6 +28,9 @@ class AuthService {
       final user = userCredential.user;
 
       if (user != null) {
+        // Save anonymous UID to persist session
+        await _saveAnonymousUid(user.uid);
+
         // Update display name
         await user.updateDisplayName(displayName);
 
@@ -77,6 +81,9 @@ class AuthService {
           'createdAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
+        // Clear anonymous UID since account is now linked to email
+        await _clearAnonymousUid();
+
         print('✅ Successfully linked anonymous account to email');
         return userCredential.user;
 
@@ -119,6 +126,9 @@ class AuthService {
             'mergedFromAnonymous': anonymousUid,
             'mergedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
+
+          // Clear anonymous UID since we're now signed into email account
+          await _clearAnonymousUid();
 
           return existingAccountCredential.user;
         }
@@ -200,6 +210,39 @@ class AuthService {
     } catch (e) {
       print('Error getting display name: $e');
       return null;
+    }
+  }
+
+  // Save anonymous UID to SharedPreferences
+  Future<void> _saveAnonymousUid(String uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('anonymous_uid', uid);
+      print('💾 Saved anonymous UID: $uid');
+    } catch (e) {
+      print('⚠️ Error saving anonymous UID: $e');
+    }
+  }
+
+  // Get saved anonymous UID
+  Future<String?> getSavedAnonymousUid() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('anonymous_uid');
+    } catch (e) {
+      print('⚠️ Error getting saved anonymous UID: $e');
+      return null;
+    }
+  }
+
+  // Clear saved anonymous UID
+  Future<void> _clearAnonymousUid() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('anonymous_uid');
+      print('🗑️ Cleared saved anonymous UID');
+    } catch (e) {
+      print('⚠️ Error clearing anonymous UID: $e');
     }
   }
 

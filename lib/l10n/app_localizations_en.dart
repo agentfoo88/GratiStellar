@@ -345,4 +345,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sortByColor => 'By Color';
+
+  @override
+  String get feedbackMenuItem => 'Send Feedback';
+
+  @override
+  String get feedbackDialogTitle => 'Send Feedback';
+
+  @override
+  String get feedbackTypeLabel => 'Type';
+
+  @override
+  String get feedbackTypeBug => 'Bug/Error';
+
+  @override
+  String get feedbackTypeFeature => 'Feature Request';
+
+  @override
+  String get feedbackTypeGeneral => 'General Feedback';
+
+  @override
+  String get feedbackMessageLabel => 'Message';
+
+  @override
+  String get feedbackMessageHint => 'Describe your feedback...';
+
+  @override
+  String get feedbackMessageRequired => 'Please enter your feedback';
+
+  @override
+  String get feedbackEmailLabel => 'Contact Email (Optional)';
+
+  @override
+  String get feedbackEmailHint => 'For follow-up on this feedback';
+
+  @override
+  String get feedbackEmailInvalid => 'Please enter a valid email';
+
+  @override
+  String get feedbackSubmit => 'Submit';
+
+  @override
+  String get feedbackSuccess => 'Thank you for your feedback!';
+
+  @override
+  String get feedbackError => 'Failed to submit feedback. Please try again.';
 }

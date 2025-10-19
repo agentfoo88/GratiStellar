@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'storage.dart';
+
+import 'package:flutter/material.dart';
+
 import 'camera_controller.dart';
+import 'storage.dart';
 
 // ========================================
 // STAR APPEARANCE CONFIGURATION

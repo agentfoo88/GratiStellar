@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../storage.dart';
 
 class FirestoreService {
@@ -436,6 +437,63 @@ class FirestoreService {
     } catch (e) {
       print('⚠️ Error checking cloud data: $e');
       return false;
+    }
+  }
+  // ONE-TIME MIGRATION: Add missing fields AND rename old fields
+  Future<void> migrateOldStars() async {
+    if (_starsCollection == null) return;
+
+    try {
+      print('🔄 Checking for stars needing migration...');
+
+      // Get all stars
+      final snapshot = await _starsCollection!.get();
+
+      int migrated = 0;
+      final batch = _firestore.batch();
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        bool needsMigration = false;
+        Map<String, dynamic> updates = {};
+
+        // Check if missing new fields
+        if (!data.containsKey('updatedAt')) {
+          updates['updatedAt'] = data['createdAt'] ?? DateTime.now().millisecondsSinceEpoch;
+          needsMigration = true;
+        }
+
+        if (!data.containsKey('deleted')) {
+          updates['deleted'] = false;
+          updates['deletedAt'] = null;
+          needsMigration = true;
+        }
+
+        if (!data.containsKey('compressed')) {
+          updates['compressed'] = false;
+          needsMigration = true;
+        }
+
+        // RENAME OLD FIELDS
+        if (data.containsKey('colorIndex') && !data.containsKey('colorPresetIndex')) {
+          updates['colorPresetIndex'] = data['colorIndex'];
+          needsMigration = true;
+        }
+
+        if (needsMigration) {
+          batch.update(doc.reference, updates);
+          migrated++;
+        }
+      }
+
+      if (migrated > 0) {
+        await batch.commit();
+        print('✅ Migrated $migrated old stars');
+      } else {
+        print('✅ All stars already migrated');
+      }
+    } catch (e) {
+      print('❌ Migration failed: $e');
     }
   }
 }

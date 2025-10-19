@@ -1,31 +1,34 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/services.dart';
+import 'dart:async';
 import 'dart:math' as math;
-import 'storage.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'background.dart';
 import 'camera_controller.dart';
-import 'starfield.dart';
-import 'gratitude_stars.dart';
-import 'nebula_regions.dart';
-import 'font_scaling.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'l10n/app_localizations.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'dart:async';
-import 'package:share_plus/share_plus.dart';
-import 'modal_dialogs.dart';
-import 'list_view_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'services/firestore_service.dart';
-import 'services/auth_service.dart';
-import 'screens/welcome_screen.dart';
-import 'screens/sign_in_screen.dart';
-import 'widgets/app_dialog.dart';
 import 'firebase_options.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'font_scaling.dart';
+import 'gratitude_stars.dart';
+import 'l10n/app_localizations.dart';
+import 'list_view_screen.dart';
+import 'modal_dialogs.dart';
+import 'nebula_regions.dart';
+import 'screens/sign_in_screen.dart';
+import 'screens/welcome_screen.dart';
+import 'services/auth_service.dart';
+import 'services/firestore_service.dart';
+import 'services/feedback_service.dart';
+import 'starfield.dart';
+import 'storage.dart';
+import 'widgets/app_dialog.dart';
 
 // ========================================
 // UI SCALE CONFIGURATION
@@ -1035,6 +1038,30 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             height: 1,
           ),
 
+          // Send Feedback
+          ListTile(
+            leading: Icon(
+              Icons.feedback_outlined,
+              color: Color(0xFFFFE135),
+              size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
+            ),
+            title: Text(
+              l10n.feedbackMenuItem,
+              style: FontScaling.getBodyMedium(context).copyWith(
+                fontSize: FontScaling.getBodyMedium(context).fontSize! * universalUIScale,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _showFeedbackDialog();
+            },
+          ),
+
+          Divider(
+            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            height: 1,
+          ),
+
           // Exit
           ListTile(
             leading: Icon(
@@ -1502,6 +1529,316 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           onPressed: () => Navigator.pop(context),
         ),
       ],
+    );
+  }
+
+  void _showFeedbackDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    String selectedType = 'bug';
+    String message = '';
+    String contactEmail = '';
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
+            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
+            decoration: BoxDecoration(
+              color: Color(0xFF1A2238).withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Color(0xFFFFE135).withValues(alpha: 0.5),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      l10n.feedbackDialogTitle,
+                      style: FontScaling.getModalTitle(context).copyWith(
+                        color: Color(0xFFFFE135),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 20)),
+
+                    // Type dropdown
+                    Text(
+                      l10n.feedbackTypeLabel,
+                      style: FontScaling.getBodyMedium(context).copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+                    DropdownButtonFormField<String>(
+                      value: selectedType,
+                      dropdownColor: Color(0xFF1A2238),
+                      style: FontScaling.getInputText(context),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFFE135),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'bug',
+                          child: Text(
+                            l10n.feedbackTypeBug,
+                            style: FontScaling.getBodyMedium(context),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'feature',
+                          child: Text(
+                            l10n.feedbackTypeFeature,
+                            style: FontScaling.getBodyMedium(context),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'general',
+                          child: Text(
+                            l10n.feedbackTypeGeneral,
+                            style: FontScaling.getBodyMedium(context),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() => selectedType = value!);
+                      },
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+
+                    // Message field
+                    Text(
+                      l10n.feedbackMessageLabel,
+                      style: FontScaling.getBodyMedium(context).copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+                    TextFormField(
+                      style: FontScaling.getInputText(context),
+                      decoration: InputDecoration(
+                        hintText: l10n.feedbackMessageHint,
+                        hintStyle: FontScaling.getInputText(context).copyWith(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Color(0xFFFFE135),
+                            width: 2,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Colors.red.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Colors.red,
+                            width: 2,
+                          ),
+                        ),
+                        counterStyle: FontScaling.getCaption(context).copyWith(
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      maxLines: 5,
+                      maxLength: 1000,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return l10n.feedbackMessageRequired;
+                        }
+                        return null;
+                      },
+                      onChanged: (value) => message = value,
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+
+                    // Optional email (only show if anonymous)
+                    if (_authService.currentUser?.isAnonymous ?? false) ...[
+                      Text(
+                        l10n.feedbackEmailLabel,
+                        style: FontScaling.getBodyMedium(context).copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+                      TextFormField(
+                        style: FontScaling.getInputText(context),
+                        decoration: InputDecoration(
+                          hintText: l10n.feedbackEmailHint,
+                          hintStyle: FontScaling.getInputText(context).copyWith(
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.05),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Color(0xFFFFE135),
+                              width: 2,
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.red.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.red,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value != null && value.isNotEmpty) {
+                            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                            if (!emailRegex.hasMatch(value)) {
+                              return l10n.feedbackEmailInvalid;
+                            }
+                          }
+                          return null;
+                        },
+                        onChanged: (value) => contactEmail = value,
+                      ),
+                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                    ],
+
+                    // Buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            l10n.cancelButton,
+                            style: FontScaling.getButtonText(context).copyWith(
+                              color: Colors.white.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (formKey.currentState!.validate()) {
+                              Navigator.pop(context);
+
+                              final feedbackService = FeedbackService();
+                              final success = await feedbackService.submitFeedback(
+                                type: selectedType,
+                                message: message,
+                                contactEmail: contactEmail.isNotEmpty ? contactEmail : null,
+                              );
+
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        success ? l10n.feedbackSuccess : l10n.feedbackError
+                                    ),
+                                    backgroundColor: success ? Colors.green : Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFFFFE135),
+                            foregroundColor: Color(0xFF1A2238),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: FontScaling.getResponsiveSpacing(context, 24),
+                              vertical: FontScaling.getResponsiveSpacing(context, 12),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            l10n.feedbackSubmit,
+                            style: FontScaling.getButtonText(context).copyWith(
+                              color: Color(0xFF1A2238),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

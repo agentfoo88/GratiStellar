@@ -1,9 +1,11 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'gratitude_stars.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'gratitude_stars.dart';
 import 'utils/compression_utils.dart';
 
 // Extension to add Gaussian distribution to Random
@@ -144,6 +146,54 @@ class GratitudeStar {
           ? DateTime.fromMillisecondsSinceEpoch(json['deletedAt'])
           : null,
     );
+  }
+}
+
+// Feedback item for user feedback collection
+class FeedbackItem {
+  final String id;
+  final String userId;
+  final String? userEmail;        // From auth if available
+  final String? displayName;      // From auth if available
+  final String type;              // 'bug', 'feature', 'general'
+  final String message;
+  final String? contactEmail;     // Optional email for anonymous users
+  final String appVersion;
+  final String platform;          // 'iOS' or 'Android'
+  final DateTime createdAt;
+
+  FeedbackItem({
+    required this.userId,
+    this.userEmail,
+    this.displayName,
+    required this.type,
+    required this.message,
+    this.contactEmail,
+    required this.appVersion,
+    required this.platform,
+    String? id,
+    DateTime? createdAt,
+  })  : id = id ?? _generateId(),
+        createdAt = createdAt ?? DateTime.now();
+
+  static String _generateId() {
+    return DateTime.now().millisecondsSinceEpoch.toString() +
+        math.Random().nextInt(999999).toString();
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'userEmail': userEmail,
+      'displayName': displayName,
+      'type': type,
+      'message': message,
+      'contactEmail': contactEmail,
+      'appVersion': appVersion,
+      'platform': platform,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+    };
   }
 }
 

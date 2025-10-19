@@ -729,6 +729,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By Color'**
   String get sortByColor;
+
+  /// Menu item for sending feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Send Feedback'**
+  String get feedbackMenuItem;
+
+  /// Title for feedback dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Send Feedback'**
+  String get feedbackDialogTitle;
+
+  /// Label for feedback type dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get feedbackTypeLabel;
+
+  /// Feedback type option for bugs
+  ///
+  /// In en, this message translates to:
+  /// **'Bug/Error'**
+  String get feedbackTypeBug;
+
+  /// Feedback type option for feature requests
+  ///
+  /// In en, this message translates to:
+  /// **'Feature Request'**
+  String get feedbackTypeFeature;
+
+  /// Feedback type option for general feedback
+  ///
+  /// In en, this message translates to:
+  /// **'General Feedback'**
+  String get feedbackTypeGeneral;
+
+  /// Label for feedback message field
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get feedbackMessageLabel;
+
+  /// Hint text for feedback message
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your feedback...'**
+  String get feedbackMessageHint;
+
+  /// Error when feedback message is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your feedback'**
+  String get feedbackMessageRequired;
+
+  /// Label for optional contact email
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Email (Optional)'**
+  String get feedbackEmailLabel;
+
+  /// Hint for contact email field
+  ///
+  /// In en, this message translates to:
+  /// **'For follow-up on this feedback'**
+  String get feedbackEmailHint;
+
+  /// Error for invalid email format
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email'**
+  String get feedbackEmailInvalid;
+
+  /// Button text to submit feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get feedbackSubmit;
+
+  /// Success message after submitting feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your feedback!'**
+  String get feedbackSuccess;
+
+  /// Error message when feedback submission fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit feedback. Please try again.'**
+  String get feedbackError;
 }
 
 class _AppLocalizationsDelegate

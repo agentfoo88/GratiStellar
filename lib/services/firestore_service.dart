@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../storage.dart';
 
 class FirestoreService {
@@ -12,6 +13,249 @@ class FirestoreService {
     if (userId == null) return null;
     return _firestore.collection('users').doc(userId).collection('stars');
   }
+
+  // ============================================================================
+  // DELTA SYNC METHODS (NEW)
+  // ============================================================================
+
+  // Upload only stars modified since last sync (DELTA SYNC)
+  Future<void> uploadDeltaStars(List<GratitudeStar> localStars) async {
+    if (_starsCollection == null) {
+      throw Exception('No user signed in');
+    }
+
+    try {
+      // Get last sync time
+      final lastSyncTime = await StorageService.getLastSyncTime();
+
+      List<GratitudeStar> starsToUpload;
+
+      if (lastSyncTime == null) {
+        // First sync - upload everything
+        print('📤 First sync - uploading all ${localStars.length} stars');
+        starsToUpload = localStars;
+      } else {
+        // Delta sync - only upload stars modified since last sync
+        starsToUpload = localStars.where((star) {
+          return star.updatedAt.isAfter(lastSyncTime);
+        }).toList();
+        print('📤 Delta sync - uploading ${starsToUpload.length} stars (modified since $lastSyncTime)');
+      }
+
+      if (starsToUpload.isEmpty) {
+        print('✅ No stars to upload');
+        await StorageService.saveLastSyncTime(DateTime.now());
+        return;
+      }
+
+      // Upload in batches (Firestore limit: 500 operations per batch)
+      const batchSize = 500;
+      int totalUploaded = 0;
+
+      for (var i = 0; i < starsToUpload.length; i += batchSize) {
+        final batch = _firestore.batch();
+        final end = (i + batchSize < starsToUpload.length)
+            ? i + batchSize
+            : starsToUpload.length;
+
+        for (var j = i; j < end; j++) {
+          final star = starsToUpload[j];
+          final docRef = _starsCollection!.doc(star.id);
+          batch.set(docRef, star.toJson());
+        }
+
+        await batch.commit();
+        totalUploaded += (end - i);
+        print('   Uploaded batch: $totalUploaded / ${starsToUpload.length}');
+      }
+
+      // Save sync timestamp
+      await StorageService.saveLastSyncTime(DateTime.now());
+      print('✅ Delta upload complete: $totalUploaded stars');
+
+    } catch (e) {
+      print('❌ Delta upload failed: $e');
+      rethrow;
+    }
+  }
+
+  // Download only stars modified since last sync (DELTA SYNC)
+  Future<List<GratitudeStar>> downloadDeltaStars() async {
+    if (_starsCollection == null) {
+      throw Exception('No user signed in');
+    }
+
+    try {
+      // Get last sync time
+      final lastSyncTime = await StorageService.getLastSyncTime();
+
+      Query query = _starsCollection!;
+
+      if (lastSyncTime != null) {
+        // Delta sync - only get stars modified since last sync
+        print('📥 Delta sync - downloading stars modified since $lastSyncTime');
+        query = query
+            .where('updatedAt', isGreaterThan: lastSyncTime.millisecondsSinceEpoch)
+            .where('deleted', isEqualTo: false);  // Don't download deleted stars
+      } else {
+        // First sync - download everything
+        print('📥 First sync - downloading all stars');
+        query = query.where('deleted', isEqualTo: false);
+      }
+
+      final snapshot = await query.get();
+
+      final stars = snapshot.docs
+          .map((doc) {
+        try {
+          return GratitudeStar.fromJson(doc.data() as Map<String, dynamic>);
+        } catch (e) {
+          print('⚠️ Error parsing star ${doc.id}: $e');
+          return null;
+        }
+      })
+          .whereType<GratitudeStar>()
+          .toList();
+
+      print('✅ Delta download complete: ${stars.length} stars');
+      return stars;
+
+    } catch (e) {
+      print('❌ Delta download failed: $e');
+      rethrow;
+    }
+  }
+
+  // Soft delete a star (mark as deleted, don't actually remove)
+  Future<void> softDeleteStar(String starId) async {
+    if (_starsCollection == null) {
+      throw Exception('No user signed in');
+    }
+
+    try {
+      await _starsCollection!.doc(starId).update({
+        'deleted': true,
+        'deletedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      print('✅ Star soft deleted: $starId');
+    } catch (e) {
+      print('❌ Soft delete failed: $e');
+      rethrow;
+    }
+  }
+
+  // Clean up stars that have been soft-deleted for >30 days
+  Future<void> cleanupStaleDeletedStars() async {
+    if (_starsCollection == null) {
+      throw Exception('No user signed in');
+    }
+
+    try {
+      // Check if we've cleaned up recently (only run once per day)
+      final prefs = await SharedPreferences.getInstance();
+      final lastCleanup = prefs.getInt('last_cleanup_at');
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      if (lastCleanup != null &&
+          now - lastCleanup < Duration(days: 1).inMilliseconds) {
+        print('ℹ️ Cleanup already ran today, skipping');
+        return;
+      }
+
+      // Find stars deleted >30 days ago
+      final thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+      final query = _starsCollection!
+          .where('deleted', isEqualTo: true)
+          .where('deletedAt', isLessThan: thirtyDaysAgo.millisecondsSinceEpoch);
+
+      final snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print('✅ No stale deleted stars to clean up');
+        await prefs.setInt('last_cleanup_at', now);
+        return;
+      }
+
+      // Delete in batches
+      const batchSize = 500;
+      int totalDeleted = 0;
+
+      for (var i = 0; i < snapshot.docs.length; i += batchSize) {
+        final batch = _firestore.batch();
+        final end = (i + batchSize < snapshot.docs.length)
+            ? i + batchSize
+            : snapshot.docs.length;
+
+        for (var j = i; j < end; j++) {
+          batch.delete(snapshot.docs[j].reference);
+        }
+
+        await batch.commit();
+        totalDeleted += (end - i);
+      }
+
+      await prefs.setInt('last_cleanup_at', now);
+      print('✅ Cleaned up $totalDeleted stale deleted stars');
+
+    } catch (e) {
+      print('❌ Cleanup failed: $e');
+      // Don't rethrow - cleanup failures shouldn't block the app
+    }
+  }
+
+  // Sync: merge local and cloud data using delta sync
+  Future<List<GratitudeStar>> syncStars(List<GratitudeStar> localStars) async {
+    if (_auth.currentUser == null) {
+      throw Exception('No user signed in');
+    }
+
+    print('🔄 Starting DELTA sync...');
+
+    try {
+      // Run cleanup in background (don't await)
+      cleanupStaleDeletedStars();
+
+      // Download stars modified since last sync
+      final cloudDeltaStars = await downloadDeltaStars();
+      print('   Cloud delta: ${cloudDeltaStars.length} stars');
+
+      // Create a map of local stars by ID for fast lookup
+      final localStarsMap = {for (var star in localStars) star.id: star};
+
+      // Merge cloud delta with local stars
+      for (final cloudStar in cloudDeltaStars) {
+        final localStar = localStarsMap[cloudStar.id];
+
+        if (localStar == null) {
+          // New star from cloud - add it
+          localStarsMap[cloudStar.id] = cloudStar;
+        } else {
+          // Star exists locally - keep newer version
+          if (cloudStar.updatedAt.isAfter(localStar.updatedAt)) {
+            localStarsMap[cloudStar.id] = cloudStar;
+          }
+        }
+      }
+
+      final mergedStars = localStarsMap.values.toList();
+
+      // Upload local stars modified since last sync
+      await uploadDeltaStars(mergedStars);
+
+      print('✅ Delta sync complete. Total stars: ${mergedStars.length}');
+      return mergedStars;
+
+    } catch (e) {
+      print('❌ Delta sync failed: $e');
+      rethrow;
+    }
+  }
+
+  // ============================================================================
+  // LEGACY METHODS (kept for backward compatibility)
+  // ============================================================================
 
   // Upload all local stars to Firestore (batch operation)
   Future<void> uploadStars(List<GratitudeStar> stars) async {
@@ -43,8 +287,6 @@ class FirestoreService {
       print('📤 Uploaded batch ${i ~/ batchSize + 1} (${batchStars.length} stars)');
     }
 
-    // Update last sync timestamp
-    await updateLastSync();
     print('✅ All stars uploaded successfully');
   }
 
@@ -71,62 +313,6 @@ class FirestoreService {
 
     print('✅ Downloaded ${stars.length} stars');
     return stars;
-  }
-
-  // Sync: merge local and cloud data intelligently
-  Future<List<GratitudeStar>> syncStars(List<GratitudeStar> localStars) async {
-    if (_starsCollection == null) {
-      throw Exception('No user signed in');
-    }
-
-    print('🔄 Syncing stars...');
-    print('   Local stars: ${localStars.length}');
-
-    // Download cloud stars
-    final cloudStars = await downloadStars();
-    print('   Cloud stars: ${cloudStars.length}');
-
-    // Create maps for efficient lookup
-    final cloudStarsMap = {for (var star in cloudStars) star.id: star};
-    final localStarsMap = {for (var star in localStars) star.id: star};
-
-    // Merge logic: keep all unique stars, use newest for duplicates
-    final mergedStars = <GratitudeStar>[];
-    final starsToUpload = <GratitudeStar>[];
-    final allIds = {...localStarsMap.keys, ...cloudStarsMap.keys};
-
-    for (final id in allIds) {
-      final localStar = localStarsMap[id];
-      final cloudStar = cloudStarsMap[id];
-
-      if (localStar == null) {
-        // Only in cloud - keep it
-        mergedStars.add(cloudStar!);
-      } else if (cloudStar == null) {
-        // Only local - add to merged and mark for upload
-        mergedStars.add(localStar);
-        starsToUpload.add(localStar);
-      } else {
-        // In both - keep newer one
-        final localNewer = localStar.createdAt.isAfter(cloudStar.createdAt);
-        final newerStar = localNewer ? localStar : cloudStar;
-        mergedStars.add(newerStar);
-
-        // If local is newer, upload it
-        if (localNewer) {
-          starsToUpload.add(localStar);
-        }
-      }
-    }
-
-    // Upload any new or updated stars in batch
-    if (starsToUpload.isNotEmpty) {
-      print('📤 Uploading ${starsToUpload.length} new/updated stars');
-      await uploadStars(starsToUpload);
-    }
-
-    print('✅ Sync complete. Total stars: ${mergedStars.length}');
-    return mergedStars;
   }
 
   // Merge stars from an old anonymous account
@@ -166,7 +352,7 @@ class FirestoreService {
       final starMap = <String, GratitudeStar>{};
       for (final star in allStarsToMerge) {
         if (!starMap.containsKey(star.id) ||
-            star.createdAt.isAfter(starMap[star.id]!.createdAt)) {
+            star.updatedAt.isAfter(starMap[star.id]!.updatedAt)) {
           starMap[star.id] = star;
         }
       }
@@ -178,9 +364,6 @@ class FirestoreService {
       await uploadStars(mergedStars);
 
       print('✅ Successfully merged anonymous account data');
-
-      // Optional: Delete old anonymous account data (commented out for safety)
-      // await _firestore.collection('users').doc(anonymousUid).delete();
 
     } catch (e) {
       print('⚠️ Could not merge anonymous account data: $e');
@@ -215,15 +398,16 @@ class FirestoreService {
     }
   }
 
-  // Delete a star from Firestore
+  // Delete a star from Firestore (now uses soft delete)
   Future<void> deleteStar(String starId) async {
     if (_starsCollection == null) return;
 
     try {
-      await _starsCollection!.doc(starId).delete();
-      print('🗑️ Star deleted from Firestore: $starId');
+      // Use soft delete instead of hard delete
+      await softDeleteStar(starId);
+      print('✅ Star deleted: $starId');
     } catch (e) {
-      print('❌ Error deleting star from Firestore: $e');
+      print('❌ Delete failed: $e');
       // Don't throw - local data is still updated
     }
   }

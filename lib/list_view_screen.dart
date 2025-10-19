@@ -66,7 +66,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
       case 'color':
         stars.sort((a, b) {
           // Sort by color index, then by creation date within same color
-          final colorCompare = a.colorIndex.compareTo(b.colorIndex);
+          final colorCompare = a.colorPresetIndex.compareTo(b.colorPresetIndex);
           if (colorCompare != 0) return colorCompare;
           return b.createdAt.compareTo(a.createdAt);
         });

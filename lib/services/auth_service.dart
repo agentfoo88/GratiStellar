@@ -24,28 +24,36 @@ class AuthService {
   // Sign in anonymously with display name
   Future<User?> signInAnonymously(String displayName) async {
     try {
+      print('🔵 Step 1: Starting Firebase anonymous sign-in...');
       final userCredential = await _auth.signInAnonymously();
+      print('🔵 Step 2: Firebase sign-in completed');
+
       final user = userCredential.user;
+      print('🔵 Step 3: Got user: ${user?.uid ?? "null"}');
 
       if (user != null) {
-        // Save anonymous UID to persist session
+        print('🔵 Step 4: Saving anonymous UID to SharedPreferences...');
         await _saveAnonymousUid(user.uid);
+        print('🔵 Step 5: UID saved successfully');
 
-        // Update display name
+        print('🔵 Step 6: Updating display name...');
         await user.updateDisplayName(displayName);
+        print('🔵 Step 7: Display name updated');
 
-        // Create user profile in Firestore
+        print('🔵 Step 8: Creating user profile in Firestore...');
         await _firestore.collection('users').doc(user.uid).set({
           'displayName': displayName,
           'createdAt': FieldValue.serverTimestamp(),
           'isAnonymous': true,
           'lastSeen': FieldValue.serverTimestamp(),
         });
+        print('🔵 Step 9: Firestore profile created');
       }
 
+      print('🔵 Step 10: Returning user');
       return user;
     } catch (e) {
-      print('Error signing in anonymously: $e');
+      print('🔴 Error signing in anonymously: $e');
       return null;
     }
   }

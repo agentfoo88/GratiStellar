@@ -46,16 +46,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     });
 
     try {
+      print('🔵 Attempting anonymous sign-in with name: $name');
       final user = await _authService.signInAnonymously(name);
+      print('🔵 Sign-in result: ${user?.uid ?? "null"}');
 
       if (user != null && mounted) {
+        print('🔵 User signed in successfully, navigation should happen automatically');
         // Navigation will be handled by auth state listener in main.dart
       } else if (mounted) {
+        print('🔴 Sign-in returned null user');
         setState(() {
           _errorMessage = 'Failed to create account. Please try again.';
           _isLoading = false;
         });
       }
+    } catch (e) {
+      print('🔴 Sign-in exception: $e');
     } catch (e) {
       if (mounted) {
         setState(() {

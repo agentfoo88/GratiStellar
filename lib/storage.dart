@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'gratitude_stars.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'utils/compression_utils.dart';
 
 // Extension to add Gaussian distribution to Random
 extension RandomGaussian on math.Random {
@@ -21,86 +22,127 @@ extension RandomGaussian on math.Random {
 
 // Data model for a gratitude star with normalized coordinates
 class GratitudeStar {
-  final String text;
-  final double worldX; // Normalized coordinate 0.0-1.0
-  final double worldY; // Normalized coordinate 0.0-1.0
-  final int colorIndex; // Store index instead of Color for serialization
-  final Color? customColor;  // Optional custom color
-  final double size;
   final String id;
+  final String text;
+  final double worldX;
+  final double worldY;
+  final int colorPresetIndex;
+  final Color? customColor;
+  final double size;
   final DateTime createdAt;
+  final DateTime updatedAt;  // Track last modification
   final int glowPatternIndex;
+  final bool deleted;  // Soft delete flag
+  final DateTime? deletedAt;  // Deletion timestamp
 
   // Getter for actual color (custom or palette)
-  Color get color => customColor ?? StarColors.getColor(colorIndex);
+  Color get color => customColor ?? StarColors.getColor(colorPresetIndex);
 
   GratitudeStar({
     required this.text,
     required this.worldX,
     required this.worldY,
-    required this.colorIndex,
+    this.colorPresetIndex = 0,
     this.customColor,
     this.size = 8.0,
-    required this.id,
-    required this.createdAt,
-    required this.glowPatternIndex,
-  });
+    String? id,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    this.glowPatternIndex = 0,
+    this.deleted = false,
+    this.deletedAt,
+  })  : id = id ?? _generateId(),
+        createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? createdAt ?? DateTime.now();
 
-  // Copy with new values
+  // Generate a unique ID (simple implementation)
+  static String _generateId() {
+    return DateTime.now().millisecondsSinceEpoch.toString() +
+        math.Random().nextInt(999999).toString();
+  }
+
+  // Copy with new values (single unified method)
   GratitudeStar copyWith({
     String? text,
     double? worldX,
     double? worldY,
-    int? colorIndex,
+    int? colorPresetIndex,
     Color? customColor,
-    bool clearCustomColor = false,  // NEW: explicit flag to clear
+    bool clearCustomColor = false,
     double? size,
-    String? id,
-    DateTime? createdAt,
-    int? glowPatternIndex,
+    DateTime? updatedAt,
+    bool? deleted,
+    DateTime? deletedAt,
   }) {
     return GratitudeStar(
+      id: id,
       text: text ?? this.text,
       worldX: worldX ?? this.worldX,
       worldY: worldY ?? this.worldY,
-      colorIndex: colorIndex ?? this.colorIndex,
-      customColor: clearCustomColor ? null : (customColor ?? this.customColor),  // FIXED
+      colorPresetIndex: colorPresetIndex ?? this.colorPresetIndex,
+      customColor: clearCustomColor ? null : (customColor ?? this.customColor),
       size: size ?? this.size,
-      id: id ?? this.id,
-      createdAt: createdAt ?? this.createdAt,
-      glowPatternIndex: glowPatternIndex ?? this.glowPatternIndex,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),  // Always update timestamp
+      glowPatternIndex: glowPatternIndex,
+      deleted: deleted ?? this.deleted,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
   Map<String, dynamic> toJson() {
+    // Try to compress text if it's long enough
+    final compressedText = CompressionUtils.compressText(text);
+    final isCompressed = compressedText != null;
+
     return {
-      'text': text,
+      'id': id,
+      'text': isCompressed ? compressedText : text,
+      'compressed': isCompressed,  // Flag to indicate compression
       'worldX': worldX,
       'worldY': worldY,
-      'colorIndex': colorIndex,
-      'customColor': customColor?.toARGB32(),
+      'colorPresetIndex': colorPresetIndex,
+      'customColor': customColor?.value,
       'size': size,
-      'id': id,
       'createdAt': createdAt.millisecondsSinceEpoch,
+      'updatedAt': updatedAt.millisecondsSinceEpoch,
       'glowPatternIndex': glowPatternIndex,
+      'deleted': deleted,
+      'deletedAt': deletedAt?.millisecondsSinceEpoch,
     };
   }
 
   factory GratitudeStar.fromJson(Map<String, dynamic> json) {
+    final createdAt = DateTime.fromMillisecondsSinceEpoch(
+        json['createdAt'] ?? DateTime.now().millisecondsSinceEpoch
+    );
+
+    // Decompress text if it was compressed
+    final rawText = json['text'] ?? '';
+    final isCompressed = json['compressed'] ?? false;
+    final text = isCompressed
+        ? CompressionUtils.decompressText(rawText)
+        : rawText;
+
     return GratitudeStar(
-      text: json['text'],
-      worldX: json['worldX'],
-      worldY: json['worldY'],
-      colorIndex: json['colorIndex'] ?? 0,
+      text: text,
+      worldX: (json['worldX'] ?? 0.5).toDouble(),
+      worldY: (json['worldY'] ?? 0.5).toDouble(),
+      colorPresetIndex: json['colorPresetIndex'] ?? 0,
       customColor: json['customColor'] != null
           ? Color(json['customColor'])
           : null,
       size: json['size'] ?? 8.0,
       id: json['id'],
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-          json['createdAt'] ?? DateTime.now().millisecondsSinceEpoch
-      ),
+      createdAt: createdAt,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['updatedAt'])
+          : createdAt,
       glowPatternIndex: json['glowPatternIndex'] ?? 0,
+      deleted: json['deleted'] ?? false,
+      deletedAt: json['deletedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['deletedAt'])
+          : null,
     );
   }
 }
@@ -217,6 +259,43 @@ class StorageService {
       print('🗑️ Cleared all local storage');
     } catch (e) {
       debugPrint('⚠️ Error clearing storage: $e');
+    }
+  }
+
+  // Save last sync timestamp
+  static Future<void> saveLastSyncTime(DateTime timestamp) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('last_synced_at', timestamp.millisecondsSinceEpoch);
+      print('💾 Saved last sync time: $timestamp');
+    } catch (e) {
+      debugPrint('⚠️ Error saving last sync time: $e');
+    }
+  }
+
+  // Get last sync timestamp
+  static Future<DateTime?> getLastSyncTime() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final timestamp = prefs.getInt('last_synced_at');
+      if (timestamp != null) {
+        return DateTime.fromMillisecondsSinceEpoch(timestamp);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('⚠️ Error getting last sync time: $e');
+      return null;
+    }
+  }
+
+  // Clear last sync timestamp
+  static Future<void> clearLastSyncTime() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('last_synced_at');
+      print('🗑️ Cleared last sync time');
+    } catch (e) {
+      debugPrint('⚠️ Error clearing last sync time: $e');
     }
   }
 

@@ -240,7 +240,7 @@ class GratitudeStarService {
       text: text,
       worldX: worldX,
       worldY: worldY,
-      colorIndex: random.nextInt(StarColors.palette.length),
+      colorPresetIndex: random.nextInt(StarColors.palette.length),
       customColor: null,
       size: 8.0 + random.nextDouble() * 6.0,
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -688,7 +688,7 @@ class StarBirthPainter extends CustomPainter {
     if (burstProgress > StarBirthConfig.colorTransitionStart) {
       final colorProgress = (burstProgress - StarBirthConfig.colorTransitionStart) /
           (1.0 - StarBirthConfig.colorTransitionStart);
-      final starColor = StarColors.getColor(star.colorIndex);
+      final starColor = StarColors.getColor(star.colorPresetIndex);
 
       // Colored glow emerging
       final coloredGlowRadius = star.size * StarBirthConfig.coloredGlowSize;

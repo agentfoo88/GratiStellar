@@ -235,7 +235,7 @@ class GratitudeDialogs {
   }) {
     // Color picker owns its state
     Color previewColor = currentStar.color;
-    int? selectedColorIndex = currentStar.customColor == null ? currentStar.colorIndex : null;
+    int? selectedColorIndex = currentStar.customColor == null ? currentStar.colorPresetIndex : null;
 
     // Color picker owns its controllers
     final hexController = TextEditingController();
@@ -797,7 +797,7 @@ class GratitudeDialogs {
             if (tempColorPreview != null || tempColorIndexPreview != null) {
               if (tempColorIndexPreview != null) {
                 currentStar = currentStar.copyWith(
-                  colorIndex: tempColorIndexPreview,
+                  colorPresetIndex: tempColorIndexPreview,
                   clearCustomColor: true,
                 );
               } else {
@@ -1022,7 +1022,7 @@ class GratitudeDialogs {
                                   // Apply color changes if any
                                   if (tempColorIndexPreview != null) {
                                     updatedStar = updatedStar.copyWith(
-                                      colorIndex: tempColorIndexPreview,
+                                      colorPresetIndex: tempColorIndexPreview,
                                       clearCustomColor: true,
                                     );
                                   } else if (tempColorPreview != null) {

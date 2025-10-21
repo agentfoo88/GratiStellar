@@ -29,18 +29,9 @@ import 'services/feedback_service.dart';
 import 'starfield.dart';
 import 'storage.dart';
 import 'widgets/app_dialog.dart';
+import 'core/config/constants.dart';
 
-// ========================================
-// UI SCALE CONFIGURATION
-// ========================================
-const double universalUIScale = 1.0;
-const double labelBackgroundAlpha = 0.85;
-const double statsLabelTextScale = 1.15;
-
-// ========================================
-// ANIMATION CONFIGURATION
-// ========================================
-const int mindfulnessTransitionMs = 2000;  // Duration for camera movement and label animation
+// UI SCALE and ANIMATION CONFIGURATION found in constants.dart
 
 // Floating label widget for displaying gratitude text
 class FloatingGratitudeLabel extends StatelessWidget {
@@ -127,7 +118,7 @@ class FloatingGratitudeLabel extends StatelessWidget {
                 vertical: FontScaling.getResponsiveSpacing(context, 8),
               ),
               decoration: BoxDecoration(
-                color: Color(0xFF1A2238).withValues(alpha: labelBackgroundAlpha),
+                color: Color(0xFF1A2238).withValues(alpha: UIConstants.labelBackgroundAlpha),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: star.color.withValues(alpha: 0.5),
@@ -328,17 +319,17 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     });
 
     _backgroundController = AnimationController(
-      duration: Duration(seconds: 30),
+      duration: AnimationConstants.backgroundDuration,
       vsync: this,
     )..repeat();
 
     _starController = AnimationController(
-      duration: Duration(seconds: 8),
+      duration: AnimationConstants.starFieldDuration,
       vsync: this,
     )..repeat();
 
     _birthController = AnimationController(
-      duration: Duration(milliseconds: 1500),
+      duration: AnimationConstants.birthAnimationDuration,
       vsync: this,
     );
 
@@ -887,7 +878,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _cameraController.animateTo(
       targetPosition: targetPosition,
       targetScale: targetScale,
-      duration: Duration(milliseconds: mindfulnessTransitionMs),
+      duration: Duration(milliseconds: AnimationConstants.mindfulnessTransitionMs),
       curve: Curves.easeInOutCubic,  // Smooth speed ramp at start and end
       vsync: this,
     );
@@ -961,7 +952,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       child: Icon(
         Icons.menu,
         color: Colors.white.withValues(alpha: 0.8),
-        size: FontScaling.getResponsiveIconSize(context, 28) * universalUIScale,
+        size: FontScaling.getResponsiveIconSize(context, 28) * UIConstants.universalUIScale,
       ),
     );
   }
@@ -996,8 +987,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               children: [
                 SvgPicture.asset(
                   'assets/icon_star.svg',
-                  width: FontScaling.getResponsiveIconSize(context, 48) * universalUIScale,
-                  height: FontScaling.getResponsiveIconSize(context, 48) * universalUIScale,
+                  width: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
+                  height: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
                   colorFilter: ColorFilter.mode(Color(0xFFFFE135), BlendMode.srcIn),
                 ),
                 SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
@@ -1005,7 +996,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   child: Text(
                     l10n.appTitle,
                     style: FontScaling.getHeadingMedium(context).copyWith(
-                      fontSize: FontScaling.getHeadingMedium(context).fontSize! * universalUIScale,
+                      fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
                       color: Color(0xFFFFE135),
                     ),
                   ),
@@ -1019,14 +1010,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             leading: Icon(
               _authService.hasEmailAccount ? Icons.account_circle : Icons.login,
               color: Color(0xFFFFE135),
-              size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
+              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
             ),
             title: Text(
               _authService.hasEmailAccount
                   ? l10n.accountMenuItem
                   : l10n.signInWithEmailMenuItem,
               style: FontScaling.getBodyMedium(context).copyWith(
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * universalUIScale,
+                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
               ),
             ),
             subtitle: _authService.hasEmailAccount
@@ -1062,12 +1053,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             leading: Icon(
               Icons.list,
               color: Color(0xFFFFE135),
-              size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
+              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
             ),
             title: Text(
               l10n.listViewMenuItem,
               style: FontScaling.getBodyMedium(context).copyWith(
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * universalUIScale,
+                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
               ),
             ),
             onTap: () {
@@ -1086,12 +1077,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             leading: Icon(
               Icons.feedback_outlined,
               color: Color(0xFFFFE135),
-              size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
+              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
             ),
             title: Text(
               l10n.feedbackMenuItem,
               style: FontScaling.getBodyMedium(context).copyWith(
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * universalUIScale,
+                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
               ),
             ),
             onTap: () {
@@ -1110,12 +1101,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             leading: Icon(
               Icons.close,
               color: Color(0xFFFFE135),
-              size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
+              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
             ),
             title: Text(
               l10n.exitButton,
               style: FontScaling.getBodyMedium(context).copyWith(
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * universalUIScale,
+                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
               ),
             ),
             onTap: () {
@@ -1166,26 +1157,26 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     return GestureDetector(
       onTap: _isAnimating ? null : _showAddGratitudeModal,
       child: Container(
-        width: FontScaling.getResponsiveSpacing(context, 70) * universalUIScale,
-        height: FontScaling.getResponsiveSpacing(context, 70) * universalUIScale,
+        width: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
+        height: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
         decoration: BoxDecoration(
           color: _isAnimating
               ? Color(0xFFFFE135).withValues(alpha: 0.5)
               : Color(0xFFFFE135),
-          borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 35) * universalUIScale),
+          borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 35) * UIConstants.universalUIScale),
           boxShadow: _isAnimating ? [] : [
             BoxShadow(
               color: Color(0xFFFFE135).withValues(alpha: 0.4),
-              blurRadius: 20 * universalUIScale,
-              spreadRadius: 5 * universalUIScale,
+              blurRadius: 20 * UIConstants.universalUIScale,
+              spreadRadius: 5 * UIConstants.universalUIScale,
             ),
           ],
         ),
         child: Center(
           child: SvgPicture.asset(
             'assets/icon_star.svg',
-            width: FontScaling.getResponsiveSpacing(context, 56) * universalUIScale,
-            height: FontScaling.getResponsiveSpacing(context, 56) * universalUIScale,
+            width: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
+            height: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
             fit: BoxFit.contain,
           ),
         ),
@@ -1196,9 +1187,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   // Bottom row UI buttons
   Widget _buildBottomButtonRow() {
     // Calculate button row dimensions
-    final buttonSize = FontScaling.getResponsiveSpacing(context, 56) * universalUIScale;
-    final spacing = FontScaling.getResponsiveSpacing(context, 16) * universalUIScale;
-    final addStarSize = FontScaling.getResponsiveSpacing(context, 70) * universalUIScale;
+    final buttonSize = FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale;
+    final spacing = FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale;
+    final addStarSize = FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale;
 
     // Total row width
     final rowWidth = buttonSize + spacing + addStarSize + spacing + buttonSize;
@@ -1225,7 +1216,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         // Connector line from slider to mindfulness button
         if (_mindfulnessMode)
           SizedBox(
-            height: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale,
+            height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
             width: rowWidth,
             child: Stack(
               alignment: Alignment.center,
@@ -1237,7 +1228,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     opacity: _mindfulnessMode ? 1.0 : 0.0,
                     child: Container(
                       width: 2,
-                      height: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale,
+                      height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
@@ -1290,12 +1281,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     return Container(
       width: sliderWidth,
       padding: EdgeInsets.symmetric(
-        horizontal: FontScaling.getResponsiveSpacing(context, 16) * universalUIScale,
-        vertical: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale,
+        horizontal: FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
+        vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
       ),
       decoration: BoxDecoration(
         color: Color(0xFF1A2238).withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20 * universalUIScale),
+        borderRadius: BorderRadius.circular(20 * UIConstants.universalUIScale),
         border: Border.all(
           color: Color(0xFFFFE135).withValues(alpha: 0.5),
           width: 2,
@@ -1307,22 +1298,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           Text(
             '${AppLocalizations.of(context)!.mindfulnessIntervalLabel}: ${_mindfulnessInterval}s',
             style: FontScaling.getCaption(context).copyWith(
-              fontSize: FontScaling.getBodySmall(context).fontSize! * universalUIScale,
+              fontSize: FontScaling.getBodySmall(context).fontSize! * UIConstants.universalUIScale,
             ),
           ),
-          SizedBox(height: FontScaling.getResponsiveSpacing(context, 8) * universalUIScale),
+          SizedBox(height: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale),
           SliderTheme(
             data: SliderThemeData(
               activeTrackColor: Color(0xFFFFE135),
               inactiveTrackColor: Color(0xFFFFE135).withValues(alpha: 0.3),
               thumbColor: Color(0xFFFFE135),
               overlayColor: Color(0xFFFFE135).withValues(alpha: 0.2),
-              trackHeight: 4 * universalUIScale,
+              trackHeight: 4 * UIConstants.universalUIScale,
               thumbShape: RoundSliderThumbShape(
-                enabledThumbRadius: 12 * universalUIScale,  // Larger thumb for mobile
+                enabledThumbRadius: 12 * UIConstants.universalUIScale,  // Larger thumb for mobile
               ),
               overlayShape: RoundSliderOverlayShape(
-                overlayRadius: 24 * universalUIScale,  // Larger tap target
+                overlayRadius: 24 * UIConstants.universalUIScale,  // Larger tap target
               ),
             ),
             child: Slider(
@@ -1346,13 +1337,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     return GestureDetector(
       onTap: _isAnimating ? null : onTap,
       child: Container(
-        width: FontScaling.getResponsiveSpacing(context, 56) * universalUIScale,
-        height: FontScaling.getResponsiveSpacing(context, 56) * universalUIScale,
+        width: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
+        height: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
         decoration: BoxDecoration(
           color: isActive
               ? Color(0xFFFFE135).withValues(alpha: 0.9)
               : Color(0xFF1A2238).withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 28) * universalUIScale),
+          borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 28) * UIConstants.universalUIScale),
           border: Border.all(
             color: Color(0xFFFFE135).withValues(alpha: isActive ? 1.0 : 0.3),
             width: 2,
@@ -1361,7 +1352,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         child: Icon(
           icon,
           color: isActive ? Color(0xFF1A2238) : Colors.white.withValues(alpha: 0.8),
-          size: FontScaling.getResponsiveIconSize(context, 24) * universalUIScale,
+          size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
         ),
       ),
     );
@@ -1373,20 +1364,20 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         Icon(
           icon,
           color: Color(0xFFFFE135),
-          size: FontScaling.getResponsiveIconSize(context, 20) * universalUIScale,
+          size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
         ),
-        SizedBox(height: FontScaling.getResponsiveSpacing(context, 4) * universalUIScale),
+        SizedBox(height: FontScaling.getResponsiveSpacing(context, 4) * UIConstants.universalUIScale),
         Text(
           label,
           style: FontScaling.getStatsLabel(context).copyWith(
-            fontSize: FontScaling.getStatsLabel(context).fontSize! * statsLabelTextScale,
+            fontSize: FontScaling.getStatsLabel(context).fontSize! * UIConstants.statsLabelTextScale,
           ),
         ),
         if (value.isNotEmpty)
           Text(
             value,
             style: FontScaling.getStatsNumber(context).copyWith(
-              fontSize: FontScaling.getStatsNumber(context).fontSize! * universalUIScale,
+              fontSize: FontScaling.getStatsNumber(context).fontSize! * UIConstants.universalUIScale,
             ),
           ),
       ],
@@ -2227,17 +2218,17 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           Text(
                             AppLocalizations.of(context)!.appTitle,
                             style: FontScaling.getAppTitle(context).copyWith(
-                              fontSize: FontScaling.getAppTitle(context).fontSize! * universalUIScale,
+                              fontSize: FontScaling.getAppTitle(context).fontSize! * UIConstants.universalUIScale,
                             ),
                           ),
-                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 16) * universalUIScale),
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale),
                           Text(
                             AppLocalizations.of(context)!.appSubtitle,
                             style: FontScaling.getSubtitle(context).copyWith(
-                              fontSize: FontScaling.getSubtitle(context).fontSize! * universalUIScale,
+                              fontSize: FontScaling.getSubtitle(context).fontSize! * UIConstants.universalUIScale,
                             ),
                           ),
-                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 32) * universalUIScale),
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 32) * UIConstants.universalUIScale),
                           // Add skip hint
                           Text(
                             'Tap to skip',
@@ -2269,12 +2260,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 child: Center(
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: FontScaling.getResponsiveSpacing(context, 20) * universalUIScale,
-                      vertical: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale,
+                      horizontal: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale,
+                      vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
                     ),
                     decoration: BoxDecoration(
                       color: Color(0xFF1A2238).withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(20 * universalUIScale),
+                      borderRadius: BorderRadius.circular(20 * UIConstants.universalUIScale),
                       border: Border.all(
                         color: Color(0xFFFFE135).withValues(alpha: 0.3),
                         width: 1,
@@ -2286,9 +2277,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildStatItem(Icons.star, AppLocalizations.of(context)!.statsTotal, StorageService.getTotalStars(gratitudeStars).toString()),
-                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * universalUIScale),
+                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale),
                           _buildStatItem(Icons.trending_up, AppLocalizations.of(context)!.statsThisWeek, StorageService.getThisWeekStars(gratitudeStars).toString()),
-                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * universalUIScale),
+                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale),
                           _buildStatItem(
                             StorageService.getAddedToday(gratitudeStars) ? Icons.check_circle : Icons.radio_button_unchecked,
                             AppLocalizations.of(context)!.statsToday,
@@ -2321,22 +2312,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     children: [
                       SvgPicture.asset(
                         'assets/icon_star.svg',
-                        width: FontScaling.getResponsiveIconSize(context, 64) * universalUIScale,
-                        height: FontScaling.getResponsiveIconSize(context, 64) * universalUIScale,
+                        width: FontScaling.getResponsiveIconSize(context, 64) * UIConstants.universalUIScale,
+                        height: FontScaling.getResponsiveIconSize(context, 64) * UIConstants.universalUIScale,
                         colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.3), BlendMode.srcIn),
                       ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 24) * universalUIScale),
+                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 24) * UIConstants.universalUIScale),
                       Text(
                         AppLocalizations.of(context)!.emptyStateTitle,
                         style: FontScaling.getEmptyStateTitle(context).copyWith(
-                          fontSize: FontScaling.getEmptyStateTitle(context).fontSize! * universalUIScale,
+                          fontSize: FontScaling.getEmptyStateTitle(context).fontSize! * UIConstants.universalUIScale,
                         ),
                       ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 12) * universalUIScale),
+                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale),
                       Text(
                         AppLocalizations.of(context)!.emptyStateSubtitle,
                         style: FontScaling.getEmptyStateSubtitle(context).copyWith(
-                          fontSize: FontScaling.getEmptyStateSubtitle(context).fontSize! * universalUIScale,
+                          fontSize: FontScaling.getEmptyStateSubtitle(context).fontSize! * UIConstants.universalUIScale,
                         ),
                       ),
                     ],

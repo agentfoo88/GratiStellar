@@ -730,6 +730,18 @@ abstract class AppLocalizations {
   /// **'By Color'**
   String get sortByColor;
 
+  /// Sort option to display gratitude stars grouped by month
+  ///
+  /// In en, this message translates to:
+  /// **'By Month'**
+  String get sortByMonth;
+
+  /// Sort option to display gratitude stars grouped by year
+  ///
+  /// In en, this message translates to:
+  /// **'By Year'**
+  String get sortByYear;
+
   /// Menu item for sending feedback
   ///
   /// In en, this message translates to:

@@ -2,9 +2,11 @@
 // Pure camera control system for GratiStellar - NO RENDERING LOGIC
 // Updated to work with normalized coordinate system
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3, Vector4, Matrix4;
-import 'dart:math' as math;
+
 import 'storage.dart'; // Import for GratitudeStar
 
 class CameraController extends ChangeNotifier {
@@ -12,11 +14,11 @@ class CameraController extends ChangeNotifier {
   Offset _position = Offset.zero;
   Offset _parallaxPosition = Offset.zero;  // NEW: Clean position for parallax layers
   double _scale = 1.0;
+  double _maxPanDistance = 3000.0;
 
   // Constraints
   static const double minScale = 0.4;
   static const double maxScale = 5.0;
-  static const double maxPanDistance = 3000.0;
   static const double focusZoomLevel = 2.0;
 
 // ========================================
@@ -96,6 +98,33 @@ class CameraController extends ChangeNotifier {
     return (worldPoint * _scale) + _position;
   }
 
+  // Calculate dynamic camera bounds based on star positions and zoom
+  void updateBounds(List<GratitudeStar> stars, Size screenSize) {
+    if (stars.isEmpty) {
+      _maxPanDistance = 2000.0;
+      return;
+    }
+
+    // Find furthest star from origin
+    double maxDistance = 0.0;
+    for (final star in stars) {
+      final starWorldX = star.worldX * screenSize.width;
+      final starWorldY = star.worldY * screenSize.height;
+      final distance = math.sqrt(starWorldX * starWorldX + starWorldY * starWorldY);
+      maxDistance = math.max(maxDistance, distance);
+    }
+
+    // Calculate padding based on zoom level
+    final paddingFactor = _scale < 0.5 ? 0.5   // Zoomed out: 50% padding
+        : _scale < 1.0 ? 0.3   // Medium: 30% padding
+        : 0.2;                 // Zoomed in: 20% padding
+
+    _maxPanDistance = maxDistance + (maxDistance * paddingFactor);
+
+    // Ensure minimum bounds
+    _maxPanDistance = math.max(_maxPanDistance, 2000.0);
+  }
+
   // Update camera position during drag
   void updatePosition(Offset delta) {
     print('Before update: _parallaxPosition = $_parallaxPosition, delta = $delta'); // DEBUG
@@ -105,13 +134,13 @@ class CameraController extends ChangeNotifier {
 
     // Apply boundary constraints
     final constrainedPosition = Offset(
-      math.max(-maxPanDistance, math.min(maxPanDistance, newPosition.dx)),
-      math.max(-maxPanDistance, math.min(maxPanDistance, newPosition.dy)),
+      math.max(-_maxPanDistance, math.min(_maxPanDistance, newPosition.dx)),
+      math.max(-_maxPanDistance, math.min(_maxPanDistance, newPosition.dy)),
     );
 
     final constrainedParallaxPosition = Offset(
-      math.max(-maxPanDistance, math.min(maxPanDistance, newParallaxPosition.dx)),
-      math.max(-maxPanDistance, math.min(maxPanDistance, newParallaxPosition.dy)),
+      math.max(-_maxPanDistance, math.min(_maxPanDistance, newParallaxPosition.dx)),
+      math.max(-_maxPanDistance, math.min(_maxPanDistance, newParallaxPosition.dy)),
     );
 
     if (constrainedPosition != _position) {
@@ -232,7 +261,7 @@ class CameraController extends ChangeNotifier {
       return;
     }
 
-    // For 2+ stars, calculate proper bounding box
+    // For 2+ stars, calculate proper bounding box in world space
     double minWorldX = stars.first.worldX;
     double maxWorldX = stars.first.worldX;
     double minWorldY = stars.first.worldY;
@@ -245,25 +274,28 @@ class CameraController extends ChangeNotifier {
       maxWorldY = math.max(maxWorldY, star.worldY);
     }
 
-    // Add padding in normalized space (5% on each side)
-    const padding = 0.05;
-    minWorldX = (minWorldX - padding).clamp(0.0, 1.0);
-    maxWorldX = (maxWorldX + padding).clamp(0.0, 1.0);
-    minWorldY = (minWorldY - padding).clamp(0.0, 1.0);
-    maxWorldY = (maxWorldY + padding).clamp(0.0, 1.0);
+// Convert world coordinates to pixels for calculation
+    final minWorldXPixels = minWorldX * screenSize.width;
+    final maxWorldXPixels = maxWorldX * screenSize.width;
+    final minWorldYPixels = minWorldY * screenSize.height;
+    final maxWorldYPixels = maxWorldY * screenSize.height;
 
-    // Calculate required scale to fit bounding box
-    final starFieldWidth = (maxWorldX - minWorldX) * screenSize.width;
-    final starFieldHeight = (maxWorldY - minWorldY) * screenSize.height;
-    final scaleX = screenSize.width / starFieldWidth;
-    final scaleY = screenSize.height / starFieldHeight;
-    final targetScale = math.min(scaleX, scaleY) * 0.8; // 80% of available space
+// Add padding (10% of the star field size)
+    final starFieldWidth = maxWorldXPixels - minWorldXPixels;
+    final starFieldHeight = maxWorldYPixels - minWorldYPixels;
+    final paddingX = starFieldWidth * 0.1;
+    final paddingY = starFieldHeight * 0.1;
 
-    // Calculate center of stars in world pixel coordinates
-    final centerWorldX = (minWorldX + maxWorldX) / 2 * screenSize.width;
-    final centerWorldY = (minWorldY + maxWorldY) / 2 * screenSize.height;
+// Calculate required scale to fit bounding box
+    final scaleX = screenSize.width / (starFieldWidth + paddingX * 2);
+    final scaleY = screenSize.height / (starFieldHeight + paddingY * 2);
+    final targetScale = math.min(scaleX, scaleY) * 0.9; // 90% of available space
 
-    // Calculate camera position to center the stars
+// Calculate center of stars in world pixel coordinates
+    final centerWorldX = (minWorldXPixels + maxWorldXPixels) / 2;
+    final centerWorldY = (minWorldYPixels + maxWorldYPixels) / 2;
+
+// Calculate camera position to center the stars
     final targetPosition = Offset(
       screenSize.width / 2 - centerWorldX * targetScale,
       screenSize.height / 2 - centerWorldY * targetScale,

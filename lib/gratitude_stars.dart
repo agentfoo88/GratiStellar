@@ -108,6 +108,22 @@ class StarColors {
   static Color getColor(int index) => palette[index % palette.length];
 }
 
+// Universe size management based on star count
+class UniverseManager {
+  static double calculateUniverseSize(int starCount) {
+    return 1.0 + (starCount / 200).floor() * 1.0;
+  }
+
+  static Offset getUniverseCenter(double universeSize) {
+    return Offset(universeSize / 2, universeSize / 2);
+  }
+
+  static double getClusterRadius(double universeSize) {
+    // Scale the cluster radius proportionally (30% of universe)
+    return universeSize * 0.3;
+  }
+}
+
 // Hit testing utility for normalized coordinates
 class StarHitTester {
   static GratitudeStar? findStarAtScreenPosition(
@@ -201,23 +217,28 @@ class GratitudeStarService {
 
   // Create a new gratitude star with normalized coordinates and smart positioning
   static GratitudeStar createStar(String text, Size screenSize, math.Random random, List<GratitudeStar> existingStars) {
-    // Use normalized coordinates (0.0-1.0) for clustering around center
-    const centerX = 0.5; // Center in normalized space
-    const centerY = 0.5;
-    const maxRadius = 0.3; // 30% of screen width/height
+    // Calculate current universe size based on star count
+    final universeSize = UniverseManager.calculateUniverseSize(existingStars.length);
+    final universeCenter = UniverseManager.getUniverseCenter(universeSize);
+    final maxRadius = UniverseManager.getClusterRadius(universeSize);
 
     double worldX, worldY;
     int attempts = 0;
     const maxAttempts = 30;
-    const minDistance = 0.05; // Minimum distance in normalized space (5% of screen)
+    const minDistance = 0.05; // Minimum distance in world space
 
     do {
       // Use Gaussian distribution to cluster around center
       final angle = random.nextDouble() * 2 * math.pi;
       final radius = random.nextGaussian() * maxRadius * 0.5;
 
-      worldX = (centerX + math.cos(angle) * radius).clamp(0.05, 0.95);
-      worldY = (centerY + math.sin(angle) * radius).clamp(0.1, 0.9);
+      worldX = universeCenter.dx + math.cos(angle) * radius;
+      worldY = universeCenter.dy + math.sin(angle) * radius;
+
+      // Soft clamp to keep stars within reasonable bounds (5% margin)
+      final margin = universeSize * 0.05;
+      worldX = worldX.clamp(margin, universeSize - margin);
+      worldY = worldY.clamp(margin, universeSize - margin);
 
       attempts++;
 
@@ -293,12 +314,20 @@ class GratitudeStarPainter extends CustomPainter {
 
     for (int i = 0; i < stars.length; i++) {
       final star = stars[i];
-      final starRandom = math.Random(star.id.hashCode);
 
       // Convert normalized world coordinates to screen coordinates
       final screenX = star.worldX * size.width;
       final screenY = star.worldY * size.height;
+
+      // Viewport culling - skip stars outside visible area (with 200px margin)
+      const cullingMargin = 200.0;
+      if (screenX < -cullingMargin || screenX > size.width + cullingMargin ||
+          screenY < -cullingMargin || screenY > size.height + cullingMargin) {
+        continue;
+      }
+
       final screenPosition = Offset(screenX, screenY);
+      final starRandom = math.Random(star.id.hashCode);
 
       // Random spin direction and rate per star (stored consistently per star)
       final isClockwise = starRandom.nextBool();

@@ -141,8 +141,8 @@ class FloatingGratitudeLabel extends StatelessWidget {
                 style: FontScaling.getCaption(context).copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                 ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
+                maxLines: 5, // Increased from 3 to allow more text
+                overflow: TextOverflow.fade,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -426,6 +426,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         _isLoading = false;
         print('🎯 Loaded ${stars.length} gratitude stars, _isLoading = false');
       });
+      // Initialize camera bounds after loading stars
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
+        }
+      });
 
       // If user is signed in with email, sync with cloud AFTER local load
       if (_authService.hasEmailAccount) {
@@ -622,6 +628,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         _isAnimating = false;
       });
       _saveGratitudes();
+      // Update camera bounds for new star
+      _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
 
       // Sync to cloud if signed in
       if (_authService.hasEmailAccount) {
@@ -700,6 +708,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       gratitudeStars.removeWhere((s) => s.id == star.id);
     });
     _saveGratitudes();
+    // Update camera bounds after deletion
+    _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
 
     // Sync deletion to cloud if signed in
     if (_authService.hasEmailAccount) {
@@ -2070,10 +2080,16 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           // Stars layer
                           Transform(
                             transform: _cameraController.transform,
-                            child: StarfieldCanvas(
-                              stars: gratitudeStars,
-                              animationController: _starController,
-                              glowPatterns: _glowPatterns,
+                            child: Container(
+                              // DEBUG: Red border to visualize starfield canvas render bounds
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.red, width: 3),
+                              ),
+                              child: StarfieldCanvas(
+                                stars: gratitudeStars,
+                                animationController: _starController,
+                                glowPatterns: _glowPatterns,
+                              ),
                             ),
                           ),
                           // Floating labels layer

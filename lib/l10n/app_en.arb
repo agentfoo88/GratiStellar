@@ -283,6 +283,14 @@
   "@sortByColor": {
     "description": "Sort option to display gratitude stars grouped by color"
   },
+  "sortByMonth": "By Month",
+  "@sortByMonth": {
+    "description": "Sort option to display gratitude stars grouped by month"
+  },
+  "sortByYear": "By Year",
+  "@sortByYear": {
+    "description": "Sort option to display gratitude stars grouped by year"
+  },
   "feedbackMenuItem": "Send Feedback",
   "@feedbackMenuItem": {
     "description": "Menu item for sending feedback"

@@ -71,6 +71,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
           return b.createdAt.compareTo(a.createdAt);
         });
         break;
+      case 'by_month':
+      case 'by_year':
+        stars.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
+        break;
     }
 
     return stars;
@@ -181,6 +185,44 @@ class _ListViewScreenState extends State<ListViewScreen> {
                   ),
                 ),
                 PopupMenuItem(
+                  value: 'by_month',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_month,
+                        color: _sortMethod == 'by_month' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        AppLocalizations.of(context)!.sortByMonth,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: _sortMethod == 'by_month' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'by_year',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        color: _sortMethod == 'by_year' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        AppLocalizations.of(context)!.sortByYear,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: _sortMethod == 'by_year' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],  // ← ADD THIS ] bracket
+                  ),
+                ),
+                PopupMenuItem(
                   value: 'alpha_az',
                   child: Row(
                     children: [
@@ -251,7 +293,9 @@ class _ListViewScreenState extends State<ListViewScreen> {
       ),
       body: sortedStars.isEmpty
           ? _buildEmptyState(context)
-          : ListView.builder(
+              : (_sortMethod == 'by_month' || _sortMethod == 'by_year')
+          ? _buildGroupedList(sortedStars)
+              : ListView.builder(
         padding: EdgeInsets.symmetric(
           horizontal: FontScaling.getResponsiveSpacing(context, 16),
           vertical: FontScaling.getResponsiveSpacing(context, 16),
@@ -354,5 +398,56 @@ class _ListViewScreenState extends State<ListViewScreen> {
         onTap: () => widget.onStarTap(star, _refreshList),
       ),
     );
+  }
+
+  Widget _buildGroupedList(List<GratitudeStar> stars) {
+    String? lastGroup;
+    final List<Widget> widgets = [];
+
+    for (final star in stars) {
+      String currentGroup;
+
+      if (_sortMethod == 'by_month') {
+        final month = star.createdAt;
+        currentGroup = '${_getMonthName(month.month)} ${month.year}';
+      } else {
+        currentGroup = '${star.createdAt.year}';
+      }
+
+      if (currentGroup != lastGroup) {
+        widgets.add(
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              FontScaling.getResponsiveSpacing(context, 16),
+              widgets.isEmpty ? FontScaling.getResponsiveSpacing(context, 16) : FontScaling.getResponsiveSpacing(context, 24),
+              FontScaling.getResponsiveSpacing(context, 16),
+              FontScaling.getResponsiveSpacing(context, 8),
+            ),
+            child: Text(
+              currentGroup,
+              style: FontScaling.getHeadingSmall(context).copyWith(
+                color: Color(0xFFFFE135),
+              ),
+            ),
+          ),
+        );
+        lastGroup = currentGroup;
+      }
+
+      widgets.add(_buildListItem(context, star));
+    }
+
+    return ListView(
+      padding: EdgeInsets.only(bottom: FontScaling.getResponsiveSpacing(context, 16)),
+      children: widgets,
+    );
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[month - 1];
   }
 }

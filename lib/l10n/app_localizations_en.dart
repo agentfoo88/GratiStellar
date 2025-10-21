@@ -347,6 +347,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortByColor => 'By Color';
 
   @override
+  String get sortByMonth => 'By Month';
+
+  @override
+  String get sortByYear => 'By Year';
+
+  @override
   String get feedbackMenuItem => 'Send Feedback';
 
   @override

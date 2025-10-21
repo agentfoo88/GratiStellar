@@ -62,7 +62,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       }
     } catch (e) {
       print('🔴 Sign-in exception: $e');
-    } catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = 'An error occurred. Please try again.';

@@ -104,7 +104,7 @@ class GratitudeStar {
       'worldX': worldX,
       'worldY': worldY,
       'colorPresetIndex': colorPresetIndex,
-      'customColor': customColor?.value,
+      'customColor': customColor?.toARGB32(),
       'size': size,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,

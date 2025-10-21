@@ -16,6 +16,7 @@ import 'background.dart';
 import 'camera_controller.dart';
 import 'core/config/constants.dart';
 import 'features/gratitudes/presentation/widgets/floating_label.dart';
+import 'features/gratitudes/presentation/widgets/empty_state.dart';
 import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'gratitude_stars.dart';
@@ -2166,35 +2167,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
             // Empty state message
             if (!_showBranding && gratitudeStars.isEmpty)
-              Positioned.fill(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPicture.asset(
-                        'assets/icon_star.svg',
-                        width: FontScaling.getResponsiveIconSize(context, 64) * UIConstants.universalUIScale,
-                        height: FontScaling.getResponsiveIconSize(context, 64) * UIConstants.universalUIScale,
-                        colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.3), BlendMode.srcIn),
-                      ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 24) * UIConstants.universalUIScale),
-                      Text(
-                        AppLocalizations.of(context)!.emptyStateTitle,
-                        style: FontScaling.getEmptyStateTitle(context).copyWith(
-                          fontSize: FontScaling.getEmptyStateTitle(context).fontSize! * UIConstants.universalUIScale,
-                        ),
-                      ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale),
-                      Text(
-                        AppLocalizations.of(context)!.emptyStateSubtitle,
-                        style: FontScaling.getEmptyStateSubtitle(context).copyWith(
-                          fontSize: FontScaling.getEmptyStateSubtitle(context).fontSize! * UIConstants.universalUIScale,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              EmptyStateWidget(),
 
             // Camera controls overlay
             if (!_showBranding)

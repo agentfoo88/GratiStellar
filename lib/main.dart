@@ -48,6 +48,7 @@ class FloatingGratitudeLabel extends StatelessWidget {
   final Size screenSize;
   final double cameraScale;
   final Offset cameraPosition;
+  final double opacity;
 
   const FloatingGratitudeLabel({
     super.key,
@@ -55,6 +56,7 @@ class FloatingGratitudeLabel extends StatelessWidget {
     required this.screenSize,
     required this.cameraScale,
     required this.cameraPosition,
+    this.opacity = 1.0,
   });
 
   @override
@@ -63,7 +65,10 @@ class FloatingGratitudeLabel extends StatelessWidget {
     final starX = star.worldX * screenSize.width;
     final starY = star.worldY * screenSize.height;
 
-    final maxLabelWidth = screenSize.width * 0.4;
+    // Adaptive width: longer text gets wider boxes
+    final maxLabelWidth = star.text.length > 150
+        ? screenSize.width * 0.5  // 50% width for long gratitudes
+        : screenSize.width * 0.4; // 40% width for normal
     const verticalOffset = 70.0;
 
     // Enhanced edge padding that accounts for zoom level
@@ -71,14 +76,18 @@ class FloatingGratitudeLabel extends StatelessWidget {
 
     // Convert star world position to screen position
     final starScreenX = (starX * cameraScale) + cameraPosition.dx;
-    final starScreenY = (starY * cameraScale) + cameraPosition.dy - (verticalOffset * cameraScale);
+    final starScreenY = (starY * cameraScale) + cameraPosition.dy;
+
+    // Apply fixed screen-space offset
+    const fixedScreenOffset = 30.0;
+    final labelScreenY = starScreenY + fixedScreenOffset;
 
     // Hide label if star is off-screen
     if (starScreenX < -maxLabelWidth ||
         starScreenX > screenSize.width + maxLabelWidth ||
-        starScreenY < -100 ||
+        starScreenY < -100 ||  // ← Keep checking star position
         starScreenY > screenSize.height + 100) {
-      return SizedBox.shrink(); // Don't render off-screen labels
+      return SizedBox.shrink();
     }
 
     // Calculate desired centered position
@@ -102,54 +111,76 @@ class FloatingGratitudeLabel extends StatelessWidget {
     horizontalTranslation = horizontalTranslation.clamp(-0.9, -0.1);
 
     return Positioned(
-      left: starX,
-      top: starY - verticalOffset,
+      left: starScreenX,
+      top: labelScreenY,
       child: FractionalTranslation(
         translation: Offset(horizontalTranslation, 0),
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: maxLabelWidth,
-          ),
-          padding: EdgeInsets.symmetric(
-            horizontal: FontScaling.getResponsiveSpacing(context, 12),
-            vertical: FontScaling.getResponsiveSpacing(context, 8),
-          ),
-          decoration: BoxDecoration(
-            color: Color(0xFF1A2238).withValues(alpha: labelBackgroundAlpha),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: star.color.withValues(alpha: 0.5),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: star.color.withValues(alpha: 0.2),
-                blurRadius: 8,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.center,
-            child: ConstrainedBox(
+        child: Opacity(
+          opacity: opacity,
+            child: Container(
               constraints: BoxConstraints(
-                maxWidth: maxLabelWidth - FontScaling.getResponsiveSpacing(context, 24),
+                maxWidth: maxLabelWidth,
+                maxHeight: 200.0,
               ),
-              child: Text(
-                star.text,
-                style: FontScaling.getCaption(context).copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
+              padding: EdgeInsets.symmetric(
+                horizontal: FontScaling.getResponsiveSpacing(context, 12),
+                vertical: FontScaling.getResponsiveSpacing(context, 8),
+              ),
+              decoration: BoxDecoration(
+                color: Color(0xFF1A2238).withValues(alpha: labelBackgroundAlpha),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: star.color.withValues(alpha: 0.5),
+                  width: 1.5,
                 ),
-                maxLines: 5, // Increased from 3 to allow more text
-                overflow: TextOverflow.fade,
-                textAlign: TextAlign.center,
+                boxShadow: [
+                  BoxShadow(
+                    color: star.color.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.center,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: maxLabelWidth - FontScaling.getResponsiveSpacing(context, 24),
+                  ),
+                  child: Text(
+                    star.text,
+                    style: _getAdaptiveTextStyle(context, star.text).copyWith(  // ← This name
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                    maxLines: null,
+                    overflow: TextOverflow.fade,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
       ),
     );
+  }
+  TextStyle _getAdaptiveTextStyle(BuildContext context, String text) {
+    final charCount = text.length;
+
+    if (charCount < 100) {
+      // Short text: Use caption size (13-16px)
+      return FontScaling.getCaption(context);
+    } else if (charCount < 200) {
+      // Medium text: Use smaller caption or body small
+      return FontScaling.getBodySmall(context);
+    } else {
+      // Long text (200-300): Smallest readable size
+      // Use the smallest available style, but ensure minimum 12px
+      final bodySmall = FontScaling.getBodySmall(context);
+      return bodySmall.copyWith(
+        fontSize: (bodySmall.fontSize! * 0.85).clamp(12.0, bodySmall.fontSize!),
+      );
+    }
   }
 }
 
@@ -512,7 +543,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _authSubscription?.cancel();  // ADD THIS LINE
+    _authSubscription?.cancel();
     _cameraController.dispose();
     _backgroundController.dispose();
     _starController.dispose();
@@ -675,8 +706,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       onDelete: _deleteStar,
       onShare: _shareStar,
       onJumpToStar: onJumpToStar,
-      onAfterSave: onAfterSave,       // ← Add this
-      onAfterDelete: onAfterDelete,   // ← Add this
+      onAfterSave: onAfterSave,
+      onAfterDelete: onAfterDelete,
     );
   }
 
@@ -844,9 +875,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     print('🧘 Target scale: $targetScale');
 
     // Calculate camera position to center the star at the new scale
+    final verticalPosition = screenSize.height * 0.40;
+
     final targetPosition = Offset(
       screenSize.width / 2 - starWorldX * targetScale,
-      screenSize.height / 2 - starWorldY * targetScale,
+      verticalPosition - starWorldY * targetScale,
     );
 
     print('🧘 Target camera position: $targetPosition');
@@ -1995,7 +2028,91 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 ),
             ),
 
-            // Layer 3: Interactive starfield
+            // Layer 3: Visual starfield (rendering only, no gestures)
+            RepaintBoundary(
+              child: Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _cameraController,
+                  builder: (context, child) {
+                    return Stack(
+                      children: [
+                        // Stars layer
+                        Transform(
+                          transform: _cameraController.transform,
+                          child: StarfieldCanvas(
+                            stars: gratitudeStars,
+                            animationController: _starController,
+                            glowPatterns: _glowPatterns,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            // Layer 3.5: Floating labels (NO TRANSFORM - window level)
+            if (_showAllGratitudes || _mindfulnessMode)
+              RepaintBoundary(
+                child: Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _cameraController,
+                    builder: (context, child) {
+                      final starsToShow = _mindfulnessMode && _activeMindfulnessStar != null
+                          ? [_activeMindfulnessStar!]
+                          : gratitudeStars;
+
+                      // Viewport culling: filter out off-screen stars
+                      final visibleStars = starsToShow.where((star) {
+                        final starX = star.worldX * currentSize.width;
+                        final starY = star.worldY * currentSize.height;
+                        final starScreenX = (starX * _cameraController.scale) + _cameraController.position.dx;
+                        final starScreenY = (starY * _cameraController.scale) + _cameraController.position.dy;
+
+                        // Check if star is within viewport + margin
+                        const margin = 300.0; // Extra margin for labels
+                        return starScreenX > -margin &&
+                            starScreenX < currentSize.width + margin &&
+                            starScreenY > -margin &&
+                            starScreenY < currentSize.height + margin;
+                      }).toList();
+
+                      return Stack(
+                        children: visibleStars.map((star) {
+                          // In mindfulness mode, animate opacity
+                          if (_mindfulnessMode) {
+                            return TweenAnimationBuilder<double>(
+                              key: ValueKey(star.id),
+                              tween: Tween(begin: 0.0, end: 1.0),
+                              duration: Duration(milliseconds: 1000),
+                              builder: (context, opacity, child) {
+                                return FloatingGratitudeLabel(
+                                  star: star,
+                                  screenSize: currentSize,
+                                  cameraScale: _cameraController.scale,
+                                  cameraPosition: _cameraController.position,
+                                  opacity: opacity,
+                                );
+                              },
+                            );
+                          }
+
+                          // Show All mode: no animation
+                          return FloatingGratitudeLabel(
+                            star: star,
+                            screenSize: currentSize,
+                            cameraScale: _cameraController.scale,
+                            cameraPosition: _cameraController.position,
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+            // Layer 4: Full-screen gesture detection (MOVED HERE)
             Positioned.fill(
               child: Listener(
                 onPointerSignal: (pointerSignal) {
@@ -2026,6 +2143,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   }
                 },
                 child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,  // ← KEY: Makes entire area respond to gestures
                   onScaleStart: _isAnimating ? null : (details) {
                     if (_mindfulnessMode) {
                       _stopMindfulnessMode();
@@ -2050,7 +2168,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       final scaleChange = (details.scale - 1.0).abs();
                       if (scaleChange > 0.01) {
                         // Very gentle zoom
-                        final dampingFactor = 0.1;
+                        final dampingFactor = 0.025;
                         final dampenedScale = 1.0 + ((details.scale - 1.0) * dampingFactor);
                         final newScale = _cameraController.scale * dampenedScale;
                         _cameraController.updateScale(newScale, details.focalPoint);
@@ -2072,95 +2190,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       _handleStarTap(details);
                     }
                   },
-                  child: AnimatedBuilder(
-                    animation: _cameraController,
-                    builder: (context, child) {
-                      return Stack(
-                        children: [
-                          // Stars layer
-                          Transform(
-                            transform: _cameraController.transform,
-                            child: Container(
-                              // DEBUG: Red border to visualize starfield canvas render bounds
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.red, width: 3),
-                              ),
-                              child: StarfieldCanvas(
-                                stars: gratitudeStars,
-                                animationController: _starController,
-                                glowPatterns: _glowPatterns,
-                              ),
-                            ),
-                          ),
-                          // Floating labels layer
-                          Transform(
-                            transform: _cameraController.transform,
-                            child: Stack(
-                              children: [
-                                // Show all gratitudes mode
-                                if (_showAllGratitudes)
-                                  ...gratitudeStars.map((star) {
-                                    return FloatingGratitudeLabel(
-                                      star: star,
-                                      screenSize: currentSize,
-                                      cameraScale: _cameraController.scale,  // ADD
-                                      cameraPosition: _cameraController.position,  // ADD
-                                    );
-                                  }),
-
-                                // Mindfulness mode - single star with animated transitions
-                                if (_mindfulnessMode && _activeMindfulnessStar != null)
-                                  AnimatedPositioned(
-                                    duration: Duration(milliseconds: mindfulnessTransitionMs),
-                                    curve: Curves.easeInOutCubic,
-                                    left: _activeMindfulnessStar!.worldX * currentSize.width,
-                                    top: _activeMindfulnessStar!.worldY * currentSize.height - 70.0,
-                                    child: FractionalTranslation(
-                                      translation: Offset(-0.5, 0),
-                                      child: AnimatedSwitcher(
-                                        duration: Duration(milliseconds: 800),
-                                        child: Container(
-                                          key: ValueKey(_activeMindfulnessStar!.id),
-                                          constraints: BoxConstraints(maxWidth: currentSize.width * 0.4),
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: FontScaling.getResponsiveSpacing(context, 12),
-                                            vertical: FontScaling.getResponsiveSpacing(context, 8),
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFF1A2238).withValues(alpha: labelBackgroundAlpha),
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(
-                                              color: _activeMindfulnessStar!.color.withValues(alpha: 0.5),
-                                              width: 1.5,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: _activeMindfulnessStar!.color.withValues(alpha: 0.2),
-                                                blurRadius: 8,
-                                                spreadRadius: 2,
-                                              ),
-                                            ],
-                                          ),
-                                          child: Text(
-                                            _activeMindfulnessStar!.text,
-                                            style: FontScaling.getBodySmall(context).copyWith(
-                                              color: Colors.white.withValues(alpha: 0.9),
-                                            ),
-                                            maxLines: 3,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                  child: Container(color: Colors.transparent), // Transparent hit target
                 ),
               ),
             ),

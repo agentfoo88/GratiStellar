@@ -18,6 +18,7 @@ import 'core/config/constants.dart';
 import 'features/gratitudes/presentation/widgets/floating_label.dart';
 import 'features/gratitudes/presentation/widgets/empty_state.dart';
 import 'features/gratitudes/presentation/widgets/bottom_controls.dart';
+import 'features/gratitudes/presentation/widgets/stats_card.dart';
 import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'gratitude_stars.dart';

@@ -17,6 +17,7 @@ import 'camera_controller.dart';
 import 'core/config/constants.dart';
 import 'features/gratitudes/presentation/widgets/floating_label.dart';
 import 'features/gratitudes/presentation/widgets/empty_state.dart';
+import 'features/gratitudes/presentation/widgets/bottom_controls.dart';
 import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'gratitude_stars.dart';
@@ -1013,211 +1014,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  Widget _buildAddStarButton() {
-    return GestureDetector(
-      onTap: _isAnimating ? null : _showAddGratitudeModal,
-      child: Container(
-        width: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
-        height: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
-        decoration: BoxDecoration(
-          color: _isAnimating
-              ? Color(0xFFFFE135).withValues(alpha: 0.5)
-              : Color(0xFFFFE135),
-          borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 35) * UIConstants.universalUIScale),
-          boxShadow: _isAnimating ? [] : [
-            BoxShadow(
-              color: Color(0xFFFFE135).withValues(alpha: 0.4),
-              blurRadius: 20 * UIConstants.universalUIScale,
-              spreadRadius: 5 * UIConstants.universalUIScale,
-            ),
-          ],
-        ),
-        child: Center(
-          child: SvgPicture.asset(
-            'assets/icon_star.svg',
-            width: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
-            height: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
-            fit: BoxFit.contain,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Bottom row UI buttons
-  Widget _buildBottomButtonRow() {
-    // Calculate button row dimensions
-    final buttonSize = FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale;
-    final spacing = FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale;
-    final addStarSize = FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale;
-
-    // Total row width
-    final rowWidth = buttonSize + spacing + addStarSize + spacing + buttonSize;
-
-    // Offset from center to mindfulness button center
-    // Need to go right by: half of add star + spacing + half of button
-    final connectorOffset = (addStarSize / 2) + spacing + (buttonSize / 2);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Horizontal slider appears above buttons when mindfulness is active
-        AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          height: _mindfulnessMode ? null : 0,
-          child: AnimatedOpacity(
-            duration: Duration(milliseconds: 300),
-            opacity: _mindfulnessMode ? 1.0 : 0.0,
-            child: _mindfulnessMode ? _buildMindfulnessSlider() : SizedBox.shrink(),
-          ),
-        ),
-
-        // Connector line from slider to mindfulness button
-        if (_mindfulnessMode)
-          SizedBox(
-            height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
-            width: rowWidth,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned(
-                  left: (rowWidth / 2) + connectorOffset - 1,  // Center + offset - half line width
-                  child: AnimatedOpacity(
-                    duration: Duration(milliseconds: 300),
-                    opacity: _mindfulnessMode ? 1.0 : 0.0,
-                    child: Container(
-                      width: 2,
-                      height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0xFFFFE135).withValues(alpha: 0.5),
-                            Color(0xFFFFE135).withValues(alpha: 0.2),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // Stable 3-button row (never moves)
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildActionButton(
-              icon: Icons.visibility,
-              isActive: _showAllGratitudes,
-              onTap: _toggleShowAll,
-            ),
-            SizedBox(width: spacing),
-            _buildAddStarButton(),
-            SizedBox(width: spacing),
-            _buildActionButton(
-              icon: Icons.self_improvement,
-              isActive: _mindfulnessMode,
-              onTap: _toggleMindfulness,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMindfulnessSlider() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 500;
-
-    // Calculate responsive width
-    final sliderWidth = isMobile
-        ? math.min(220.0, screenWidth * 0.6)  // Max 220px or 60% of screen (whichever is smaller)
-        : 200.0;  // Compact on larger screens too
-
-    return Container(
-      width: sliderWidth,
-      padding: EdgeInsets.symmetric(
-        horizontal: FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
-        vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
-      ),
-      decoration: BoxDecoration(
-        color: Color(0xFF1A2238).withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20 * UIConstants.universalUIScale),
-        border: Border.all(
-          color: Color(0xFFFFE135).withValues(alpha: 0.5),
-          width: 2,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '${AppLocalizations.of(context)!.mindfulnessIntervalLabel}: ${_mindfulnessInterval}s',
-            style: FontScaling.getCaption(context).copyWith(
-              fontSize: FontScaling.getBodySmall(context).fontSize! * UIConstants.universalUIScale,
-            ),
-          ),
-          SizedBox(height: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale),
-          SliderTheme(
-            data: SliderThemeData(
-              activeTrackColor: Color(0xFFFFE135),
-              inactiveTrackColor: Color(0xFFFFE135).withValues(alpha: 0.3),
-              thumbColor: Color(0xFFFFE135),
-              overlayColor: Color(0xFFFFE135).withValues(alpha: 0.2),
-              trackHeight: 4 * UIConstants.universalUIScale,
-              thumbShape: RoundSliderThumbShape(
-                enabledThumbRadius: 12 * UIConstants.universalUIScale,  // Larger thumb for mobile
-              ),
-              overlayShape: RoundSliderOverlayShape(
-                overlayRadius: 24 * UIConstants.universalUIScale,  // Larger tap target
-              ),
-            ),
-            child: Slider(
-              value: _mindfulnessInterval.toDouble(),
-              min: 2,
-              max: 20,
-              divisions: 18,
-              onChanged: _onMindfulnessIntervalChanged,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: _isAnimating ? null : onTap,
-      child: Container(
-        width: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
-        height: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
-        decoration: BoxDecoration(
-          color: isActive
-              ? Color(0xFFFFE135).withValues(alpha: 0.9)
-              : Color(0xFF1A2238).withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 28) * UIConstants.universalUIScale),
-          border: Border.all(
-            color: Color(0xFFFFE135).withValues(alpha: isActive ? 1.0 : 0.3),
-            width: 2,
-          ),
-        ),
-        child: Icon(
-          icon,
-          color: isActive ? Color(0xFF1A2238) : Colors.white.withValues(alpha: 0.8),
-          size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
-        ),
-      ),
-    );
-  }
-
   Widget _buildStatItem(IconData icon, String label, String value) {
     return Column(
       children: [
@@ -2161,7 +1957,16 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: _buildBottomButtonRow(),
+                  child: BottomControlsWidget(
+                    showAllGratitudes: _showAllGratitudes,
+                    mindfulnessMode: _mindfulnessMode,
+                    isAnimating: _isAnimating,
+                    mindfulnessInterval: _mindfulnessInterval,
+                    onToggleShowAll: _toggleShowAll,
+                    onToggleMindfulness: _toggleMindfulness,
+                    onAddStar: _showAddGratitudeModal,
+                    onMindfulnessIntervalChanged: _onMindfulnessIntervalChanged,
+                  ),
                 ),
               ),
 

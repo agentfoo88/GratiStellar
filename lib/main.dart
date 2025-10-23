@@ -8,16 +8,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'background.dart';
 import 'camera_controller.dart';
 import 'core/config/constants.dart';
-import 'features/gratitudes/presentation/widgets/floating_label.dart';
-import 'features/gratitudes/presentation/widgets/empty_state.dart';
+import 'features/gratitudes/presentation/widgets/app_drawer.dart';
 import 'features/gratitudes/presentation/widgets/bottom_controls.dart';
+import 'features/gratitudes/presentation/widgets/empty_state.dart';
+import 'features/gratitudes/presentation/widgets/floating_label.dart';
 import 'features/gratitudes/presentation/widgets/stats_card.dart';
 import 'firebase_options.dart';
 import 'font_scaling.dart';
@@ -805,205 +805,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  // Helper widget builders
-  Widget _buildHamburgerButton() {
-    return GestureDetector(
-      onTap: () {
-        _scaffoldKey.currentState?.openDrawer();
-      },
-      child: Icon(
-        Icons.menu,
-        color: Colors.white.withValues(alpha: 0.8),
-        size: FontScaling.getResponsiveIconSize(context, 28) * UIConstants.universalUIScale,
-      ),
-    );
-  }
-
-  Widget _buildDrawer() {
-    final l10n = AppLocalizations.of(context)!;
-
-    return Drawer(
-      backgroundColor: Color(0xFF1A2238).withValues(alpha: 0.98),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          // Header with Icon and Title side-by-side
-          Container(
-            padding: EdgeInsets.fromLTRB(
-              FontScaling.getResponsiveSpacing(context, 16),
-              MediaQuery.of(context).padding.top + FontScaling.getResponsiveSpacing(context, 16),
-              FontScaling.getResponsiveSpacing(context, 16),
-              FontScaling.getResponsiveSpacing(context, 16),
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF4A6FA5).withValues(alpha: 0.3),
-                  Color(0xFF1A2238),
-                ],
-              ),
-            ),
-            child: Row(
-              children: [
-                SvgPicture.asset(
-                  'assets/icon_star.svg',
-                  width: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
-                  height: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
-                  colorFilter: ColorFilter.mode(Color(0xFFFFE135), BlendMode.srcIn),
-                ),
-                SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
-                Expanded(
-                  child: Text(
-                    l10n.appTitle,
-                    style: FontScaling.getHeadingMedium(context).copyWith(
-                      fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
-                      color: Color(0xFFFFE135),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Account section
-          ListTile(
-            leading: Icon(
-              _authService.hasEmailAccount ? Icons.account_circle : Icons.login,
-              color: Color(0xFFFFE135),
-              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
-            ),
-            title: Text(
-              _authService.hasEmailAccount
-                  ? l10n.accountMenuItem
-                  : l10n.signInWithEmailMenuItem,
-              style: FontScaling.getBodyMedium(context).copyWith(
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
-              ),
-            ),
-            subtitle: _authService.hasEmailAccount
-                ? Text(
-              _authService.currentUser?.displayName ?? l10n.defaultUserName,
-              style: FontScaling.getCaption(context),
-            )
-                : null,
-            onTap: () {
-              Navigator.pop(context);
-              if (_authService.hasEmailAccount) {
-                _showAccountDialog();
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SignInScreen(),
-                  ),
-                );
-              }
-            },
-          ),
-
-          // Heavy divider
-          Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.5),
-            thickness: 2,
-            height: 2,
-          ),
-
-          // List View
-          ListTile(
-            leading: Icon(
-              Icons.list,
-              color: Color(0xFFFFE135),
-              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
-            ),
-            title: Text(
-              l10n.listViewMenuItem,
-              style: FontScaling.getBodyMedium(context).copyWith(
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
-              ),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              _navigateToListView();
-            },
-          ),
-
-          Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
-            height: 1,
-          ),
-
-          // Send Feedback
-          ListTile(
-            leading: Icon(
-              Icons.feedback_outlined,
-              color: Color(0xFFFFE135),
-              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
-            ),
-            title: Text(
-              l10n.feedbackMenuItem,
-              style: FontScaling.getBodyMedium(context).copyWith(
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
-              ),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              _showFeedbackDialog();
-            },
-          ),
-
-          Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
-            height: 1,
-          ),
-
-          // Exit
-          ListTile(
-            leading: Icon(
-              Icons.close,
-              color: Color(0xFFFFE135),
-              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
-            ),
-            title: Text(
-              l10n.exitButton,
-              style: FontScaling.getBodyMedium(context).copyWith(
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
-              ),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              GratitudeDialogs.showQuitConfirmation(context);
-            },
-          ),
-          Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
-            height: 1,
-          ),
-
-// Version number at bottom
-          FutureBuilder<PackageInfo>(
-            future: PackageInfo.fromPlatform(),
-            builder: (context, snapshot) {
-              final version = snapshot.data?.version ?? '1.0.0';
-              final buildNumber = snapshot.data?.buildNumber ?? '1';
-
-              return Padding(
-                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 16)),
-                child: Center(
-                  child: Text(
-                    'Version $version ($buildNumber)',
-                    style: FontScaling.getCaption(context).copyWith(
-                      color: Colors.white.withValues(alpha: 0.4),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
+  void _handleAccountTap() {
+    Navigator.pop(context); // Close drawer
+    if (_authService.hasEmailAccount) {
+      _showAccountDialog();
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignInScreen(),
+        ),
+      );
+    }
   }
 
   void _showAddGratitudeModal() {
@@ -1012,32 +825,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       controller: _gratitudeController,
       onAdd: _addGratitude,
       isAnimating: _isAnimating,
-    );
-  }
-
-  Widget _buildStatItem(IconData icon, String label, String value) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          color: Color(0xFFFFE135),
-          size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
-        ),
-        SizedBox(height: FontScaling.getResponsiveSpacing(context, 4) * UIConstants.universalUIScale),
-        Text(
-          label,
-          style: FontScaling.getStatsLabel(context).copyWith(
-            fontSize: FontScaling.getStatsLabel(context).fontSize! * UIConstants.statsLabelTextScale,
-          ),
-        ),
-        if (value.isNotEmpty)
-          Text(
-            value,
-            style: FontScaling.getStatsNumber(context).copyWith(
-              fontSize: FontScaling.getStatsNumber(context).fontSize! * UIConstants.universalUIScale,
-            ),
-          ),
-      ],
     );
   }
 
@@ -1624,7 +1411,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: _buildDrawer(),
+      drawer: AppDrawerWidget(
+        authService: _authService,
+        onAccountTap: _handleAccountTap,
+        onListViewTap: () {
+          Navigator.pop(context);
+          _navigateToListView();
+        },
+        onFeedbackTap: () {
+          Navigator.pop(context);
+          _showFeedbackDialog();
+        },
+        onExitTap: () {
+          Navigator.pop(context);
+          GratitudeDialogs.showQuitConfirmation(context);
+        },
+      ),
       body: SizedBox(
         width: double.infinity,
         height: double.infinity,
@@ -1907,7 +1709,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               Positioned(
                 top: MediaQuery.of(context).padding.top + 16,
                 left: 16,
-                child: _buildHamburgerButton(),
+                child: HamburgerButton(
+                  onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
               ),
 
             // Stats card
@@ -1917,37 +1721,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale,
-                      vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF1A2238).withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(20 * UIConstants.universalUIScale),
-                      border: Border.all(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildStatItem(Icons.star, AppLocalizations.of(context)!.statsTotal, StorageService.getTotalStars(gratitudeStars).toString()),
-                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale),
-                          _buildStatItem(Icons.trending_up, AppLocalizations.of(context)!.statsThisWeek, StorageService.getThisWeekStars(gratitudeStars).toString()),
-                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale),
-                          _buildStatItem(
-                            StorageService.getAddedToday(gratitudeStars) ? Icons.check_circle : Icons.radio_button_unchecked,
-                            AppLocalizations.of(context)!.statsToday,
-                            '',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  child: StatsCardWidget(stars: gratitudeStars),
                 ),
               ),
 

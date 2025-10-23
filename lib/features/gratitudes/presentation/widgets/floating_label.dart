@@ -37,40 +37,40 @@ class FloatingGratitudeLabel extends StatelessWidget {
     // Enhanced edge padding that accounts for zoom level
     final dynamicEdgePadding = 8.0 + (40.0 / cameraScale.clamp(0.5, 2.0));
 
-    // Convert star world position to screen position
+// Convert star world position to screen position
     final starScreenX = (starX * cameraScale) + cameraPosition.dx;
     final starScreenY = (starY * cameraScale) + cameraPosition.dy;
 
-    // Apply fixed screen-space offset
+// Apply fixed screen-space offset
     const fixedScreenOffset = 30.0;
     final labelScreenY = starScreenY + fixedScreenOffset;
 
-    // Hide label if star is off-screen
+// Hide label if star is off-screen
     if (starScreenX < -maxLabelWidth ||
         starScreenX > screenSize.width + maxLabelWidth ||
-        starScreenY < -100 ||  // ← Keep checking star position
+        starScreenY < -100 ||
         starScreenY > screenSize.height + 100) {
       return SizedBox.shrink();
     }
 
-    // Calculate desired centered position
+// Calculate desired centered position
     double horizontalTranslation = -0.5;
 
-    // Check if label would overflow left edge
+// Check if label would overflow left edge
     final labelLeftEdge = starScreenX - (maxLabelWidth / 2);
     if (labelLeftEdge < dynamicEdgePadding) {
       final shiftRight = dynamicEdgePadding - labelLeftEdge;
       horizontalTranslation = -0.5 + (shiftRight / maxLabelWidth);
     }
 
-    // Check if label would overflow right edge
+// Check if label would overflow right edge
     final labelRightEdge = starScreenX + (maxLabelWidth / 2);
     if (labelRightEdge > screenSize.width - dynamicEdgePadding) {
       final overhang = labelRightEdge - (screenSize.width - dynamicEdgePadding);
       horizontalTranslation = -0.5 - (overhang / maxLabelWidth);
     }
 
-    // Clamp translation to prevent over-shifting
+// Clamp translation to prevent over-shifting
     horizontalTranslation = horizontalTranslation.clamp(-0.9, -0.1);
 
     return Positioned(

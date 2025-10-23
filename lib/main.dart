@@ -24,6 +24,9 @@ import 'features/gratitudes/presentation/widgets/bottom_controls.dart';
 import 'features/gratitudes/presentation/widgets/empty_state.dart';
 import 'features/gratitudes/presentation/widgets/floating_label.dart';
 import 'features/gratitudes/presentation/widgets/stats_card.dart';
+import 'features/gratitudes/data/datasources/local_data_source.dart';
+import 'features/gratitudes/data/datasources/remote_data_source.dart';
+import 'features/gratitudes/data/repositories/gratitude_repository.dart';
 import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'gratitude_stars.dart';
@@ -157,6 +160,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   late final UpdateGratitudeUseCase _updateGratitudeUseCase;
   late final LoadGratitudesUseCase _loadGratitudesUseCase;
   late final SyncGratitudesUseCase _syncGratitudesUseCase;
+  late final GratitudeRepository _repository;
+  late final LocalDataSource _localDataSource;
+  late final RemoteDataSource _remoteDataSource;
   bool _isLoading = true;
   bool _showBranding = true;
   bool _isAnimating = false;
@@ -213,19 +219,23 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     print('🎭 Animation controllers created');
 
+    _localDataSource = LocalDataSource();
+    _remoteDataSource = RemoteDataSource(_firestoreService);
+    _repository = GratitudeRepository(
+      localDataSource: _localDataSource,
+      remoteDataSource: _remoteDataSource,
+      authService: _authService,
+    );
+
     // Initialize use cases
     _addGratitudeUseCase = AddGratitudeUseCase(_random);
-    _deleteGratitudeUseCase = DeleteGratitudeUseCase(
-      firestoreService: _firestoreService,
-      authService: _authService,
-    );
-    _updateGratitudeUseCase = UpdateGratitudeUseCase();
+    _deleteGratitudeUseCase = DeleteGratitudeUseCase(_repository);
+    _updateGratitudeUseCase = UpdateGratitudeUseCase(_repository);
     _loadGratitudesUseCase = LoadGratitudesUseCase(
+      repository: _repository,
       authService: _authService,
     );
-    _syncGratitudesUseCase = SyncGratitudesUseCase(
-      firestoreService: _firestoreService,
-    );
+    _syncGratitudesUseCase = SyncGratitudesUseCase(_repository);
 
 // Generate static universe based on full screen size
     final view = WidgetsBinding.instance.platformDispatcher.views.first;

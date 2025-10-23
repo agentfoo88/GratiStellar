@@ -9,11 +9,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'background.dart';
 import 'camera_controller.dart';
 import 'core/config/constants.dart';
+import 'features/gratitudes/domain/usecases/add_gratitude_use_case.dart';
+import 'features/gratitudes/domain/usecases/delete_gratitude_use_case.dart';
+import 'features/gratitudes/domain/usecases/load_gratitudes_use_case.dart';
+import 'features/gratitudes/domain/usecases/sync_gratitudes_use_case.dart';
+import 'features/gratitudes/domain/usecases/update_gratitude_use_case.dart';
+import 'features/gratitudes/domain/usecases/use_case.dart';
 import 'features/gratitudes/presentation/widgets/app_drawer.dart';
 import 'features/gratitudes/presentation/widgets/bottom_controls.dart';
 import 'features/gratitudes/presentation/widgets/empty_state.dart';
@@ -147,6 +152,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   late AnimationController _backgroundController;
   late AnimationController _starController;
   late CameraController _cameraController;
+  late final AddGratitudeUseCase _addGratitudeUseCase;
+  late final DeleteGratitudeUseCase _deleteGratitudeUseCase;
+  late final UpdateGratitudeUseCase _updateGratitudeUseCase;
+  late final LoadGratitudesUseCase _loadGratitudesUseCase;
+  late final SyncGratitudesUseCase _syncGratitudesUseCase;
   bool _isLoading = true;
   bool _showBranding = true;
   bool _isAnimating = false;
@@ -202,6 +212,20 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     });
 
     print('🎭 Animation controllers created');
+
+    // Initialize use cases
+    _addGratitudeUseCase = AddGratitudeUseCase(_random);
+    _deleteGratitudeUseCase = DeleteGratitudeUseCase(
+      firestoreService: _firestoreService,
+      authService: _authService,
+    );
+    _updateGratitudeUseCase = UpdateGratitudeUseCase();
+    _loadGratitudesUseCase = LoadGratitudesUseCase(
+      authService: _authService,
+    );
+    _syncGratitudesUseCase = SyncGratitudesUseCase(
+      firestoreService: _firestoreService,
+    );
 
 // Generate static universe based on full screen size
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
@@ -262,54 +286,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   Future<void> _loadGratitudes() async {
-    print('💾 Loading gratitudes...');
-
-    // Check if this is first run after install/reinstall
-    await _checkFirstRun();
-
-    // Restore anonymous session if exists
-    await _restoreAnonymousSessionIfNeeded();
-
-    // Safety check: If signed in, verify local data belongs to current user
-    if (_authService.isSignedIn) {
-      final currentUid = _authService.currentUser?.uid;
-      final prefs = await SharedPreferences.getInstance();
-      final localDataOwner = prefs.getString('local_data_owner_uid');
-
-      if (localDataOwner != null && localDataOwner != currentUid) {
-        // Local data belongs to different user - clear ALL data!
-        print('⚠️ Local data belongs to different user. Clearing...');
-        await StorageService.clearAllData();  // ← Use centralized clear
-        await prefs.setString('local_data_owner_uid', currentUid!);
-
-        // Load empty list, will sync from cloud
-        if (mounted) {
-          setState(() {
-            gratitudeStars = [];
-            _isLoading = false;
-          });
-        }
-
-        // Sync from cloud
-        if (_authService.hasEmailAccount) {
-          _syncWithCloud();
-        }
-        return; // Exit early
-      }
-
-      // Store current user as owner if not set
-      if (localDataOwner == null && currentUid != null) {
-        await prefs.setString('local_data_owner_uid', currentUid);
-      }
-    }
-    final stars = await StorageService.loadGratitudeStars();
+    final result = await _loadGratitudesUseCase(NoParams());
 
     if (mounted) {
       setState(() {
-        gratitudeStars = stars;
+        gratitudeStars = result.stars;
         _isLoading = false;
-        print('🎯 Loaded ${stars.length} gratitude stars, _isLoading = false');
       });
+
       // Initialize camera bounds after loading stars
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -317,80 +301,28 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         }
       });
 
-      // If user is signed in with email, sync with cloud AFTER local load
-      if (_authService.hasEmailAccount) {
-        print('🔄 User has email account, starting cloud sync...');
+      // Sync with cloud if needed
+      if (result.shouldSyncWithCloud) {
         await _syncWithCloud();
       }
     }
   }
 
-  Future<void> _restoreAnonymousSessionIfNeeded() async {
-    try {
-      // Only restore if not currently signed in
-      if (_authService.isSignedIn) {
-        print('✓ User already signed in, skipping session restoration');
-        return;
-      }
-
-      // Check if we have a saved anonymous UID
-      final savedUid = await _authService.getSavedAnonymousUid();
-
-      if (savedUid != null) {
-        print('🔄 Found saved anonymous UID: $savedUid');
-
-        // Firebase will auto-restore anonymous sessions if valid
-        // We just need to wait a moment for Firebase to initialize
-        await Future.delayed(Duration(milliseconds: 500));
-
-        // Check if session was restored
-        if (_authService.isSignedIn && _authService.currentUser?.uid == savedUid) {
-          print('✅ Anonymous session restored successfully');
-        } else {
-          print('⚠️ Saved session expired or invalid, will create new session on welcome screen');
-        }
-      } else {
-        print('ℹ️ No saved anonymous UID found');
-      }
-    } catch (e) {
-      print('⚠️ Error restoring anonymous session: $e');
-      // Continue normally - user will create new session
-    }
-  }
-
   Future<void> _syncWithCloud() async {
     try {
-      print('🔄 Starting cloud sync...');
+      final result = await _syncGratitudesUseCase(
+        SyncGratitudesParams(localStars: gratitudeStars),
+      );
 
-      // Check if user has cloud data
-      final hasCloudData = await _firestoreService.hasCloudData();
-
-      if (hasCloudData) {
-        // Sync and merge data
-        print('📥 Cloud data exists, syncing...');
-        final mergedStars = await _firestoreService.syncStars(gratitudeStars);
-
-        if (mounted) {
-          setState(() {
-            gratitudeStars = mergedStars;
-          });
-          await _saveGratitudes();
-          print('✅ Sync complete! Total stars: ${mergedStars.length}');
-        }
-      } else {
-        // First time - upload local stars to cloud
-        print('📤 No cloud data, uploading local stars...');
-        await _firestoreService.uploadStars(gratitudeStars);
-        print('✅ Local stars uploaded to cloud');
+      if (mounted) {
+        setState(() {
+          gratitudeStars = result.mergedStars;
+        });
       }
     } catch (e) {
       print('⚠️ Sync failed: $e');
       // Don't show error to user - local data is still safe
     }
-  }
-
-  Future<void> _saveGratitudes() async {
-    await StorageService.saveGratitudeStars(gratitudeStars);
   }
 
   @override
@@ -466,18 +398,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
 
     // Trim whitespace, newlines, and collapse multiple spaces
-    final trimmedText = _gratitudeController.text
-        .trim()                           // Remove leading/trailing whitespace
-        .replaceAll(RegExp(r'\s+'), ' '); // Collapse multiple spaces/newlines to single space
-
-    if (trimmedText.isEmpty) return;
-
     final screenSize = MediaQuery.of(context).size;
-    final newStar = GratitudeStarService.createStar(
-      trimmedText,  // Use trimmed text instead of raw controller text
-      screenSize,
-      _random,
-      gratitudeStars,
+    final newStar = await _addGratitudeUseCase(
+      AddGratitudeParams(
+        text: _gratitudeController.text,
+        screenSize: screenSize,
+        existingStars: gratitudeStars,
+      ),
     );
 
     _gratitudeController.clear();
@@ -511,7 +438,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         _animatingStar = null;
         _isAnimating = false;
       });
-      _saveGratitudes();
       // Update camera bounds for new star
       _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
 
@@ -572,36 +498,39 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  void _saveStarEdits(GratitudeStar updatedStar) {
-    final index = gratitudeStars.indexWhere((s) => s.id == updatedStar.id);
-    if (index != -1) {
-      HapticFeedback.mediumImpact();
-      setState(() {
-        gratitudeStars[index] = updatedStar;
-      });
-      _saveGratitudes();
-    }
-  }
+  void _saveStarEdits(GratitudeStar updatedStar) async {
+    HapticFeedback.mediumImpact();
 
-  void _deleteStar(GratitudeStar star) {
-    HapticFeedback.heavyImpact();
-
-    final starId = star.id; // Save ID before removing
+    final updatedStars = await _updateGratitudeUseCase(
+      UpdateGratitudeParams(
+        updatedStar: updatedStar,
+        allStars: gratitudeStars,
+      ),
+    );
 
     setState(() {
-      gratitudeStars.removeWhere((s) => s.id == star.id);
+      gratitudeStars = updatedStars;
     });
-    _saveGratitudes();
+  }
+
+  void _deleteStar(GratitudeStar star) async {
+    HapticFeedback.heavyImpact();
+
+    final updatedStars = await _deleteGratitudeUseCase(
+      DeleteGratitudeParams(
+        star: star,
+        allStars: gratitudeStars,
+      ),
+    );
+
+    setState(() {
+      gratitudeStars = updatedStars;
+    });
+
     // Update camera bounds after deletion
     _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
-
-    // Sync deletion to cloud if signed in
-    if (_authService.hasEmailAccount) {
-      _firestoreService.deleteStar(starId).catchError((e) {
-        print('⚠️ Failed to sync star deletion to cloud: $e');
-      });
-    }
   }
+
 
   void _handleStarTap(TapDownDetails details) {
     final screenSize = MediaQuery.of(context).size;
@@ -1341,29 +1270,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     });
   }
 
-  // Check if this is the first run after install and clear stale data
-  Future<void> _checkFirstRun() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final hasRunBefore = prefs.getBool('has_run_before') ?? false;
-
-      if (!hasRunBefore) {
-        print('🆕 First run detected - clearing any stale data');
-
-        // Clear all local data to ensure fresh start
-        await StorageService.clearAllData();
-
-        // Mark that app has run
-        await prefs.setBool('has_run_before', true);
-
-        print('✅ First run setup complete');
-      }
-    } catch (e) {
-      print('⚠️ Error checking first run: $e');
-      // Non-critical, continue anyway
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     print('🏗️ Building GratitudeScreen, _isLoading: $_isLoading, stars: ${_staticStars.length}');
@@ -1481,8 +1387,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             ),
 
             // Layer 3: Visual starfield (rendering only, no gestures)
-            RepaintBoundary(
-              child: Positioned.fill(
+            Positioned.fill(
+              child: RepaintBoundary(
                 child: AnimatedBuilder(
                   animation: _cameraController,
                   builder: (context, child) {
@@ -1506,8 +1412,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
             // Layer 3.5: Floating labels (NO TRANSFORM - window level)
             if (_showAllGratitudes || _mindfulnessMode)
-              RepaintBoundary(
-                child: Positioned.fill(
+              Positioned.fill(
+                child: RepaintBoundary(
                   child: AnimatedBuilder(
                     animation: _cameraController,
                     builder: (context, child) {

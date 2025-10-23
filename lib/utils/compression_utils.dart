@@ -19,10 +19,6 @@ class CompressionUtils {
       // Compress using gzip
       final compressed = GZipEncoder().encode(bytes);
 
-      if (compressed == null) {
-        return null;
-      }
-
       // Encode to base64 for storage
       final base64Compressed = base64.encode(compressed);
 

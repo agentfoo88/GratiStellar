@@ -8,25 +8,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'background.dart';
 import 'camera_controller.dart';
 import 'core/config/constants.dart';
-import 'features/gratitudes/domain/usecases/add_gratitude_use_case.dart';
-import 'features/gratitudes/domain/usecases/delete_gratitude_use_case.dart';
-import 'features/gratitudes/domain/usecases/load_gratitudes_use_case.dart';
-import 'features/gratitudes/domain/usecases/sync_gratitudes_use_case.dart';
-import 'features/gratitudes/domain/usecases/update_gratitude_use_case.dart';
-import 'features/gratitudes/domain/usecases/use_case.dart';
+import 'features/gratitudes/data/datasources/local_data_source.dart';
+import 'features/gratitudes/data/datasources/remote_data_source.dart';
+import 'features/gratitudes/data/repositories/gratitude_repository.dart';
+import 'features/gratitudes/presentation/state/gratitude_provider.dart';
 import 'features/gratitudes/presentation/widgets/app_drawer.dart';
 import 'features/gratitudes/presentation/widgets/bottom_controls.dart';
 import 'features/gratitudes/presentation/widgets/empty_state.dart';
 import 'features/gratitudes/presentation/widgets/floating_label.dart';
 import 'features/gratitudes/presentation/widgets/stats_card.dart';
-import 'features/gratitudes/data/datasources/local_data_source.dart';
-import 'features/gratitudes/data/datasources/remote_data_source.dart';
-import 'features/gratitudes/data/repositories/gratitude_repository.dart';
 import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'gratitude_stars.dart';
@@ -66,66 +62,90 @@ class GratiStellarApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print('🏗️ Building GratiStellarApp');
-    return MaterialApp(
-      title: 'GratiStellar',
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+
+    // Initialize services (these are singletons/static, so safe to create here)
+    final authService = AuthService();
+    final firestoreService = FirestoreService();
+    final localDataSource = LocalDataSource();
+    final remoteDataSource = RemoteDataSource(firestoreService);
+    final repository = GratitudeRepository(
+      localDataSource: localDataSource,
+      remoteDataSource: remoteDataSource,
+      authService: authService,
+    );
+
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => GratitudeProvider(
+            repository: repository,
+            authService: authService,
+            random: math.Random(),
+          )..loadGratitudes(), // Load data immediately
+        ),
       ],
-      supportedLocales: const [
-        Locale('en'),
-        Locale('es'),
-        Locale('fr'),
-      ],
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-        fontFamily: 'JosefinSans',
-        textTheme: TextTheme(
-          bodyMedium: TextStyle(
-            fontSize: 24.0,
-            fontWeight: FontWeight.w500,
+      child: MaterialApp(
+        title: 'GratiStellar',
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en'),
+          Locale('es'),
+          Locale('fr'),
+        ],
+        theme: ThemeData(
+          primarySwatch: Colors.indigo,
+          fontFamily: 'JosefinSans',
+          textTheme: TextTheme(
+            bodyMedium: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-      ),
-      // Auth-aware routing
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          // Show loading while checking auth state
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Scaffold(
-              body: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0xFF4A6FA5),
-                      Color(0xFF166088),
-                      Color(0xFF0B1426),
-                      Color(0xFF2C3E50),
-                    ],
+        // Auth-aware routing
+        home: StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            // Show loading while checking auth state
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Scaffold(
+                body: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0xFF4A6FA5),
+                        Color(0xFF166088),
+                        Color(0xFF0B1426),
+                        Color(0xFF2C3E50),
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFFFE135),
+                    ),
                   ),
                 ),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: Color(0xFFFFE135),
-                  ),
-                ),
-              ),
-            );
-          }
+              );
+            }
 
-          // If user is signed in, show main app
-          if (snapshot.hasData) {
-            return GratitudeScreen();
-          }
+            // If user is signed in, show main app
+            if (snapshot.hasData) {
+              return GratitudeScreen();
+            }
 
-          // Otherwise, show welcome screen
-          return WelcomeScreen();
-        },
+            // Otherwise, show welcome screen
+            return WelcomeScreen();
+          },
+        ),
       ),
     );
   }
@@ -144,9 +164,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _gratitudeController = TextEditingController();
   final AuthService _authService = AuthService();
-  final FirestoreService _firestoreService = FirestoreService();
 
-  List<GratitudeStar> gratitudeStars = [];
   List<OrganicNebulaRegion> _organicNebulaRegions = [];
   List<VanGoghStar> _vanGoghStars = [];
   List<BackgroundStar> _staticStars = [];
@@ -155,31 +173,30 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   late AnimationController _backgroundController;
   late AnimationController _starController;
   late CameraController _cameraController;
-  late final AddGratitudeUseCase _addGratitudeUseCase;
-  late final DeleteGratitudeUseCase _deleteGratitudeUseCase;
-  late final UpdateGratitudeUseCase _updateGratitudeUseCase;
-  late final LoadGratitudesUseCase _loadGratitudesUseCase;
-  late final SyncGratitudesUseCase _syncGratitudesUseCase;
-  late final GratitudeRepository _repository;
-  late final LocalDataSource _localDataSource;
-  late final RemoteDataSource _remoteDataSource;
-  bool _isLoading = true;
   bool _showBranding = true;
-  bool _isAnimating = false;
   bool _isAppInBackground = false;
-  bool _showAllGratitudes = false;
-  bool _mindfulnessMode = false;
   bool _isMultiFingerGesture = false;
-    AnimationController? _birthController;
-  GratitudeStar? _animatingStar;
-  final math.Random _random = math.Random();
+  AnimationController? _birthController;
   DateTime? _lastScrollTime;
-  int _mindfulnessInterval = 3;
-  Timer? _mindfulnessTimer;
-  GratitudeStar? _activeMindfulnessStar;
   final String _userName = "A friend";
   Color? _previewColor;
-  StreamSubscription<User?>? _authSubscription;
+  GratitudeStar? _lastMindfulnessStar;
+
+  // Birth animation completion handler (class-level method)
+  void _completeBirthAnimation() async {
+    final provider = context.read<GratitudeProvider>();
+
+    if (provider.animatingStar != null) {
+      HapticFeedback.mediumImpact();
+
+      await provider.completeBirthAnimation();
+
+      // Update camera bounds for new star
+      _cameraController.updateBounds(provider.gratitudeStars, MediaQuery.of(context).size);
+
+      _birthController!.reset();
+    }
+  }
 
   @override
   void initState() {
@@ -187,14 +204,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _cameraController = CameraController();
-
-    // Monitor auth state changes
-    _authSubscription = _authService.authStateChanges.listen((user) {
-      if (mounted && user != null && _authService.hasEmailAccount) {
-        print('👤 Auth state changed, reloading gratitudes...');
-        _loadGratitudes();
-      }
-    });
 
     _backgroundController = AnimationController(
       duration: AnimationConstants.backgroundDuration,
@@ -219,32 +228,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     print('🎭 Animation controllers created');
 
-    _localDataSource = LocalDataSource();
-    _remoteDataSource = RemoteDataSource(_firestoreService);
-    _repository = GratitudeRepository(
-      localDataSource: _localDataSource,
-      remoteDataSource: _remoteDataSource,
-      authService: _authService,
-    );
-
-    // Initialize use cases
-    _addGratitudeUseCase = AddGratitudeUseCase(_random);
-    _deleteGratitudeUseCase = DeleteGratitudeUseCase(_repository);
-    _updateGratitudeUseCase = UpdateGratitudeUseCase(_repository);
-    _loadGratitudesUseCase = LoadGratitudesUseCase(
-      repository: _repository,
-      authService: _authService,
-    );
-    _syncGratitudesUseCase = SyncGratitudesUseCase(_repository);
-
-// Generate static universe based on full screen size
+    // Generate static universe based on full screen size
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
     final screenSize = view.physicalSize / view.devicePixelRatio;
 
-// Layer-specific universe sizes (starting conservative, will adjust if needed)
-    final backgroundSize = screenSize;  // No padding - doesn't zoom/pan
-    final nebulaSize = screenSize;      // Starting at 1.0x - test if nebulae stay visible
-    final vanGoghSize = screenSize;     // Starting at 1.0x - test if spiral stays centered
+    // Layer-specific universe sizes
+    final backgroundSize = screenSize;
+    final nebulaSize = screenSize;
+    final vanGoghSize = screenSize;
 
     _staticStars = BackgroundService.generateStaticStars(backgroundSize);
     _vanGoghStars = VanGoghStarService.generateVanGoghStars(vanGoghSize);
@@ -262,7 +253,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       print('❌ Error in initialization: $e');
     }
 
-    _loadGratitudes();
+    // Provider handles loading via its initialization
+    // Camera bounds will be updated in build() once data loads
 
     _startSplashTimer();
   }
@@ -296,55 +288,19 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   Future<void> _loadGratitudes() async {
-    final result = await _loadGratitudesUseCase(NoParams());
-
-    if (mounted) {
-      setState(() {
-        gratitudeStars = result.stars;
-        _isLoading = false;
-      });
-
-      // Initialize camera bounds after loading stars
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
-        }
-      });
-
-      // Sync with cloud if needed
-      if (result.shouldSyncWithCloud) {
-        await _syncWithCloud();
-      }
-    }
-  }
-
-  Future<void> _syncWithCloud() async {
-    try {
-      final result = await _syncGratitudesUseCase(
-        SyncGratitudesParams(localStars: gratitudeStars),
-      );
-
-      if (mounted) {
-        setState(() {
-          gratitudeStars = result.mergedStars;
-        });
-      }
-    } catch (e) {
-      print('⚠️ Sync failed: $e');
-      // Don't show error to user - local data is still safe
-    }
+    final provider = context.read<GratitudeProvider>();
+    await provider.loadGratitudes();
+    // Provider notifies listeners, UI updates automatically
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _authSubscription?.cancel();
     _cameraController.dispose();
     _backgroundController.dispose();
     _starController.dispose();
     _gratitudeController.dispose();
     _birthController?.dispose();
-    _mindfulnessTimer?.cancel();
     super.dispose();
   }
 
@@ -362,7 +318,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           _backgroundController.stop();
           _starController.stop();
           _birthController?.stop();
-          _mindfulnessTimer?.cancel();
         }
         break;
 
@@ -373,14 +328,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           _backgroundController.repeat();
           _starController.repeat();
 
-          // Reload gratitudes when app resumes (will sync if signed in)
+          // Reload gratitudes when app resumes (Provider handles sync)
           if (_authService.hasEmailAccount) {
             _loadGratitudes();
-          }
-
-          // Restart mindfulness timer if it was active
-          if (_mindfulnessMode) {
-            _scheduleNextStar();
           }
         }
         break;
@@ -392,37 +342,26 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _addGratitude() async {
-    // Cancel mindfulness mode if active
-    if (_mindfulnessMode) {
-      _stopMindfulnessMode();
-      setState(() {
-        _mindfulnessMode = false;
-      });
-    }
+    final provider = context.read<GratitudeProvider>();
 
-    // Cancel show all mode if active
-    if (_showAllGratitudes) {
-      setState(() {
-        _showAllGratitudes = false;
-      });
-    }
+    // Cancel modes via provider
+    provider.cancelModes();
 
-    // Trim whitespace, newlines, and collapse multiple spaces
+    final trimmedText = _gratitudeController.text
+        .trim()
+        .replaceAll(RegExp(r'\s+'), ' ');
+
+    if (trimmedText.isEmpty) return;
+
     final screenSize = MediaQuery.of(context).size;
-    final newStar = await _addGratitudeUseCase(
-      AddGratitudeParams(
-        text: _gratitudeController.text,
-        screenSize: screenSize,
-        existingStars: gratitudeStars,
-      ),
-    );
+
+    // Create star via provider
+    final newStar = await provider.createGratitude(trimmedText, screenSize);
 
     _gratitudeController.clear();
 
-    setState(() {
-      _isAnimating = true;
-      _animatingStar = newStar;
-    });
+    // Start animation via provider
+    provider.startBirthAnimation(newStar);
 
     await _adjustCameraForDestination(newStar, screenSize);
 
@@ -438,28 +377,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     _birthController!.duration = Duration(milliseconds: duration);
     _birthController!.forward(from: 0.0);
-  }
-
-  void _completeBirthAnimation() {
-    if (_animatingStar != null) {
-      HapticFeedback.mediumImpact();
-      setState(() {
-        gratitudeStars.add(_animatingStar!);
-        _animatingStar = null;
-        _isAnimating = false;
-      });
-      // Update camera bounds for new star
-      _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
-
-      // Sync to cloud if signed in
-      if (_authService.hasEmailAccount) {
-        _firestoreService.addStar(gratitudeStars.last).catchError((e) {
-          print('⚠️ Failed to sync new star to cloud: $e');
-        });
-      }
-
-      _birthController!.reset();
-    }
   }
 
   Future<void> _adjustCameraForDestination(GratitudeStar star, Size screenSize) async {
@@ -487,10 +404,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         VoidCallback? onAfterSave,
         VoidCallback? onAfterDelete,
       }) {
+    final provider = context.read<GratitudeProvider>();
+
     GratitudeDialogs.showEditStar(
       context: context,
       star: star,
-      allStars: gratitudeStars,
+      allStars: provider.gratitudeStars,
       onSave: _saveStarEdits,
       onDelete: _deleteStar,
       onShare: _shareStar,
@@ -510,44 +429,23 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   void _saveStarEdits(GratitudeStar updatedStar) async {
     HapticFeedback.mediumImpact();
-
-    final updatedStars = await _updateGratitudeUseCase(
-      UpdateGratitudeParams(
-        updatedStar: updatedStar,
-        allStars: gratitudeStars,
-      ),
-    );
-
-    setState(() {
-      gratitudeStars = updatedStars;
-    });
+    await context.read<GratitudeProvider>().updateGratitude(updatedStar);
   }
 
   void _deleteStar(GratitudeStar star) async {
     HapticFeedback.heavyImpact();
 
-    final updatedStars = await _deleteGratitudeUseCase(
-      DeleteGratitudeParams(
-        star: star,
-        allStars: gratitudeStars,
-      ),
-    );
-
-    setState(() {
-      gratitudeStars = updatedStars;
-    });
-
-    // Update camera bounds after deletion
-    _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
+    final provider = context.read<GratitudeProvider>();
+    await provider.deleteGratitude(star);
   }
 
-
   void _handleStarTap(TapDownDetails details) {
+    final provider = context.read<GratitudeProvider>();
     final screenSize = MediaQuery.of(context).size;
 
     final tappedStar = StarHitTester.findStarAtScreenPosition(
       details.localPosition,
-      gratitudeStars,
+      provider.gratitudeStars,
       screenSize,
       cameraPosition: _cameraController.position,
       cameraScale: _cameraController.scale,
@@ -559,149 +457,54 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
-  // Toggle methods
-  void _toggleShowAll() {
-    HapticFeedback.lightImpact();
-    setState(() {
-      _showAllGratitudes = !_showAllGratitudes;
-      // Disable mindfulness mode when enabling show all
-      if (_showAllGratitudes && _mindfulnessMode) {
-        _stopMindfulnessMode();
-        _mindfulnessMode = false;
-      }
-    });
-  }
-
-  void _toggleMindfulness() {
-    // Check if there are any stars
-    if (gratitudeStars.isEmpty) {
-      GratitudeDialogs.showMindfulnessNoStars(context);
-      return;
-    }
-
-    HapticFeedback.lightImpact();
-    setState(() {
-      _mindfulnessMode = !_mindfulnessMode;
-      // Disable show all mode when enabling mindfulness
-      if (_mindfulnessMode && _showAllGratitudes) {
-        _showAllGratitudes = false;
-      }
-    });
-
-    if (_mindfulnessMode) {
-      _startMindfulnessMode();
-    } else {
-      _stopMindfulnessMode();
-    }
-  }
-
-  void _startMindfulnessMode() {
-    print('Mindfulness mode started');
-
-    // Immediately select and navigate to first star
-    _selectRandomStar();
-
-    // Schedule next star selection after interval + camera movement time
-    _scheduleNextStar();
-  }
-
-  void _scheduleNextStar() {
-    // Wait for: interval duration + camera animation (2000ms) + buffer (200ms)
-    final totalDelay = Duration(milliseconds: (_mindfulnessInterval * 1000) + 2200);
-
-    _mindfulnessTimer?.cancel();
-    _mindfulnessTimer = Timer(totalDelay, () {
-      if (mounted && _mindfulnessMode) {
-        _selectRandomStar();
-        _scheduleNextStar(); // Schedule the next one
-      }
-    });
-  }
-
-  void _stopMindfulnessMode() {
-    _mindfulnessTimer?.cancel();
-    _mindfulnessTimer = null;
-    setState(() {
-      _activeMindfulnessStar = null;
-    });
-    print('Mindfulness mode stopped');
-  }
-
-  void _selectRandomStar() {
-    if (gratitudeStars.isEmpty) {
-      _stopMindfulnessMode();
-      setState(() {
-        _mindfulnessMode = false;
-      });
-      return;
-    }
-
-    final random = math.Random();
-    final selectedStar = gratitudeStars[random.nextInt(gratitudeStars.length)];
-
-    print('🧘 Mindfulness: Selected star "${selectedStar.text}"');
-    print('🧘 Star position: (${selectedStar.worldX}, ${selectedStar.worldY})');
-
-    HapticFeedback.lightImpact();
-
-    // Update star - AnimatedSwitcher handles the animation
-    setState(() {
-      _activeMindfulnessStar = selectedStar;
-    });
-
-    print('🧘 Active mindfulness star set: ${_activeMindfulnessStar?.text}');
-
-    _navigateToMindfulnessStar(selectedStar);
-  }
-
   void _navigateToMindfulnessStar(GratitudeStar star) {
     final screenSize = MediaQuery.of(context).size;
-    final targetScale = CameraController.focusZoomLevel;
 
-    // Convert star's normalized world coordinates to pixels
+    // Calculate world position
     final starWorldX = star.worldX * screenSize.width;
     final starWorldY = star.worldY * screenSize.height;
+    final starWorldPos = Offset(starWorldX, starWorldY);
 
-    print('🧘 Screen size: $screenSize');
-    print('🧘 Star world position (pixels): ($starWorldX, $starWorldY)');
-    print('🧘 Target scale: $targetScale');
-
-    // Calculate camera position to center the star at the new scale
-    final verticalPosition = screenSize.height * 0.40;
-
-    final targetPosition = Offset(
-      screenSize.width / 2 - starWorldX * targetScale,
-      verticalPosition - starWorldY * targetScale,
+    // Calculate target screen position with vertical offset
+    // Offset 40 pixels above center to avoid bottom slider
+    const verticalOffset = -40.0;
+    final targetScreenPos = Offset(
+      screenSize.width / 2,
+      (screenSize.height / 2) + verticalOffset,
     );
+    final targetCameraPos = targetScreenPos - (starWorldPos * _cameraController.scale);
 
-    print('🧘 Target camera position: $targetPosition');
+    print('🧘 Navigating to mindfulness star at world: $starWorldPos (offset: $verticalOffset)');
 
+    // Animate to the star
     _cameraController.animateTo(
-      targetPosition: targetPosition,
-      targetScale: targetScale,
-      duration: Duration(milliseconds: AnimationConstants.mindfulnessTransitionMs),
-      curve: Curves.easeInOutCubic,  // Smooth speed ramp at start and end
+      targetPosition: targetCameraPos,
+      duration: Duration(milliseconds: 2000),
       vsync: this,
     );
   }
 
-  void _onMindfulnessIntervalChanged(double value) {
-    setState(() {
-      _mindfulnessInterval = value.round();
-    });
+  // Toggle methods
+  void _toggleShowAll() {
+    context.read<GratitudeProvider>().toggleShowAll();
+  }
 
-    // Restart timer with new interval if currently active
-    if (_mindfulnessMode && _mindfulnessTimer != null) {
-      _scheduleNextStar();  // ✅ Use the correct method that includes camera delay
-    }
+  void _toggleMindfulness() {
+    context.read<GratitudeProvider>().toggleMindfulness();
+  }
+
+  void _onMindfulnessIntervalChanged(double value) {
+    context.read<GratitudeProvider>().setMindfulnessInterval(value.round());
   }
 
   void _navigateToListView() async {
+    final provider = context.read<GratitudeProvider>();
+
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ListViewScreen(
-          stars: gratitudeStars,
+          stars: provider.gratitudeStars,
           onStarTap: (star, refreshList) => _showStarDetailsFromList(star, refreshList),
           onJumpToStar: (star) {},
         ),
@@ -759,11 +562,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _showAddGratitudeModal() {
+    final provider = context.read<GratitudeProvider>();
+
     GratitudeDialogs.showAddGratitude(
       context: context,
       controller: _gratitudeController,
       onAdd: _addGratitude,
-      isAnimating: _isAnimating,
+      isAnimating: provider.isAnimating,
     );
   }
 
@@ -1282,11 +1087,45 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   @override
   Widget build(BuildContext context) {
-    print('🏗️ Building GratitudeScreen, _isLoading: $_isLoading, stars: ${_staticStars.length}');
+    final provider = context.watch<GratitudeProvider>();
+
+    // Get all state from provider
+    final gratitudeStars = provider.gratitudeStars;
+    final isLoading = provider.isLoading;
+    final showAllGratitudes = provider.showAllGratitudes;
+    final mindfulnessMode = provider.mindfulnessMode;
+    final isAnimating = provider.isAnimating;
+    final animatingStar = provider.animatingStar;
+    final activeMindfulnessStar = provider.activeMindfulnessStar;
+    final mindfulnessInterval = provider.mindfulnessInterval;
+
+    print('🏗️ Building GratitudeScreen, isLoading: $isLoading, stars: ${gratitudeStars.length}');
+
+    // Navigate to mindfulness star when it changes (with deduplication)
+    if (mindfulnessMode && activeMindfulnessStar != null) {
+      // Only navigate if star changed
+      if (_lastMindfulnessStar?.id != activeMindfulnessStar.id) {
+        _lastMindfulnessStar = activeMindfulnessStar;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _navigateToMindfulnessStar(activeMindfulnessStar);
+          }
+        });
+      }
+    }
+
+    // Update camera bounds when stars change
+    if (!isLoading && gratitudeStars.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
+        }
+      });
+    }
 
     final currentSize = MediaQuery.of(context).size;
 
-    if (_isLoading) {
+    if (isLoading) {
       return Scaffold(
         body: Container(
           decoration: BoxDecoration(
@@ -1421,14 +1260,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             ),
 
             // Layer 3.5: Floating labels (NO TRANSFORM - window level)
-            if (_showAllGratitudes || _mindfulnessMode)
+            if (showAllGratitudes || mindfulnessMode)
               Positioned.fill(
                 child: RepaintBoundary(
                   child: AnimatedBuilder(
                     animation: _cameraController,
                     builder: (context, child) {
-                      final starsToShow = _mindfulnessMode && _activeMindfulnessStar != null
-                          ? [_activeMindfulnessStar!]
+                      final starsToShow = mindfulnessMode && activeMindfulnessStar != null
+                          ? [activeMindfulnessStar]
                           : gratitudeStars;
 
                       // Viewport culling: filter out off-screen stars
@@ -1449,7 +1288,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       return Stack(
                         children: visibleStars.map((star) {
                           // In mindfulness mode, animate opacity
-                          if (_mindfulnessMode) {
+                          if (mindfulnessMode) {
                             return TweenAnimationBuilder<double>(
                               key: ValueKey(star.id),
                               tween: Tween(begin: 0.0, end: 1.0),
@@ -1485,11 +1324,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               child: Listener(
                 onPointerSignal: (pointerSignal) {
                   if (pointerSignal is PointerScrollEvent) {
-                    if (_mindfulnessMode) {
-                      _stopMindfulnessMode();
-                      setState(() {
-                        _mindfulnessMode = false;
-                      });
+                    final provider = context.read<GratitudeProvider>();
+                    if (provider.mindfulnessMode) {
+                      provider.stopMindfulness();
                     }
 
                     final now = DateTime.now();
@@ -1512,23 +1349,19 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 },
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,  // ← KEY: Makes entire area respond to gestures
-                  onScaleStart: _isAnimating ? null : (details) {
-                    if (_mindfulnessMode) {
-                      _stopMindfulnessMode();
-                      setState(() {
-                        _mindfulnessMode = false;
-                      });
+                  onScaleStart: isAnimating ? null : (details) {
+                    final provider = context.read<GratitudeProvider>();
+                    if (provider.mindfulnessMode) {
+                      provider.stopMindfulness();
                     }
 
                     // Detect if this is a multi-finger gesture
                     _isMultiFingerGesture = details.pointerCount > 1;
                   },
-                  onScaleUpdate: _isAnimating ? null : (details) {
-                    if (_mindfulnessMode) {
-                      _stopMindfulnessMode();
-                      setState(() {
-                        _mindfulnessMode = false;
-                      });
+                  onScaleUpdate: isAnimating ? null : (details) {
+                    final provider = context.read<GratitudeProvider>();
+                    if (provider.mindfulnessMode) {
+                      provider.stopMindfulness();
                     }
 
                     // Handle pinch zoom with threshold to reduce sensitivity
@@ -1548,11 +1381,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       _cameraController.updatePosition(details.focalPointDelta);
                     }
                   },
-                  onScaleEnd: _isAnimating ? null : (details) {
+                  onScaleEnd: isAnimating ? null : (details) {
                     // Reset multi-finger flag when gesture ends
                     _isMultiFingerGesture = false;
                   },
-                  onTapDown: _isAnimating ? null : (details) {
+                  onTapDown: isAnimating ? null : (details) {
                     // Only handle tap if it wasn't a multi-finger gesture
                     if (!_isMultiFingerGesture) {
                       _handleStarTap(details);
@@ -1563,7 +1396,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               ),
             ),
             // Animated star birth layer
-            if (_isAnimating && _animatingStar != null)
+            if (isAnimating && animatingStar != null)
               Positioned.fill(
                 child: AnimatedBuilder(
                   animation: Listenable.merge([_birthController!, _cameraController]),
@@ -1571,7 +1404,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     return Transform(
                       transform: _cameraController.transform,
                       child: AnimatedStarBirth(
-                        star: _animatingStar!,
+                        star: animatingStar,
                         animation: _birthController!,
                         cameraController: _cameraController,
                         screenSize: MediaQuery.of(context).size,
@@ -1649,10 +1482,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                 right: 0,
                 child: Center(
                   child: BottomControlsWidget(
-                    showAllGratitudes: _showAllGratitudes,
-                    mindfulnessMode: _mindfulnessMode,
-                    isAnimating: _isAnimating,
-                    mindfulnessInterval: _mindfulnessInterval,
+                    showAllGratitudes: showAllGratitudes,
+                    mindfulnessMode: mindfulnessMode,
+                    isAnimating: isAnimating,
+                    mindfulnessInterval: mindfulnessInterval,
                     onToggleShowAll: _toggleShowAll,
                     onToggleMindfulness: _toggleMindfulness,
                     onAddStar: _showAddGratitudeModal,

@@ -30,7 +30,7 @@ class GratitudeProvider extends ChangeNotifier {
   late final LoadGratitudesUseCase _loadGratitudesUseCase;
   late final SyncGratitudesUseCase _syncGratitudesUseCase;
 
-  // State
+  // state
   List<GratitudeStar> _gratitudeStars = [];
   bool _isLoading = true;
   bool _showAllGratitudes = false;

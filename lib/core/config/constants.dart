@@ -1,5 +1,3 @@
-// lib/core/config/constants.dart
-
 /// UI scale configuration for consistent sizing across the app
 class UIConstants {
   UIConstants._(); // Private constructor to prevent instantiation
@@ -18,6 +16,9 @@ class AnimationConstants {
 
   // Mindfulness mode transition duration in milliseconds
   static const int mindfulnessTransitionMs = 2000;
+
+  // Mindfulness mode vertical position (40% from top to avoid slider overlap)
+  static const double mindfulnessVerticalPosition = 0.40;
 
   // Background animation duration
   static const Duration backgroundDuration = Duration(seconds: 30);

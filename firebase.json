@@ -1,8 +1,1 @@
-{
-  "firestore": {
-    "database": "(default)",
-    "location": "northamerica-northeast2",
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  }
-}
+{"firestore":{"database":"(default)","location":"northamerica-northeast2","rules":"firestore.rules","indexes":"firestore.indexes.json"},"flutter":{"platforms":{"android":{"default":{"projectId":"gratistellar","appId":"1:416336168755:android:12621fccc7dfe466c9a046","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"gratistellar","configurations":{"android":"1:416336168755:android:12621fccc7dfe466c9a046","ios":"1:416336168755:ios:8a538c0dd090e511c9a046","macos":"1:416336168755:ios:8a538c0dd090e511c9a046","web":"1:416336168755:web:aabee0e72317df93c9a046","windows":"1:416336168755:web:eacbefde7904f850c9a046"}}}}}}

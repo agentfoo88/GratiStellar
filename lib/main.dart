@@ -465,21 +465,17 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final starWorldY = star.worldY * screenSize.height;
     final starWorldPos = Offset(starWorldX, starWorldY);
 
-    // Calculate target screen position with vertical offset
-    // Offset 40 pixels above center to avoid bottom slider
-    const verticalOffset = -40.0;
-    final targetScreenPos = Offset(
-      screenSize.width / 2,
-      (screenSize.height / 2) + verticalOffset,
-    );
+    // Position star at 40% from top to avoid bottom slider overlap
+    final verticalPosition = screenSize.height * AnimationConstants.mindfulnessVerticalPosition;
+    final targetScreenPos = Offset(screenSize.width / 2, verticalPosition);
     final targetCameraPos = targetScreenPos - (starWorldPos * _cameraController.scale);
 
-    print('🧘 Navigating to mindfulness star at world: $starWorldPos (offset: $verticalOffset)');
+    print('🧘 Navigating to mindfulness star at world: $starWorldPos');
 
     // Animate to the star
     _cameraController.animateTo(
       targetPosition: targetCameraPos,
-      duration: Duration(milliseconds: 2000),
+      duration: Duration(milliseconds: AnimationConstants.mindfulnessTransitionMs),
       vsync: this,
     );
   }

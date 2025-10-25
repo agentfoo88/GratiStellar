@@ -12,6 +12,7 @@ import '../../domain/usecases/delete_gratitude_use_case.dart';
 import '../../domain/usecases/update_gratitude_use_case.dart';
 import '../../domain/usecases/load_gratitudes_use_case.dart';
 import '../../domain/usecases/sync_gratitudes_use_case.dart';
+import '../../../../core/config/constants.dart';
 
 /// Provider for gratitude state management
 ///
@@ -213,16 +214,35 @@ class GratitudeProvider extends ChangeNotifier {
   }
 
   void _selectRandomStar() {
-    if (_gratitudeStars.isNotEmpty) {
-      _activeMindfulnessStar = _gratitudeStars[_random.nextInt(_gratitudeStars.length)];
+    if (_gratitudeStars.isEmpty) return;
+
+    // If only one star, use it
+    if (_gratitudeStars.length == 1) {
+      _activeMindfulnessStar = _gratitudeStars[0];
       notifyListeners();
+      return;
     }
+
+    // Filter out current star to avoid repetition
+    final availableStars = _gratitudeStars
+        .where((star) => star.id != _activeMindfulnessStar?.id)
+        .toList();
+
+    // Select random star from available pool
+    _activeMindfulnessStar = availableStars[_random.nextInt(availableStars.length)];
+
+    print('🧘 Provider selected star: "${_activeMindfulnessStar?.text}"');
+    notifyListeners();
   }
 
   void _scheduleNextStar() {
     _mindfulnessTimer?.cancel();
+    final totalDelay = Duration(
+      milliseconds: AnimationConstants.mindfulnessTransitionMs + (_mindfulnessInterval * 1000),
+    );
+
     _mindfulnessTimer = Timer(
-      Duration(seconds: _mindfulnessInterval),
+      totalDelay,
           () {
         if (_mindfulnessMode) {
           _selectRandomStar();

@@ -14,13 +14,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos',
-        );
+        return macos;
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
@@ -35,30 +31,53 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAw_oG1UJ1hj8ySoVg5PLTjHoeqgghbff4',
-    appId: '1:416336168755:web:a08a4a307444156dc9a046',
+    apiKey: 'AIzaSyCeVsWLnvPSDDYIyxWfeWCkAa9sAY3NxK4',
+    appId: '1:416336168755:web:aabee0e72317df93c9a046',
     messagingSenderId: '416336168755',
     projectId: 'gratistellar',
     authDomain: 'gratistellar.firebaseapp.com',
     storageBucket: 'gratistellar.firebasestorage.app',
-    measurementId: 'G-D7T32WBHM8',
+    measurementId: 'G-RWD64NXK44',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAw_oG1UJ1hj8ySoVg5PLTjHoeqgghbff4',
-    appId: '1:416336168755:android:c3d0f3e6d5e8f0a7c9a046',
+    apiKey: 'AIzaSyCZXGZ8FHDf3tjF_jq9FQJCdp9fD18VXg0',
+    appId: '1:416336168755:android:12621fccc7dfe466c9a046',
     messagingSenderId: '416336168755',
     projectId: 'gratistellar',
     storageBucket: 'gratistellar.firebasestorage.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAw_oG1UJ1hj8ySoVg5PLTjHoeqgghbff4',
-    appId: '1:416336168755:web:a08a4a307444156dc9a046',
+    apiKey: 'AIzaSyCeVsWLnvPSDDYIyxWfeWCkAa9sAY3NxK4',
+    appId: '1:416336168755:web:eacbefde7904f850c9a046',
     messagingSenderId: '416336168755',
     projectId: 'gratistellar',
     authDomain: 'gratistellar.firebaseapp.com',
     storageBucket: 'gratistellar.firebasestorage.app',
-    measurementId: 'G-D7T32WBHM8',
+    measurementId: 'G-NB0TJLKZPQ',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyBOIqR1Zc3MPFUT356HtJ0GdSrtZJ_WtBY',
+    appId: '1:416336168755:ios:8a538c0dd090e511c9a046',
+    messagingSenderId: '416336168755',
+    projectId: 'gratistellar',
+    storageBucket: 'gratistellar.firebasestorage.app',
+    androidClientId: '416336168755-ohke806pcd2g25vba7sec5hqtlotqeqm.apps.googleusercontent.com',
+    iosClientId: '416336168755-85f22vhdtrgmh54vbt8kn29upcqume2c.apps.googleusercontent.com',
+    iosBundleId: 'com.example.gratistellar',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyBOIqR1Zc3MPFUT356HtJ0GdSrtZJ_WtBY',
+    appId: '1:416336168755:ios:8a538c0dd090e511c9a046',
+    messagingSenderId: '416336168755',
+    projectId: 'gratistellar',
+    storageBucket: 'gratistellar.firebasestorage.app',
+    androidClientId: '416336168755-ohke806pcd2g25vba7sec5hqtlotqeqm.apps.googleusercontent.com',
+    iosClientId: '416336168755-85f22vhdtrgmh54vbt8kn29upcqume2c.apps.googleusercontent.com',
+    iosBundleId: 'com.example.gratistellar',
+  );
+
 }

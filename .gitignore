@@ -77,3 +77,5 @@ doc/api/
 # Firebase (if you add it later)
 .firebase/
 firebase-debug.log
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist

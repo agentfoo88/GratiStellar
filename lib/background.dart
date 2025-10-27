@@ -17,11 +17,11 @@ class BackgroundConfig {
       referenceStarCount / (referenceScreenSize.width * referenceScreenSize.height);
 
   // Star Generation Settings
-  static const int starCount = 2500;                    // Total number of background stars
+  static const int starCount = 12500;                    // Total number of background stars
   static const double starSizeMin = 0.1;              // Minimum star size
-  static const double starSizeMax = 1.0;              // Maximum star size
-  static const double starBrightnessMin = 0.15;        // Minimum star brightness (0.0-1.0)
-  static const double starBrightnessMax = 0.5;        // Maximum star brightness (0.0-1.0)
+  static const double starSizeMax = 1.25;              // Maximum star size
+  static const double starBrightnessMin = 0.25;        // Minimum star brightness (0.0-1.0)
+  static const double starBrightnessMax = 0.65;        // Maximum star brightness (0.0-1.0)
 
   // Star Distribution Settings
   static const bool useGaussianDistribution = false;   // Use Gaussian distribution vs uniform

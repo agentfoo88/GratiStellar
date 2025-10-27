@@ -1,4 +1,5 @@
 // lib/features/gratitudes/presentation/widgets/app_drawer.dart
+import '../../../../services/layer_cache_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -167,6 +168,54 @@ class AppDrawerWidget extends StatelessWidget {
           Divider(
             color: Color(0xFFFFE135).withValues(alpha: 0.2),
             height: 1,
+          ),
+
+          ListTile(
+            leading: Icon(Icons.cleaning_services, color: Colors.white70),
+            title: Text(
+              'Clear Layer Cache',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              'Regenerate background layers',
+              style: TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+            onTap: () async {
+              Navigator.of(context).pop(); // Close drawer
+
+              // Show confirmation dialog
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Clear Cache?'),
+                  content: Text('This will regenerate all background layers. The app will restart.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: Text('Clear Cache'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true) {
+                await LayerCacheService().clearCache();
+
+                // Show snackbar
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Cache cleared. Restart the app to regenerate.'),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
+              }
+            },
           ),
 
           // Version number at bottom

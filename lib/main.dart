@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,12 +8,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'background.dart';
 import 'camera_controller.dart';
+import 'core/animation/animation_manager.dart';
 import 'core/config/constants.dart';
 import 'features/gratitudes/data/datasources/local_data_source.dart';
 import 'features/gratitudes/data/datasources/remote_data_source.dart';
@@ -20,21 +21,24 @@ import 'features/gratitudes/data/repositories/gratitude_repository.dart';
 import 'features/gratitudes/presentation/state/gratitude_provider.dart';
 import 'features/gratitudes/presentation/widgets/app_drawer.dart';
 import 'features/gratitudes/presentation/widgets/bottom_controls.dart';
+import 'features/gratitudes/presentation/widgets/branding_overlay.dart';
 import 'features/gratitudes/presentation/widgets/empty_state.dart';
-import 'features/gratitudes/presentation/widgets/floating_label.dart';
+import 'features/gratitudes/presentation/widgets/loading_state.dart';
 import 'features/gratitudes/presentation/widgets/stats_card.dart';
+import 'features/gratitudes/presentation/widgets/visual_layers_stack.dart';
 import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'gratitude_stars.dart';
 import 'l10n/app_localizations.dart';
 import 'list_view_screen.dart';
 import 'modal_dialogs.dart';
-import 'nebula_regions.dart';
 import 'screens/sign_in_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'services/auth_service.dart';
+import 'services/crashlytics_service.dart';
 import 'services/feedback_service.dart';
 import 'services/firestore_service.dart';
+import 'services/layer_cache_service.dart';
 import 'starfield.dart';
 import 'storage.dart';
 import 'widgets/app_dialog.dart';
@@ -50,9 +54,23 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Initialize Crashlytics
+  await CrashlyticsService().initialize();
+
   print('📦 Loading textures...');
-  await BackgroundService.loadTextures();
-  print('✅ Textures loaded, starting app');
+  try {
+    CrashlyticsService().log('Starting texture loading');
+    await BackgroundService.loadTextures();
+    CrashlyticsService().log('Textures loaded successfully');
+    print('✅ Textures loaded, starting app');
+  } catch (e, stack) {
+    CrashlyticsService().recordError(e, stack, reason: 'Texture loading failed');
+    print('⚠️ Texture loading error: $e (continuing anyway)');
+  }
+
+  // Note: Layer cache will be initialized per screen size in GratitudeScreen
+  // This is because we need to know the actual screen size first
+
   runApp(GratiStellarApp());
 }
 
@@ -165,18 +183,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   final TextEditingController _gratitudeController = TextEditingController();
   final AuthService _authService = AuthService();
 
-  List<OrganicNebulaRegion> _organicNebulaRegions = [];
-  List<VanGoghStar> _vanGoghStars = [];
-  List<BackgroundStar> _staticStars = [];
   List<Paint> _glowPatterns = [];
   List<Paint> _backgroundGradients = [];
-  late AnimationController _backgroundController;
-  late AnimationController _starController;
+  bool _layerCacheInitialized = false;
+  ui.Image? _nebulaAssetImage;
+  List<VanGoghStar> _animatedVanGoghStars = []; // The 12 twinkling stars
+  List<VanGoghStar> _allVanGoghStars = [];
+  // List<OrganicNebulaRegion> _organicNebulaRegions = []; // ADD THIS
+  late AnimationManager _animationManager;
   late CameraController _cameraController;
   bool _showBranding = true;
   bool _isAppInBackground = false;
   bool _isMultiFingerGesture = false;
-  AnimationController? _birthController;
   DateTime? _lastScrollTime;
   final String _userName = "A friend";
   Color? _previewColor;
@@ -194,7 +212,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       // Update camera bounds for new star
       _cameraController.updateBounds(provider.gratitudeStars, MediaQuery.of(context).size);
 
-      _birthController!.reset();
+      _animationManager.resetBirthAnimation();
     }
   }
 
@@ -205,46 +223,36 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     WidgetsBinding.instance.addObserver(this);
     _cameraController = CameraController();
 
-    _backgroundController = AnimationController(
-      duration: AnimationConstants.backgroundDuration,
-      vsync: this,
-    )..repeat();
-
-    _starController = AnimationController(
-      duration: AnimationConstants.starFieldDuration,
-      vsync: this,
-    )..repeat();
-
-    _birthController = AnimationController(
-      duration: AnimationConstants.birthAnimationDuration,
-      vsync: this,
-    );
-
-    _birthController!.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _completeBirthAnimation();
-      }
-    });
-
-    print('🎭 Animation controllers created');
+    _animationManager = AnimationManager();
+    _animationManager.initialize(this, _completeBirthAnimation);
 
     // Generate static universe based on full screen size
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
     final screenSize = view.physicalSize / view.devicePixelRatio;
 
-    // Layer-specific universe sizes
-    final backgroundSize = screenSize;
-    final nebulaSize = screenSize;
-    final vanGoghSize = screenSize;
+    // Log screen size for crash reports
+    final crashlytics = CrashlyticsService();
+    crashlytics.setCustomKey('screen_width', screenSize.width.round());
+    crashlytics.setCustomKey('screen_height', screenSize.height.round());
 
-    _staticStars = BackgroundService.generateStaticStars(backgroundSize);
-    _vanGoghStars = VanGoghStarService.generateVanGoghStars(vanGoghSize);
-    _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(nebulaSize);
+    // Initialize layer cache (async - happens in background)
+    _initializeLayerCache(screenSize);
 
-    print('📐 Generated universe - Screen: ${screenSize.width.round()}x${screenSize.height.round()}');
-    print('   Background: ${backgroundSize.width.round()}x${backgroundSize.height.round()} (${_staticStars.length} stars)');
-    print('   Nebula: ${nebulaSize.width.round()}x${nebulaSize.height.round()} (${_organicNebulaRegions.length} regions)');
-    print('   Van Gogh: ${vanGoghSize.width.round()}x${vanGoghSize.height.round()} (${_vanGoghStars.length} stars)');
+    // Initialize layer cache (async - happens in background)
+
+    // Load nebula asset image
+    _loadNebulaAsset();
+
+    // Generate all Van Gogh stars - needed for camera bounds calculation
+    _allVanGoghStars = VanGoghStarService.generateVanGoghStars(screenSize);
+    final staticCount = (_allVanGoghStars.length * 0.9).round(); // 90% static
+    _animatedVanGoghStars = _allVanGoghStars.skip(staticCount).toList(); // Last 10% animate
+    // _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(screenSize);
+
+    print('📐 Screen: ${screenSize.width.round()}x${screenSize.height.round()}');
+    print('   🎨 Using cached layers (background, ${staticCount} Van Gogh stars)');
+    print('   ✨ Animating: ${_animatedVanGoghStars.length} Van Gogh stars');
+    print('   📍 Camera bounds: ${_allVanGoghStars.length} Van Gogh stars (for reference only)');
 
     try {
       _initializePrecomputedElements();
@@ -259,6 +267,24 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _startSplashTimer();
   }
 
+  Future<void> _loadNebulaAsset() async {
+    try {
+      final ByteData data = await rootBundle.load('assets/textures/background-01.png');
+      final Uint8List bytes = data.buffer.asUint8List();
+      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+      final ui.FrameInfo frameInfo = await codec.getNextFrame();
+
+      if (mounted) {
+        setState(() {
+          _nebulaAssetImage = frameInfo.image;
+        });
+      }
+      print('✅ Nebula asset loaded');
+    } catch (e) {
+      print('⚠️ Failed to load nebula asset: $e');
+    }
+  }
+
   void _initializePrecomputedElements() {
     print('🌟 Starting initialization...');
 
@@ -267,6 +293,28 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     _backgroundGradients = BackgroundService.generateBackgroundGradients();
     print('🎨 Generated ${_backgroundGradients.length} background gradients');
+  }
+
+  Future<void> _initializeLayerCache(Size screenSize) async {
+    final crashlytics = CrashlyticsService();
+
+    try {
+      crashlytics.log('Initializing layer cache');
+      await LayerCacheService().initialize(screenSize);
+
+      if (mounted) {
+        setState(() {
+          _layerCacheInitialized = true;
+        });
+      }
+
+      crashlytics.log('Layer cache ready');
+      print('✅ Layer cache initialized');
+    } catch (e, stack) {
+      crashlytics.recordError(e, stack, reason: 'Layer cache initialization failed');
+      print('⚠️ Layer cache failed: $e');
+      // App continues without cache (will be slower but still works)
+    }
   }
 
   void _startSplashTimer() {
@@ -297,10 +345,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _cameraController.dispose();
-    _backgroundController.dispose();
-    _starController.dispose();
-    _gratitudeController.dispose();
-    _birthController?.dispose();
+    _animationManager.dispose();
     super.dispose();
   }
 
@@ -315,9 +360,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       // App going to background
         if (!_isAppInBackground) {
           _isAppInBackground = true;
-          _backgroundController.stop();
-          _starController.stop();
-          _birthController?.stop();
+          _animationManager.pauseAll();
         }
         break;
 
@@ -325,8 +368,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       // App coming back to foreground
         if (_isAppInBackground) {
           _isAppInBackground = false;
-          _backgroundController.repeat();
-          _starController.repeat();
+          _animationManager.resumeAll();
 
           // Reload gratitudes when app resumes (Provider handles sync)
           if (_authService.hasEmailAccount) {
@@ -375,8 +417,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         StarBirthConfig.travelDurationMax.toDouble())
         .toInt();
 
-    _birthController!.duration = Duration(milliseconds: duration);
-    _birthController!.forward(from: 0.0);
+    _animationManager.startBirthAnimation(Duration(milliseconds: duration));
   }
 
   Future<void> _adjustCameraForDestination(GratitudeStar star, Size screenSize) async {
@@ -459,6 +500,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   void _navigateToMindfulnessStar(GratitudeStar star) {
     final screenSize = MediaQuery.of(context).size;
+    final targetScale = CameraController.focusZoomLevel; // ADD THIS - 200% zoom
 
     // Calculate world position
     final starWorldX = star.worldX * screenSize.width;
@@ -468,13 +510,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // Position star at 40% from top to avoid bottom slider overlap
     final verticalPosition = screenSize.height * AnimationConstants.mindfulnessVerticalPosition;
     final targetScreenPos = Offset(screenSize.width / 2, verticalPosition);
-    final targetCameraPos = targetScreenPos - (starWorldPos * _cameraController.scale);
+    final targetCameraPos = targetScreenPos - (starWorldPos * targetScale); // USE targetScale
 
     print('🧘 Navigating to mindfulness star at world: $starWorldPos');
 
-    // Animate to the star
+    // Animate to the star with zoom
     _cameraController.animateTo(
       targetPosition: targetCameraPos,
+      targetScale: targetScale, // ADD THIS
       duration: Duration(milliseconds: AnimationConstants.mindfulnessTransitionMs),
       vsync: this,
     );
@@ -1122,42 +1165,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final currentSize = MediaQuery.of(context).size;
 
     if (isLoading) {
-      return Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.topCenter,
-              colors: [
-                Color(0xFF4A6FA5),
-                Color(0xFF166088),
-                Color(0xFF0B1426),
-                Color(0xFF2C3E50),
-              ],
-            ),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  'assets/icon_star.svg',
-                  width: FontScaling.getResponsiveIconSize(context, 64),
-                  height: FontScaling.getResponsiveIconSize(context, 64),
-                  colorFilter: ColorFilter.mode(_previewColor ?? Colors.white, BlendMode.srcIn),
-                ),
-                SizedBox(height: FontScaling.getResponsiveSpacing(context, 20)),
-                Text(
-                  AppLocalizations.of(context)!.loadingMessage,
-                  style: FontScaling.getBodyMedium(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+      return LoadingStateWidget(previewColor: _previewColor);
     }
 
     return Scaffold(
@@ -1183,139 +1191,24 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         height: double.infinity,
         child: Stack(
           children: [
-            // Layer 1: Static background
-              Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: _cameraController,
-                  builder: (context, child) {
-                    return Transform(
-                      transform: _cameraController.getBackgroundTransform(),
-                      child: CustomPaint(
-                        painter: StaticBackgroundPainter(_staticStars),
-                        size: Size.infinite,
-                      ),
-                    );
-                  },
-                ),
+            // All visual rendering layers
+            VisualLayersStack(
+              layerCacheInitialized: _layerCacheInitialized,
+              nebulaAssetImage: _nebulaAssetImage,
+              animatedVanGoghStars: _animatedVanGoghStars,
+              gratitudeStars: gratitudeStars,
+              showAllGratitudes: showAllGratitudes,
+              mindfulnessMode: mindfulnessMode,
+              activeMindfulnessStar: activeMindfulnessStar,
+              isAnimating: isAnimating,
+              animatingStar: animatingStar,
+              glowPatterns: _glowPatterns,
+              cameraController: _cameraController,
+              animationManager: _animationManager,
+              currentSize: currentSize,
             ),
 
-            // Layer 2: Nebula
-              Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: Listenable.merge([_backgroundController, _cameraController]),
-                  builder: (context, child) {
-                    return Transform(
-                      transform: _cameraController.getNebulaTransform(currentSize),
-                      child: OrganicNebulaWidget(
-                        regions: _organicNebulaRegions,
-                        animationValue: _backgroundController.value,
-                      ),
-                    );
-                  },
-              ),
-            ),
-
-            // Layer 2.5: Van Gogh stars
-              Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: _cameraController,
-                  builder: (context, child) {
-                    return Transform(
-                      transform: _cameraController.getVanGoghTransform(currentSize),
-                      child: CustomPaint(
-                        painter: VanGoghMidgroundPainter(_vanGoghStars),
-                        size: Size.infinite,
-                      ),
-                    );
-                  },
-                ),
-            ),
-
-            // Layer 3: Visual starfield (rendering only, no gestures)
-            Positioned.fill(
-              child: RepaintBoundary(
-                child: AnimatedBuilder(
-                  animation: _cameraController,
-                  builder: (context, child) {
-                    return Stack(
-                      children: [
-                        // Stars layer
-                        Transform(
-                          transform: _cameraController.transform,
-                          child: StarfieldCanvas(
-                            stars: gratitudeStars,
-                            animationController: _starController,
-                            glowPatterns: _glowPatterns,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            // Layer 3.5: Floating labels (NO TRANSFORM - window level)
-            if (showAllGratitudes || mindfulnessMode)
-              Positioned.fill(
-                child: RepaintBoundary(
-                  child: AnimatedBuilder(
-                    animation: _cameraController,
-                    builder: (context, child) {
-                      final starsToShow = mindfulnessMode && activeMindfulnessStar != null
-                          ? [activeMindfulnessStar]
-                          : gratitudeStars;
-
-                      // Viewport culling: filter out off-screen stars
-                      final visibleStars = starsToShow.where((star) {
-                        final starX = star.worldX * currentSize.width;
-                        final starY = star.worldY * currentSize.height;
-                        final starScreenX = (starX * _cameraController.scale) + _cameraController.position.dx;
-                        final starScreenY = (starY * _cameraController.scale) + _cameraController.position.dy;
-
-                        // Check if star is within viewport + margin
-                        const margin = 300.0; // Extra margin for labels
-                        return starScreenX > -margin &&
-                            starScreenX < currentSize.width + margin &&
-                            starScreenY > -margin &&
-                            starScreenY < currentSize.height + margin;
-                      }).toList();
-
-                      return Stack(
-                        children: visibleStars.map((star) {
-                          // In mindfulness mode, animate opacity
-                          if (mindfulnessMode) {
-                            return TweenAnimationBuilder<double>(
-                              key: ValueKey(star.id),
-                              tween: Tween(begin: 0.0, end: 1.0),
-                              duration: Duration(milliseconds: 1000),
-                              builder: (context, opacity, child) {
-                                return FloatingGratitudeLabel(
-                                  star: star,
-                                  screenSize: currentSize,
-                                  cameraScale: _cameraController.scale,
-                                  cameraPosition: _cameraController.position,
-                                  opacity: opacity,
-                                );
-                              },
-                            );
-                          }
-
-                          // Show All mode: no animation
-                          return FloatingGratitudeLabel(
-                            star: star,
-                            screenSize: currentSize,
-                            cameraScale: _cameraController.scale,
-                            cameraPosition: _cameraController.position,
-                          );
-                        }).toList(),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-            // Layer 4: Full-screen gesture detection (MOVED HERE)
+            // Gesture detection for pan/zoom/tap
             Positioned.fill(
               child: Listener(
                 onPointerSignal: (pointerSignal) {
@@ -1344,14 +1237,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   }
                 },
                 child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,  // ← KEY: Makes entire area respond to gestures
+                  behavior: HitTestBehavior.translucent,
                   onScaleStart: isAnimating ? null : (details) {
                     final provider = context.read<GratitudeProvider>();
                     if (provider.mindfulnessMode) {
                       provider.stopMindfulness();
                     }
-
-                    // Detect if this is a multi-finger gesture
                     _isMultiFingerGesture = details.pointerCount > 1;
                   },
                   onScaleUpdate: isAnimating ? null : (details) {
@@ -1360,11 +1251,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       provider.stopMindfulness();
                     }
 
-                    // Handle pinch zoom with threshold to reduce sensitivity
                     if (details.scale != 1.0) {
                       final scaleChange = (details.scale - 1.0).abs();
                       if (scaleChange > 0.01) {
-                        // Very gentle zoom
                         final dampingFactor = 0.025;
                         final dampenedScale = 1.0 + ((details.scale - 1.0) * dampingFactor);
                         final newScale = _cameraController.scale * dampenedScale;
@@ -1372,82 +1261,26 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       }
                     }
 
-                    // Handle pan (when not pinching)
                     if (details.scale == 1.0) {
                       _cameraController.updatePosition(details.focalPointDelta);
                     }
                   },
                   onScaleEnd: isAnimating ? null : (details) {
-                    // Reset multi-finger flag when gesture ends
                     _isMultiFingerGesture = false;
                   },
                   onTapDown: isAnimating ? null : (details) {
-                    // Only handle tap if it wasn't a multi-finger gesture
                     if (!_isMultiFingerGesture) {
                       _handleStarTap(details);
                     }
                   },
-                  child: Container(color: Colors.transparent), // Transparent hit target
+                  child: Container(color: Colors.transparent),
                 ),
               ),
             ),
-            // Animated star birth layer
-            if (isAnimating && animatingStar != null)
-              Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: Listenable.merge([_birthController!, _cameraController]),
-                  builder: (context, child) {
-                    return Transform(
-                      transform: _cameraController.transform,
-                      child: AnimatedStarBirth(
-                        star: animatingStar,
-                        animation: _birthController!,
-                        cameraController: _cameraController,
-                        screenSize: MediaQuery.of(context).size,
-                      ),
-                    );
-                  },
-                ),
-              ),
 
             // Branding overlay
             if (_showBranding)
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: _skipSplash,  // ADD THIS
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.7),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.appTitle,
-                            style: FontScaling.getAppTitle(context).copyWith(
-                              fontSize: FontScaling.getAppTitle(context).fontSize! * UIConstants.universalUIScale,
-                            ),
-                          ),
-                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale),
-                          Text(
-                            AppLocalizations.of(context)!.appSubtitle,
-                            style: FontScaling.getSubtitle(context).copyWith(
-                              fontSize: FontScaling.getSubtitle(context).fontSize! * UIConstants.universalUIScale,
-                            ),
-                          ),
-                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 32) * UIConstants.universalUIScale),
-                          // Add skip hint
-                          Text(
-                            'Tap to skip',
-                            style: FontScaling.getCaption(context).copyWith(
-                              color: Colors.white.withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              BrandingOverlayWidget(onSkip: _skipSplash),
 
             // Hamburger menu button (top-left)
             if (!_showBranding)
@@ -1494,9 +1327,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             if (!_showBranding && gratitudeStars.isEmpty)
               EmptyStateWidget(),
 
-            // Camera controls overlay
+            // Camera controls overlay1
             if (!_showBranding)
-              CameraControlsOverlay(  // REMOVE RepaintBoundary wrapper here
+              CameraControlsOverlay(
                 cameraController: _cameraController,
                 stars: gratitudeStars,
                 screenSize: MediaQuery.of(context).size,

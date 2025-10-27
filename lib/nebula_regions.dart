@@ -5,15 +5,15 @@ import 'dart:math' as math;
 class OrganicNebulaConfig {
   // Reference configuration
   static const Size referenceScreenSize = Size(1920, 1080);
-  static const int referenceNebulaCount = 6;
+  static const int referenceNebulaCount = 3;
 
   // Scale nebula count by screen area
   static const bool useScaledCount = true;
 
   // Nebula size as percentage of screen (instead of fixed pixels)
-  static const double baseSizePercent = 0.13;  // 13% of screen width
-  static const double sizeVariationPercent = 0.16;  // +/- 16% variation
-  static const double nebulaOpacity = 0.05;
+  static const double baseSizePercent = 0.23;  // 13% of screen width
+  static const double sizeVariationPercent = 0.25;  // +/- 16% variation
+  static const double nebulaOpacity = 0.001;
 
   // Organic shape parameters
   static const int shapeNodes = 12; // Points defining irregular boundary
@@ -21,14 +21,14 @@ class OrganicNebulaConfig {
   static const double edgeSoftness = 0.3; // How soft the edges are
 
   // Internal structure
-  static const int internalClouds = 8; // Sub-clouds within each nebula
+  static const int internalClouds = 2; // Sub-clouds within each nebula
   static const double internalVariation = 0.6; // Color/brightness variation
   static const double tendrilLength = 0.7; // Length of wispy tendrils
 
   // Animation
   static const double driftSpeed = 0.01;
   static const double morphSpeed = 0.005; // Speed of shape morphing
-  static const double internalMotion = 0.002; // Internal cloud movement
+  static const double internalMotion = 0.02; // Internal cloud movement
 
   // Enhanced color palettes with more variation
   static const List<List<Color>> nebulaPalettes = [
@@ -299,12 +299,13 @@ class OrganicNebulaPainter extends CustomPainter {
 
   void _paintMultiLayerGradient(Canvas canvas, Offset position, NebulaCloudlet cloudlet) {
     final paint = Paint()..blendMode = BlendMode.screen;
+    final opacity = OrganicNebulaConfig.nebulaOpacity; // USE THE CONFIG!
 
     // Layer 1: Outer diffuse glow
     final outerGradient = RadialGradient(
       colors: [
-        cloudlet.secondaryColor.withValues(alpha: 0.05 * cloudlet.density),
-        cloudlet.secondaryColor.withValues(alpha: 0.02 * cloudlet.density),
+        cloudlet.secondaryColor.withValues(alpha: opacity * 10 * cloudlet.density),
+        cloudlet.secondaryColor.withValues(alpha: opacity * 4 * cloudlet.density),
         Colors.transparent,
       ],
       stops: [0.0, 0.6, 1.0],
@@ -318,8 +319,9 @@ class OrganicNebulaPainter extends CustomPainter {
     // Layer 2: Mid-range color mixing
     final midGradient = RadialGradient(
       colors: [
-        Color.lerp(cloudlet.primaryColor, cloudlet.secondaryColor, 0.3)!.withValues(alpha: 0.15 * cloudlet.density),
-        cloudlet.primaryColor.withValues(alpha: 0.08 * cloudlet.density),
+        Color.lerp(cloudlet.primaryColor, cloudlet.secondaryColor, 0.3)!
+            .withValues(alpha: opacity * 30 * cloudlet.density),
+        cloudlet.primaryColor.withValues(alpha: opacity * 16 * cloudlet.density),
         Colors.transparent,
       ],
       stops: [0.0, 0.5, 1.0],
@@ -333,8 +335,8 @@ class OrganicNebulaPainter extends CustomPainter {
     // Layer 3: Bright inner core
     final innerGradient = RadialGradient(
       colors: [
-        cloudlet.primaryColor.withValues(alpha: 0.25 * cloudlet.density),
-        cloudlet.primaryColor.withValues(alpha: 0.1 * cloudlet.density),
+        cloudlet.primaryColor.withValues(alpha: opacity * 50 * cloudlet.density),
+        cloudlet.primaryColor.withValues(alpha: opacity * 20 * cloudlet.density),
         Colors.transparent,
       ],
       stops: [0.0, 0.3, 1.0],

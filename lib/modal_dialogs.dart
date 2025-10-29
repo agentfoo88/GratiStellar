@@ -646,6 +646,7 @@ class GratitudeDialogs {
                       child: Scrollbar(
                         child: TextField(
                           controller: controller,
+                          textCapitalization: TextCapitalization.sentences,
                           autofocus: true,
                           maxLength: maxCharacters,
                           maxLines: null, // Allow unlimited lines
@@ -844,6 +845,7 @@ class GratitudeDialogs {
                     else
                       TextField(
                         controller: editTextController,
+                        textCapitalization: TextCapitalization.sentences,
                         decoration: InputDecoration(
                           hintText: AppLocalizations.of(context)!.editGratitudeHint,
                           hintStyle: FontScaling.getInputHint(context),

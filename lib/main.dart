@@ -650,6 +650,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     // Display name field
                     TextField(
                       controller: displayNameController,
+                      textCapitalization: TextCapitalization.sentences,
                       style: FontScaling.getInputText(context),
                       textAlign: TextAlign.center,
                       decoration: InputDecoration(
@@ -914,6 +915,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     ),
                     SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
                     TextFormField(
+                      textCapitalization: TextCapitalization.sentences,
                       style: FontScaling.getInputText(context),
                       decoration: InputDecoration(
                         hintText: l10n.feedbackMessageHint,
@@ -980,7 +982,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       ),
                       SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
                       TextFormField(
+                        textCapitalization: TextCapitalization.sentences,
                         style: FontScaling.getInputText(context),
+                        keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           hintText: l10n.feedbackEmailHint,
                           hintStyle: FontScaling.getInputText(context).copyWith(

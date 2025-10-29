@@ -145,6 +145,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         // Name input
                         TextField(
                           controller: _nameController,
+                          textCapitalization: TextCapitalization.sentences,
                           enabled: !_isLoading,
                           textAlign: TextAlign.center,
                           style: FontScaling.getInputText(context),

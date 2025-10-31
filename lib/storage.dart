@@ -349,6 +349,29 @@ class StorageService {
     }
   }
 
+  // Font scale preference
+  static const String _fontScaleKey = 'user_font_scale';
+
+  static Future<void> saveFontScale(double scale) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_fontScaleKey, scale);
+      print('💾 Saved font scale: $scale');
+    } catch (e) {
+      debugPrint('⚠️ Error saving font scale: $e');
+    }
+  }
+
+  static Future<double> getFontScale() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getDouble(_fontScaleKey) ?? 1.0; // Default 100%
+    } catch (e) {
+      debugPrint('⚠️ Error getting font scale: $e');
+      return 1.0;
+    }
+  }
+
   // Calculate statistics (unchanged)
   static int getTotalStars(List<GratitudeStar> stars) => stars.length;
 

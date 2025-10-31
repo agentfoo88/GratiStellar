@@ -1,8 +1,8 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../cached_painters.dart';
 import '../../../../camera_controller.dart';
 import '../../../../core/animation/animation_manager.dart';
 import '../../../../gratitude_stars.dart';
@@ -10,7 +10,6 @@ import '../../../../services/layer_cache_service.dart';
 import '../../../../starfield.dart';
 import '../../../../storage.dart';
 import 'floating_label.dart';
-import '../../../../cached_painters.dart';
 
 /// All visual rendering layers for the gratitude visualization
 ///
@@ -174,7 +173,7 @@ class VisualLayersStack extends StatelessWidget {
                       // In mindfulness mode, animate opacity
                       if (mindfulnessMode) {
                         return TweenAnimationBuilder<double>(
-                          key: ValueKey(star.id),
+                          key: Key(star.id), // ← star.id should be unique
                           tween: Tween(begin: 0.0, end: 1.0),
                           duration: Duration(milliseconds: 1000),
                           builder: (context, opacity, child) {
@@ -191,7 +190,7 @@ class VisualLayersStack extends StatelessWidget {
 
                       // Normal mode - no opacity animation
                       return FloatingGratitudeLabel(
-                        key: ValueKey(star.id),
+                        key: Key(star.id), // ← star.id should be unique
                         star: star,
                         screenSize: currentSize,
                         cameraScale: cameraController.scale,

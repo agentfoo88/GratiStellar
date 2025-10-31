@@ -255,57 +255,74 @@ class CameraController extends ChangeNotifier {
 
   // Fit all stars in view - Updated for normalized coordinates
   void fitAllStars(List<GratitudeStar> stars, Size screenSize, TickerProvider vsync) {
-    // Simple solution for 0 or 1 stars: reset to center at 100% zoom
-    if (stars.length <= 1) {
-      resetToHome(vsync);
-      return;
-    }
+    if (stars.isEmpty) return;
 
-    // For 2+ stars, calculate proper bounding box in world space
-    double minWorldX = stars.first.worldX;
-    double maxWorldX = stars.first.worldX;
-    double minWorldY = stars.first.worldY;
-    double maxWorldY = stars.first.worldY;
+    // Find bounds of all stars in world coordinates
+    double minX = double.infinity;
+    double maxX = double.negativeInfinity;
+    double minY = double.infinity;
+    double maxY = double.negativeInfinity;
 
     for (final star in stars) {
-      minWorldX = math.min(minWorldX, star.worldX);
-      maxWorldX = math.max(maxWorldX, star.worldX);
-      minWorldY = math.min(minWorldY, star.worldY);
-      maxWorldY = math.max(maxWorldY, star.worldY);
+      final starX = star.worldX * screenSize.width;
+      final starY = star.worldY * screenSize.height;
+
+      minX = math.min(minX, starX);
+      maxX = math.max(maxX, starX);
+      minY = math.min(minY, starY);
+      maxY = math.max(maxY, starY);
     }
 
-// Convert world coordinates to pixels for calculation
-    final minWorldXPixels = minWorldX * screenSize.width;
-    final maxWorldXPixels = maxWorldX * screenSize.width;
-    final minWorldYPixels = minWorldY * screenSize.height;
-    final maxWorldYPixels = maxWorldY * screenSize.height;
+    // Calculate center of all stars
+    final centerX = (minX + maxX) / 2;
+    final centerY = (minY + maxY) / 2;
 
-// Add padding (10% of the star field size)
-    final starFieldWidth = maxWorldXPixels - minWorldXPixels;
-    final starFieldHeight = maxWorldYPixels - minWorldYPixels;
-    final paddingX = starFieldWidth * 0.1;
-    final paddingY = starFieldHeight * 0.1;
+    // Calculate required scale to fit all stars with padding
+    const padding = 100.0; // Padding in pixels
+    final width = maxX - minX + padding * 2;
+    final height = maxY - minY + padding * 2;
 
-// Calculate required scale to fit bounding box
-    final scaleX = screenSize.width / (starFieldWidth + paddingX * 2);
-    final scaleY = screenSize.height / (starFieldHeight + paddingY * 2);
-    final targetScale = math.min(scaleX, scaleY) * 0.9; // 90% of available space
+    final scaleX = screenSize.width / width;
+    final scaleY = screenSize.height / height;
+    final targetScale = math.min(scaleX, scaleY).clamp(minScale, maxScale);
 
-// Calculate center of stars in world pixel coordinates
-    final centerWorldX = (minWorldXPixels + maxWorldXPixels) / 2;
-    final centerWorldY = (minWorldYPixels + maxWorldYPixels) / 2;
-
-// Calculate camera position to center the stars
+    // Calculate camera position to center the bounds
     final targetPosition = Offset(
-      screenSize.width / 2 - centerWorldX * targetScale,
-      screenSize.height / 2 - centerWorldY * targetScale,
+      screenSize.width / 2 - centerX * targetScale,
+      screenSize.height / 2 - centerY * targetScale,
     );
+
+    print('📐 Fit all: bounds ($minX, $minY) to ($maxX, $maxY), scale: $targetScale');
 
     animateTo(
       targetPosition: targetPosition,
-      targetScale: math.max(minScale, math.min(maxScale, targetScale)),
-      duration: const Duration(milliseconds: 1000),
+      targetScale: targetScale,
+      duration: Duration(milliseconds: 800),
       curve: Curves.easeInOutCubic,
+      vsync: vsync,
+    );
+  }
+
+  // Center camera on a specific world point (normalized coordinates)
+  void centerOnPoint(Offset worldPoint, Size screenSize, TickerProvider vsync) {
+    final targetScreenPos = Offset(screenSize.width / 2, screenSize.height / 2);
+    final worldPosPixels = Offset(worldPoint.dx * screenSize.width, worldPoint.dy * screenSize.height);
+
+    // Use different calculation based on zoom level
+    final Offset targetCameraPosition;
+    if (_scale < 0.5) {
+      // At low zoom, use current screen position + offset method
+      // This avoids floating-point precision issues
+      final currentScreenPos = worldToScreen(worldPosPixels);
+      targetCameraPosition = _position + (targetScreenPos - currentScreenPos);
+    } else {
+      // Normal calculation for higher zoom levels
+      targetCameraPosition = targetScreenPos - (worldPosPixels * _scale);
+    }
+
+    animateTo(
+      targetPosition: targetCameraPosition,
+      duration: const Duration(milliseconds: 600),
       vsync: vsync,
     );
   }
@@ -385,7 +402,8 @@ class CameraControlsOverlay extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: fontSize,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
+                            // letterSpacing: 0.5, // Add letter spacing
                           ),
                         ),
                       ),
@@ -485,7 +503,7 @@ class CameraControlsOverlay extends StatelessWidget {
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: fontSize * 0.75,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),

@@ -37,4 +37,5 @@ class CameraConstants {
   static const double minScale = 0.4;
   static const double maxScale = 5.0;
   static const double focusZoomLevel = 2.0;
+  static const double jumpToStarZoom = 2.5;
 }

@@ -8,16 +8,18 @@ import '../../../../core/config/constants.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../storage.dart';
 
 /// App navigation drawer widget
 ///
 /// Contains menu items for Account, List View, Feedback, and Exit
-class AppDrawerWidget extends StatelessWidget {
+class AppDrawerWidget extends StatefulWidget {
   final AuthService authService;
   final VoidCallback onAccountTap;
   final VoidCallback onListViewTap;
   final VoidCallback onFeedbackTap;
   final VoidCallback onExitTap;
+  final VoidCallback onFontScaleChanged;
 
   const AppDrawerWidget({
     super.key,
@@ -26,7 +28,30 @@ class AppDrawerWidget extends StatelessWidget {
     required this.onListViewTap,
     required this.onFeedbackTap,
     required this.onExitTap,
+    required this.onFontScaleChanged,
   });
+
+  @override
+  State<AppDrawerWidget> createState() => _AppDrawerWidgetState();
+}
+
+class _AppDrawerWidgetState extends State<AppDrawerWidget> {
+  double textScaleFactor = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFontScale();
+  }
+
+  Future<void> _loadFontScale() async {
+    final scale = await StorageService.getFontScale();
+    if (mounted) {
+      setState(() {
+        textScaleFactor = scale;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,25 +105,25 @@ class AppDrawerWidget extends StatelessWidget {
           // Account section
           ListTile(
             leading: Icon(
-              authService.hasEmailAccount ? Icons.account_circle : Icons.login,
+              widget.authService.hasEmailAccount ? Icons.account_circle : Icons.login,
               color: Color(0xFFFFE135),
               size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
             ),
             title: Text(
-              authService.hasEmailAccount
+              widget.authService.hasEmailAccount
                   ? l10n.accountMenuItem
                   : l10n.signInWithEmailMenuItem,
               style: FontScaling.getBodyMedium(context).copyWith(
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
               ),
             ),
-            subtitle: authService.hasEmailAccount
+            subtitle: widget.authService.hasEmailAccount
                 ? Text(
-              authService.currentUser?.displayName ?? l10n.defaultUserName,
+              widget.authService.currentUser?.displayName ?? l10n.defaultUserName,
               style: FontScaling.getCaption(context),
             )
                 : null,
-            onTap: onAccountTap,
+            onTap: widget.onAccountTap,
           ),
 
           // Heavy divider
@@ -121,13 +146,72 @@ class AppDrawerWidget extends StatelessWidget {
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
               ),
             ),
-            onTap: onListViewTap,
+            onTap: widget.onListViewTap,
           ),
 
           Divider(
             color: Color(0xFFFFE135).withValues(alpha: 0.2),
             height: 1,
           ),
+
+          // Font Size Setting
+          ListTile(
+            leading: Icon(Icons.text_fields, color: Colors.white70),
+            title: Text(
+              'Font Size',
+              style: FontScaling.getBodyMedium(context).copyWith(
+                color: Colors.white,
+              ),
+            ),
+            subtitle: StatefulBuilder(
+              builder: (context, setSliderState) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 8),
+                    Text(
+                      '${(textScaleFactor * 100).round()}%',
+                      style: FontScaling.getBodySmall(context).copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
+                    Slider(
+                      value: textScaleFactor,
+                      min: 0.75,
+                      max: 1.75,
+                      divisions: 4,
+                      label: '${(textScaleFactor * 100).round()}%',
+                      activeColor: Color(0xFFFFE135),
+                      inactiveColor: Colors.white24,
+                      onChanged: (value) async {
+                        // Update local state immediately
+                        setSliderState(() {
+                          textScaleFactor = value;
+                        });
+                      },
+                      onChangeEnd: (value) async {
+                        // Save to storage when user releases slider
+                        await StorageService.saveFontScale(value);
+
+                        // Trigger parent rebuild by calling the callback
+                        widget.onFontScaleChanged();
+                      },
+                    ),
+                    Text(
+                      'Preview: The quick brown fox jumps',
+                      style: TextStyle(
+                        fontSize: 16 * textScaleFactor,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                  ],
+                );
+              },
+            ),
+          ),
+
+          Divider(color: Colors.white24),
 
           // Send Feedback
           ListTile(
@@ -142,7 +226,7 @@ class AppDrawerWidget extends StatelessWidget {
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
               ),
             ),
-            onTap: onFeedbackTap,
+            onTap: widget.onFeedbackTap ,
           ),
 
           Divider(
@@ -163,7 +247,7 @@ class AppDrawerWidget extends StatelessWidget {
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
               ),
             ),
-            onTap: onExitTap,
+            onTap: widget.onExitTap,
           ),
           Divider(
             color: Color(0xFFFFE135).withValues(alpha: 0.2),
@@ -178,7 +262,7 @@ class AppDrawerWidget extends StatelessWidget {
             ),
             subtitle: Text(
               'Regenerate background layers',
-              style: TextStyle(color: Colors.white60, fontSize: 12),
+              style: TextStyle(color: Colors.white60, fontSize: 15),
             ),
             onTap: () async {
               Navigator.of(context).pop(); // Close drawer
@@ -222,8 +306,12 @@ class AppDrawerWidget extends StatelessWidget {
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
             builder: (context, snapshot) {
-              final version = snapshot.data?.version ?? '1.0.0';
-              final buildNumber = snapshot.data?.buildNumber ?? '1';
+              if (!snapshot.hasData) {
+                return const SizedBox.shrink(); // Avoid showing placeholder text
+              }
+              final info = snapshot.data!;
+              final version = info.version;
+              final buildNumber = info.buildNumber;
 
               return Padding(
                 padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 16)),

@@ -88,7 +88,20 @@ class GratitudeProvider extends ChangeNotifier {
   Future<void> loadGratitudes() async {
     final result = await _loadGratitudesUseCase(NoParams());
 
-    _gratitudeStars = result.stars;
+    // Deduplicate by ID (in case of storage corruption or sync issues)
+    final seenIds = <String>{};
+    final dedupedStars = <GratitudeStar>[];
+
+    for (final star in result.stars) {
+      if (!seenIds.contains(star.id)) {
+        seenIds.add(star.id);
+        dedupedStars.add(star);
+      } else {
+        print('⚠️ Duplicate star detected and removed: ${star.id}');
+      }
+    }
+
+    _gratitudeStars = dedupedStars;
     _isLoading = false;
     notifyListeners();
 
@@ -105,7 +118,18 @@ class GratitudeProvider extends ChangeNotifier {
         SyncGratitudesParams(localStars: _gratitudeStars),
       );
 
-      _gratitudeStars = result.mergedStars;
+      // Deduplicate by ID (in case of sync issues)
+      final seenIds = <String>{};
+      final dedupedStars = <GratitudeStar>[];
+
+      for (final star in result.mergedStars) {
+        if (!seenIds.contains(star.id)) {
+          seenIds.add(star.id);
+          dedupedStars.add(star);
+        }
+      }
+
+      _gratitudeStars = dedupedStars;
       notifyListeners();
     } catch (e) {
       print('⚠️ Sync failed: $e');
@@ -214,7 +238,12 @@ class GratitudeProvider extends ChangeNotifier {
   }
 
   void _selectRandomStar() {
-    if (_gratitudeStars.isEmpty) return;
+    // Safety check: no stars available
+    if (_gratitudeStars.isEmpty) {
+      _activeMindfulnessStar = null;
+      stopMindfulness(); // Auto-stop if no stars left
+      return;
+    }
 
     // If only one star, use it
     if (_gratitudeStars.length == 1) {
@@ -227,6 +256,13 @@ class GratitudeProvider extends ChangeNotifier {
     final availableStars = _gratitudeStars
         .where((star) => star.id != _activeMindfulnessStar?.id)
         .toList();
+
+    // Safety check: filtered list might be empty (shouldn't happen, but be safe)
+    if (availableStars.isEmpty) {
+      _activeMindfulnessStar = _gratitudeStars[0];
+      notifyListeners();
+      return;
+    }
 
     // Select random star from available pool
     _activeMindfulnessStar = availableStars[_random.nextInt(availableStars.length)];

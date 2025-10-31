@@ -2,7 +2,7 @@ name: gratistellar
 description: "Build your universe of thankfulness with a peaceful gratitude tracker"
 publish_to: "none"
 
-version: 0.9.3
+version: 0.9.4
 
 environment:
   sdk: ^3.9.2

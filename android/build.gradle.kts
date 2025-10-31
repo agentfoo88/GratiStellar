@@ -17,12 +17,12 @@ allprojects {
     }
 }
 
-rootProject.buildDir = file("../build")
+rootProject.layout.buildDirectory.set(file("../build"))
 
 subprojects {
-    project.buildDir = file("${rootProject.buildDir}/${project.name}")
+    project.layout.buildDirectory.set(file("${rootProject.layout.buildDirectory.get().asFile}/${project.name}"))
 }
 
 tasks.register<Delete>("clean") {
-    delete(rootProject.buildDir)
+    delete(rootProject.layout.buildDirectory)
 }

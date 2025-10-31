@@ -182,7 +182,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _gratitudeController = TextEditingController();
   final AuthService _authService = AuthService();
-
+  double _fontScale = 1.0; // User's preferred font scale
   List<Paint> _glowPatterns = [];
   List<Paint> _backgroundGradients = [];
   bool _layerCacheInitialized = false;
@@ -250,7 +250,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(screenSize);
 
     print('📐 Screen: ${screenSize.width.round()}x${screenSize.height.round()}');
-    print('   🎨 Using cached layers (background, ${staticCount} Van Gogh stars)');
+    print('   🎨 Using cached layers (background, $staticCount Van Gogh stars)');
     print('   ✨ Animating: ${_animatedVanGoghStars.length} Van Gogh stars');
     print('   📍 Camera bounds: ${_allVanGoghStars.length} Van Gogh stars (for reference only)');
 
@@ -264,7 +264,17 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // Provider handles loading via its initialization
     // Camera bounds will be updated in build() once data loads
 
+    _loadFontScale();
     _startSplashTimer();
+  }
+
+  Future<void> _loadFontScale() async {
+    final scale = await StorageService.getFontScale();
+    if (mounted) {
+      setState(() {
+        _fontScale = scale;
+      });
+    }
   }
 
   Future<void> _loadNebulaAsset() async {
@@ -405,7 +415,24 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // Start animation via provider
     provider.startBirthAnimation(newStar);
 
-    await _adjustCameraForDestination(newStar, screenSize);
+    // Calculate camera position so star appears at 40% from top
+    // (prevents text input modal from obscuring the star)
+    final starWorldX = newStar.worldX * screenSize.width;
+    final starWorldY = newStar.worldY * screenSize.height;
+
+    final targetPosition = Offset(
+      screenSize.width / 2 - starWorldX * _cameraController.scale,
+      screenSize.height * 0.4 - starWorldY * _cameraController.scale, // 40% from top
+    );
+
+    _cameraController.animateTo(
+      targetPosition: targetPosition,
+      targetScale: _cameraController.scale, // Keep current scale
+      duration: Duration(milliseconds: 400),
+      curve: Curves.easeInOutCubic,
+      vsync: this,
+    );
+    await Future.delayed(Duration(milliseconds: 400));
 
     final startScreen = Offset(screenSize.width / 2, screenSize.height);
     final endWorld = Offset(newStar.worldX * screenSize.width, newStar.worldY * screenSize.height);
@@ -418,24 +445,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         .toInt();
 
     _animationManager.startBirthAnimation(Duration(milliseconds: duration));
-  }
-
-  Future<void> _adjustCameraForDestination(GratitudeStar star, Size screenSize) async {
-    final targetScreenPos = Offset(screenSize.width / 2, screenSize.height / 2);
-    final worldPosPixels = Offset(star.worldX * screenSize.width, star.worldY * screenSize.height);
-    final targetCameraPosition = targetScreenPos - (worldPosPixels * _cameraController.scale);
-
-    print('🎯 Centering star at scale ${_cameraController.scale}');
-    print('World pos: $worldPosPixels, Target screen: $targetScreenPos');
-    print('Target camera position: $targetCameraPosition');
-
-    _cameraController.animateTo(
-      targetPosition: targetCameraPosition,
-      duration: Duration(milliseconds: 600),
-      vsync: this,
-    );
-
-    await Future.delayed(Duration(milliseconds: 400));
   }
 
   /// Shows the edit dialog for a star (delegates to modal_dialogs.dart)
@@ -498,27 +507,26 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
-  void _navigateToMindfulnessStar(GratitudeStar star) {
+  Future<void> _navigateToMindfulnessStar(GratitudeStar star) async {
     final screenSize = MediaQuery.of(context).size;
-    final targetScale = CameraController.focusZoomLevel; // ADD THIS - 200% zoom
 
     // Calculate world position
     final starWorldX = star.worldX * screenSize.width;
     final starWorldY = star.worldY * screenSize.height;
-    final starWorldPos = Offset(starWorldX, starWorldY);
 
-    // Position star at 40% from top to avoid bottom slider overlap
-    final verticalPosition = screenSize.height * AnimationConstants.mindfulnessVerticalPosition;
-    final targetScreenPos = Offset(screenSize.width / 2, verticalPosition);
-    final targetCameraPos = targetScreenPos - (starWorldPos * targetScale); // USE targetScale
+    print('🧘 Navigating to mindfulness star at world: ($starWorldX, $starWorldY)');
 
-    print('🧘 Navigating to mindfulness star at world: $starWorldPos');
+    // Position at 40% from top (not center) with slow 2-second animation
+    final targetPosition = Offset(
+      screenSize.width / 2 - starWorldX * _cameraController.scale,
+      screenSize.height * 0.4 - starWorldY * _cameraController.scale, // 40% from top
+    );
 
-    // Animate to the star with zoom
     _cameraController.animateTo(
-      targetPosition: targetCameraPos,
-      targetScale: targetScale, // ADD THIS
-      duration: Duration(milliseconds: AnimationConstants.mindfulnessTransitionMs),
+      targetPosition: targetPosition,
+      targetScale: _cameraController.scale, // Keep current zoom
+      duration: Duration(milliseconds: 2000), // 2 seconds - slow and graceful
+      curve: Curves.easeInOutCubic,
       vsync: this,
     );
   }
@@ -536,18 +544,25 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     context.read<GratitudeProvider>().setMindfulnessInterval(value.round());
   }
 
-  void _navigateToListView() async {
-    final provider = context.read<GratitudeProvider>();
+  void _jumpToStar(GratitudeStar star) {
+    final screenSize = MediaQuery.of(context).size;
 
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ListViewScreen(
-          stars: provider.gratitudeStars,
-          onStarTap: (star, refreshList) => _showStarDetailsFromList(star, refreshList),
-          onJumpToStar: (star) {},
-        ),
-      ),
+    // Convert star's normalized world coordinates to pixels
+    final starWorldX = star.worldX * screenSize.width;
+    final starWorldY = star.worldY * screenSize.height;
+
+    // Calculate camera position to center the star at the new scale
+    final targetPosition = Offset(
+      screenSize.width / 2 - starWorldX * CameraConstants.jumpToStarZoom,
+      screenSize.height / 2 - starWorldY * CameraConstants.jumpToStarZoom,
+    );
+
+    _cameraController.animateTo(
+      targetPosition: targetPosition,
+      targetScale: CameraConstants.jumpToStarZoom,
+      duration: Duration(milliseconds: 1500),
+      curve: Curves.easeInOutCubic,
+      vsync: this,
     );
   }
 
@@ -563,43 +578,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  void _jumpToStar(GratitudeStar star) {
-    final screenSize = MediaQuery.of(context).size;
-    final targetScale = CameraController.focusZoomLevel;
-
-    // Convert star's normalized world coordinates to pixels
-    final starWorldX = star.worldX * screenSize.width;
-    final starWorldY = star.worldY * screenSize.height;
-
-    // Calculate camera position to center the star at the new scale
-    final targetPosition = Offset(
-      screenSize.width / 2 - starWorldX * targetScale,
-      screenSize.height / 2 - starWorldY * targetScale,
-    );
-
-    _cameraController.animateTo(
-      targetPosition: targetPosition,
-      targetScale: targetScale,
-      duration: Duration(milliseconds: 1500),
-      curve: Curves.easeInOutCubic,
-      vsync: this,
-    );
-  }
-
-  void _handleAccountTap() {
-    Navigator.pop(context); // Close drawer
-    if (_authService.hasEmailAccount) {
-      _showAccountDialog();
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SignInScreen(),
-        ),
-      );
-    }
-  }
-
   void _showAddGratitudeModal() {
     final provider = context.read<GratitudeProvider>();
 
@@ -609,6 +587,40 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       onAdd: _addGratitude,
       isAnimating: provider.isAnimating,
     );
+  }
+
+  void _navigateToListView() async {
+    final provider = context.read<GratitudeProvider>();
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ListViewScreen(
+          stars: provider.gratitudeStars,
+          onStarTap: (star, refreshList) => _showStarDetailsFromList(star, refreshList),
+          onJumpToStar: (star) {},
+        ),
+      ),
+    );
+  }
+
+  void _showSignOutConfirmation() {
+    final l10n = AppLocalizations.of(context)!;
+
+    AppDialog.showConfirmation(
+      context: context,
+      title: l10n.signOutTitle,
+      message: l10n.signOutMessage,
+      icon: Icons.logout,
+      iconColor: Colors.red.withValues(alpha: 0.8),
+      confirmText: l10n.signOutButton,
+      cancelText: l10n.cancelButton,
+      isDestructive: true,
+    ).then((confirmed) async {
+      if (confirmed == true) {
+        await _authService.signOut();
+      }
+    });
   }
 
   void _showAccountDialog() {
@@ -792,6 +804,20 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         ),
       ],
     );
+  }
+
+  void _handleAccountTap() {
+    Navigator.pop(context); // Close drawer
+    if (_authService.hasEmailAccount) {
+      _showAccountDialog();
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignInScreen(),
+        ),
+      );
+    }
   }
 
   void _showFeedbackDialog() {
@@ -1025,7 +1051,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                             ),
                           ),
                         ),
-                        keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
                             final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
@@ -1109,25 +1134,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  void _showSignOutConfirmation() {
-    final l10n = AppLocalizations.of(context)!;
-
-    AppDialog.showConfirmation(
-      context: context,
-      title: l10n.signOutTitle,
-      message: l10n.signOutMessage,
-      icon: Icons.logout,
-      iconColor: Colors.red.withValues(alpha: 0.8),
-      confirmText: l10n.signOutButton,
-      cancelText: l10n.cancelButton,
-      isDestructive: true,
-    ).then((confirmed) async {
-      if (confirmed == true) {
-        await _authService.signOut();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GratitudeProvider>();
@@ -1172,177 +1178,183 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       return LoadingStateWidget(previewColor: _previewColor);
     }
 
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: AppDrawerWidget(
-        authService: _authService,
-        onAccountTap: _handleAccountTap,
-        onListViewTap: () {
-          Navigator.pop(context);
-          _navigateToListView();
-        },
-        onFeedbackTap: () {
-          Navigator.pop(context);
-          _showFeedbackDialog();
-        },
-        onExitTap: () {
-          Navigator.pop(context);
-          GratitudeDialogs.showQuitConfirmation(context);
-        },
-      ),
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: Stack(
-          children: [
-            // All visual rendering layers
-            VisualLayersStack(
-              layerCacheInitialized: _layerCacheInitialized,
-              nebulaAssetImage: _nebulaAssetImage,
-              animatedVanGoghStars: _animatedVanGoghStars,
-              gratitudeStars: gratitudeStars,
-              showAllGratitudes: showAllGratitudes,
-              mindfulnessMode: mindfulnessMode,
-              activeMindfulnessStar: activeMindfulnessStar,
-              isAnimating: isAnimating,
-              animatingStar: animatingStar,
-              glowPatterns: _glowPatterns,
-              cameraController: _cameraController,
-              animationManager: _animationManager,
-              currentSize: currentSize,
-            ),
+    return MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(_fontScale),
+        ),
+        child: Scaffold(
+          key: _scaffoldKey,
+          drawer: AppDrawerWidget(
+            authService: _authService,
+            onAccountTap: _handleAccountTap,
+            onListViewTap: () {
+              Navigator.pop(context);
+              _navigateToListView();
+            },
+            onFeedbackTap: () {
+              Navigator.pop(context);
+              _showFeedbackDialog();
+            },
+            onExitTap: () {
+              Navigator.pop(context);
+              GratitudeDialogs.showQuitConfirmation(context);
+            },
+            onFontScaleChanged: _loadFontScale,
+          ),
+          body: SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: Stack(
+              children: [
+                // All visual rendering layers
+                VisualLayersStack(
+                  layerCacheInitialized: _layerCacheInitialized,
+                  nebulaAssetImage: _nebulaAssetImage,
+                  animatedVanGoghStars: _animatedVanGoghStars,
+                  gratitudeStars: gratitudeStars,
+                  showAllGratitudes: showAllGratitudes,
+                  mindfulnessMode: mindfulnessMode,
+                  activeMindfulnessStar: activeMindfulnessStar,
+                  isAnimating: isAnimating,
+                  animatingStar: animatingStar,
+                  glowPatterns: _glowPatterns,
+                  cameraController: _cameraController,
+                  animationManager: _animationManager,
+                  currentSize: currentSize,
+                ),
 
-            // Gesture detection for pan/zoom/tap
-            Positioned.fill(
-              child: Listener(
-                onPointerSignal: (pointerSignal) {
-                  if (pointerSignal is PointerScrollEvent) {
-                    final provider = context.read<GratitudeProvider>();
-                    if (provider.mindfulnessMode) {
-                      provider.stopMindfulness();
-                    }
+                // Gesture detection for pan/zoom/tap
+                Positioned.fill(
+                  child: Listener(
+                    onPointerSignal: (pointerSignal) {
+                      if (pointerSignal is PointerScrollEvent) {
+                        final provider = context.read<GratitudeProvider>();
+                        if (provider.mindfulnessMode) {
+                          provider.stopMindfulness();
+                        }
 
-                    final now = DateTime.now();
-                    if (_lastScrollTime != null && now.difference(_lastScrollTime!).inMilliseconds < 16) {
-                      return;
-                    }
-                    _lastScrollTime = now;
+                        final now = DateTime.now();
+                        if (_lastScrollTime != null && now.difference(_lastScrollTime!).inMilliseconds < 16) {
+                          return;
+                        }
+                        _lastScrollTime = now;
 
-                    final scrollEvent = pointerSignal;
-                    final delta = scrollEvent.scrollDelta.dy;
-                    final screenSize = MediaQuery.of(context).size;
-                    final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
+                        final scrollEvent = pointerSignal;
+                        final delta = scrollEvent.scrollDelta.dy;
+                        final screenSize = MediaQuery.of(context).size;
+                        final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
 
-                    if (delta > 0) {
-                      _cameraController.zoomOut(1.1, screenCenter);
-                    } else {
-                      _cameraController.zoomIn(1.1, screenCenter);
-                    }
-                  }
-                },
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onScaleStart: isAnimating ? null : (details) {
-                    final provider = context.read<GratitudeProvider>();
-                    if (provider.mindfulnessMode) {
-                      provider.stopMindfulness();
-                    }
-                    _isMultiFingerGesture = details.pointerCount > 1;
-                  },
-                  onScaleUpdate: isAnimating ? null : (details) {
-                    final provider = context.read<GratitudeProvider>();
-                    if (provider.mindfulnessMode) {
-                      provider.stopMindfulness();
-                    }
-
-                    if (details.scale != 1.0) {
-                      final scaleChange = (details.scale - 1.0).abs();
-                      if (scaleChange > 0.01) {
-                        final dampingFactor = 0.025;
-                        final dampenedScale = 1.0 + ((details.scale - 1.0) * dampingFactor);
-                        final newScale = _cameraController.scale * dampenedScale;
-                        _cameraController.updateScale(newScale, details.focalPoint);
+                        if (delta > 0) {
+                          _cameraController.zoomOut(1.1, screenCenter);
+                        } else {
+                          _cameraController.zoomIn(1.1, screenCenter);
+                        }
                       }
-                    }
+                    },
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onScaleStart: isAnimating ? null : (details) {
+                        final provider = context.read<GratitudeProvider>();
+                        if (provider.mindfulnessMode) {
+                          provider.stopMindfulness();
+                        }
+                        _isMultiFingerGesture = details.pointerCount > 1;
+                      },
+                      onScaleUpdate: isAnimating ? null : (details) {
+                        final provider = context.read<GratitudeProvider>();
+                        if (provider.mindfulnessMode) {
+                          provider.stopMindfulness();
+                        }
 
-                    if (details.scale == 1.0) {
-                      _cameraController.updatePosition(details.focalPointDelta);
-                    }
-                  },
-                  onScaleEnd: isAnimating ? null : (details) {
-                    _isMultiFingerGesture = false;
-                  },
-                  onTapDown: isAnimating ? null : (details) {
-                    if (!_isMultiFingerGesture) {
-                      _handleStarTap(details);
-                    }
-                  },
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-            ),
+                        if (details.scale != 1.0) {
+                          final scaleChange = (details.scale - 1.0).abs();
+                          if (scaleChange > 0.01) {
+                            final dampingFactor = 0.025;
+                            final dampenedScale = 1.0 + ((details.scale - 1.0) * dampingFactor);
+                            final newScale = _cameraController.scale * dampenedScale;
+                            _cameraController.updateScale(newScale, details.focalPoint);
+                          }
+                        }
 
-            // Branding overlay
-            if (_showBranding)
-              BrandingOverlayWidget(onSkip: _skipSplash),
-
-            // Hamburger menu button (top-left)
-            if (!_showBranding)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 16,
-                left: 16,
-                child: HamburgerButton(
-                  onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                ),
-              ),
-
-            // Stats card
-            if (!_showBranding)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 16,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: StatsCardWidget(stars: gratitudeStars),
-                ),
-              ),
-
-            // Bottom button row with slider integrated
-            if (!_showBranding)
-              Positioned(
-                bottom: MediaQuery.of(context).padding.bottom + 50,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: BottomControlsWidget(
-                    showAllGratitudes: showAllGratitudes,
-                    mindfulnessMode: mindfulnessMode,
-                    isAnimating: isAnimating,
-                    mindfulnessInterval: mindfulnessInterval,
-                    onToggleShowAll: _toggleShowAll,
-                    onToggleMindfulness: _toggleMindfulness,
-                    onAddStar: _showAddGratitudeModal,
-                    onMindfulnessIntervalChanged: _onMindfulnessIntervalChanged,
+                        if (details.scale == 1.0) {
+                          _cameraController.updatePosition(details.focalPointDelta);
+                        }
+                      },
+                      onScaleEnd: isAnimating ? null : (details) {
+                        _isMultiFingerGesture = false;
+                      },
+                      onTapDown: isAnimating ? null : (details) {
+                        if (!_isMultiFingerGesture) {
+                          _handleStarTap(details);
+                        }
+                      },
+                      child: Container(color: Colors.transparent),
+                    ),
                   ),
                 ),
-              ),
 
-            // Empty state message
-            if (!_showBranding && gratitudeStars.isEmpty)
-              EmptyStateWidget(),
+                // Branding overlay
+                if (_showBranding)
+                  BrandingOverlayWidget(onSkip: _skipSplash),
 
-            // Camera controls overlay1
-            if (!_showBranding)
-              CameraControlsOverlay(
-                cameraController: _cameraController,
-                stars: gratitudeStars,
-                screenSize: MediaQuery.of(context).size,
-                vsync: this,
-                safeAreaPadding: MediaQuery.of(context).padding,
-              ),
-          ],
+                // Stats card
+                if (!_showBranding)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 16,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: StatsCardWidget(stars: gratitudeStars),
+                    ),
+                  ),
+
+                // Hamburger menu button (top-left)
+                if (!_showBranding)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 16,
+                    left: 16,
+                    child: HamburgerButton(
+                      onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                    ),
+                  ),
+
+                // Bottom button row with slider integrated
+                if (!_showBranding)
+                  Positioned(
+                    bottom: MediaQuery.of(context).padding.bottom + 50,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: BottomControlsWidget(
+                        showAllGratitudes: showAllGratitudes,
+                        mindfulnessMode: mindfulnessMode,
+                        isAnimating: isAnimating,
+                        mindfulnessInterval: mindfulnessInterval,
+                        onToggleShowAll: _toggleShowAll,
+                        onToggleMindfulness: _toggleMindfulness,
+                        onAddStar: _showAddGratitudeModal,
+                        onMindfulnessIntervalChanged: _onMindfulnessIntervalChanged,
+                      ),
+                    ),
+                  ),
+
+                // Empty state message
+                if (!_showBranding && gratitudeStars.isEmpty)
+                  EmptyStateWidget(),
+
+                // Camera controls overlay1
+                if (!_showBranding)
+                  CameraControlsOverlay(
+                    cameraController: _cameraController,
+                    stars: gratitudeStars,
+                    screenSize: MediaQuery.of(context).size,
+                    vsync: this,
+                    safeAreaPadding: MediaQuery.of(context).padding,
+                  ),
+              ],
+            ),
+          ),
         ),
-      ),
     );
   }
 }

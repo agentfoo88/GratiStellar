@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+
 import '../config/constants.dart';
 
 /// Manages all animation controllers for the gratitude visualization
 ///
 /// Centralizes animation lifecycle management to reduce complexity in the main screen.
 /// Handles background animation, star field animation, and star birth animation.
+/// Respects user's reduced motion preferences for accessibility.
 class AnimationManager {
   late AnimationController _backgroundController;
   late AnimationController _starController;
   AnimationController? _birthController;
 
   bool _isInitialized = false;
+  bool _reduceMotion = false;
 
   /// Gets the background animation controller (for nebula pulse effects)
   AnimationController get background => _backgroundController;
@@ -21,27 +24,56 @@ class AnimationManager {
   /// Gets the birth animation controller (for new star creation)
   AnimationController? get birth => _birthController;
 
+  /// Whether reduced motion is enabled
+  bool get isReducedMotion => _reduceMotion;
+
   /// Initialize all animation controllers
   ///
   /// [vsync] must be provided by a TickerProviderStateMixin State
   /// [onBirthComplete] callback fired when birth animation completes
-  void initialize(TickerProvider vsync, VoidCallback onBirthComplete) {
+  /// [context] used to check reduced motion preferences
+  void initialize(
+      TickerProvider vsync,
+      VoidCallback onBirthComplete,
+      {required bool reduceMotion}
+      ) {
     if (_isInitialized) {
       throw StateError('AnimationManager already initialized');
     }
 
+    _reduceMotion = reduceMotion;
+
+    // Background animation (nebula pulse) - decorative
     _backgroundController = AnimationController(
-      duration: AnimationConstants.backgroundDuration,
+      duration: _reduceMotion
+          ? Duration.zero
+          : AnimationConstants.backgroundDuration,
       vsync: vsync,
-    )..repeat();
+    );
 
+    // Only repeat if motion is allowed
+    if (!_reduceMotion) {
+      _backgroundController.repeat();
+    }
+
+    // Star field animation (twinkling) - decorative
     _starController = AnimationController(
-      duration: AnimationConstants.starFieldDuration,
+      duration: _reduceMotion
+          ? Duration.zero
+          : AnimationConstants.starFieldDuration,
       vsync: vsync,
-    )..repeat();
+    );
 
+    if (!_reduceMotion) {
+      _starController.repeat();
+    }
+
+    // Birth animation - essential feedback, so we use a very short duration
+    // instead of zero to maintain the feel of creation
     _birthController = AnimationController(
-      duration: AnimationConstants.birthAnimationDuration,
+      duration: _reduceMotion
+          ? const Duration(milliseconds: 150)  // Very fast but not instant
+          : AnimationConstants.birthAnimationDuration,
       vsync: vsync,
     );
 
@@ -52,17 +84,24 @@ class AnimationManager {
     });
 
     _isInitialized = true;
-    print('🎭 AnimationManager initialized with 3 controllers');
+    print('🎭 AnimationManager initialized with ${_reduceMotion ? "REDUCED" : "FULL"} motion');
   }
 
   /// Start the birth animation with a specific duration
   ///
   /// [duration] calculated based on travel distance
+  /// Automatically adjusted if reduced motion is enabled
   void startBirthAnimation(Duration duration) {
     if (!_isInitialized) {
       throw StateError('AnimationManager not initialized');
     }
-    _birthController!.duration = duration;
+
+    // Override duration if reduced motion is enabled
+    final adjustedDuration = _reduceMotion
+        ? const Duration(milliseconds: 150)
+        : duration;
+
+    _birthController!.duration = adjustedDuration;
     _birthController!.forward(from: 0.0);
   }
 
@@ -80,8 +119,11 @@ class AnimationManager {
 
   /// Resume all animations (called when app returns to foreground)
   void resumeAll() {
-    _backgroundController.repeat();
-    _starController.repeat();
+    // Only resume if not in reduced motion mode
+    if (!_reduceMotion) {
+      _backgroundController.repeat();
+      _starController.repeat();
+    }
     // Birth controller resumes only if it was animating
   }
 

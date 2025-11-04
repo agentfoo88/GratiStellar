@@ -1,5 +1,3 @@
-// lib/features/gratitudes/presentation/widgets/bottom_controls.dart
-
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -8,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/accessibility/motion_helper.dart';
 
 /// Bottom controls widget with add star, show all, and mindfulness buttons
 ///
@@ -53,11 +52,11 @@ class BottomControlsWidget extends StatelessWidget {
       children: [
         // Horizontal slider appears above buttons when mindfulness is active
         AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
+          duration: MotionHelper.getEssentialDuration(context),
+          curve: MotionHelper.getCurve(context, Curves.easeInOut),
           height: mindfulnessMode ? null : 0,
           child: AnimatedOpacity(
-            duration: Duration(milliseconds: 300),
+            duration: MotionHelper.getEssentialDuration(context),
             opacity: mindfulnessMode ? 1.0 : 0.0,
             child: mindfulnessMode ? _buildMindfulnessSlider(context) : SizedBox.shrink(),
           ),
@@ -74,7 +73,7 @@ class BottomControlsWidget extends StatelessWidget {
                 Positioned(
                   left: (rowWidth / 2) + connectorOffset - 1,  // Center + offset - half line width
                   child: AnimatedOpacity(
-                    duration: Duration(milliseconds: 300),
+                    duration: MotionHelper.getEssentialDuration(context),
                     opacity: mindfulnessMode ? 1.0 : 0.0,
                     child: Container(
                       width: 2,
@@ -188,7 +187,7 @@ class BottomControlsWidget extends StatelessWidget {
           SliderTheme(
             data: SliderThemeData(
               activeTrackColor: Color(0xFFFFE135),
-              inactiveTrackColor: Color(0xFFFFE135).withValues(alpha: 0.3),
+              inactiveTrackColor: Color(0xFFFFE135).withValues(alpha: 0.4),
               thumbColor: Color(0xFFFFE135),
               overlayColor: Color(0xFFFFE135).withValues(alpha: 0.2),
               trackHeight: 4 * UIConstants.universalUIScale,
@@ -229,7 +228,7 @@ class BottomControlsWidget extends StatelessWidget {
               : Color(0xFF1A2238).withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 28) * UIConstants.universalUIScale),
           border: Border.all(
-            color: Color(0xFFFFE135).withValues(alpha: isActive ? 1.0 : 0.3),
+            color: Color(0xFFFFE135).withValues(alpha: isActive ? 1.0 : 0.5),
             width: 2,
           ),
         ),

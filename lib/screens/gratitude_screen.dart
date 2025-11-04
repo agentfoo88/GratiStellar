@@ -32,6 +32,7 @@ import '../starfield.dart';
 import '../storage.dart';
 import '../widgets/app_dialog.dart';
 import 'sign_in_screen.dart';
+import 'trash_screen.dart';
 
 class GratitudeScreen extends StatefulWidget {
   const GratitudeScreen({super.key});
@@ -80,6 +81,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
+  bool _hasInitializedAnimations = false;
+
   @override
   void initState() {
     print('🎬 GratitudeScreen initState starting...');
@@ -88,7 +91,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _cameraController = CameraController();
 
     _animationManager = AnimationManager();
-    _animationManager.initialize(this, _completeBirthAnimation);
+    // DON'T initialize here - wait for didChangeDependencies
 
     // Generate static universe based on full screen size
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
@@ -102,8 +105,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // Initialize layer cache (async - happens in background)
     _initializeLayerCache(screenSize);
 
-    // Initialize layer cache (async - happens in background)
-
     // Load nebula asset image
     _loadNebulaAsset();
 
@@ -111,7 +112,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _allVanGoghStars = VanGoghStarService.generateVanGoghStars(screenSize);
     final staticCount = (_allVanGoghStars.length * 0.9).round(); // 90% static
     _animatedVanGoghStars = _allVanGoghStars.skip(staticCount).toList(); // Last 10% animate
-    // _organicNebulaRegions = OrganicNebulaService.generateOrganicNebulae(screenSize);
 
     print('📐 Screen: ${screenSize.width.round()}x${screenSize.height.round()}');
     print('   🎨 Using cached layers (background, $staticCount Van Gogh stars)');
@@ -125,11 +125,26 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       print('❌ Error in initialization: $e');
     }
 
-    // Provider handles loading via its initialization
-    // Camera bounds will be updated in build() once data loads
-
     _loadFontScale();
     _startSplashTimer();
+  }
+
+// This is a SEPARATE method, not inside initState
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Initialize animations only once, after context is available
+    if (!_hasInitializedAnimations) {
+      final reduceMotion = MediaQuery.disableAnimationsOf(context);
+      _animationManager.initialize(
+        this,
+        _completeBirthAnimation,
+        reduceMotion: reduceMotion,
+      );
+      _hasInitializedAnimations = true;
+      print('🎭 AnimationManager initialized in didChangeDependencies');
+    }
   }
 
   Future<void> _loadFontScale() async {
@@ -295,6 +310,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       duration: Duration(milliseconds: 400),
       curve: Curves.easeInOutCubic,
       vsync: this,
+      context: context,
     );
     await Future.delayed(Duration(milliseconds: 400));
 
@@ -392,6 +408,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       duration: Duration(milliseconds: 2000), // 2 seconds - slow and graceful
       curve: Curves.easeInOutCubic,
       vsync: this,
+      context: context,
     );
   }
 
@@ -427,6 +444,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       duration: Duration(milliseconds: 1500),
       curve: Curves.easeInOutCubic,
       vsync: this,
+      context: context,
     );
   }
 
@@ -1058,6 +1076,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           onFeedbackTap: () {
             Navigator.pop(context);
             _showFeedbackDialog();
+          },
+          onTrashTap: () {
+            Navigator.pop(context); // Close drawer
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TrashScreen()),
+            );
           },
           onExitTap: () {
             Navigator.pop(context);

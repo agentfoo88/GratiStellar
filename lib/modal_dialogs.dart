@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'storage.dart';
-import 'gratitude_stars.dart';
+
+import 'core/security/input_validator.dart';
 import 'font_scaling.dart';
+import 'gratitude_stars.dart';
 import 'l10n/app_localizations.dart';
+import 'storage.dart';
 import 'widgets/app_dialog.dart';
 
 /// Centralized dialogs for GratiStellar app
@@ -353,7 +355,11 @@ class GratitudeDialogs {
                         ),
                         style: FontScaling.getInputText(context),
                         onChanged: (value) {
-                          String hexValue = value;
+                          // Sanitize hex input
+                          final sanitized = InputValidator.sanitizeHexColor(value);
+                          if (sanitized == null) return; // Invalid format
+
+                          String hexValue = sanitized;
                           if (!hexValue.startsWith('#') && hexValue.length >= 6) {
                             hexValue = '#$hexValue';
                             hexController.value = TextEditingValue(
@@ -390,7 +396,7 @@ class GratitudeDialogs {
                               decoration: InputDecoration(
                                 labelText: 'R',
                                 filled: true,
-                                fillColor: Colors.white.withValues(alpha: 0.1),
+                                fillColor: Colors.red.withValues(alpha: 0.1),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -417,7 +423,7 @@ class GratitudeDialogs {
                               decoration: InputDecoration(
                                 labelText: 'G',
                                 filled: true,
-                                fillColor: Colors.white.withValues(alpha: 0.1),
+                                fillColor: Colors.green.withValues(alpha: 0.1),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -444,7 +450,7 @@ class GratitudeDialogs {
                               decoration: InputDecoration(
                                 labelText: 'B',
                                 filled: true,
-                                fillColor: Colors.white.withValues(alpha: 0.1),
+                                fillColor: Colors.blue.withValues(alpha: 0.1),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),

@@ -19,11 +19,20 @@ class DeleteGratitudeUseCase extends UseCase<List<GratitudeStar>, DeleteGratitud
 
   @override
   Future<List<GratitudeStar>> call(DeleteGratitudeParams params) async {
-    await repository.deleteGratitude(params.star.id, params.allStars);
+    // Soft delete: mark as deleted with timestamp
+    final deletedStar = params.star.copyWith(
+      deleted: true,
+      deletedAt: DateTime.now(),
+    );
 
-    // Return updated list
+    await repository.deleteGratitude(deletedStar, params.allStars);
+
+    // Return updated list with soft-deleted star
     final updatedStars = List<GratitudeStar>.from(params.allStars);
-    updatedStars.removeWhere((s) => s.id == params.star.id);
+    final index = updatedStars.indexWhere((s) => s.id == params.star.id);
+    if (index != -1) {
+      updatedStars[index] = deletedStar;
+    }
     return updatedStars;
   }
 }

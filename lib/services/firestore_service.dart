@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../core/security/rate_limiter.dart';
 import '../storage.dart';
 
 class FirestoreService {
@@ -21,6 +21,11 @@ class FirestoreService {
 
   // Upload only stars modified since last sync (DELTA SYNC)
   Future<void> uploadDeltaStars(List<GratitudeStar> localStars) async {
+    if (!RateLimiter.checkLimit('sync_operation')) {
+      final retryAfter = RateLimiter.getTimeUntilReset('sync_operation');
+      throw RateLimitException('sync_operation', retryAfter);
+    }
+
     if (_starsCollection == null) {
       throw Exception('No user signed in');
     }

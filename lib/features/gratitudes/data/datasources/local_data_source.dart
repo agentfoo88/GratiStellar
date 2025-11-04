@@ -26,4 +26,16 @@ class LocalDataSource {
     final stars = await loadStars();
     return stars.isNotEmpty;
   }
+
+  /// Load only non-deleted gratitude stars
+  Future<List<GratitudeStar>> loadActiveStars() async {
+    final allStars = await loadStars();
+    return allStars.where((star) => !star.deleted).toList();
+  }
+
+  /// Load only deleted gratitude stars
+  Future<List<GratitudeStar>> loadDeletedStars() async {
+    final allStars = await loadStars();
+    return allStars.where((star) => star.deleted).toList();
+  }
 }

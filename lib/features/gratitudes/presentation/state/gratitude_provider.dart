@@ -12,7 +12,11 @@ import '../../domain/usecases/delete_gratitude_use_case.dart';
 import '../../domain/usecases/update_gratitude_use_case.dart';
 import '../../domain/usecases/load_gratitudes_use_case.dart';
 import '../../domain/usecases/sync_gratitudes_use_case.dart';
+import '../../domain/usecases/get_deleted_gratitudes_use_case.dart';
+import '../../domain/usecases/restore_gratitude_use_case.dart';
+import '../../domain/usecases/purge_old_deleted_use_case.dart';
 import '../../../../core/config/constants.dart';
+import '../../../../core/security/rate_limiter.dart';
 
 /// Provider for gratitude state management
 ///
@@ -30,6 +34,9 @@ class GratitudeProvider extends ChangeNotifier {
   late final UpdateGratitudeUseCase _updateGratitudeUseCase;
   late final LoadGratitudesUseCase _loadGratitudesUseCase;
   late final SyncGratitudesUseCase _syncGratitudesUseCase;
+  late final GetDeletedGratitudesUseCase _getDeletedGratitudesUseCase;
+  late final RestoreGratitudeUseCase _restoreGratitudeUseCase;
+  late final PurgeOldDeletedUseCase _purgeOldDeletedUseCase;
 
   // state
   List<GratitudeStar> _gratitudeStars = [];
@@ -73,6 +80,9 @@ class GratitudeProvider extends ChangeNotifier {
       authService: _authService,
     );
     _syncGratitudesUseCase = SyncGratitudesUseCase(_repository);
+    _getDeletedGratitudesUseCase = GetDeletedGratitudesUseCase(_repository);
+    _restoreGratitudeUseCase = RestoreGratitudeUseCase(_repository);
+    _purgeOldDeletedUseCase = PurgeOldDeletedUseCase(_repository);
   }
 
   void _setupAuthListener() {
@@ -101,7 +111,11 @@ class GratitudeProvider extends ChangeNotifier {
       }
     }
 
-    _gratitudeStars = dedupedStars;
+    // Purge old deleted items (30+ days)
+    final purgedStars = await _purgeOldDeletedUseCase(PurgeOldDeletedParams(dedupedStars));
+
+    // Filter out deleted items for display
+    _gratitudeStars = purgedStars.where((star) => !star.deleted).toList();
     _isLoading = false;
     notifyListeners();
 
@@ -129,7 +143,7 @@ class GratitudeProvider extends ChangeNotifier {
         }
       }
 
-      _gratitudeStars = dedupedStars;
+      _gratitudeStars = dedupedStars.where((star) => !star.deleted).toList();
       notifyListeners();
     } catch (e) {
       print('⚠️ Sync failed: $e');
@@ -184,14 +198,21 @@ class GratitudeProvider extends ChangeNotifier {
 
   /// Delete a gratitude
   Future<void> deleteGratitude(GratitudeStar star) async {
-    final updatedStars = await _deleteGratitudeUseCase(
-      DeleteGratitudeParams(
-        star: star,
-        allStars: _gratitudeStars,
-      ),
-    );
+    // Rate limit check
+    if (!RateLimiter.checkLimit('delete_gratitude')) {
+      final retryAfter = RateLimiter.getTimeUntilReset('delete_gratitude');
+      throw RateLimitException('delete_gratitude', retryAfter);
+    }
 
-    _gratitudeStars = updatedStars;
+    // Get all stars including deleted ones for the repository operation
+    final allStarsIncludingDeleted = await _repository.getGratitudes();
+
+    final params = DeleteGratitudeParams(star: star, allStars: allStarsIncludingDeleted);
+    final updatedStars = await _deleteGratitudeUseCase(params);
+
+    // Filter out deleted items for display
+    _gratitudeStars = updatedStars.where((s) => !s.deleted).toList();
+
     notifyListeners();
   }
 
@@ -312,6 +333,40 @@ class GratitudeProvider extends ChangeNotifier {
   // ADD THIS METHOD HERE ↓
   void test() {
     print('✅ Provider is accessible!');
+  }
+
+  /// Get deleted gratitudes (for trash view)
+  Future<List<GratitudeStar>> getDeletedGratitudes() async {
+    return await _getDeletedGratitudesUseCase(NoParams());
+  }
+
+  /// Restore a deleted gratitude
+  Future<void> restoreGratitude(GratitudeStar star) async {
+    final allStars = [..._gratitudeStars, star]; // Include the deleted star
+
+    await _restoreGratitudeUseCase(
+      RestoreGratitudeParams(star: star, allStars: allStars),
+    );
+
+    // Reload to reflect changes
+    await loadGratitudes();
+  }
+
+  /// Permanently delete a gratitude
+  Future<void> permanentlyDeleteGratitude(GratitudeStar star) async {
+    // Get all stars including deleted ones
+    final allStarsIncludingDeleted = await _repository.getGratitudes();
+
+    final updatedStars = List<GratitudeStar>.from(allStarsIncludingDeleted);
+    updatedStars.removeWhere((s) => s.id == star.id);
+    await _repository.saveGratitudes(updatedStars);
+
+    // Also sync permanent deletion if authenticated
+    if (_authService.hasEmailAccount) {
+      await _repository.permanentlyDeleteGratitude(star.id, updatedStars);
+    }
+
+    notifyListeners();
   }
 
   @override

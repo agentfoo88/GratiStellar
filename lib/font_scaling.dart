@@ -32,10 +32,10 @@ class FontScaling {
   static const double desktopButton = 13.0;   // 11 + 2
 
   // Font weight constants
-  static const FontWeight lightWeight = FontWeight.w500;     // Medium
-  static const FontWeight normalWeight = FontWeight.w600;    // Semi-bold
-  static const FontWeight mediumWeight = FontWeight.w700;    // Bold
-  static const FontWeight boldWeight = FontWeight.w800;      // Extra-bold
+  static const FontWeight lightWeight = FontWeight.w600;     // Semi-bold (was w500)
+  static const FontWeight normalWeight = FontWeight.w700;    // Bold (was w600)
+  static const FontWeight mediumWeight = FontWeight.w800;    // Extra-bold (was w700)
+  static const FontWeight boldWeight = FontWeight.w900;      // Black (was w800)
 
   // Predefined text styles with responsive sizing
   static TextStyle getHeadingLarge(BuildContext context, {Color? color}) {

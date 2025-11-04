@@ -444,10 +444,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
   }
 
   String _getMonthName(int month) {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return months[month - 1];
+    // Use Flutter's built-in localization
+    final date = DateTime(2025, month);
+    return DateFormat.MMMM().format(date);
   }
 }

@@ -25,10 +25,31 @@
   "changeColorButton": "Change Color",
   "editGratitudeHint": "Edit your gratitude...",
   "deleteConfirmTitle": "Delete this gratitude?",
-  "deleteWarning": "This action cannot be undone.",
+  "deleteWarning": "Move to Trash? (Recoverable for 30 days)",
   "exitTitle": "Exit GratiStellar?",
   "exitMessage": "Are you sure you want to exit the app?",
   "exitButton": "Exit",
+  "trashMenuItem": "Trash",
+    "trashScreenTitle": "Trash",
+    "trashEmpty": "Trash is empty",
+    "trashEmptyDescription": "Deleted items appear here for 30 days",
+    "daysRemaining": "{count} days left",
+    "@daysRemaining": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "restoreButton": "Restore",
+    "deleteForeverButton": "Delete Forever",
+    "restoreDialogTitle": "Restore Item?",
+    "restoreDialogContent": "This will restore the gratitude to your sky.",
+    "permanentDeleteDialogTitle": "Delete Permanently?",
+    "permanentDeleteDialogContent": "This action cannot be undone. The gratitude will be permanently deleted.",
+    "gratitudeRestored": "Gratitude restored",
+    "gratitudePermanentlyDeleted": "Gratitude permanently deleted",
+    "deleteConfirmationContent": "Move to Trash? (Recoverable for 30 days)",
   "comingSoonTitle": "Coming Soon",
   "colorPreviewTitle": "Color Preview",
   "presetColorsTitle": "Preset Colors",
@@ -350,5 +371,20 @@
   "feedbackError": "Failed to submit feedback. Please try again.",
   "@feedbackError": {
     "description": "Error message when feedback submission fails"
+  },
+  "restoreTooltip": "Restore",
+  "@restoreTooltip": {
+    "description": "Tooltip for restore button"
+  },
+  "deletePermanentlyTooltip": "Delete Permanently",
+  "@deletePermanentlyTooltip": {
+    "description": "Tooltip for permanent delete button"
+  },
+  "errorLoadingTrash": "Error loading trash",
+  "deletedOn": "Deleted {date}",
+  "@deletedOn": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
   }
 }

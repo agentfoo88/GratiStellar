@@ -69,7 +69,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteConfirmTitle => 'Delete this gratitude?';
 
   @override
-  String get deleteWarning => 'This action cannot be undone.';
+  String get deleteWarning => 'Move to Trash? (Recoverable for 30 days)';
 
   @override
   String get exitTitle => 'Exit GratiStellar?';
@@ -79,6 +79,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exitButton => 'Exit';
+
+  @override
+  String get trashMenuItem => 'Trash';
+
+  @override
+  String get trashScreenTitle => 'Trash';
+
+  @override
+  String get trashEmpty => 'Trash is empty';
+
+  @override
+  String get trashEmptyDescription => 'Deleted items appear here for 30 days';
+
+  @override
+  String daysRemaining(int count) {
+    return '$count days left';
+  }
+
+  @override
+  String get restoreButton => 'Restore';
+
+  @override
+  String get deleteForeverButton => 'Delete Forever';
+
+  @override
+  String get restoreDialogTitle => 'Restore Item?';
+
+  @override
+  String get restoreDialogContent =>
+      'This will restore the gratitude to your sky.';
+
+  @override
+  String get permanentDeleteDialogTitle => 'Delete Permanently?';
+
+  @override
+  String get permanentDeleteDialogContent =>
+      'This action cannot be undone. The gratitude will be permanently deleted.';
+
+  @override
+  String get gratitudeRestored => 'Gratitude restored';
+
+  @override
+  String get gratitudePermanentlyDeleted => 'Gratitude permanently deleted';
+
+  @override
+  String get deleteConfirmationContent =>
+      'Move to Trash? (Recoverable for 30 days)';
 
   @override
   String get comingSoonTitle => 'Coming Soon';
@@ -396,4 +443,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feedbackError => 'Failed to submit feedback. Please try again.';
+
+  @override
+  String get restoreTooltip => 'Restore';
+
+  @override
+  String get deletePermanentlyTooltip => 'Delete Permanently';
+
+  @override
+  String get errorLoadingTrash => 'Error loading trash';
+
+  @override
+  String deletedOn(String date) {
+    return 'Deleted $date';
+  }
 }

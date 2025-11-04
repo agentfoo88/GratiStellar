@@ -1,5 +1,8 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
+import '../../../../core/security/input_validator.dart';
 import '../../../../gratitude_stars.dart';
 import '../../../../storage.dart';
 import 'use_case.dart';
@@ -31,18 +34,22 @@ class AddGratitudeUseCase extends UseCase<GratitudeStar, AddGratitudeParams> {
 
   @override
   Future<GratitudeStar> call(AddGratitudeParams params) async {
-    // Trim whitespace, newlines, and collapse multiple spaces
-    final trimmedText = params.text
-        .trim()
-        .replaceAll(RegExp(r'\s+'), ' ');
+    // Sanitize input (removes dangerous characters, normalizes whitespace)
+    final sanitizedText = InputValidator.sanitizeGratitudeText(params.text);
 
-    if (trimmedText.isEmpty) {
+    // Validate sanitized text
+    if (sanitizedText.isEmpty) {
       throw ArgumentError('Gratitude text cannot be empty');
     }
 
-    // Create the new star using the service
+    // Additional security check
+    if (InputValidator.hasDangerousContent(sanitizedText)) {
+      throw ArgumentError('Invalid characters detected in gratitude text');
+    }
+
+    // Create the new star using the sanitized text
     final newStar = GratitudeStarService.createStar(
-      trimmedText,
+      sanitizedText,  // ← Use sanitized, not original
       params.screenSize,
       random,
       params.existingStars,

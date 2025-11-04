@@ -217,7 +217,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteWarning.
   ///
   /// In en, this message translates to:
-  /// **'This action cannot be undone.'**
+  /// **'Move to Trash? (Recoverable for 30 days)'**
   String get deleteWarning;
 
   /// No description provided for @exitTitle.
@@ -237,6 +237,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exit'**
   String get exitButton;
+
+  /// No description provided for @trashMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get trashMenuItem;
+
+  /// No description provided for @trashScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get trashScreenTitle;
+
+  /// No description provided for @trashEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash is empty'**
+  String get trashEmpty;
+
+  /// No description provided for @trashEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted items appear here for 30 days'**
+  String get trashEmptyDescription;
+
+  /// No description provided for @daysRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days left'**
+  String daysRemaining(int count);
+
+  /// No description provided for @restoreButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restoreButton;
+
+  /// No description provided for @deleteForeverButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Forever'**
+  String get deleteForeverButton;
+
+  /// No description provided for @restoreDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Item?'**
+  String get restoreDialogTitle;
+
+  /// No description provided for @restoreDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This will restore the gratitude to your sky.'**
+  String get restoreDialogContent;
+
+  /// No description provided for @permanentDeleteDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Permanently?'**
+  String get permanentDeleteDialogTitle;
+
+  /// No description provided for @permanentDeleteDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone. The gratitude will be permanently deleted.'**
+  String get permanentDeleteDialogContent;
+
+  /// No description provided for @gratitudeRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Gratitude restored'**
+  String get gratitudeRestored;
+
+  /// No description provided for @gratitudePermanentlyDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Gratitude permanently deleted'**
+  String get gratitudePermanentlyDeleted;
+
+  /// No description provided for @deleteConfirmationContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Trash? (Recoverable for 30 days)'**
+  String get deleteConfirmationContent;
 
   /// No description provided for @comingSoonTitle.
   ///
@@ -831,6 +915,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to submit feedback. Please try again.'**
   String get feedbackError;
+
+  /// Tooltip for restore button
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restoreTooltip;
+
+  /// Tooltip for permanent delete button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Permanently'**
+  String get deletePermanentlyTooltip;
+
+  /// No description provided for @errorLoadingTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading trash'**
+  String get errorLoadingTrash;
+
+  /// No description provided for @deletedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {date}'**
+  String deletedOn(String date);
 }
 
 class _AppLocalizationsDelegate

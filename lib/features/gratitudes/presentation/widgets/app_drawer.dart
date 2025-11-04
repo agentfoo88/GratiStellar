@@ -20,6 +20,7 @@ class AppDrawerWidget extends StatefulWidget {
   final VoidCallback onFeedbackTap;
   final VoidCallback onExitTap;
   final VoidCallback onFontScaleChanged;
+  final VoidCallback onTrashTap;
 
   const AppDrawerWidget({
     super.key,
@@ -29,6 +30,7 @@ class AppDrawerWidget extends StatefulWidget {
     required this.onFeedbackTap,
     required this.onExitTap,
     required this.onFontScaleChanged,
+    required this.onTrashTap,
   });
 
   @override
@@ -213,6 +215,57 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
           Divider(color: Colors.white24),
 
+          Divider(color: Colors.white24),
+
+          // Trash
+          FutureBuilder<int>(
+            future: _getTrashCount(),
+            builder: (context, snapshot) {
+              final trashCount = snapshot.data ?? 0;
+
+              return ListTile(
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: Color(0xFFFFE135),
+                  size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+                ),
+                title: Row(
+                  children: [
+                    Text(
+                      'Trash',
+                      style: FontScaling.getBodyMedium(context).copyWith(
+                        fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                      ),
+                    ),
+                    if (trashCount > 0) ...[
+                      SizedBox(width: 8),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$trashCount',
+                          style: FontScaling.getCaption(context).copyWith(
+                            color: Colors.orange[300],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                onTap: widget.onTrashTap,
+              );
+            },
+          ),
+
+          Divider(
+            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            height: 1,
+          ),
+
           // Send Feedback
           ListTile(
             leading: Icon(
@@ -329,6 +382,14 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
         ],
       ),
     );
+  }
+  Future<int> _getTrashCount() async {
+    try {
+      final allStars = await StorageService.loadGratitudeStars();
+      return allStars.where((star) => star.deleted).length;
+    } catch (e) {
+      return 0;
+    }
   }
 }
 

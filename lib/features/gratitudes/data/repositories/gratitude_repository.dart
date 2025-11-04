@@ -68,18 +68,22 @@ class GratitudeRepository {
     }
   }
 
-  /// Delete a gratitude (local + cloud if authenticated)
-  Future<void> deleteGratitude(String starId, List<GratitudeStar> allStars) async {
+  /// Delete a gratitude (soft delete - marks as deleted)
+  Future<void> deleteGratitude(GratitudeStar deletedStar, List<GratitudeStar> allStars) async {
     final updatedStars = List<GratitudeStar>.from(allStars);
-    updatedStars.removeWhere((s) => s.id == starId);
-    await _localDataSource.saveStars(updatedStars);
+    final index = updatedStars.indexWhere((s) => s.id == deletedStar.id);
 
-    // Sync deletion to cloud if authenticated
-    if (_authService.hasEmailAccount) {
-      try {
-        await _remoteDataSource.deleteStar(starId);
-      } catch (e) {
-        print('⚠️ Failed to sync star deletion to cloud: $e');
+    if (index != -1) {
+      updatedStars[index] = deletedStar;
+      await _localDataSource.saveStars(updatedStars);
+
+      // Sync soft delete to cloud if authenticated
+      if (_authService.hasEmailAccount) {
+        try {
+          await _remoteDataSource.updateStar(deletedStar);
+        } catch (e) {
+          print('⚠️ Failed to sync star deletion to cloud: $e');
+        }
       }
     }
   }
@@ -109,5 +113,73 @@ class GratitudeRepository {
   /// Clear all local data
   Future<void> clearAllData() async {
     await _localDataSource.clearAll();
+  }
+
+  /// Get deleted gratitudes (for trash view)
+  Future<List<GratitudeStar>> getDeletedGratitudes() async {
+    final allStars = await _localDataSource.loadStars();
+    return allStars.where((star) => star.deleted).toList();
+  }
+
+  /// Restore a deleted gratitude
+  Future<void> restoreGratitude(GratitudeStar star, List<GratitudeStar> allStars) async {
+    final restoredStar = star.copyWith(
+      deleted: false,
+      deletedAt: null,
+    );
+
+    final updatedStars = List<GratitudeStar>.from(allStars);
+    final index = updatedStars.indexWhere((s) => s.id == star.id);
+
+    if (index != -1) {
+      updatedStars[index] = restoredStar;
+      await _localDataSource.saveStars(updatedStars);
+
+      // Sync restore to cloud if authenticated
+      if (_authService.hasEmailAccount) {
+        try {
+          await _remoteDataSource.updateStar(restoredStar);
+        } catch (e) {
+          print('⚠️ Failed to sync star restore to cloud: $e');
+        }
+      }
+    }
+  }
+
+  /// Permanently delete a gratitude (hard delete)
+  Future<void> permanentlyDeleteGratitude(String starId, List<GratitudeStar> allStars) async {
+    final updatedStars = List<GratitudeStar>.from(allStars);
+    updatedStars.removeWhere((s) => s.id == starId);
+    await _localDataSource.saveStars(updatedStars);
+
+    // Sync permanent deletion to cloud if authenticated
+    if (_authService.hasEmailAccount) {
+      try {
+        await _remoteDataSource.deleteStar(starId);
+      } catch (e) {
+        print('⚠️ Failed to sync permanent deletion to cloud: $e');
+      }
+    }
+  }
+
+  /// Purge old deleted items (older than 30 days)
+  Future<List<GratitudeStar>> purgeOldDeletedItems(List<GratitudeStar> allStars) async {
+    final now = DateTime.now();
+    final thirtyDaysAgo = now.subtract(Duration(days: 30));
+
+    final updatedStars = allStars.where((star) {
+      if (star.deleted && star.deletedAt != null) {
+        return star.deletedAt!.isAfter(thirtyDaysAgo);
+      }
+      return true; // Keep non-deleted items
+    }).toList();
+
+    final purgedCount = allStars.length - updatedStars.length;
+    if (purgedCount > 0) {
+      print('🗑️ Purged $purgedCount old deleted items');
+      await _localDataSource.saveStars(updatedStars);
+    }
+
+    return updatedStars;
   }
 }

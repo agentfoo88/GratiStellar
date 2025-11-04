@@ -1,13 +1,11 @@
-// camera_controller.dart
 // Pure camera control system for GratiStellar - NO RENDERING LOGIC
-// Updated to work with normalized coordinate system
 
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3, Vector4, Matrix4;
-
-import 'storage.dart'; // Import for GratitudeStar
+import 'core/accessibility/motion_helper.dart';
+import 'storage.dart';
 
 class CameraController extends ChangeNotifier {
   // Camera state
@@ -208,9 +206,26 @@ class CameraController extends ChangeNotifier {
     Duration duration = const Duration(milliseconds: 800),
     Curve curve = Curves.easeOutCubic,
     TickerProvider? vsync,
+    BuildContext? context,  // ← Added parameter
   }) {
     if (vsync == null) return;
 
+    // Check for reduced motion
+    final reduceMotion = context != null && MotionHelper.shouldReduceMotion(context);
+
+    if (reduceMotion) {
+      // Instant jump - no animation
+      if (targetPosition != null) {
+        _position = targetPosition;
+      }
+      if (targetScale != null) {
+        _scale = math.max(minScale, math.min(maxScale, targetScale));
+      }
+      notifyListeners();
+      return;
+    }
+
+    // Normal animation code continues below
     _animationController?.dispose();
     _animationController = AnimationController(duration: duration, vsync: vsync);
 

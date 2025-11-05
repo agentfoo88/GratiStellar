@@ -30,26 +30,26 @@
   "exitMessage": "Are you sure you want to exit the app?",
   "exitButton": "Exit",
   "trashMenuItem": "Trash",
-    "trashScreenTitle": "Trash",
-    "trashEmpty": "Trash is empty",
-    "trashEmptyDescription": "Deleted items appear here for 30 days",
-    "daysRemaining": "{count} days left",
-    "@daysRemaining": {
-      "placeholders": {
-        "count": {
-          "type": "int"
-        }
+  "trashScreenTitle": "Trash",
+  "trashEmpty": "Trash is empty",
+  "trashEmptyDescription": "Deleted items appear here for 30 days",
+  "daysRemaining": "{count} days left",
+  "@daysRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
-    },
-    "restoreButton": "Restore",
-    "deleteForeverButton": "Delete Forever",
-    "restoreDialogTitle": "Restore Item?",
-    "restoreDialogContent": "This will restore the gratitude to your sky.",
-    "permanentDeleteDialogTitle": "Delete Permanently?",
-    "permanentDeleteDialogContent": "This action cannot be undone. The gratitude will be permanently deleted.",
-    "gratitudeRestored": "Gratitude restored",
-    "gratitudePermanentlyDeleted": "Gratitude permanently deleted",
-    "deleteConfirmationContent": "Move to Trash? (Recoverable for 30 days)",
+    }
+  },
+  "restoreButton": "Restore",
+  "deleteForeverButton": "Delete Forever",
+  "restoreDialogTitle": "Restore Item?",
+  "restoreDialogContent": "This will restore the gratitude to your sky.",
+  "permanentDeleteDialogTitle": "Delete Permanently?",
+  "permanentDeleteDialogContent": "This action cannot be undone. The gratitude will be permanently deleted.",
+  "gratitudeRestored": "Gratitude restored",
+  "gratitudePermanentlyDeleted": "Gratitude permanently deleted",
+  "deleteConfirmationContent": "Move to Trash? (Recoverable for 30 days)",
   "comingSoonTitle": "Coming Soon",
   "colorPreviewTitle": "Color Preview",
   "presetColorsTitle": "Preset Colors",
@@ -386,5 +386,60 @@
     "placeholders": {
       "date": {"type": "String"}
     }
-  }
+  },
+  "creatingGratitudeStar": "Creating gratitude star, please wait",
+  "addNewGratitudeStar": "Add new gratitude star",
+  "addStarHint": "Opens dialog to write your gratitude",
+  "mindfulnessIntervalSlider": "Mindfulness interval slider",
+  "mindfulnessIntervalHint": "Adjust time between gratitudes from 3 to 30 seconds",
+  "hideOtherGratitudes": "Hide other gratitudes",
+  "showAllGratitudes": "Show all gratitudes",
+  "switchToSingleStarView": "Switch to single star view",
+  "showAllStarsInSky": "Show all stars in sky",
+  "exitMindfulnessMode": "Exit mindfulness mode",
+  "enterMindfulnessMode": "Enter mindfulness mode",
+  "stopCyclingGratitudes": "Stop cycling through gratitudes",
+  "startMindfulViewing": "Start mindful viewing of your gratitudes",
+  "actionButton": "Action button",
+  "tapToActivate": "Tap to activate",
+  "accountSettings": "Account settings",
+  "manageAccountHint": "Manage your account and authentication",
+  "viewGratitudesAsList": "View your gratitudes as a text list",
+  "fontSize": "Font Size",
+  "fontSizeSlider": "Font size slider",
+  "adjustTextSize": "Adjust text size from 75% to 175%",
+  "fontPreviewText": "Preview: The quick brown fox jumps",
+  "trashWithCount": "Trash, {count} deleted items",
+  "@trashWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "viewDeletedGratitudes": "View and restore deleted gratitudes",
+  "trash": "Trash",
+  "sendFeedbackHint": "Send feedback about the app",
+  "closeAppHint": "Close the application",
+  "clearLayerCache": "Clear Layer Cache",
+  "regenerateBackgroundHint": "Regenerate background layers",
+  "regenerateBackgroundLayers": "Regenerate background layers",
+  "clearCacheTitle": "Clear Cache?",
+  "clearCacheMessage": "This will regenerate all background layers. The app will restart.",
+  "cancel": "Cancel",
+  "clearCache": "Clear Cache",
+  "cacheCleared": "Cache cleared. Restart the app to regenerate.",
+  "version": "Version {version} ({buildNumber})",
+  "@version": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "openMenu": "Open menu",
+  "openNavigationMenu": "Open navigation menu"
 }

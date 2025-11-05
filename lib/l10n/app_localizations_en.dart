@@ -457,4 +457,124 @@ class AppLocalizationsEn extends AppLocalizations {
   String deletedOn(String date) {
     return 'Deleted $date';
   }
+
+  @override
+  String get creatingGratitudeStar => 'Creating gratitude star, please wait';
+
+  @override
+  String get addNewGratitudeStar => 'Add new gratitude star';
+
+  @override
+  String get addStarHint => 'Opens dialog to write your gratitude';
+
+  @override
+  String get mindfulnessIntervalSlider => 'Mindfulness interval slider';
+
+  @override
+  String get mindfulnessIntervalHint =>
+      'Adjust time between gratitudes from 3 to 30 seconds';
+
+  @override
+  String get hideOtherGratitudes => 'Hide other gratitudes';
+
+  @override
+  String get showAllGratitudes => 'Show all gratitudes';
+
+  @override
+  String get switchToSingleStarView => 'Switch to single star view';
+
+  @override
+  String get showAllStarsInSky => 'Show all stars in sky';
+
+  @override
+  String get exitMindfulnessMode => 'Exit mindfulness mode';
+
+  @override
+  String get enterMindfulnessMode => 'Enter mindfulness mode';
+
+  @override
+  String get stopCyclingGratitudes => 'Stop cycling through gratitudes';
+
+  @override
+  String get startMindfulViewing => 'Start mindful viewing of your gratitudes';
+
+  @override
+  String get actionButton => 'Action button';
+
+  @override
+  String get tapToActivate => 'Tap to activate';
+
+  @override
+  String get accountSettings => 'Account settings';
+
+  @override
+  String get manageAccountHint => 'Manage your account and authentication';
+
+  @override
+  String get viewGratitudesAsList => 'View your gratitudes as a text list';
+
+  @override
+  String get fontSize => 'Font Size';
+
+  @override
+  String get fontSizeSlider => 'Font size slider';
+
+  @override
+  String get adjustTextSize => 'Adjust text size from 75% to 175%';
+
+  @override
+  String get fontPreviewText => 'Preview: The quick brown fox jumps';
+
+  @override
+  String trashWithCount(int count) {
+    return 'Trash, $count deleted items';
+  }
+
+  @override
+  String get viewDeletedGratitudes => 'View and restore deleted gratitudes';
+
+  @override
+  String get trash => 'Trash';
+
+  @override
+  String get sendFeedbackHint => 'Send feedback about the app';
+
+  @override
+  String get closeAppHint => 'Close the application';
+
+  @override
+  String get clearLayerCache => 'Clear Layer Cache';
+
+  @override
+  String get regenerateBackgroundHint => 'Regenerate background layers';
+
+  @override
+  String get regenerateBackgroundLayers => 'Regenerate background layers';
+
+  @override
+  String get clearCacheTitle => 'Clear Cache?';
+
+  @override
+  String get clearCacheMessage =>
+      'This will regenerate all background layers. The app will restart.';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get clearCache => 'Clear Cache';
+
+  @override
+  String get cacheCleared => 'Cache cleared. Restart the app to regenerate.';
+
+  @override
+  String version(String version, String buildNumber) {
+    return 'Version $version ($buildNumber)';
+  }
+
+  @override
+  String get openMenu => 'Open menu';
+
+  @override
+  String get openNavigationMenu => 'Open navigation menu';
 }

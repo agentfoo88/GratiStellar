@@ -101,7 +101,38 @@ class GratiStellarApp extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
+          // Add focus theme
+          focusColor: Color(0xFFFFE135),
+          // Update input decoration theme for visible focus
+          inputDecorationTheme: InputDecorationTheme(
+            focusColor: Color(0xFFFFE135),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Color(0xFFFFE135),
+                width: 2,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Color(0xFFFFE135).withValues(alpha: 0.3),
+              ),
+            ),
+          ),
+          // Update elevated button theme for focus
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              overlayColor: WidgetStateColor.resolveWith((states) {
+                if (states.contains(WidgetState.focused)) {
+                  return Color(0xFFFFE135).withValues(alpha: 0.2);
+                }
+                return Colors.transparent;
+              }),
+            ),
+          ),
         ),
+
         // Auth-aware routing
         home: StreamBuilder<User?>(
           stream: FirebaseAuth.instance.authStateChanges(),

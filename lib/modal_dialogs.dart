@@ -654,6 +654,7 @@ class GratitudeDialogs {
                           controller: controller,
                           textCapitalization: TextCapitalization.sentences,
                           autofocus: true,
+                          focusNode: FocusNode(),
                           maxLength: maxCharacters,
                           maxLines: null, // Allow unlimited lines
                           keyboardType: TextInputType.multiline,
@@ -706,6 +707,7 @@ class GratitudeDialogs {
                             controller.clear();
                             Navigator.of(context).pop();
                           },
+                          focusNode: FocusNode(),
                           child: Text(
                             AppLocalizations.of(context)!.cancelButton,
                             style: FontScaling.getButtonText(context).copyWith(
@@ -719,6 +721,7 @@ class GratitudeDialogs {
                             onAdd();
                             Navigator.of(context).pop();
                           },
+                          focusNode: FocusNode(),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFFFFE135),
                             disabledBackgroundColor: Colors.grey,
@@ -852,6 +855,8 @@ class GratitudeDialogs {
                       TextField(
                         controller: editTextController,
                         textCapitalization: TextCapitalization.sentences,
+                        autofocus: true,
+                        focusNode: FocusNode(),
                         decoration: InputDecoration(
                           hintText: AppLocalizations.of(context)!.editGratitudeHint,
                           hintStyle: FontScaling.getInputHint(context),

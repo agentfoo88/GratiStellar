@@ -939,6 +939,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deleted {date}'**
   String deletedOn(String date);
+
+  /// No description provided for @creatingGratitudeStar.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating gratitude star, please wait'**
+  String get creatingGratitudeStar;
+
+  /// No description provided for @addNewGratitudeStar.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new gratitude star'**
+  String get addNewGratitudeStar;
+
+  /// No description provided for @addStarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens dialog to write your gratitude'**
+  String get addStarHint;
+
+  /// No description provided for @mindfulnessIntervalSlider.
+  ///
+  /// In en, this message translates to:
+  /// **'Mindfulness interval slider'**
+  String get mindfulnessIntervalSlider;
+
+  /// No description provided for @mindfulnessIntervalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust time between gratitudes from 3 to 30 seconds'**
+  String get mindfulnessIntervalHint;
+
+  /// No description provided for @hideOtherGratitudes.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide other gratitudes'**
+  String get hideOtherGratitudes;
+
+  /// No description provided for @showAllGratitudes.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all gratitudes'**
+  String get showAllGratitudes;
+
+  /// No description provided for @switchToSingleStarView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to single star view'**
+  String get switchToSingleStarView;
+
+  /// No description provided for @showAllStarsInSky.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all stars in sky'**
+  String get showAllStarsInSky;
+
+  /// No description provided for @exitMindfulnessMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit mindfulness mode'**
+  String get exitMindfulnessMode;
+
+  /// No description provided for @enterMindfulnessMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter mindfulness mode'**
+  String get enterMindfulnessMode;
+
+  /// No description provided for @stopCyclingGratitudes.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop cycling through gratitudes'**
+  String get stopCyclingGratitudes;
+
+  /// No description provided for @startMindfulViewing.
+  ///
+  /// In en, this message translates to:
+  /// **'Start mindful viewing of your gratitudes'**
+  String get startMindfulViewing;
+
+  /// No description provided for @actionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Action button'**
+  String get actionButton;
+
+  /// No description provided for @tapToActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to activate'**
+  String get tapToActivate;
+
+  /// No description provided for @accountSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Account settings'**
+  String get accountSettings;
+
+  /// No description provided for @manageAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your account and authentication'**
+  String get manageAccountHint;
+
+  /// No description provided for @viewGratitudesAsList.
+  ///
+  /// In en, this message translates to:
+  /// **'View your gratitudes as a text list'**
+  String get viewGratitudesAsList;
+
+  /// No description provided for @fontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Font Size'**
+  String get fontSize;
+
+  /// No description provided for @fontSizeSlider.
+  ///
+  /// In en, this message translates to:
+  /// **'Font size slider'**
+  String get fontSizeSlider;
+
+  /// No description provided for @adjustTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust text size from 75% to 175%'**
+  String get adjustTextSize;
+
+  /// No description provided for @fontPreviewText.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview: The quick brown fox jumps'**
+  String get fontPreviewText;
+
+  /// No description provided for @trashWithCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash, {count} deleted items'**
+  String trashWithCount(int count);
+
+  /// No description provided for @viewDeletedGratitudes.
+  ///
+  /// In en, this message translates to:
+  /// **'View and restore deleted gratitudes'**
+  String get viewDeletedGratitudes;
+
+  /// No description provided for @trash.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get trash;
+
+  /// No description provided for @sendFeedbackHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Send feedback about the app'**
+  String get sendFeedbackHint;
+
+  /// No description provided for @closeAppHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Close the application'**
+  String get closeAppHint;
+
+  /// No description provided for @clearLayerCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Layer Cache'**
+  String get clearLayerCache;
+
+  /// No description provided for @regenerateBackgroundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate background layers'**
+  String get regenerateBackgroundHint;
+
+  /// No description provided for @regenerateBackgroundLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate background layers'**
+  String get regenerateBackgroundLayers;
+
+  /// No description provided for @clearCacheTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Cache?'**
+  String get clearCacheTitle;
+
+  /// No description provided for @clearCacheMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will regenerate all background layers. The app will restart.'**
+  String get clearCacheMessage;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @clearCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Cache'**
+  String get clearCache;
+
+  /// No description provided for @cacheCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache cleared. Restart the app to regenerate.'**
+  String get cacheCleared;
+
+  /// No description provided for @version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} ({buildNumber})'**
+  String version(String version, String buildNumber);
+
+  /// No description provided for @openMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Open menu'**
+  String get openMenu;
+
+  /// No description provided for @openNavigationMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Open navigation menu'**
+  String get openNavigationMenu;
 }
 
 class _AppLocalizationsDelegate

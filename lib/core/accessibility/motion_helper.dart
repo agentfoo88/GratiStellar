@@ -43,4 +43,12 @@ class MotionHelper {
   static bool shouldPlayDecorativeAnimations(BuildContext context) {
     return !shouldReduceMotion(context);
   }
+
+  /// Debug helper to verify touch targets meet accessibility guidelines
+  /// Call during development to log touch target sizes
+  static void debugTouchTarget(BuildContext context, String elementName, double size) {
+    final minSize = 48.0;
+    final status = size >= minSize ? "✅ PASS" : "❌ FAIL";
+    print("Touch Target: $elementName = ${size.toStringAsFixed(1)}dp $status (min: ${minSize}dp)");
+  }
 }

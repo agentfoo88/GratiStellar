@@ -142,6 +142,24 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get closeButton;
 
+  /// Button to optionally choose star color during creation
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Star Color'**
+  String get chooseColorButton;
+
+  /// Button to collapse color picker and use random color
+  ///
+  /// In en, this message translates to:
+  /// **'Use Random Color'**
+  String get useRandomColor;
+
+  /// Button to open advanced color picker
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Color'**
+  String get customColorButton;
+
   /// No description provided for @statsTotal.
   ///
   /// In en, this message translates to:
@@ -1167,6 +1185,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open navigation menu'**
   String get openNavigationMenu;
+
+  /// Template for sharing gratitude
+  ///
+  /// In en, this message translates to:
+  /// **'{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - a universe of gratitude'**
+  String shareTemplate(String userName, String gratitudeText);
 }
 
 class _AppLocalizationsDelegate

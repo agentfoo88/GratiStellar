@@ -216,7 +216,14 @@ class GratitudeStarService {
   }
 
   // Create a new gratitude star with normalized coordinates and smart positioning
-  static GratitudeStar createStar(String text, Size screenSize, math.Random random, List<GratitudeStar> existingStars) {
+  static GratitudeStar createStar(
+      String text,
+      Size screenSize,
+      math.Random random,
+      List<GratitudeStar> existingStars, {
+        int? colorPresetIndex,
+        Color? customColor,
+      }) {
     // Calculate current universe size based on star count
     final universeSize = UniverseManager.calculateUniverseSize(existingStars.length);
     final universeCenter = UniverseManager.getUniverseCenter(universeSize);
@@ -263,9 +270,9 @@ class GratitudeStarService {
       text: text,
       worldX: worldX,
       worldY: worldY,
-      colorPresetIndex: random.nextInt(StarColors.palette.length),
-      customColor: null,
-      size: 8.0 + random.nextDouble() * 6.0,
+      colorPresetIndex: colorPresetIndex ?? random.nextInt(StarColors.palette.length),
+      customColor: customColor,
+      size: 12.0 + random.nextDouble() * 6.0,  // Base size now 12.0
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       createdAt: DateTime.now(),
       glowPatternIndex: random.nextInt(10),

@@ -46,7 +46,7 @@ class GratitudeStar {
     required this.worldY,
     this.colorPresetIndex = 0,
     this.customColor,
-    this.size = 8.0,
+    this.size = 12.0,
     String? id,
     DateTime? createdAt,
     DateTime? updatedAt,

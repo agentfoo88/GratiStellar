@@ -33,6 +33,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closeButton => 'Close';
 
   @override
+  String get chooseColorButton => 'Choose Star Color';
+
+  @override
+  String get useRandomColor => 'Use Random Color';
+
+  @override
+  String get customColorButton => 'Custom Color';
+
+  @override
   String get statsTotal => 'Total';
 
   @override
@@ -577,4 +586,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openNavigationMenu => 'Open navigation menu';
+
+  @override
+  String shareTemplate(String userName, String gratitudeText) {
+    return '$userName shared their gratitude with you:\n$gratitudeText\n\n- GratiStellar - a universe of gratitude';
+  }
 }

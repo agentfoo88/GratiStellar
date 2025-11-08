@@ -59,6 +59,7 @@ class GratitudeProvider extends ChangeNotifier {
   GratitudeStar? get animatingStar => _animatingStar;
   GratitudeStar? get activeMindfulnessStar => _activeMindfulnessStar;
   int get mindfulnessInterval => _mindfulnessInterval;
+  int? _selectedStarIndex;
 
   GratitudeProvider({
     required GratitudeRepository repository,
@@ -87,11 +88,33 @@ class GratitudeProvider extends ChangeNotifier {
 
   void _setupAuthListener() {
     _authSubscription = _authService.authStateChanges.listen((user) {
-      if (user != null && _authService.hasEmailAccount) {
+      if (user == null) {
+        // User signed out - clear all state
+        print('👤 User signed out, clearing state...');
+        clearState();
+      } else {
+        // User signed in - reload their data
         print('👤 Auth state changed, reloading gratitudes...');
         loadGratitudes();
       }
     });
+  }
+
+  /// Clear all state (called on sign out)
+  void clearState() {
+    print('🗑️ Clearing provider state');
+    _gratitudeStars = [];
+    _isLoading = true;
+    _showAllGratitudes = false;
+    _mindfulnessMode = false;
+    _isAnimating = false;
+    _animatingStar = null;
+    _activeMindfulnessStar = null;
+    _selectedStarIndex = null;  // Reset selected star
+    _mindfulnessTimer?.cancel();
+    _mindfulnessTimer = null;
+
+    notifyListeners();
   }
 
   /// Load gratitudes from storage
@@ -151,12 +174,19 @@ class GratitudeProvider extends ChangeNotifier {
   }
 
   /// Create a new gratitude star
-  Future<GratitudeStar> createGratitude(String text, Size screenSize) async {
+  Future<GratitudeStar> createGratitude(
+      String text,
+      Size screenSize, {
+        int? colorPresetIndex,
+        Color? customColor,
+      }) async {
     final star = await _addGratitudeUseCase(
       AddGratitudeParams(
         text: text,
         screenSize: screenSize,
         existingStars: _gratitudeStars,
+        colorPresetIndex: colorPresetIndex,
+        customColor: customColor,
       ),
     );
     return star;

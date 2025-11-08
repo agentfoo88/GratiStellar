@@ -601,7 +601,7 @@ class GratitudeDialogs {
   static void showAddGratitude({
     required BuildContext context,
     required TextEditingController controller,
-    required VoidCallback onAdd,
+    required Function([int? colorIndex, Color? customColor]) onAdd,
     required bool isAnimating,
   }) {
     if (isAnimating) return;
@@ -612,6 +612,10 @@ class GratitudeDialogs {
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (BuildContext context) {
+        bool showColorPicker = false; // Collapsed by default
+        int? selectedColorIndex; // null = use random
+        Color? customColorPreview;
+
         return StatefulBuilder(
           builder: (context, setState) {
             final remainingChars = maxCharacters - controller.text.length;
@@ -699,6 +703,108 @@ class GratitudeDialogs {
                     ),
 
                     SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+
+                    // Optional color selection (collapsed by default)
+                    Column(
+                      children: [
+                        // Toggle button
+                        TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              showColorPicker = !showColorPicker;
+                              // Set default color when opening
+                              if (showColorPicker && selectedColorIndex == null) {
+                                selectedColorIndex = 0;
+                              }
+                            });
+                          },
+                          icon: Icon(
+                            showColorPicker ? Icons.expand_less : Icons.palette,
+                            size: FontScaling.getResponsiveIconSize(context, 20),
+                          ),
+                          label: Text(
+                            showColorPicker
+                                ? AppLocalizations.of(context)!.useRandomColor
+                                : AppLocalizations.of(context)!.chooseColorButton,
+                            style: FontScaling.getButtonText(context).copyWith(
+                              color: Color(0xFFFFE135),
+                            ),
+                          ),
+                        ),
+
+                        // Expandable color picker
+                        if (showColorPicker) ...[
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+
+                          // Star preview
+                          Container(
+                            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 12)),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: SvgPicture.asset(
+                              'assets/icon_star.svg',
+                              width: FontScaling.getResponsiveIconSize(context, 40),
+                              height: FontScaling.getResponsiveIconSize(context, 40),
+                              colorFilter: ColorFilter.mode(
+                                customColorPreview ?? StarColors.getColor(selectedColorIndex ?? 0),
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+
+                          // Color grid
+                          _buildColorGrid(
+                            context: context,
+                            selectedIndex: customColorPreview != null ? -1 : (selectedColorIndex ?? 0),
+                            onColorTap: (index) {
+                              setState(() {
+                                selectedColorIndex = index;
+                                customColorPreview = null;
+                              });
+                            },
+                          ),
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+
+                          // Custom color button
+                          TextButton.icon(
+                            onPressed: () {
+                              _showColorPickerDialog(
+                                context: context,
+                                currentStar: GratitudeStar(
+                                  text: '',
+                                  worldX: 0.5,
+                                  worldY: 0.5,
+                                  colorPresetIndex: selectedColorIndex ?? 0,
+                                  customColor: customColorPreview,
+                                ),
+                                onColorSelected: (colorIndex, customColor) {
+                                  setState(() {
+                                    if (colorIndex != null) {
+                                      selectedColorIndex = colorIndex;
+                                      customColorPreview = null;
+                                    } else if (customColor != null) {
+                                      customColorPreview = customColor;
+                                    }
+                                  });
+                                },
+                              );
+                            },
+                            icon: Icon(Icons.color_lens, size: FontScaling.getResponsiveIconSize(context, 18)),
+                            label: Text(
+                              AppLocalizations.of(context)!.customColorButton,
+                              style: FontScaling.getButtonText(context).copyWith(
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -718,7 +824,11 @@ class GratitudeDialogs {
                         SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
                         ElevatedButton(
                           onPressed: isOverLimit ? null : () {
-                            onAdd();
+                            if (showColorPicker && selectedColorIndex != null) {
+                              onAdd(selectedColorIndex, customColorPreview);
+                            } else {
+                              onAdd(); // Random color
+                            }
                             Navigator.of(context).pop();
                           },
                           focusNode: FocusNode(),

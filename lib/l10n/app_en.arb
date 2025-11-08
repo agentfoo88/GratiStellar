@@ -13,6 +13,18 @@
   "createStarButton": "Create Star",
   "cancelButton": "Cancel",
   "closeButton": "Close",
+  "chooseColorButton": "Choose Star Color",
+  "@chooseColorButton": {
+    "description": "Button to optionally choose star color during creation"
+  },
+  "useRandomColor": "Use Random Color",
+  "@useRandomColor": {
+    "description": "Button to collapse color picker and use random color"
+  },
+  "customColorButton": "Custom Color",
+  "@customColorButton": {
+    "description": "Button to open advanced color picker"
+  },
   "statsTotal": "Total",
   "statsThisWeek": "This Week",
   "statsToday": "Today",
@@ -430,16 +442,28 @@
   "clearCache": "Clear Cache",
   "cacheCleared": "Cache cleared. Restart the app to regenerate.",
   "version": "Version {version} ({buildNumber})",
-  "@version": {
-    "placeholders": {
-      "version": {
-        "type": "String"
-      },
-      "buildNumber": {
-        "type": "String"
+    "@version": {
+      "placeholders": {
+        "version": {
+          "type": "String"
+        },
+        "buildNumber": {
+          "type": "String"
+        }
+      }
+    },
+    "openMenu": "Open menu",
+      "openNavigationMenu": "Open navigation menu",
+      "shareTemplate": "{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - a universe of gratitude",
+      "@shareTemplate": {
+        "description": "Template for sharing gratitude",
+        "placeholders": {
+          "userName": {
+            "type": "String"
+          },
+          "gratitudeText": {
+            "type": "String"
+          }
+        }
       }
     }
-  },
-  "openMenu": "Open menu",
-  "openNavigationMenu": "Open navigation menu"
-}

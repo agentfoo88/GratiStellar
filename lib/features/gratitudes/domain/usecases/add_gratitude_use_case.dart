@@ -12,11 +12,15 @@ class AddGratitudeParams {
   final String text;
   final Size screenSize;
   final List<GratitudeStar> existingStars;
+  final int? colorPresetIndex;
+  final Color? customColor;
 
   const AddGratitudeParams({
     required this.text,
     required this.screenSize,
     required this.existingStars,
+    this.colorPresetIndex,
+    this.customColor,
   });
 }
 
@@ -53,6 +57,8 @@ class AddGratitudeUseCase extends UseCase<GratitudeStar, AddGratitudeParams> {
       params.screenSize,
       random,
       params.existingStars,
+      colorPresetIndex: params.colorPresetIndex,
+      customColor: params.customColor,
     );
 
     return newStar;

@@ -272,7 +272,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
-  void _addGratitude() async {
+  void _addGratitude([int? colorIndex, Color? customColor]) async {
     final provider = context.read<GratitudeProvider>();
 
     // Cancel modes via provider
@@ -286,8 +286,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     final screenSize = MediaQuery.of(context).size;
 
-    // Create star via provider
-    final newStar = await provider.createGratitude(trimmedText, screenSize);
+    // Create star via provider - pass optional color parameters
+    final newStar = await provider.createGratitude(
+      trimmedText,
+      screenSize,
+      colorPresetIndex: colorIndex,
+      customColor: customColor,
+    );
 
     _gratitudeController.clear();
 
@@ -351,7 +356,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   void _shareStar(GratitudeStar star) {
     HapticFeedback.mediumImpact();
-    final shareText = '$_userName shared their gratitude with you:\n${star.text}\n\n- GratiStellar - your universe of thankfulness';
+    final l10n = AppLocalizations.of(context)!;
+    final shareText = l10n.shareTemplate(_userName, star.text);
     SharePlus.instance.share(
         ShareParams(text: shareText)
     );

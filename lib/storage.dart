@@ -37,6 +37,16 @@ class GratitudeStar {
   final bool deleted;  // Soft delete flag
   final DateTime? deletedAt;  // Deletion timestamp
 
+  // Animation Properties (added for performance)
+  final double spinDirection;
+  final double spinRate;
+  final double pulseSpeedH;
+  final double pulseSpeedV;
+  final double pulsePhaseH;
+  final double pulsePhaseV;
+  final double pulseMinScaleH;
+  final double pulseMinScaleV;
+
   // Getter for actual color (custom or palette)
   Color get color => customColor ?? StarColors.getColor(colorPresetIndex);
 
@@ -53,6 +63,14 @@ class GratitudeStar {
     this.glowPatternIndex = 0,
     this.deleted = false,
     this.deletedAt,
+    required this.spinDirection,
+    required this.spinRate,
+    required this.pulseSpeedH,
+    required this.pulseSpeedV,
+    required this.pulsePhaseH,
+    required this.pulsePhaseV,
+    required this.pulseMinScaleH,
+    required this.pulseMinScaleV,
   })  : id = id ?? _generateId(),
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? createdAt ?? DateTime.now();
@@ -75,32 +93,48 @@ class GratitudeStar {
     DateTime? updatedAt,
     bool? deleted,
     DateTime? deletedAt,
+    double? spinDirection,
+    double? spinRate,
+    double? pulseSpeedH,
+    double? pulseSpeedV,
+    double? pulsePhaseH,
+    double? pulsePhaseV,
+    double? pulseMinScaleH,
+    double? pulseMinScaleV,
   }) {
     return GratitudeStar(
       id: id,
       text: text ?? this.text,
+      createdAt: createdAt, // <-- This 'createdAt' is from the outer scope, not this.createdAt
+      updatedAt: updatedAt ?? DateTime.now(),
+      glowPatternIndex: glowPatternIndex,
+      deleted: deleted ?? this.deleted,
+      deletedAt: deletedAt ?? this.deletedAt,
+      spinDirection: spinDirection ?? this.spinDirection,
+      spinRate: spinRate ?? this.spinRate,
+      pulseSpeedH: pulseSpeedH ?? this.pulseSpeedH,
+      pulseSpeedV: pulseSpeedV ?? this.pulseSpeedV,
+      pulsePhaseH: pulsePhaseH ?? this.pulsePhaseH,
+      pulsePhaseV: pulsePhaseV ?? this.pulsePhaseV,
+      pulseMinScaleH: pulseMinScaleH ?? this.pulseMinScaleH,
+      pulseMinScaleV: pulseMinScaleV ?? this.pulseMinScaleV,
       worldX: worldX ?? this.worldX,
       worldY: worldY ?? this.worldY,
       colorPresetIndex: colorPresetIndex ?? this.colorPresetIndex,
       customColor: clearCustomColor ? null : (customColor ?? this.customColor),
       size: size ?? this.size,
-      createdAt: createdAt,
-      updatedAt: updatedAt ?? DateTime.now(),  // Always update timestamp
-      glowPatternIndex: glowPatternIndex,
-      deleted: deleted ?? this.deleted,
-      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
   Map<String, dynamic> toJson() {
-    // Try to compress text if it's long enough
+    // Try to compress text if it\'s long enough
     final compressedText = CompressionUtils.compressText(text);
     final isCompressed = compressedText != null;
 
     return {
       'id': id,
       'text': isCompressed ? compressedText : text,
-      'compressed': isCompressed,  // Flag to indicate compression
+      'compressed': isCompressed, // Flag to indicate compression
       'worldX': worldX,
       'worldY': worldY,
       'colorPresetIndex': colorPresetIndex,
@@ -111,12 +145,23 @@ class GratitudeStar {
       'glowPatternIndex': glowPatternIndex,
       'deleted': deleted,
       'deletedAt': deletedAt?.millisecondsSinceEpoch,
+      // Add new animation properties for serialization
+      'spinDirection': spinDirection,
+      'spinRate': spinRate,
+      'pulseSpeedH': pulseSpeedH,
+      'pulseSpeedV': pulseSpeedV,
+      'pulsePhaseH': pulsePhaseH,
+      'pulsePhaseV': pulsePhaseV,
+      'pulseMinScaleH': pulseMinScaleH,
+      'pulseMinScaleV': pulseMinScaleV,
     };
   }
 
   factory GratitudeStar.fromJson(Map<String, dynamic> json) {
     final createdAt = DateTime.fromMillisecondsSinceEpoch(
-        json['createdAt'] ?? DateTime.now().millisecondsSinceEpoch
+        json['createdAt'] ?? DateTime
+            .now()
+            .millisecondsSinceEpoch
     );
 
     // Decompress text if it was compressed
@@ -125,6 +170,11 @@ class GratitudeStar {
     final text = isCompressed
         ? CompressionUtils.decompressText(rawText)
         : rawText;
+
+    // Provide default random values for animation properties for old stars
+    // This ensures existing stars still animate correctly without breaking
+    final dummyRandom = math.Random(
+        json['id'].hashCode); // Use star ID hash for consistent randoms
 
     return GratitudeStar(
       text: text,
@@ -145,6 +195,28 @@ class GratitudeStar {
       deletedAt: json['deletedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['deletedAt'])
           : null,
+      // Deserialize new animation properties, with defaults for older stars
+      spinDirection: (json['spinDirection'] ??
+          (dummyRandom.nextBool() ? 1.0 : -1.0)).toDouble(),
+      spinRate: (json['spinRate'] ?? (StarConfig.spinRateMin +
+          dummyRandom.nextDouble() *
+              (StarConfig.spinRateMax - StarConfig.spinRateMin))).toDouble(),
+      pulseSpeedH: (json['pulseSpeedH'] ?? (StarConfig.pulseSpeedMin +
+          dummyRandom.nextDouble() *
+              (StarConfig.pulseSpeedMax - StarConfig.pulseSpeedMin)))
+          .toDouble(),
+      pulseSpeedV: (json['pulseSpeedV'] ?? (StarConfig.pulseSpeedMin +
+          dummyRandom.nextDouble() *
+              (StarConfig.pulseSpeedMax - StarConfig.pulseSpeedMin)))
+          .toDouble(),
+      pulsePhaseH: (json['pulsePhaseH'] ??
+          dummyRandom.nextDouble() * 2 * math.pi).toDouble(),
+      pulsePhaseV: (json['pulsePhaseV'] ??
+          dummyRandom.nextDouble() * 2 * math.pi).toDouble(),
+      pulseMinScaleH: (json['pulseMinScaleH'] ??
+          dummyRandom.nextDouble() * StarConfig.pulseMinScaleMax).toDouble(),
+      pulseMinScaleV: (json['pulseMinScaleV'] ??
+          dummyRandom.nextDouble() * StarConfig.pulseMinScaleMax).toDouble(),
     );
   }
 }

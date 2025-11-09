@@ -266,6 +266,17 @@ class GratitudeStarService {
 
     } while (attempts < maxAttempts);
 
+    // --- Calculate animation properties once at creation ---
+    final spinDirection = random.nextBool() ? 1.0 : -1.0;
+    final spinRate = StarConfig.spinRateMin + random.nextDouble() * (StarConfig.spinRateMax - StarConfig.spinRateMin);
+    final pulseSpeedH = StarConfig.pulseSpeedMin + random.nextDouble() * (StarConfig.pulseSpeedMax - StarConfig.pulseSpeedMin);
+    final pulseSpeedV = StarConfig.pulseSpeedMin + random.nextDouble() * (StarConfig.pulseSpeedMax - StarConfig.pulseSpeedMin);
+    final pulsePhaseH = random.nextDouble() * 2 * math.pi;
+    final pulsePhaseV = random.nextDouble() * 2 * math.pi;
+    final pulseMinScaleH = random.nextDouble() * StarConfig.pulseMinScaleMax;
+    final pulseMinScaleV = random.nextDouble() * StarConfig.pulseMinScaleMax;
+    // --- End animation property calculations ---
+
     return GratitudeStar(
       text: text,
       worldX: worldX,
@@ -276,6 +287,15 @@ class GratitudeStarService {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       createdAt: DateTime.now(),
       glowPatternIndex: random.nextInt(10),
+      // Pass the newly calculated animation properties
+      spinDirection: spinDirection,
+      spinRate: spinRate,
+      pulseSpeedH: pulseSpeedH,
+      pulseSpeedV: pulseSpeedV,
+      pulsePhaseH: pulsePhaseH,
+      pulsePhaseV: pulsePhaseV,
+      pulseMinScaleH: pulseMinScaleH,
+      pulseMinScaleV: pulseMinScaleV,
     );
   }
 }
@@ -334,12 +354,8 @@ class GratitudeStarPainter extends CustomPainter {
       }
 
       final screenPosition = Offset(screenX, screenY);
-      final starRandom = math.Random(star.id.hashCode);
-
-      // Random spin direction and rate per star (stored consistently per star)
-      final isClockwise = starRandom.nextBool();
-      final spinRate = StarConfig.spinRateMin + starRandom.nextDouble() * (StarConfig.spinRateMax - StarConfig.spinRateMin);
-      final spinDirection = isClockwise ? 1.0 : -1.0;
+      final spinDirection = star.spinDirection; // Use pre-calculated value
+      final spinRate = star.spinRate;           // Use pre-calculated value
 
       // Use star creation time to ensure continuous rotation even for old stars
       final timeSinceCreation = DateTime.now().difference(star.createdAt).inMilliseconds / 1000.0;
@@ -351,7 +367,7 @@ class GratitudeStarPainter extends CustomPainter {
       final glowColor = star.color;
 
       // Scale glow to star size with configurable variation
-      final glowMultiplier = StarConfig.glowSizeMin + starRandom.nextDouble() * (StarConfig.glowSizeMax - StarConfig.glowSizeMin);
+      final glowMultiplier = StarConfig.glowSizeMin + (star.id.hashCode % 1000 / 1000.0) * (StarConfig.glowSizeMax - StarConfig.glowSizeMin); // Derived from star ID for consistent variation
 
       // Outer glow - softer and more diffuse, scaled to star
       final outerGlowRadius = star.size * glowMultiplier;
@@ -388,19 +404,14 @@ class GratitudeStarPainter extends CustomPainter {
 
       // Layer 2: Pointy spinning twinkles with configurable organic pulsing
       // Create varied speeds and patterns per star using config values
-      final basePulseSpeed = StarConfig.pulseSpeedMin + starRandom.nextDouble() * (StarConfig.pulseSpeedMax - StarConfig.pulseSpeedMin);
-      final speedVariation = 1.0 - StarConfig.pulseAxisVariation + starRandom.nextDouble() * StarConfig.pulseAxisVariation * 2.0;
-      final horizontalSpeed = basePulseSpeed * speedVariation;
-      final verticalSpeed = basePulseSpeed * (1.0 - StarConfig.pulseAxisVariation + starRandom.nextDouble() * StarConfig.pulseAxisVariation * 2.0);
+      final horizontalSpeed = star.pulseSpeedH; // Use pre-calculated value
+      final verticalSpeed = star.pulseSpeedV; // Use pre-calculated value
 
-      // Completely independent phase offsets for organic timing
-      final hPhaseOffset = starRandom.nextDouble() * 2 * math.pi;
-      final vPhaseOffset = starRandom.nextDouble() * 2 * math.pi;
+      final hPhaseOffset = star.pulsePhaseH; // Use pre-calculated value
+      final vPhaseOffset = star.pulsePhaseV; // Use pre-calculated value
 
-      // Create sharp pulses with configurable minimum scales
-      final hMinScale = starRandom.nextDouble() * StarConfig.pulseMinScaleMax;
-      final vMinScale = starRandom.nextDouble() * StarConfig.pulseMinScaleMax;
-
+      final hMinScale = star.pulseMinScaleH; // Use pre-calculated value
+      final vMinScale = star.pulseMinScaleV; // Use pre-calculated value
       final pulseTimeH = (timeSinceCreation * horizontalSpeed + hPhaseOffset) % (2 * math.pi);
       final pulseTimeV = (timeSinceCreation * verticalSpeed + vPhaseOffset) % (2 * math.pi);
 

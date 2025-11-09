@@ -779,6 +779,14 @@ class GratitudeDialogs {
                                   worldY: 0.5,
                                   colorPresetIndex: selectedColorIndex ?? 0,
                                   customColor: customColorPreview,
+                                  spinDirection: 1.0,
+                                  spinRate: 0.5,
+                                  pulseSpeedH: 2.0,
+                                  pulseSpeedV: 2.0,
+                                  pulsePhaseH: 0.0,
+                                  pulsePhaseV: 0.0,
+                                  pulseMinScaleH: 0.0,
+                                  pulseMinScaleV: 0.0,
                                 ),
                                 onColorSelected: (colorIndex, customColor) {
                                   setState(() {

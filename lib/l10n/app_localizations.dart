@@ -1189,7 +1189,7 @@ abstract class AppLocalizations {
   /// Template for sharing gratitude
   ///
   /// In en, this message translates to:
-  /// **'{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - a universe of gratitude'**
+  /// **'{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your universe of gratitude'**
   String shareTemplate(String userName, String gratitudeText);
 }
 

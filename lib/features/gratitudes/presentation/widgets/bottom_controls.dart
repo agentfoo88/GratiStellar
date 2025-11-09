@@ -35,8 +35,6 @@ class BottomControlsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     // Calculate button row dimensions
     final buttonSize = FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale;
     final spacing = FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale;

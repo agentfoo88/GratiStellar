@@ -454,7 +454,7 @@
     },
     "openMenu": "Open menu",
       "openNavigationMenu": "Open navigation menu",
-      "shareTemplate": "{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - a universe of gratitude",
+      "shareTemplate": "{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your universe of gratitude",
       "@shareTemplate": {
         "description": "Template for sharing gratitude",
         "placeholders": {

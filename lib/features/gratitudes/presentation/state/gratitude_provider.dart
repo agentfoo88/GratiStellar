@@ -59,7 +59,6 @@ class GratitudeProvider extends ChangeNotifier {
   GratitudeStar? get animatingStar => _animatingStar;
   GratitudeStar? get activeMindfulnessStar => _activeMindfulnessStar;
   int get mindfulnessInterval => _mindfulnessInterval;
-  int? _selectedStarIndex;
 
   GratitudeProvider({
     required GratitudeRepository repository,
@@ -110,7 +109,6 @@ class GratitudeProvider extends ChangeNotifier {
     _isAnimating = false;
     _animatingStar = null;
     _activeMindfulnessStar = null;
-    _selectedStarIndex = null;  // Reset selected star
     _mindfulnessTimer?.cancel();
     _mindfulnessTimer = null;
 

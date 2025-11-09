@@ -64,6 +64,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   final String _userName = "A friend";
   Color? _previewColor;
   GratitudeStar? _lastMindfulnessStar;
+  Timer? _resizeDebounceTimer;
+  Size? _lastKnownSize;
+  bool _isRegeneratingLayers = false;
+  bool _allowRegeneration = false;
 
   // Birth animation completion handler (class-level method)
   void _completeBirthAnimation() async {
@@ -81,6 +85,41 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
+  Future<void> _regenerateLayersForNewSize(Size newSize) async {
+    setState(() {
+      _isRegeneratingLayers = true;
+    });
+
+    print('🔄 Regenerating layers for size: $newSize');
+
+    try {
+      // Clear old cache
+      await LayerCacheService().clearCache();
+
+      // Regenerate for new size
+      await LayerCacheService().initialize(newSize);
+
+      // Update camera bounds
+      final provider = context.read<GratitudeProvider>();
+      _cameraController.updateBounds(provider.gratitudeStars, newSize);
+
+      // Regenerate Van Gogh stars for new size
+      _allVanGoghStars = VanGoghStarService.generateVanGoghStars(newSize);
+      _animatedVanGoghStars = _allVanGoghStars.skip((_allVanGoghStars.length * 0.9).round()).toList();
+
+      print('✅ Layers regenerated successfully');
+    } catch (e) {
+      print('⚠️ Layer regeneration failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRegeneratingLayers = false;
+          _layerCacheInitialized = true;
+        });
+      }
+    }
+  }
+
   bool _hasInitializedAnimations = false;
 
   @override
@@ -91,7 +130,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _cameraController = CameraController();
 
     _animationManager = AnimationManager();
-    // DON'T initialize here - wait for didChangeDependencies
+// Initialize animations immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_hasInitializedAnimations) {
+        _animationManager.initialize(this, _completeBirthAnimation, reduceMotion: false);
+        _hasInitializedAnimations = true;
+      }
+    });
 
     // Generate static universe based on full screen size
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
@@ -129,22 +174,64 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _startSplashTimer();
   }
 
-// This is a SEPARATE method, not inside initState
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void didChangeMetrics() {
+    super.didChangeMetrics();
 
-    // Initialize animations only once, after context is available
-    if (!_hasInitializedAnimations) {
-      final reduceMotion = MediaQuery.disableAnimationsOf(context);
-      _animationManager.initialize(
-        this,
-        _completeBirthAnimation,
-        reduceMotion: reduceMotion,
-      );
-      _hasInitializedAnimations = true;
-      print('🎭 AnimationManager initialized in didChangeDependencies');
+    // Don't use MediaQuery during build - get size from window
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    final currentSize = view.physicalSize / view.devicePixelRatio;
+
+    // First time seeing the size - just store it, don't regenerate
+    if (_lastKnownSize == null) {
+      _lastKnownSize = currentSize;
+      print('📐 Initial screen size detected: $currentSize');
+
+      // Allow regeneration after 3 seconds (after splash/initialization)
+      Future.delayed(Duration(seconds: 3), () {
+        if (mounted) {
+          _allowRegeneration = true;
+          print('✅ Regeneration now allowed');
+        }
+      });
+      return;
     }
+
+    // Don't regenerate if not allowed yet (still initializing)
+    if (!_allowRegeneration) {
+      print('📐 Size changed but regeneration blocked (still initializing)');
+      _lastKnownSize = currentSize;
+      return;
+    }
+
+    // Check if size actually changed significantly (avoid pixel-level jitter)
+    final widthDiff = (currentSize.width - _lastKnownSize!.width).abs();
+    final heightDiff = (currentSize.height - _lastKnownSize!.height).abs();
+
+    // Only regenerate if change is >50 pixels (avoid noise)
+    if (widthDiff < 50 && heightDiff < 50) {
+      return;
+    }
+
+    // Don't regenerate if cache isn't ready yet
+    if (!_layerCacheInitialized) {
+      print('📐 Size changed but cache not ready, skipping regeneration');
+      _lastKnownSize = currentSize;
+      return;
+    }
+
+    print('📐 Screen size changed: $_lastKnownSize → $currentSize');
+    _lastKnownSize = currentSize;
+
+    // Cancel previous timer if exists
+    _resizeDebounceTimer?.cancel();
+
+    // Wait 500ms after last resize before regenerating
+    _resizeDebounceTimer = Timer(Duration(milliseconds: 500), () {
+      if (mounted && _layerCacheInitialized && _allowRegeneration) {
+        _regenerateLayersForNewSize(currentSize);
+      }
+    });
   }
 
   Future<void> _loadFontScale() async {
@@ -233,6 +320,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _resizeDebounceTimer?.cancel();
     _cameraController.dispose();
     _animationManager.dispose();
     super.dispose();
@@ -1245,6 +1333,31 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   screenSize: MediaQuery.of(context).size,
                   vsync: this,
                   safeAreaPadding: MediaQuery.of(context).padding,
+                ),
+              // Regeneration overlay
+              if (_isRegeneratingLayers)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Adjusting star field...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
             ],
           ),

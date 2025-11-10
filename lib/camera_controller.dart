@@ -10,9 +10,18 @@ import 'storage.dart';
 class CameraController extends ChangeNotifier {
   // Camera state
   Offset _position = Offset.zero;
-  Offset _parallaxPosition = Offset.zero;  // NEW: Clean position for parallax layers
+  Offset _parallaxPosition = Offset.zero;  // Clean position for parallax layers
   double _scale = 1.0;
-  double _maxPanDistance = 3000.0;
+
+  // Stored for automatic bounds updates
+  List<GratitudeStar> _stars = [];
+  Size _screenSize = Size.zero;
+
+  // Asymmetric pan limits for _position (screen offset of world origin)
+  double _minPositionX = 0.0;
+  double _maxPositionX = 0.0;
+  double _minPositionY = 0.0;
+  double _maxPositionY = 0.0;
 
   // Constraints
   static const double minScale = 0.4;
@@ -98,53 +107,112 @@ class CameraController extends ChangeNotifier {
 
   // Calculate dynamic camera bounds based on star positions and zoom
   void updateBounds(List<GratitudeStar> stars, Size screenSize) {
+    // Store for automatic updates
+    _stars = stars;
+    _screenSize = screenSize;
+
     if (stars.isEmpty) {
-      _maxPanDistance = 2000.0;
+      // If no stars, allow a small pan limit around the screen center
+      _minPositionX = -screenSize.width * 0.5;
+      _maxPositionX = screenSize.width * 0.5;
+      _minPositionY = -screenSize.height * 0.5;
+      _maxPositionY = screenSize.height * 0.5;
       return;
     }
 
-    // Find furthest star from origin
-    double maxDistance = 0.0;
+    // Find the absolute min/max normalized world coordinates occupied by stars
+    double minWorldX = double.infinity;
+    double maxWorldX = double.negativeInfinity;
+    double minWorldY = double.infinity;
+    double maxWorldY = double.negativeInfinity;
+
     for (final star in stars) {
-      final starWorldX = star.worldX * screenSize.width;
-      final starWorldY = star.worldY * screenSize.height;
-      final distance = math.sqrt(starWorldX * starWorldX + starWorldY * starWorldY);
-      maxDistance = math.max(maxDistance, distance);
+      minWorldX = math.min(minWorldX, star.worldX);
+      maxWorldX = math.max(maxWorldX, star.worldX);
+      minWorldY = math.min(minWorldY, star.worldY);
+      maxWorldY = math.max(maxWorldY, star.worldY);
     }
 
-    // Calculate padding based on zoom level
-    final paddingFactor = _scale < 0.5 ? 0.5   // Zoomed out: 50% padding
-        : _scale < 1.0 ? 0.3   // Medium: 30% padding
-        : 0.2;                 // Zoomed in: 20% padding
+    // Convert normalized world bounds to screen pixel bounds at scale 1.0
+    // These represent the pixel coordinates if _scale = 1.0 and _position = Offset.zero
+    final double minWorldXPixels = minWorldX * screenSize.width;
+    final double maxWorldXPixels = maxWorldX * screenSize.width;
+    final double minWorldYPixels = minWorldY * screenSize.height;
+    final double maxWorldYPixels = maxWorldY * screenSize.height;
 
-    _maxPanDistance = maxDistance + (maxDistance * paddingFactor);
+    // Fixed padding in screen pixels
+    const double paddingPixels = 100.0;
 
-    // Ensure minimum bounds
-    _maxPanDistance = math.max(_maxPanDistance, 2000.0);
+    // Calculate allowed range for _position.dx (screen offset of world origin)
+    final double effectiveWorldWidth = (maxWorldXPixels - minWorldXPixels) * _scale;
+    if (effectiveWorldWidth <= screenSize.width - 2 * paddingPixels) {
+      // If the scaled world content (width) fits within the screen (with padding), center it horizontally.
+      // minPositionX = maxPositionX = the _position.dx that centers the content.
+      _minPositionX = (screenSize.width - effectiveWorldWidth) / 2.0 - (minWorldXPixels * _scale);
+      _maxPositionX = _minPositionX; // Center point
+    } else {
+      // If the scaled world content (width) is wider than the screen (with padding), allow panning.
+      // maxPositionX: When the left edge of the scaled content (minWorldXPixels*_scale) aligns with screen left + padding.
+      _maxPositionX = -minWorldXPixels * _scale + paddingPixels;
+      // minPositionX: When the right edge of the scaled content (maxWorldXPixels*_scale) aligns with screen right - padding.
+      _minPositionX = screenSize.width - maxWorldXPixels * _scale - paddingPixels;
+    }
+
+    // Calculate allowed range for _position.dy (screen offset of world origin)
+    final double effectiveWorldHeight = (maxWorldYPixels - minWorldYPixels) * _scale;
+    if (effectiveWorldHeight <= screenSize.height - 2 * paddingPixels) {
+      // If the scaled world content (height) fits within the screen (with padding), center it vertically.
+      // minPositionY = maxPositionY = the _position.dy that centers the content.
+      _minPositionY = (screenSize.height - effectiveWorldHeight) / 2.0 - (minWorldYPixels * _scale);
+      _maxPositionY = _minPositionY; // Center point
+    } else {
+      // If the scaled world content (height) is taller than the screen (with padding), allow panning.s
+      // maxPositionY: When the top edge of the scaled content (minWorldYPixels*_scale) aligns with screen top + padding.
+      _maxPositionY = -minWorldYPixels * _scale + paddingPixels;
+      // minPositionY: When the bottom edge of the scaled content (maxWorldYPixels*_scale) aligns with screen bottom - padding.
+      _minPositionY = screenSize.height - maxWorldYPixels * _scale - paddingPixels;
+    }
+
+    // Ensure min <= max (can happen if there's only one star or edge cases)
+    if (_minPositionX > _maxPositionX) _maxPositionX = _minPositionX;
+    if (_minPositionY > _maxPositionY) _maxPositionY = _minPositionY;
+
+    // Apply global fallback pan limits if the calculated bounds are too tight (e.g., very few stars, almost no content)
+    // This ensures a minimum pan-ability even if the content is tiny.
+    const double fallbackPanRange = 2000.0; // Total range (e.g., +/- 1000 from center)
+    _minPositionX = math.min(_minPositionX, -fallbackPanRange / 2);
+    _maxPositionX = math.max(_maxPositionX, fallbackPanRange / 2);
+    _minPositionY = math.min(_minPositionY, -fallbackPanRange / 2);
+    _maxPositionY = math.max(_maxPositionY, fallbackPanRange / 2);
+
+    print('DEBUG Pan Bounds: X=[$_minPositionX, $_maxPositionX], Y=[$_minPositionY, $_maxPositionY]');
   }
 
   // Update camera position during drag
   void updatePosition(Offset delta) {
-    print('Before update: _parallaxPosition = $_parallaxPosition, delta = $delta'); // DEBUG
+    // DEBUG: print('Before update: _position = $_position, delta = $delta');
 
     final newPosition = _position + delta;
-    final newParallaxPosition = _parallaxPosition + delta;
+    final newParallaxPosition = _parallaxPosition + delta; // Parallax still uses the same delta
 
-    // Apply boundary constraints
+    // Apply new asymmetric boundary constraints
     final constrainedPosition = Offset(
-      math.max(-_maxPanDistance, math.min(_maxPanDistance, newPosition.dx)),
-      math.max(-_maxPanDistance, math.min(_maxPanDistance, newPosition.dy)),
+      newPosition.dx.clamp(_minPositionX, _maxPositionX),
+      newPosition.dy.clamp(_minPositionY, _maxPositionY),
     );
 
+    // Parallax position should be constrained by its own logic, relative to the main camera.
+    // For now, let's also clamp _parallaxPosition using the same limits for simplicity,
+    // but a more advanced parallax system might have different bounds.
     final constrainedParallaxPosition = Offset(
-      math.max(-_maxPanDistance, math.min(_maxPanDistance, newParallaxPosition.dx)),
-      math.max(-_maxPanDistance, math.min(_maxPanDistance, newParallaxPosition.dy)),
+      newParallaxPosition.dx.clamp(_minPositionX, _maxPositionX),
+      newParallaxPosition.dy.clamp(_minPositionY, _maxPositionY),
     );
 
     if (constrainedPosition != _position) {
       _position = constrainedPosition;
       _parallaxPosition = constrainedParallaxPosition;
-      print('After update: _parallaxPosition = $_parallaxPosition'); // DEBUG
+      // DEBUG: print('After update: _position = $_position, _parallaxPosition = $_parallaxPosition');
       notifyListeners();
     }
   }
@@ -167,18 +235,47 @@ class CameraController extends ChangeNotifier {
         // For very small scales, use simpler calculation to avoid precision errors
         if (constrainedScale < 0.4) {
           _scale = constrainedScale;
+          // Recalculate bounds even for low zoom
+          if (_stars.isNotEmpty && _screenSize != Size.zero) {
+            updateBounds(_stars, _screenSize);
+          }
           notifyListeners();
         } else {
           // Normal focal point handling for higher zoom levels
           final worldFocus = screenToWorld(focalPoint);
           _scale = constrainedScale;
+
+          // Recalculate bounds for new scale
+          if (_stars.isNotEmpty && _screenSize != Size.zero) {
+            updateBounds(_stars, _screenSize);
+          }
+
+          // First, calculate the ideal new position based on focal point.
           final newScreenFocus = worldToScreen(worldFocus);
           final adjustment = focalPoint - newScreenFocus;
-          _position = _position + adjustment;
+          final idealNewPosition = _position + adjustment;
+
+          // Now, clamp using the UPDATED bounds
+          _position = Offset(
+            idealNewPosition.dx.clamp(_minPositionX, _maxPositionX),
+            idealNewPosition.dy.clamp(_minPositionY, _maxPositionY),
+          );
+
+          // For parallax, ensure it's clamped
+          _parallaxPosition = Offset(
+            idealNewPosition.dx.clamp(_minPositionX, _maxPositionX),
+            idealNewPosition.dy.clamp(_minPositionY, _maxPositionY),
+          );
+
           notifyListeners();
+
         }
       } else {
         _scale = constrainedScale;
+        // Recalculate bounds when scale changes
+        if (_stars.isNotEmpty && _screenSize != Size.zero) {
+          updateBounds(_stars, _screenSize);
+        }
         notifyListeners();
       }
     }
@@ -206,7 +303,7 @@ class CameraController extends ChangeNotifier {
     Duration duration = const Duration(milliseconds: 800),
     Curve curve = Curves.easeOutCubic,
     TickerProvider? vsync,
-    BuildContext? context,  // ← Added parameter
+    BuildContext? context,  // Added parameter
   }) {
     if (vsync == null) return;
 
@@ -405,10 +502,10 @@ class CameraControlsOverlay extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.7),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                          color: const Color(0xFF1A2238).withOpacity(0.9),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                            color: const Color(0xFFFFE135).withOpacity(0.3),
                             width: 1,
                           ),
                         ),
@@ -431,10 +528,10 @@ class CameraControlsOverlay extends StatelessWidget {
                       color: Colors.transparent,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                          color: const Color(0xFF1A2238).withOpacity(0.9),
                           borderRadius: BorderRadius.circular(controlSize / 2),
                           border: Border.all(
-                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                            color: const Color(0xFFFFE135).withOpacity(0.3),
                             width: 1,
                           ),
                         ),
@@ -494,10 +591,10 @@ class CameraControlsOverlay extends StatelessWidget {
                       color: Colors.transparent,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                          color: const Color(0xFF1A2238).withOpacity(0.9),
                           borderRadius: BorderRadius.circular(controlSize / 2),
                           border: Border.all(
-                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                            color: const Color(0xFFFFE135).withOpacity(0.3),
                             width: 1,
                           ),
                         ),
@@ -535,10 +632,10 @@ class CameraControlsOverlay extends StatelessWidget {
                       color: Colors.transparent,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                          color: const Color(0xFF1A2238).withOpacity(0.9),
                           borderRadius: BorderRadius.circular(controlSize / 2),
                           border: Border.all(
-                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                            color: const Color(0xFFFFE135).withOpacity(0.3),
                             width: 1,
                           ),
                         ),

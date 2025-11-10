@@ -12,7 +12,7 @@ import 'storage.dart';
 class StarConfig {
   // Glow Settings
   static const double glowSizeMin = 3.0;        // Minimum glow multiplier (x star size)
-  static const double glowSizeMax = 5.0;        // Maximum glow multiplier (x star size)
+  static const double glowSizeMax = 6.0;        // Maximum glow multiplier (x star size)
   static const double glowInnerRatio = 0.25;     // Inner glow size ratio (0.0-1.0)
 
   // Spin Rate Settings
@@ -27,14 +27,14 @@ class StarConfig {
 
   // Twinkle Shape Settings
   static const double twinkleLength = 2.5;      // Twinkle ray length (x star size)
-  static const double twinkleWidth = 0.8;       // Twinkle ray width
+  static const double twinkleWidth = 1.2;       // Twinkle ray width
   static const double concaveDrama = 1.0;       // How dramatic the concave curve is (0.0-1.0)
-  static const double twinkleOpacityMin = 0.35;  // Minimum twinkle opacity
-  static const double twinkleOpacityMax = 0.80;  // Maximum twinkle opacity
+  static const double twinkleOpacityMin = 0.25;  // Minimum twinkle opacity
+  static const double twinkleOpacityMax = 0.60;  // Maximum twinkle opacity
 
   // Star Core Settings
-  static const double coreSize = 0.12;          // Core size ratio (x star size)
-  static const double coreBrightnessMin = 0.95; // Minimum core brightness
+  static const double coreSize = 0.1;          // Core size ratio (x star size)
+  static const double coreBrightnessMin = 0.88; // Minimum core brightness
   static const double coreBrightnessMax = 1.0; // Maximum core brightness
 
   // Glow Opacity Settings

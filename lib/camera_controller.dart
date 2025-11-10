@@ -12,16 +12,11 @@ class CameraController extends ChangeNotifier {
   Offset _position = Offset.zero;
   Offset _parallaxPosition = Offset.zero;  // Clean position for parallax layers
   double _scale = 1.0;
+  double _maxPanDistance = 3000.0;
 
   // Stored for automatic bounds updates
   List<GratitudeStar> _stars = [];
   Size _screenSize = Size.zero;
-
-  // Asymmetric pan limits for _position (screen offset of world origin)
-  double _minPositionX = 0.0;
-  double _maxPositionX = 0.0;
-  double _minPositionY = 0.0;
-  double _maxPositionY = 0.0;
 
   // Constraints
   static const double minScale = 0.4;
@@ -112,107 +107,68 @@ class CameraController extends ChangeNotifier {
     _screenSize = screenSize;
 
     if (stars.isEmpty) {
-      // If no stars, allow a small pan limit around the screen center
-      _minPositionX = -screenSize.width * 0.5;
-      _maxPositionX = screenSize.width * 0.5;
-      _minPositionY = -screenSize.height * 0.5;
-      _maxPositionY = screenSize.height * 0.5;
+      _maxPanDistance = 2000.0;
       return;
     }
 
-    // Find the absolute min/max normalized world coordinates occupied by stars
-    double minWorldX = double.infinity;
-    double maxWorldX = double.negativeInfinity;
-    double minWorldY = double.infinity;
-    double maxWorldY = double.negativeInfinity;
-
+    // Find furthest star from origin in screen pixels
+    double maxDistance = 0.0;
     for (final star in stars) {
-      minWorldX = math.min(minWorldX, star.worldX);
-      maxWorldX = math.max(maxWorldX, star.worldX);
-      minWorldY = math.min(minWorldY, star.worldY);
-      maxWorldY = math.max(maxWorldY, star.worldY);
+      final starWorldX = star.worldX * screenSize.width;
+      final starWorldY = star.worldY * screenSize.height;
+      final distance = math.sqrt(starWorldX * starWorldX + starWorldY * starWorldY);
+      maxDistance = math.max(maxDistance, distance);
     }
 
-    // Convert normalized world bounds to screen pixel bounds at scale 1.0
-    // These represent the pixel coordinates if _scale = 1.0 and _position = Offset.zero
-    final double minWorldXPixels = minWorldX * screenSize.width;
-    final double maxWorldXPixels = maxWorldX * screenSize.width;
-    final double minWorldYPixels = minWorldY * screenSize.height;
-    final double maxWorldYPixels = maxWorldY * screenSize.height;
-
-    // Fixed padding in screen pixels
-    const double paddingPixels = 100.0;
-
-    // Calculate allowed range for _position.dx (screen offset of world origin)
-    final double effectiveWorldWidth = (maxWorldXPixels - minWorldXPixels) * _scale;
-    if (effectiveWorldWidth <= screenSize.width - 2 * paddingPixels) {
-      // If the scaled world content (width) fits within the screen (with padding), center it horizontally.
-      // minPositionX = maxPositionX = the _position.dx that centers the content.
-      _minPositionX = (screenSize.width - effectiveWorldWidth) / 2.0 - (minWorldXPixels * _scale);
-      _maxPositionX = _minPositionX; // Center point
+    // CRITICAL FIX: Padding must INCREASE with zoom level
+    final double paddingFactor;
+    if (_scale < 0.5) {
+      paddingFactor = 0.6;  // Zoomed way out: 60% padding
+    } else if (_scale < 1.0) {
+      paddingFactor = 1.0;  // Medium zoom: 100% padding
+    } else if (_scale < 2.0) {
+      paddingFactor = 1.5;  // Moderate zoom: 150% padding
     } else {
-      // If the scaled world content (width) is wider than the screen (with padding), allow panning.
-      // maxPositionX: When the left edge of the scaled content (minWorldXPixels*_scale) aligns with screen left + padding.
-      _maxPositionX = -minWorldXPixels * _scale + paddingPixels;
-      // minPositionX: When the right edge of the scaled content (maxWorldXPixels*_scale) aligns with screen right - padding.
-      _minPositionX = screenSize.width - maxWorldXPixels * _scale - paddingPixels;
+      // High zoom: Scale factor itself as padding
+      // At 500% zoom, this gives 500% padding
+      paddingFactor = _scale;
     }
 
-    // Calculate allowed range for _position.dy (screen offset of world origin)
-    final double effectiveWorldHeight = (maxWorldYPixels - minWorldYPixels) * _scale;
-    if (effectiveWorldHeight <= screenSize.height - 2 * paddingPixels) {
-      // If the scaled world content (height) fits within the screen (with padding), center it vertically.
-      // minPositionY = maxPositionY = the _position.dy that centers the content.
-      _minPositionY = (screenSize.height - effectiveWorldHeight) / 2.0 - (minWorldYPixels * _scale);
-      _maxPositionY = _minPositionY; // Center point
-    } else {
-      // If the scaled world content (height) is taller than the screen (with padding), allow panning.s
-      // maxPositionY: When the top edge of the scaled content (minWorldYPixels*_scale) aligns with screen top + padding.
-      _maxPositionY = -minWorldYPixels * _scale + paddingPixels;
-      // minPositionY: When the bottom edge of the scaled content (maxWorldYPixels*_scale) aligns with screen bottom - padding.
-      _minPositionY = screenSize.height - maxWorldYPixels * _scale - paddingPixels;
-    }
+    _maxPanDistance = maxDistance + (maxDistance * paddingFactor);
 
-    // Ensure min <= max (can happen if there's only one star or edge cases)
-    if (_minPositionX > _maxPositionX) _maxPositionX = _minPositionX;
-    if (_minPositionY > _maxPositionY) _maxPositionY = _minPositionY;
+    // Ensure minimum bounds
+    _maxPanDistance = math.max(_maxPanDistance, 2000.0);
 
-    // Apply global fallback pan limits if the calculated bounds are too tight (e.g., very few stars, almost no content)
-    // This ensures a minimum pan-ability even if the content is tiny.
-    const double fallbackPanRange = 2000.0; // Total range (e.g., +/- 1000 from center)
-    _minPositionX = math.min(_minPositionX, -fallbackPanRange / 2);
-    _maxPositionX = math.max(_maxPositionX, fallbackPanRange / 2);
-    _minPositionY = math.min(_minPositionY, -fallbackPanRange / 2);
-    _maxPositionY = math.max(_maxPositionY, fallbackPanRange / 2);
-
-    print('DEBUG Pan Bounds: X=[$_minPositionX, $_maxPositionX], Y=[$_minPositionY, $_maxPositionY]');
+    print('🎯 Pan distance at ${_scale.toStringAsFixed(1)}x zoom: ${_maxPanDistance.toStringAsFixed(0)}px (padding: ${(paddingFactor * 100).toStringAsFixed(0)}%)');
   }
 
   // Update camera position during drag
   void updatePosition(Offset delta) {
-    // DEBUG: print('Before update: _position = $_position, delta = $delta');
-
     final newPosition = _position + delta;
-    final newParallaxPosition = _parallaxPosition + delta; // Parallax still uses the same delta
+    final newParallaxPosition = _parallaxPosition + delta;
 
-    // Apply new asymmetric boundary constraints
-    final constrainedPosition = Offset(
-      newPosition.dx.clamp(_minPositionX, _maxPositionX),
-      newPosition.dy.clamp(_minPositionY, _maxPositionY),
+    // Simple radial constraint
+    final distance = math.sqrt(
+        newPosition.dx * newPosition.dx +
+            newPosition.dy * newPosition.dy
     );
 
-    // Parallax position should be constrained by its own logic, relative to the main camera.
-    // For now, let's also clamp _parallaxPosition using the same limits for simplicity,
-    // but a more advanced parallax system might have different bounds.
-    final constrainedParallaxPosition = Offset(
-      newParallaxPosition.dx.clamp(_minPositionX, _maxPositionX),
-      newParallaxPosition.dy.clamp(_minPositionY, _maxPositionY),
-    );
+    final Offset constrainedPosition;
+    final Offset constrainedParallaxPosition;
+
+    if (distance > _maxPanDistance) {
+      // Constrain to circle boundary
+      final factor = _maxPanDistance / distance;
+      constrainedPosition = newPosition * factor;
+      constrainedParallaxPosition = newParallaxPosition * factor;
+    } else {
+      constrainedPosition = newPosition;
+      constrainedParallaxPosition = newParallaxPosition;
+    }
 
     if (constrainedPosition != _position) {
       _position = constrainedPosition;
       _parallaxPosition = constrainedParallaxPosition;
-      // DEBUG: print('After update: _position = $_position, _parallaxPosition = $_parallaxPosition');
       notifyListeners();
     }
   }
@@ -221,7 +177,7 @@ class CameraController extends ChangeNotifier {
   void updateScale(double newScale, [Offset? focalPoint]) {
     final constrainedScale = math.max(minScale, math.min(maxScale, newScale));
 
-    // Prevent changes that are too small OR when scale gets too extreme
+    // Prevent changes that are too small
     if ((constrainedScale - _scale).abs() < 0.001) return;
 
     // Add extra stability check for very low zoom levels
@@ -250,25 +206,28 @@ class CameraController extends ChangeNotifier {
             updateBounds(_stars, _screenSize);
           }
 
-          // First, calculate the ideal new position based on focal point.
+          // Calculate the ideal new position based on focal point
           final newScreenFocus = worldToScreen(worldFocus);
           final adjustment = focalPoint - newScreenFocus;
           final idealNewPosition = _position + adjustment;
 
-          // Now, clamp using the UPDATED bounds
-          _position = Offset(
-            idealNewPosition.dx.clamp(_minPositionX, _maxPositionX),
-            idealNewPosition.dy.clamp(_minPositionY, _maxPositionY),
+          // Apply radial constraint instead of asymmetric bounds
+          final distance = math.sqrt(
+              idealNewPosition.dx * idealNewPosition.dx +
+                  idealNewPosition.dy * idealNewPosition.dy
           );
 
-          // For parallax, ensure it's clamped
-          _parallaxPosition = Offset(
-            idealNewPosition.dx.clamp(_minPositionX, _maxPositionX),
-            idealNewPosition.dy.clamp(_minPositionY, _maxPositionY),
-          );
+          if (distance > _maxPanDistance) {
+            // Constrain to circle boundary
+            final factor = _maxPanDistance / distance;
+            _position = idealNewPosition * factor;
+            _parallaxPosition = idealNewPosition * factor;
+          } else {
+            _position = idealNewPosition;
+            _parallaxPosition = idealNewPosition;
+          }
 
           notifyListeners();
-
         }
       } else {
         _scale = constrainedScale;

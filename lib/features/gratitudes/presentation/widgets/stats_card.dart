@@ -1,14 +1,14 @@
-// lib/features/gratitudes/presentation/widgets/stats_card.dart
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../storage.dart';
+import '../state/galaxy_provider.dart';
 
 /// Stats card widget displaying gratitude statistics
 ///
-/// Shows total count, this week count, and today indicator
+/// Shows galaxy name, total count, this week count, and today indicator
 class StatsCardWidget extends StatelessWidget {
   final List<GratitudeStar> stars;
 
@@ -19,52 +19,84 @@ class StatsCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale,
-        vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
-      ),
-      decoration: BoxDecoration(
-        color: Color(0xFF1A2238).withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(20 * UIConstants.universalUIScale),
-        border: Border.all(
-          color: Color(0xFFFFE135).withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildStatItem(
-              context,
-              Icons.star,
-              AppLocalizations.of(context)!.statsTotal,
-              StorageService.getTotalStars(stars).toString(),
+    return Consumer<GalaxyProvider>(
+      builder: (context, galaxyProvider, _) {
+        final galaxyName = galaxyProvider.activeGalaxy?.name ?? 'All Stars';
+
+        return Align(
+          alignment: Alignment.topCenter,
+          child: IntrinsicWidth(
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale,
+                vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
+              ),
+              decoration: BoxDecoration(
+                color: Color(0xFF1A2238).withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(20 * UIConstants.universalUIScale),
+                border: Border.all(
+                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Galaxy name at the top
+                  _buildGalaxyName(context, galaxyName),
+
+                  SizedBox(height: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale),
+
+                  // Horizontal divider
+                  Container(
+                    height: 1,
+                    color: Color(0xFFFFE135).withValues(alpha: 0.2),
+                  ),
+
+                  SizedBox(height: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale),
+
+                  // Stats row
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStatItem(
+                        context,
+                        Icons.star,
+                        AppLocalizations.of(context)!.statsTotal,
+                        StorageService.getTotalStars(stars).toString(),
+                      ),
+                      SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale),
+                      _buildStatItem(
+                        context,
+                        Icons.trending_up,
+                        AppLocalizations.of(context)!.statsThisWeek,
+                        StorageService.getThisWeekStars(stars).toString(),
+                      ),
+                      SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale),
+                      _buildStatItem(
+                        context,
+                        StorageService.getAddedToday(stars) ? Icons.check_circle : Icons.radio_button_unchecked,
+                        AppLocalizations.of(context)!.statsToday,
+                        '',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale),
-            _buildStatItem(
-              context,
-              Icons.trending_up,
-              AppLocalizations.of(context)!.statsThisWeek,
-              StorageService.getThisWeekStars(stars).toString(),
-            ),
-            SizedBox(width: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale),
-            _buildStatItem(
-              context,
-              StorageService.getAddedToday(stars) ? Icons.check_circle : Icons.radio_button_unchecked,
-              AppLocalizations.of(context)!.statsToday,
-              '',
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildStatItem(BuildContext context, IconData icon, String label, String value) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(
           icon,
@@ -78,13 +110,38 @@ class StatsCardWidget extends StatelessWidget {
             fontSize: FontScaling.getStatsLabel(context).fontSize! * UIConstants.statsLabelTextScale,
           ),
         ),
-        if (value.isNotEmpty)
+        if (value.isNotEmpty) ...[
+          SizedBox(height: FontScaling.getResponsiveSpacing(context, 2) * UIConstants.universalUIScale),
           Text(
             value,
             style: FontScaling.getStatsNumber(context).copyWith(
               fontSize: FontScaling.getStatsNumber(context).fontSize! * UIConstants.universalUIScale,
             ),
           ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildGalaxyName(BuildContext context, String galaxyName) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.brightness_2,
+          color: Color(0xFFFFE135),
+          size: FontScaling.getResponsiveIconSize(context, 18) * UIConstants.universalUIScale,
+        ),
+        SizedBox(width: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale),
+        Text(
+          galaxyName,
+          style: FontScaling.getStatsLabel(context).copyWith(
+            fontSize: FontScaling.getStatsLabel(context).fontSize! * UIConstants.universalUIScale,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFFFE135),
+          ),
+        ),
       ],
     );
   }

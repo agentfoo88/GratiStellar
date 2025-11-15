@@ -17,6 +17,7 @@ import '../../domain/usecases/restore_gratitude_use_case.dart';
 import '../../domain/usecases/purge_old_deleted_use_case.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../core/security/rate_limiter.dart';
+import 'galaxy_provider.dart';
 
 /// Provider for gratitude state management
 ///
@@ -27,6 +28,8 @@ class GratitudeProvider extends ChangeNotifier {
   final GratitudeRepository _repository;
   final AuthService _authService;
   final math.Random _random;
+
+  late final GalaxyProvider _galaxyProvider;
 
   // Use cases
   late final AddGratitudeUseCase _addGratitudeUseCase;
@@ -99,6 +102,11 @@ class GratitudeProvider extends ChangeNotifier {
     });
   }
 
+  /// Set galaxy provider (called after construction)
+  void setGalaxyProvider(GalaxyProvider galaxyProvider) {
+    _galaxyProvider = galaxyProvider;
+  }
+
   /// Clear all state (called on sign out)
   void clearState() {
     print('🗑️ Clearing provider state');
@@ -111,6 +119,8 @@ class GratitudeProvider extends ChangeNotifier {
     _activeMindfulnessStar = null;
     _mindfulnessTimer?.cancel();
     _mindfulnessTimer = null;
+
+    _galaxyProvider.clearAll();
 
     notifyListeners();
   }
@@ -142,7 +152,10 @@ class GratitudeProvider extends ChangeNotifier {
 
     // Sync with cloud if needed
     if (result.shouldSyncWithCloud) {
-      await syncWithCloud();
+      // Don't block on sync - run in background
+      syncWithCloud().catchError((e) {
+        print('⚠️ Background sync failed: $e');
+      });
     }
   }
 
@@ -183,6 +196,7 @@ class GratitudeProvider extends ChangeNotifier {
         text: text,
         screenSize: screenSize,
         existingStars: _gratitudeStars,
+        galaxyId: _galaxyProvider.activeGalaxyId!,
         colorPresetIndex: colorPresetIndex,
         customColor: customColor,
       ),
@@ -203,7 +217,11 @@ class GratitudeProvider extends ChangeNotifier {
       _gratitudeStars.add(_animatingStar!);
 
       // Save to repository (includes cloud sync if authenticated)
-      await _repository.addGratitude(_animatingStar!, _gratitudeStars);
+      final allStars = await _repository.getAllGratitudesUnfiltered();
+      await _repository.addGratitude(_animatingStar!, allStars);
+
+      // Update galaxy star count
+      await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
 
       _isAnimating = false;
       _animatingStar = null;
@@ -232,14 +250,18 @@ class GratitudeProvider extends ChangeNotifier {
       throw RateLimitException('delete_gratitude', retryAfter);
     }
 
-    // Get all stars including deleted ones for the repository operation
-    final allStarsIncludingDeleted = await _repository.getGratitudes();
+    // Get all stars including deleted ones for the repository operation (UNFILTERED!)
+    final allStarsIncludingDeleted = await _repository.getAllGratitudesUnfiltered();
 
     final params = DeleteGratitudeParams(star: star, allStars: allStarsIncludingDeleted);
-    final updatedStars = await _deleteGratitudeUseCase(params);
+    await _deleteGratitudeUseCase(params);
 
-    // Filter out deleted items for display
-    _gratitudeStars = updatedStars.where((s) => !s.deleted).toList();
+    // Reload from repository to get properly filtered stars
+    // (loadGratitudes already calls notifyListeners, so we don't need to call it again)
+    await loadGratitudes();
+
+    // Update galaxy star count (this also notifies its own listeners)
+    await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
 
     notifyListeners();
   }
@@ -358,26 +380,32 @@ class GratitudeProvider extends ChangeNotifier {
     }
   }
 
-  // ADD THIS METHOD HERE ↓
-  void test() {
-    print('✅ Provider is accessible!');
-  }
-
   /// Get deleted gratitudes (for trash view)
   Future<List<GratitudeStar>> getDeletedGratitudes() async {
-    return await _getDeletedGratitudesUseCase(NoParams());
+    final result = await _getDeletedGratitudesUseCase(NoParams());
+    return result.stars;
+  }
+
+  /// Get count of deleted gratitudes in current galaxy
+  Future<int> getDeletedGratitudesCount() async {
+    final result = await _getDeletedGratitudesUseCase(NoParams());
+    return result.count;
   }
 
   /// Restore a deleted gratitude
   Future<void> restoreGratitude(GratitudeStar star) async {
-    final allStars = [..._gratitudeStars, star]; // Include the deleted star
+    // Get all stars including deleted ones for the repository operation (UNFILTERED!)
+    final allStarsIncludingDeleted = await _repository.getAllGratitudesUnfiltered();
 
     await _restoreGratitudeUseCase(
-      RestoreGratitudeParams(star: star, allStars: allStars),
+      RestoreGratitudeParams(star: star, allStars: allStarsIncludingDeleted),
     );
 
     // Reload to reflect changes
     await loadGratitudes();
+
+    // Update galaxy star count
+    await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
   }
 
   /// Permanently delete a gratitude

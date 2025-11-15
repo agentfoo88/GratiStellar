@@ -1,14 +1,16 @@
-import '../../../../services/layer_cache_service.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
+
+import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../services/layer_cache_service.dart';
 import '../../../../storage.dart';
-import '../../../../core/accessibility/semantic_helper.dart';
+import '../state/gratitude_provider.dart';
 
 /// App navigation drawer widget
 ///
@@ -17,6 +19,7 @@ class AppDrawerWidget extends StatefulWidget {
   final AuthService authService;
   final VoidCallback onAccountTap;
   final VoidCallback onListViewTap;
+  final VoidCallback onGalaxiesTap;
   final VoidCallback onFeedbackTap;
   final VoidCallback onExitTap;
   final VoidCallback onFontScaleChanged;
@@ -27,6 +30,7 @@ class AppDrawerWidget extends StatefulWidget {
     required this.authService,
     required this.onAccountTap,
     required this.onListViewTap,
+    required this.onGalaxiesTap,
     required this.onFeedbackTap,
     required this.onExitTap,
     required this.onFontScaleChanged,
@@ -158,6 +162,33 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 ),
               ),
               onTap: widget.onListViewTap,
+            ),
+          ),
+
+          Divider(
+            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            height: 1,
+          ),
+
+          // My Galaxies
+          SemanticHelper.label(
+            label: l10n.myGalaxies,
+            hint: l10n.manageGalaxiesHint,
+            isButton: true,
+            child: ListTile(
+              focusNode: FocusNode(),
+              leading: Icon(
+                Icons.stars,
+                color: Color(0xFFFFE135),
+                size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+              ),
+              title: Text(
+                l10n.myGalaxies,
+                style: FontScaling.getBodyMedium(context).copyWith(
+                  fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                ),
+              ),
+              onTap: widget.onGalaxiesTap,
             ),
           ),
 
@@ -395,6 +426,30 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             ),
           ),
 
+          // TEMPORARY RECOVERY OPTION
+          ListTile(
+            leading: Icon(Icons.cloud_download, color: Colors.red),
+            title: Text('🚨 RECOVER DATA FROM CLOUD'),
+            subtitle: Text('Force full sync from Firebase'),
+            onTap: () async {
+              Navigator.pop(context);
+
+              // Clear sync timestamp to force full download
+              await StorageService.clearLastSyncTime();
+
+              // Reload gratitudes - will trigger full sync
+              final gratitudeProvider = Provider.of<GratitudeProvider>(context, listen: false);
+              await gratitudeProvider.loadGratitudes();
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Full sync complete! Check your stars.'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+          ),
+
           // Version number at bottom
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
@@ -426,8 +481,8 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
   Future<int> _getTrashCount() async {
     try {
-      final allStars = await StorageService.loadGratitudeStars();
-      return allStars.where((star) => star.deleted).length;
+      final provider = Provider.of<GratitudeProvider>(context, listen: false);
+      return await provider.getDeletedGratitudesCount();
     } catch (e) {
       return 0;
     }

@@ -54,7 +54,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyStateTitle => 'Your constellation awaits';
 
   @override
-  String get emptyStateSubtitle => 'Tap the + button to birth your first star';
+  String get emptyStateSubtitle =>
+      'Tap the star button to create your first star';
 
   @override
   String get editButton => 'Edit';
@@ -84,7 +85,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exitTitle => 'Exit GratiStellar?';
 
   @override
-  String get exitMessage => 'Are you sure you want to exit the app?';
+  String get exitMessage => 'Are you sure you want to exit GratiStellar?';
 
   @override
   String get exitButton => 'Exit';
@@ -164,7 +165,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listViewMenuItem => 'List View';
 
   @override
-  String get mindfulnessIntervalLabel => 'Interval (seconds)';
+  String get mindfulnessIntervalLabel => 'Delay (seconds)';
 
   @override
   String get mindfulnessNoStarsTitle => 'No stars yet';
@@ -477,7 +478,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addStarHint => 'Opens dialog to write your gratitude';
 
   @override
-  String get mindfulnessIntervalSlider => 'Mindfulness interval slider';
+  String get mindfulnessIntervalSlider => 'Mindfulness delay slider';
 
   @override
   String get mindfulnessIntervalHint =>
@@ -591,4 +592,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String shareTemplate(String userName, String gratitudeText) {
     return '$userName shared their gratitude with you:\n$gratitudeText\n\n- GratiStellar - your universe of gratitude';
   }
+
+  @override
+  String get myGalaxies => 'My Galaxies';
+
+  @override
+  String get manageGalaxiesHint =>
+      'Create and switch between galaxy collections';
+
+  @override
+  String get createNewGalaxy => 'Create New Galaxy';
+
+  @override
+  String get startNewGalaxyWithFreshStars =>
+      'Start a new galaxy collection with a fresh sky';
+
+  @override
+  String get nameYourGalaxy => 'Name your galaxy:';
+
+  @override
+  String get galaxyNameField => 'Galaxy name';
+
+  @override
+  String get galaxyNameHint => 'e.g., 2025, Work Journal, Travel Memories';
+
+  @override
+  String get enterGalaxyName => 'Enter a name for your galaxy';
+
+  @override
+  String get createGalaxyDescription =>
+      'Your current stars will remain in their galaxy and you can return anytime.';
+
+  @override
+  String get createGalaxy => 'Create Galaxy';
+
+  @override
+  String get renameGalaxy => 'Rename Galaxy';
+
+  @override
+  String get enterNewGalaxyName => 'Enter new name for this galaxy';
+
+  @override
+  String get noGalaxiesYet => 'No galaxies yet';
+
+  @override
+  String get createYourFirstGalaxy =>
+      'Create your first galaxy to start organizing your gratitudes';
+
+  @override
+  String get active => 'Active';
+
+  @override
+  String get currentlyActiveGalaxy => 'This is your currently active galaxy';
+
+  @override
+  String get tapToSwitchToGalaxy => 'Tap to switch to this galaxy';
+
+  @override
+  String activeGalaxyItem(String name, int starCount) {
+    return '$name (Active) - $starCount stars';
+  }
+
+  @override
+  String galaxyItem(String name, int starCount) {
+    return '$name - $starCount stars';
+  }
+
+  @override
+  String galaxyStats(int starCount, String date) {
+    return '$starCount stars • Created $date';
+  }
+
+  @override
+  String get save => 'Save';
 }

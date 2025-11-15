@@ -29,7 +29,7 @@
   "statsThisWeek": "This Week",
   "statsToday": "Today",
   "emptyStateTitle": "Your constellation awaits",
-  "emptyStateSubtitle": "Tap the + button to birth your first star",
+  "emptyStateSubtitle": "Tap the star button to create your first star",
   "editButton": "Edit",
   "shareButton": "Share",
   "deleteButton": "Delete",
@@ -39,7 +39,7 @@
   "deleteConfirmTitle": "Delete this gratitude?",
   "deleteWarning": "Move to Trash? (Recoverable for 30 days)",
   "exitTitle": "Exit GratiStellar?",
-  "exitMessage": "Are you sure you want to exit the app?",
+  "exitMessage": "Are you sure you want to exit GratiStellar?",
   "exitButton": "Exit",
   "trashMenuItem": "Trash",
   "trashScreenTitle": "Trash",
@@ -71,7 +71,7 @@
   "applyButton": "Apply",
   "loginMenuItem": "Login",
   "listViewMenuItem": "List View",
-  "mindfulnessIntervalLabel": "Interval (seconds)",
+  "mindfulnessIntervalLabel": "Delay (seconds)",
   "mindfulnessNoStarsTitle": "No stars yet",
   "mindfulnessNoStarsMessage": "Add a star first to use mindfulness mode",
   "listViewTitle": "Your Gratitude Stars",
@@ -402,7 +402,7 @@
   "creatingGratitudeStar": "Creating gratitude star, please wait",
   "addNewGratitudeStar": "Add new gratitude star",
   "addStarHint": "Opens dialog to write your gratitude",
-  "mindfulnessIntervalSlider": "Mindfulness interval slider",
+  "mindfulnessIntervalSlider": "Mindfulness delay slider",
   "mindfulnessIntervalHint": "Adjust time between gratitudes from 3 to 30 seconds",
   "hideOtherGratitudes": "Hide other gratitudes",
   "showAllGratitudes": "Show all gratitudes",
@@ -455,15 +455,124 @@
     "openMenu": "Open menu",
       "openNavigationMenu": "Open navigation menu",
       "shareTemplate": "{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your universe of gratitude",
-      "@shareTemplate": {
-        "description": "Template for sharing gratitude",
-        "placeholders": {
-          "userName": {
-            "type": "String"
-          },
-          "gratitudeText": {
-            "type": "String"
+        "@shareTemplate": {
+          "description": "Template for sharing gratitude",
+          "placeholders": {
+            "userName": {
+              "type": "String"
+            },
+            "gratitudeText": {
+              "type": "String"
+            }
           }
+        },
+
+        "myGalaxies": "My Galaxies",
+        "@myGalaxies": {
+          "description": "Menu item for galaxy management"
+        },
+        "manageGalaxiesHint": "Create and switch between galaxy collections",
+        "@manageGalaxiesHint": {
+          "description": "Hint for galaxy management menu item"
+        },
+        "createNewGalaxy": "Create New Galaxy",
+        "@createNewGalaxy": {
+          "description": "Button text to create a new galaxy"
+        },
+        "startNewGalaxyWithFreshStars": "Start a new galaxy collection with a fresh sky",
+        "@startNewGalaxyWithFreshStars": {
+          "description": "Hint for create new galaxy button"
+        },
+        "nameYourGalaxy": "Name your galaxy:",
+        "@nameYourGalaxy": {
+          "description": "Label for naming a galaxy"
+        },
+        "galaxyNameField": "Galaxy name",
+        "@galaxyNameField": {
+          "description": "Label for galaxy name input field"
+        },
+        "galaxyNameHint": "e.g., 2025, Work Journal, Travel Memories",
+        "@galaxyNameHint": {
+          "description": "Hint text for galaxy name field"
+        },
+        "enterGalaxyName": "Enter a name for your galaxy",
+        "@enterGalaxyName": {
+          "description": "Hint for galaxy name accessibility"
+        },
+        "createGalaxyDescription": "Your current stars will remain in their galaxy and you can return anytime.",
+        "@createGalaxyDescription": {
+          "description": "Description text for galaxy creation"
+        },
+        "createGalaxy": "Create Galaxy",
+        "@createGalaxy": {
+          "description": "Button text to confirm galaxy creation"
+        },
+        "renameGalaxy": "Rename Galaxy",
+        "@renameGalaxy": {
+          "description": "Title for rename galaxy dialog"
+        },
+        "enterNewGalaxyName": "Enter new name for this galaxy",
+        "@enterNewGalaxyName": {
+          "description": "Hint for rename galaxy field"
+        },
+        "noGalaxiesYet": "No galaxies yet",
+        "@noGalaxiesYet": {
+          "description": "Empty state title when no galaxies exist"
+        },
+        "createYourFirstGalaxy": "Create your first galaxy to start organizing your gratitudes",
+        "@createYourFirstGalaxy": {
+          "description": "Empty state description for first galaxy"
+        },
+        "active": "Active",
+        "@active": {
+          "description": "Badge text for active galaxy"
+        },
+        "currentlyActiveGalaxy": "This is your currently active galaxy",
+        "@currentlyActiveGalaxy": {
+          "description": "Accessibility hint for active galaxy"
+        },
+        "tapToSwitchToGalaxy": "Tap to switch to this galaxy",
+        "@tapToSwitchToGalaxy": {
+          "description": "Accessibility hint for switching galaxies"
+        },
+        "activeGalaxyItem": "{name} (Active) - {starCount} stars",
+        "@activeGalaxyItem": {
+          "description": "Accessibility label for active galaxy item",
+          "placeholders": {
+            "name": {
+              "type": "String"
+            },
+            "starCount": {
+              "type": "int"
+            }
+          }
+        },
+        "galaxyItem": "{name} - {starCount} stars",
+        "@galaxyItem": {
+          "description": "Accessibility label for galaxy item",
+          "placeholders": {
+            "name": {
+              "type": "String"
+            },
+            "starCount": {
+              "type": "int"
+            }
+          }
+        },
+        "galaxyStats": "{starCount} stars • Created {date}",
+        "@galaxyStats": {
+          "description": "Galaxy statistics subtitle",
+          "placeholders": {
+            "starCount": {
+              "type": "int"
+            },
+            "date": {
+              "type": "String"
+            }
+          }
+        },
+        "save": "Save",
+        "@save": {
+          "description": "Save button text"
         }
-      }
     }

@@ -221,6 +221,7 @@ class GratitudeStarService {
       Size screenSize,
       math.Random random,
       List<GratitudeStar> existingStars, {
+        required String galaxyId,
         int? colorPresetIndex,
         Color? customColor,
       }) {
@@ -286,6 +287,7 @@ class GratitudeStarService {
       size: 12.0 + random.nextDouble() * 6.0,  // Base size now 12.0
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       createdAt: DateTime.now(),
+      galaxyId: galaxyId,
       glowPatternIndex: random.nextInt(10),
       // Pass the newly calculated animation properties
       spinDirection: spinDirection,

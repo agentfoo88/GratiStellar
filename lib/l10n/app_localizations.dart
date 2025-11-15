@@ -187,7 +187,7 @@ abstract class AppLocalizations {
   /// No description provided for @emptyStateSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Tap the + button to birth your first star'**
+  /// **'Tap the star button to create your first star'**
   String get emptyStateSubtitle;
 
   /// No description provided for @editButton.
@@ -247,7 +247,7 @@ abstract class AppLocalizations {
   /// No description provided for @exitMessage.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to exit the app?'**
+  /// **'Are you sure you want to exit GratiStellar?'**
   String get exitMessage;
 
   /// No description provided for @exitButton.
@@ -397,7 +397,7 @@ abstract class AppLocalizations {
   /// No description provided for @mindfulnessIntervalLabel.
   ///
   /// In en, this message translates to:
-  /// **'Interval (seconds)'**
+  /// **'Delay (seconds)'**
   String get mindfulnessIntervalLabel;
 
   /// No description provided for @mindfulnessNoStarsTitle.
@@ -979,7 +979,7 @@ abstract class AppLocalizations {
   /// No description provided for @mindfulnessIntervalSlider.
   ///
   /// In en, this message translates to:
-  /// **'Mindfulness interval slider'**
+  /// **'Mindfulness delay slider'**
   String get mindfulnessIntervalSlider;
 
   /// No description provided for @mindfulnessIntervalHint.
@@ -1191,6 +1191,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your universe of gratitude'**
   String shareTemplate(String userName, String gratitudeText);
+
+  /// Menu item for galaxy management
+  ///
+  /// In en, this message translates to:
+  /// **'My Galaxies'**
+  String get myGalaxies;
+
+  /// Hint for galaxy management menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Create and switch between galaxy collections'**
+  String get manageGalaxiesHint;
+
+  /// Button text to create a new galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Galaxy'**
+  String get createNewGalaxy;
+
+  /// Hint for create new galaxy button
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new galaxy collection with a fresh sky'**
+  String get startNewGalaxyWithFreshStars;
+
+  /// Label for naming a galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Name your galaxy:'**
+  String get nameYourGalaxy;
+
+  /// Label for galaxy name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Galaxy name'**
+  String get galaxyNameField;
+
+  /// Hint text for galaxy name field
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., 2025, Work Journal, Travel Memories'**
+  String get galaxyNameHint;
+
+  /// Hint for galaxy name accessibility
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name for your galaxy'**
+  String get enterGalaxyName;
+
+  /// Description text for galaxy creation
+  ///
+  /// In en, this message translates to:
+  /// **'Your current stars will remain in their galaxy and you can return anytime.'**
+  String get createGalaxyDescription;
+
+  /// Button text to confirm galaxy creation
+  ///
+  /// In en, this message translates to:
+  /// **'Create Galaxy'**
+  String get createGalaxy;
+
+  /// Title for rename galaxy dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Galaxy'**
+  String get renameGalaxy;
+
+  /// Hint for rename galaxy field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter new name for this galaxy'**
+  String get enterNewGalaxyName;
+
+  /// Empty state title when no galaxies exist
+  ///
+  /// In en, this message translates to:
+  /// **'No galaxies yet'**
+  String get noGalaxiesYet;
+
+  /// Empty state description for first galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first galaxy to start organizing your gratitudes'**
+  String get createYourFirstGalaxy;
+
+  /// Badge text for active galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get active;
+
+  /// Accessibility hint for active galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'This is your currently active galaxy'**
+  String get currentlyActiveGalaxy;
+
+  /// Accessibility hint for switching galaxies
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to switch to this galaxy'**
+  String get tapToSwitchToGalaxy;
+
+  /// Accessibility label for active galaxy item
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (Active) - {starCount} stars'**
+  String activeGalaxyItem(String name, int starCount);
+
+  /// Accessibility label for galaxy item
+  ///
+  /// In en, this message translates to:
+  /// **'{name} - {starCount} stars'**
+  String galaxyItem(String name, int starCount);
+
+  /// Galaxy statistics subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'{starCount} stars • Created {date}'**
+  String galaxyStats(int starCount, String date);
+
+  /// Save button text
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
 }
 
 class _AppLocalizationsDelegate

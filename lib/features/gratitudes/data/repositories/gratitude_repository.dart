@@ -14,6 +14,8 @@ class GratitudeRepository {
   final RemoteDataSource _remoteDataSource;
   final AuthService _authService;
 
+  String? _activeGalaxyId;
+
   GratitudeRepository({
     required LocalDataSource localDataSource,
     required RemoteDataSource remoteDataSource,
@@ -22,8 +24,41 @@ class GratitudeRepository {
         _remoteDataSource = remoteDataSource,
         _authService = authService;
 
-  /// Get all gratitudes from local storage
+  /// Get all gratitudes from local storage (filtered by active galaxy)
   Future<List<GratitudeStar>> getGratitudes() async {
+    final allStars = await _localDataSource.loadStars();
+
+    print('🌌 Repository: Loading stars, activeGalaxyId: $_activeGalaxyId');
+    print('🌌 All stars: ${allStars.length}');
+
+    // Debug: Show what galaxy IDs the stars actually have
+    print('🌌 Star galaxy IDs:');
+    for (final star in allStars) {
+      print('   - "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" → galaxyId: "${star.galaxyId}" (deleted: ${star.deleted})');
+    }
+
+    // Filter by active galaxy if set
+    if (_activeGalaxyId != null) {
+      final filtered = allStars.where((star) => star.galaxyId == _activeGalaxyId).toList();
+      print('🌌 Filtered stars for galaxy $_activeGalaxyId: ${filtered.length}');
+      return filtered;
+    }
+
+    print('🌌 No active galaxy, returning all ${allStars.length} stars');
+    return allStars;
+  }
+
+  /// Set the active galaxy ID for filtering
+  void setActiveGalaxyId(String? galaxyId) {
+    _activeGalaxyId = galaxyId;
+    print('🌌 Active galaxy set to: $galaxyId');
+  }
+
+  /// Get the current active galaxy ID
+  String? getActiveGalaxyId() => _activeGalaxyId;
+
+  /// Get all gratitudes regardless of galaxy (for migration, etc.)
+  Future<List<GratitudeStar>> getAllGratitudesUnfiltered() async {
     return await _localDataSource.loadStars();
   }
 
@@ -115,10 +150,25 @@ class GratitudeRepository {
     await _localDataSource.clearAll();
   }
 
-  /// Get deleted gratitudes (for trash view)
+  /// Get deleted gratitudes (for trash view - filtered by active galaxy)
   Future<List<GratitudeStar>> getDeletedGratitudes() async {
     final allStars = await _localDataSource.loadStars();
+
+    // Filter by active galaxy AND deleted status
+    if (_activeGalaxyId != null) {
+      return allStars
+          .where((star) => star.deleted && star.galaxyId == _activeGalaxyId)
+          .toList();
+    }
+
+    // Fallback: return all deleted stars if no active galaxy
     return allStars.where((star) => star.deleted).toList();
+  }
+
+  /// Get count of deleted gratitudes in active galaxy
+  Future<int> getDeletedGratitudesCount() async {
+    final deletedStars = await getDeletedGratitudes();
+    return deletedStars.length;
   }
 
   /// Restore a deleted gratitude
@@ -146,19 +196,14 @@ class GratitudeRepository {
     }
   }
 
-  /// Permanently delete a gratitude (hard delete)
-  Future<void> permanentlyDeleteGratitude(String starId, List<GratitudeStar> allStars) async {
-    final updatedStars = List<GratitudeStar>.from(allStars);
-    updatedStars.removeWhere((s) => s.id == starId);
-    await _localDataSource.saveStars(updatedStars);
-
-    // Sync permanent deletion to cloud if authenticated
-    if (_authService.hasEmailAccount) {
-      try {
-        await _remoteDataSource.deleteStar(starId);
-      } catch (e) {
-        print('⚠️ Failed to sync permanent deletion to cloud: $e');
-      }
+  /// Delete a gratitude from cloud storage only
+  Future<void> deleteFromCloud(String starId) async {
+    try {
+      await _remoteDataSource.deleteStar(starId);
+      print('✅ Deleted star $starId from cloud');
+    } catch (e) {
+      print('⚠️ Failed to delete star from cloud: $e');
+      // Don't rethrow - this is a background sync operation
     }
   }
 
@@ -181,5 +226,30 @@ class GratitudeRepository {
     }
 
     return updatedStars;
+  }
+
+  /// Migrate existing stars without galaxy IDs to the active galaxy
+  Future<void> migrateStarsToActiveGalaxy(String activeGalaxyId) async {
+    try {
+      final allStars = await _localDataSource.loadStars();
+      bool needsSave = false;
+
+      final migratedStars = allStars.map((star) {
+        // If star has no galaxy ID, assign it to the active galaxy
+        if (star.galaxyId.isEmpty || star.galaxyId == 'default') {
+          print('📝 Migrating star "${star.text}" to galaxy $activeGalaxyId');
+          needsSave = true;
+          return star.copyWith(galaxyId: activeGalaxyId);
+        }
+        return star;
+      }).toList();
+
+      if (needsSave) {
+        await _localDataSource.saveStars(migratedStars);
+        print('✅ Migrated ${migratedStars.length} stars to active galaxy');
+      }
+    } catch (e) {
+      print('❌ Star migration failed: $e');
+    }
   }
 }

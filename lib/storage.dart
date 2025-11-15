@@ -36,6 +36,7 @@ class GratitudeStar {
   final int glowPatternIndex;
   final bool deleted;  // Soft delete flag
   final DateTime? deletedAt;  // Deletion timestamp
+  final String galaxyId;
 
   // Animation Properties (added for performance)
   final double spinDirection;
@@ -63,6 +64,7 @@ class GratitudeStar {
     this.glowPatternIndex = 0,
     this.deleted = false,
     this.deletedAt,
+    this.galaxyId = 'default',
     required this.spinDirection,
     required this.spinRate,
     required this.pulseSpeedH,
@@ -93,6 +95,7 @@ class GratitudeStar {
     DateTime? updatedAt,
     bool? deleted,
     DateTime? deletedAt,
+    String? galaxyId,
     double? spinDirection,
     double? spinRate,
     double? pulseSpeedH,
@@ -105,11 +108,12 @@ class GratitudeStar {
     return GratitudeStar(
       id: id,
       text: text ?? this.text,
-      createdAt: createdAt, // <-- This 'createdAt' is from the outer scope, not this.createdAt
+      createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       glowPatternIndex: glowPatternIndex,
       deleted: deleted ?? this.deleted,
       deletedAt: deletedAt ?? this.deletedAt,
+      galaxyId: galaxyId ?? this.galaxyId,
       spinDirection: spinDirection ?? this.spinDirection,
       spinRate: spinRate ?? this.spinRate,
       pulseSpeedH: pulseSpeedH ?? this.pulseSpeedH,
@@ -145,6 +149,7 @@ class GratitudeStar {
       'glowPatternIndex': glowPatternIndex,
       'deleted': deleted,
       'deletedAt': deletedAt?.millisecondsSinceEpoch,
+      'galaxyId': galaxyId,
       // Add new animation properties for serialization
       'spinDirection': spinDirection,
       'spinRate': spinRate,
@@ -195,6 +200,7 @@ class GratitudeStar {
       deletedAt: json['deletedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['deletedAt'])
           : null,
+      galaxyId: json['galaxyId'] ?? 'default',
       // Deserialize new animation properties, with defaults for older stars
       spinDirection: (json['spinDirection'] ??
           (dummyRandom.nextBool() ? 1.0 : -1.0)).toDouble(),

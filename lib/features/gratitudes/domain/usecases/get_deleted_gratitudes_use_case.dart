@@ -2,13 +2,27 @@ import '../../../../storage.dart';
 import '../../data/repositories/gratitude_repository.dart';
 import 'use_case.dart';
 
-class GetDeletedGratitudesUseCase extends UseCase<List<GratitudeStar>, NoParams> {
+class GetDeletedGratitudesResult {
+  final List<GratitudeStar> stars;
+  final int count;
+
+  const GetDeletedGratitudesResult({
+    required this.stars,
+    required this.count,
+  });
+}
+
+class GetDeletedGratitudesUseCase extends UseCase<GetDeletedGratitudesResult, NoParams> {
   final GratitudeRepository repository;
 
   GetDeletedGratitudesUseCase(this.repository);
 
   @override
-  Future<List<GratitudeStar>> call(NoParams params) async {
-    return await repository.getDeletedGratitudes();
+  Future<GetDeletedGratitudesResult> call(NoParams params) async {
+    final stars = await repository.getDeletedGratitudes();
+    return GetDeletedGratitudesResult(
+      stars: stars,
+      count: stars.length,
+    );
   }
 }

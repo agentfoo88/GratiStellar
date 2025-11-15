@@ -11,6 +11,10 @@ import 'features/gratitudes/data/datasources/local_data_source.dart';
 import 'features/gratitudes/data/datasources/remote_data_source.dart';
 import 'features/gratitudes/data/repositories/gratitude_repository.dart';
 import 'features/gratitudes/presentation/state/gratitude_provider.dart';
+import 'features/gratitudes/data/datasources/galaxy_local_data_source.dart';
+import 'features/gratitudes/data/datasources/galaxy_remote_data_source.dart';
+import 'features/gratitudes/data/repositories/galaxy_repository.dart';
+import 'features/gratitudes/presentation/state/galaxy_provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/gratitude_screen.dart';
@@ -68,17 +72,77 @@ class GratiStellarApp extends StatelessWidget {
       authService: authService,
     );
 
+    // Initialize galaxy services
+    final galaxyLocalDataSource = GalaxyLocalDataSource();
+    final galaxyRemoteDataSource = GalaxyRemoteDataSource(authService: authService);
+    final galaxyRepository = GalaxyRepository(
+      localDataSource: galaxyLocalDataSource,
+      remoteDataSource: galaxyRemoteDataSource,
+      gratitudeRepository: repository,
+      authService: authService,
+    );
+
     return MultiProvider(
       providers: [
+        // Galaxy Provider FIRST
         ChangeNotifierProvider(
-          create: (_) => GratitudeProvider(
-            repository: repository,
-            authService: authService,
-            random: math.Random(),
-          )..loadGratitudes(), // Load data immediately
+          create: (_) => GalaxyProvider(
+            galaxyRepository: galaxyRepository,
+            gratitudeRepository: repository,
+          ),
+        ),
+
+        // Gratitude Provider SECOND (depends on Galaxy Provider)
+        ChangeNotifierProxyProvider<GalaxyProvider, GratitudeProvider?>(
+          create: (context) {
+            final gratitudeProvider = GratitudeProvider(
+              repository: repository,
+              authService: authService,
+              random: math.Random(),
+            );
+
+            // Link providers bidirectionally ONCE during creation
+            final galaxyProvider = context.read<GalaxyProvider>();
+            gratitudeProvider.setGalaxyProvider(galaxyProvider);
+            galaxyProvider.setGratitudeProvider(gratitudeProvider);
+
+            return gratitudeProvider;
+          },
+          update: (context, galaxyProvider, gratitudeProvider) {
+            // Ensure gratitudeProvider exists
+            if (gratitudeProvider == null) {
+              gratitudeProvider = GratitudeProvider(
+                repository: repository,
+                authService: authService,
+                random: math.Random(),
+              );
+
+              // Link on first update if needed
+              gratitudeProvider.setGalaxyProvider(galaxyProvider);
+              galaxyProvider.setGratitudeProvider(gratitudeProvider);
+            }
+
+            // Initialize galaxy system ONCE, then load gratitudes
+            if (!galaxyProvider.isLoading && galaxyProvider.activeGalaxyId == null) {
+              // First time - initialize galaxies
+              Future.microtask(() async {
+                await galaxyProvider.initialize();
+                // After galaxies are ready, load gratitudes
+                await gratitudeProvider!.loadGratitudes();
+              });
+            } else if (galaxyProvider.activeGalaxyId != null &&
+                gratitudeProvider.gratitudeStars.isEmpty &&
+                !gratitudeProvider.isLoading) {
+              // Galaxy is ready but gratitudes not loaded yet
+              Future.microtask(() => gratitudeProvider!.loadGratitudes());
+            }
+
+            return gratitudeProvider;
+          },
         ),
       ],
-      child: MaterialApp(
+
+        child: MaterialApp(
         title: 'GratiStellar',
         debugShowCheckedModeBanner: false,
         localizationsDelegates: const [

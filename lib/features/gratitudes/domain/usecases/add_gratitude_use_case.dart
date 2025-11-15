@@ -12,6 +12,7 @@ class AddGratitudeParams {
   final String text;
   final Size screenSize;
   final List<GratitudeStar> existingStars;
+  final String galaxyId;
   final int? colorPresetIndex;
   final Color? customColor;
 
@@ -19,6 +20,7 @@ class AddGratitudeParams {
     required this.text,
     required this.screenSize,
     required this.existingStars,
+    required this.galaxyId,
     this.colorPresetIndex,
     this.customColor,
   });
@@ -57,6 +59,7 @@ class AddGratitudeUseCase extends UseCase<GratitudeStar, AddGratitudeParams> {
       params.screenSize,
       random,
       params.existingStars,
+      galaxyId: params.galaxyId,
       colorPresetIndex: params.colorPresetIndex,
       customColor: params.customColor,
     );

@@ -16,6 +16,7 @@ import '../features/gratitudes/presentation/widgets/app_drawer.dart';
 import '../features/gratitudes/presentation/widgets/bottom_controls.dart';
 import '../features/gratitudes/presentation/widgets/branding_overlay.dart';
 import '../features/gratitudes/presentation/widgets/empty_state.dart';
+import '../features/gratitudes/presentation/widgets/galaxy_list_dialog.dart';
 import '../features/gratitudes/presentation/widgets/loading_state.dart';
 import '../features/gratitudes/presentation/widgets/stats_card.dart';
 import '../features/gratitudes/presentation/widgets/visual_layers_stack.dart';
@@ -512,7 +513,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _toggleMindfulness() {
-    context.read<GratitudeProvider>().toggleMindfulness();
+    final provider = context.read<GratitudeProvider>();
+
+    // Check if there are stars before toggling
+    if (provider.gratitudeStars.isEmpty && !provider.mindfulnessMode) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.mindfulnessNoStarsMessage),
+          backgroundColor: Color(0xFF1A2238),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    provider.toggleMindfulness();
   }
 
   void _onMindfulnessIntervalChanged(double value) {
@@ -577,6 +593,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           onJumpToStar: (star) {},
         ),
       ),
+    );
+  }
+
+  void _showGalaxiesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const GalaxyListDialog(),
     );
   }
 
@@ -765,14 +788,30 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         },
       ),
       actions: [
-        AppDialogAction(
-          text: l10n.signOutButton,
-          isDestructive: true,
-          onPressed: () {
-            Navigator.pop(context); // Close account dialog
-            _showSignOutConfirmation();
-          },
-        ),
+        // Show "Sign in with Email" for anonymous users
+        if (!_authService.hasEmailAccount)
+          AppDialogAction(
+            text: l10n.signInWithEmailMenuItem,
+            onPressed: () {
+              Navigator.pop(context); // Close account dialog
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SignInScreen(),
+                ),
+              );
+            },
+          ),
+        // Show "Sign Out" for email users
+        if (_authService.hasEmailAccount)
+          AppDialogAction(
+            text: l10n.signOutButton,
+            isDestructive: true,
+            onPressed: () {
+              Navigator.pop(context); // Close account dialog
+              _showSignOutConfirmation();
+            },
+          ),
         AppDialogAction(
           text: l10n.closeButton,
           isPrimary: true,
@@ -784,16 +823,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   void _handleAccountTap() {
     Navigator.pop(context); // Close drawer
-    if (_authService.hasEmailAccount) {
-      _showAccountDialog();
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SignInScreen(),
-        ),
-      );
-    }
+    // Show account dialog for both anonymous and email users
+    _showAccountDialog();
   }
 
   void _showFeedbackDialog() {
@@ -1166,6 +1197,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           onListViewTap: () {
             Navigator.pop(context);
             _navigateToListView();
+          },
+          onGalaxiesTap: () {
+            Navigator.pop(context);
+            _showGalaxiesDialog();
           },
           onFeedbackTap: () {
             Navigator.pop(context);

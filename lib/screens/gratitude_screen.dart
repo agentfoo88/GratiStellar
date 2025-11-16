@@ -29,6 +29,7 @@ import '../services/auth_service.dart';
 import '../services/crashlytics_service.dart';
 import '../services/feedback_service.dart';
 import '../services/layer_cache_service.dart';
+import '../services/sync_status_service.dart';
 import '../starfield.dart';
 import '../storage.dart';
 import '../widgets/app_dialog.dart';
@@ -591,6 +592,74 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           stars: provider.gratitudeStars,
           onStarTap: (star, refreshList) => _showStarDetailsFromList(star, refreshList),
           onJumpToStar: (star) {},
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSyncStatusIndicator(SyncStatusService syncStatus) {
+    // Hide when fully synced
+    if (syncStatus.status == SyncStatus.synced) {
+      return SizedBox.shrink();
+    }
+
+    IconData icon;
+    Color color;
+    String tooltip;
+
+    switch (syncStatus.status) {
+      case SyncStatus.synced:
+        return SizedBox.shrink();
+      case SyncStatus.pending:
+        icon = Icons.cloud_upload_outlined;
+        color = Colors.orange;
+        tooltip = 'Changes pending sync';
+        break;
+      case SyncStatus.syncing:
+        icon = Icons.sync;
+        color = Colors.blue;
+        tooltip = 'Syncing...';
+        break;
+      case SyncStatus.offline:
+        icon = Icons.cloud_off_outlined;
+        color = Colors.grey;
+        tooltip = 'Offline - will sync when connected';
+        break;
+      case SyncStatus.error:
+        icon = Icons.cloud_sync_outlined;
+        color = Colors.red;
+        tooltip = 'Sync failed - tap to retry';
+        break;
+    }
+
+    return Semantics(
+      label: tooltip,
+      button: syncStatus.status == SyncStatus.error,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+        child: IconButton(
+          icon: syncStatus.status == SyncStatus.syncing
+              ? SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          )
+              : Icon(icon, color: color, size: 20),
+          tooltip: tooltip,
+          onPressed: syncStatus.status == SyncStatus.error
+              ? () {
+            final provider = context.read<GratitudeProvider>();
+            provider.forceSync();
+          }
+              : null,
         ),
       ),
     );
@@ -1333,6 +1402,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   left: 16,
                   child: HamburgerButton(
                     onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                  ),
+                ),
+
+              // Sync status indicator (top-right)
+              if (!_showBranding)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  right: 16,
+                  child: Consumer<SyncStatusService>(
+                    builder: (context, syncStatus, child) {
+                      return _buildSyncStatusIndicator(syncStatus);
+                    },
                   ),
                 ),
 

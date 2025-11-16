@@ -2,13 +2,88 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow authenticated users to read/write their own data
+    // Helper functions for validation
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidStar() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'text', 'createdAt', 'updatedAt', 'deleted']) &&
+             data.text is string &&
+             data.text.size() <= 500 && // Max 500 chars
+             data.deleted is bool &&
+             data.createdAt is int &&
+             data.updatedAt is int &&
+             (data.deleted == false || ('deletedAt' in data && data.deletedAt is int));
+    }
+
+    function isValidGalaxy() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'name', 'createdAt', 'deleted', 'starCount']) &&
+             data.name is string &&
+             data.name.size() <= 30 && // Max 30 chars
+             data.deleted is bool &&
+             data.createdAt is int &&
+             data.starCount is int &&
+             data.starCount >= 0 &&
+             // deletedAt can be null or int
+             (!('deletedAt' in data) || data.deletedAt == null || data.deletedAt is int) &&
+             // lastViewedAt can be null or int
+             (!('lastViewedAt' in data) || data.lastViewedAt == null || data.lastViewedAt is int);
+    }
+
+    // User document (stores activeGalaxyId)
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // Allow user to read/write their own stars
+      allow read: if isOwner(userId);
+      // Allow writing activeGalaxyId field
+      allow write: if isOwner(userId);
+
+      // Stars subcollection with validation
       match /stars/{starId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read: if isOwner(userId);
+
+        // Create: must be valid star with matching ID
+        allow create: if isOwner(userId) &&
+                         isValidStar() &&
+                         request.resource.data.id == starId;
+
+        // Update: must remain valid and can't change ID
+        allow update: if isOwner(userId) &&
+                         isValidStar() &&
+                         request.resource.data.id == resource.data.id &&
+                         request.resource.data.createdAt == resource.data.createdAt;
+
+        // Delete: only allow soft deletes (mark as deleted, don't actually remove)
+        // Hard deletes only allowed if already soft-deleted for >30 days
+        allow delete: if isOwner(userId) &&
+                         (resource.data.deleted == true &&
+                          resource.data.deletedAt < request.time.toMillis() - (30 * 24 * 60 * 60 * 1000));
+      }
+
+      // Galaxy metadata subcollection
+      match /galaxyMetadata/{galaxyId} {
+        allow read: if isOwner(userId);
+
+        // Create: must be valid galaxy with matching ID
+        allow create: if isOwner(userId) &&
+                         isValidGalaxy() &&
+                         request.resource.data.id == galaxyId;
+
+        // Update: must remain valid and can't change ID or createdAt
+        allow update: if isOwner(userId) &&
+                         isValidGalaxy() &&
+                         request.resource.data.id == resource.data.id &&
+                         request.resource.data.createdAt == resource.data.createdAt;
+
+        // Delete: only allow soft deletes (hard deletes for old items)
+        allow delete: if isOwner(userId) &&
+                         (resource.data.deleted == true &&
+                          resource.data.deletedAt < request.time.toMillis() - (30 * 24 * 60 * 60 * 1000));
       }
     }
   }

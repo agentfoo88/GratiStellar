@@ -1,7 +1,9 @@
 // lib/features/gratitudes/data/repositories/gratitude_repository.dart
 
-import '../../../../storage.dart';
+import 'dart:async';
+
 import '../../../../services/auth_service.dart';
+import '../../../../storage.dart';
 import '../datasources/local_data_source.dart';
 import '../datasources/remote_data_source.dart';
 
@@ -72,15 +74,8 @@ class GratitudeRepository {
     final updatedStars = [...allStars, star];
     await _localDataSource.saveStars(updatedStars);
 
-    // Sync to cloud if authenticated
-    if (_authService.hasEmailAccount) {
-      try {
-        await _remoteDataSource.addStar(star);
-      } catch (e) {
-        print('⚠️ Failed to sync new star to cloud: $e');
-        // Don't rethrow - local save succeeded
-      }
-    }
+    // Cloud sync happens via debounced timer to prevent UI freezing
+    print('💾 Star saved locally: ${star.id}');
   }
 
   /// Update an existing gratitude (local + cloud if authenticated)
@@ -92,14 +87,8 @@ class GratitudeRepository {
       updatedStars[index] = star;
       await _localDataSource.saveStars(updatedStars);
 
-      // Sync to cloud if authenticated
-      if (_authService.hasEmailAccount) {
-        try {
-          await _remoteDataSource.updateStar(star);
-        } catch (e) {
-          print('⚠️ Failed to sync star update to cloud: $e');
-        }
-      }
+      // Cloud sync happens via debounced timer to prevent UI freezing
+      print('💾 Star updated locally: ${star.id}');
     }
   }
 
@@ -112,14 +101,8 @@ class GratitudeRepository {
       updatedStars[index] = deletedStar;
       await _localDataSource.saveStars(updatedStars);
 
-      // Sync soft delete to cloud if authenticated
-      if (_authService.hasEmailAccount) {
-        try {
-          await _remoteDataSource.updateStar(deletedStar);
-        } catch (e) {
-          print('⚠️ Failed to sync star deletion to cloud: $e');
-        }
-      }
+      // Cloud sync happens via debounced timer to prevent UI freezing
+      print('💾 Star deleted locally: ${deletedStar.id}');
     }
   }
 
@@ -127,21 +110,33 @@ class GratitudeRepository {
   Future<List<GratitudeStar>> syncWithCloud(List<GratitudeStar> localStars) async {
     print('🔄 Starting cloud sync...');
 
-    final hasCloudData = await _remoteDataSource.hasCloudData();
+    try {
+      // Add timeout to prevent hanging on poor connectivity
+      final hasCloudData = await _remoteDataSource.hasCloudData()
+          .timeout(Duration(seconds: 10));
 
-    if (hasCloudData) {
-      // Delta sync - merge changes
-      print('📥 Cloud data exists, syncing...');
-      final mergedStars = await _remoteDataSource.syncStars(localStars);
-      await _localDataSource.saveStars(mergedStars);
-      print('✅ Sync complete! Total stars: ${mergedStars.length}');
-      return mergedStars;
-    } else {
-      // First sync - upload local to cloud
-      print('📤 No cloud data, uploading local stars...');
-      await _remoteDataSource.uploadStars(localStars);
-      print('✅ Local stars uploaded to cloud');
-      return localStars;
+      if (hasCloudData) {
+        // Delta sync - merge changes
+        print('📥 Cloud data exists, syncing...');
+        final mergedStars = await _remoteDataSource.syncStars(localStars)
+            .timeout(Duration(seconds: 30));
+        await _localDataSource.saveStars(mergedStars);
+        print('✅ Sync complete! Total stars: ${mergedStars.length}');
+        return mergedStars;
+      } else {
+        // First sync - upload local to cloud
+        print('📤 No cloud data, uploading local stars...');
+        await _remoteDataSource.uploadStars(localStars)
+            .timeout(Duration(seconds: 30));
+        print('✅ Local stars uploaded to cloud');
+        return localStars;
+      }
+    } on TimeoutException {
+      print('⏱️ Sync timeout - will retry later');
+      rethrow;
+    } catch (e) {
+      print('❌ Sync failed: $e');
+      rethrow;
     }
   }
 

@@ -1,22 +1,24 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../../../storage.dart';
-import '../../../../services/auth_service.dart';
-import '../../data/repositories/gratitude_repository.dart';
-import '../../domain/usecases/use_case.dart';
-import '../../domain/usecases/add_gratitude_use_case.dart';
-import '../../domain/usecases/delete_gratitude_use_case.dart';
-import '../../domain/usecases/update_gratitude_use_case.dart';
-import '../../domain/usecases/load_gratitudes_use_case.dart';
-import '../../domain/usecases/sync_gratitudes_use_case.dart';
-import '../../domain/usecases/get_deleted_gratitudes_use_case.dart';
-import '../../domain/usecases/restore_gratitude_use_case.dart';
-import '../../domain/usecases/purge_old_deleted_use_case.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
 import '../../../../core/config/constants.dart';
 import '../../../../core/security/rate_limiter.dart';
+import '../../../../services/auth_service.dart';
+import '../../../../services/sync_status_service.dart';
+import '../../../../storage.dart';
+import '../../data/repositories/gratitude_repository.dart';
+import '../../domain/usecases/add_gratitude_use_case.dart';
+import '../../domain/usecases/delete_gratitude_use_case.dart';
+import '../../domain/usecases/get_deleted_gratitudes_use_case.dart';
+import '../../domain/usecases/load_gratitudes_use_case.dart';
+import '../../domain/usecases/purge_old_deleted_use_case.dart';
+import '../../domain/usecases/restore_gratitude_use_case.dart';
+import '../../domain/usecases/sync_gratitudes_use_case.dart';
+import '../../domain/usecases/update_gratitude_use_case.dart';
+import '../../domain/usecases/use_case.dart';
 import 'galaxy_provider.dart';
 
 /// Provider for gratitude state management
@@ -27,6 +29,7 @@ class GratitudeProvider extends ChangeNotifier {
   // Dependencies
   final GratitudeRepository _repository;
   final AuthService _authService;
+  final SyncStatusService _syncStatusService;
   final math.Random _random;
 
   late final GalaxyProvider _galaxyProvider;
@@ -52,6 +55,13 @@ class GratitudeProvider extends ChangeNotifier {
   int _mindfulnessInterval = 3;
   Timer? _mindfulnessTimer;
   StreamSubscription<User?>? _authSubscription;
+  Timer? _syncDebouncer;
+  bool _hasPendingChanges = false;
+
+  // Sync coordination
+  bool _isSyncing = false;
+  DateTime? _lastSuccessfulSync;
+  int _retryAttempts = 0;
 
   // Getters
   List<GratitudeStar> get gratitudeStars => _gratitudeStars;
@@ -62,13 +72,17 @@ class GratitudeProvider extends ChangeNotifier {
   GratitudeStar? get animatingStar => _animatingStar;
   GratitudeStar? get activeMindfulnessStar => _activeMindfulnessStar;
   int get mindfulnessInterval => _mindfulnessInterval;
+  SyncStatusService get syncStatus => _syncStatusService;
+  bool get hasPendingChanges => _hasPendingChanges;
 
   GratitudeProvider({
     required GratitudeRepository repository,
     required AuthService authService,
+    required SyncStatusService syncStatusService,
     required math.Random random,
   })  : _repository = repository,
         _authService = authService,
+        _syncStatusService = syncStatusService,
         _random = random {
     _initializeUseCases();
     _setupAuthListener();
@@ -161,9 +175,27 @@ class GratitudeProvider extends ChangeNotifier {
 
   /// Sync with cloud
   Future<void> syncWithCloud() async {
+    // Check if already syncing (mutex)
+    if (_isSyncing) {
+      print('⏸️ Sync already in progress, skipping...');
+      return;
+    }
+
+    // Smart sync: Skip if recently synced and no pending changes
+    if (_lastSuccessfulSync != null && !_hasPendingChanges) {
+      final timeSinceLastSync = DateTime.now().difference(_lastSuccessfulSync!);
+      if (timeSinceLastSync < Duration(minutes: 5)) {
+        print('⏭️ Skipping sync - recently synced ${timeSinceLastSync.inMinutes}m ago with no pending changes');
+        return;
+      }
+    }
+
+    _isSyncing = true;
     try {
+      // Get ALL stars (unfiltered) for sync to prevent data loss across galaxies
+      final allStarsUnfiltered = await _repository.getAllGratitudesUnfiltered();
       final result = await _syncGratitudesUseCase(
-        SyncGratitudesParams(localStars: _gratitudeStars),
+        SyncGratitudesParams(localStars: allStarsUnfiltered),
       );
 
       // Deduplicate by ID (in case of sync issues)
@@ -177,10 +209,25 @@ class GratitudeProvider extends ChangeNotifier {
         }
       }
 
-      _gratitudeStars = dedupedStars.where((star) => !star.deleted).toList();
+      // Filter for UI display: only non-deleted stars from the current galaxy
+      // Note: ALL stars (dedupedStars) are already saved to repository by the sync use case
+      // This filtering is ONLY for the UI display in _gratitudeStars
+      _gratitudeStars = dedupedStars
+          .where((star) =>
+              !star.deleted &&
+              star.galaxyId == _galaxyProvider.activeGalaxyId)
+          .toList();
+
+      // Track successful sync
+      _lastSuccessfulSync = DateTime.now();
+      _retryAttempts = 0;
+
       notifyListeners();
     } catch (e) {
       print('⚠️ Sync failed: $e');
+      rethrow; // Let caller handle the error
+    } finally {
+      _isSyncing = false;
     }
   }
 
@@ -219,6 +266,8 @@ class GratitudeProvider extends ChangeNotifier {
       // Save to repository (includes cloud sync if authenticated)
       final allStars = await _repository.getAllGratitudesUnfiltered();
       await _repository.addGratitude(_animatingStar!, allStars);
+      // Schedule background sync
+      _markPendingAndScheduleSync();
 
       // Update galaxy star count
       await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
@@ -240,6 +289,8 @@ class GratitudeProvider extends ChangeNotifier {
 
     _gratitudeStars = updatedStars;
     notifyListeners();
+    // Schedule background sync
+    _markPendingAndScheduleSync();
   }
 
   /// Delete a gratitude
@@ -264,6 +315,8 @@ class GratitudeProvider extends ChangeNotifier {
     await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
 
     notifyListeners();
+    // Schedule background sync
+    _markPendingAndScheduleSync();
   }
 
   /// Toggle show all gratitudes mode
@@ -406,12 +459,14 @@ class GratitudeProvider extends ChangeNotifier {
 
     // Update galaxy star count
     await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
+    // Schedule background sync
+    _markPendingAndScheduleSync();
   }
 
   /// Permanently delete a gratitude
   Future<void> permanentlyDeleteGratitude(GratitudeStar star) async {
     // Get all stars including deleted ones
-    final allStarsIncludingDeleted = await _repository.getGratitudes();
+    final allStarsIncludingDeleted = await _repository.getAllGratitudesUnfiltered();
 
     final updatedStars = List<GratitudeStar>.from(allStarsIncludingDeleted);
     updatedStars.removeWhere((s) => s.id == star.id);
@@ -419,16 +474,95 @@ class GratitudeProvider extends ChangeNotifier {
 
     // Also sync permanent deletion if authenticated
     if (_authService.hasEmailAccount) {
-      await _repository.permanentlyDeleteGratitude(star.id, updatedStars);
+      await _repository.deleteFromCloud(star.id);
     }
 
     notifyListeners();
+  }
+
+  /// Mark changes as pending and schedule background sync
+  void _markPendingAndScheduleSync() {
+    _hasPendingChanges = true;
+    _syncStatusService.markPending();
+    _scheduleSync();
+  }
+
+  /// Schedule a debounced sync (batches multiple changes)
+  void _scheduleSync() {
+    // Cancel any existing timer
+    _syncDebouncer?.cancel();
+
+    // Schedule new sync in 30 seconds
+    _syncDebouncer = Timer(Duration(seconds: 30), () {
+      _performBackgroundSync();
+    });
+
+    print('⏱️ Sync scheduled for 30 seconds from now');
+  }
+
+  /// Perform the actual background sync
+  Future<void> _performBackgroundSync() async {
+    if (!_authService.hasEmailAccount) {
+      print('📵 Not signed in, skipping sync');
+      return;
+    }
+
+    if (!_syncStatusService.canSync) {
+      print('📵 Cannot sync (offline or already syncing)');
+      return;
+    }
+
+    print('🔄 Starting background sync...');
+    _syncStatusService.markSyncing();
+
+    try {
+      await syncWithCloud();
+
+      _hasPendingChanges = false;
+      _syncStatusService.markSynced();
+      print('✅ Background sync complete');
+    } catch (e) {
+      print('❌ Background sync failed: $e');
+      _syncStatusService.markError(e.toString());
+
+      // Handle rate limit errors - DON'T retry automatically
+      if (e is RateLimitException) {
+        print('! Rate limit exceeded - waiting for reset, no automatic retry');
+        // User can manually retry later or wait for next change to trigger sync
+        return;
+      }
+
+      // For other errors (network, etc.), retry with exponential backoff
+      _retryAttempts++;
+      const maxRetries = 3;
+
+      if (_retryAttempts > maxRetries) {
+        print('❌ Max retry attempts reached ($maxRetries), giving up');
+        _retryAttempts = 0; // Reset for next sync trigger
+        return;
+      }
+
+      // Exponential backoff: 2min, 4min, 8min
+      final backoffMinutes = 2 * math.pow(2, _retryAttempts - 1).toInt();
+      print('🔄 Scheduling retry #$_retryAttempts in $backoffMinutes minutes...');
+
+      _syncDebouncer = Timer(Duration(minutes: backoffMinutes), () {
+        _performBackgroundSync();
+      });
+    }
+  }
+
+  /// Force immediate sync (called on app lifecycle events)
+  Future<void> forceSync() async {
+    _syncDebouncer?.cancel(); // Cancel scheduled sync
+    await _performBackgroundSync();
   }
 
   @override
   void dispose() {
     _authSubscription?.cancel();
     _mindfulnessTimer?.cancel();
+    _syncDebouncer?.cancel();
     super.dispose();
   }
 }

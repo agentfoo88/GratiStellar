@@ -22,6 +22,7 @@ import 'screens/welcome_screen.dart';
 import 'services/auth_service.dart';
 import 'services/crashlytics_service.dart';
 import 'services/firestore_service.dart';
+import 'services/sync_status_service.dart';
 
 // UI SCALE and ANIMATION CONFIGURATION found in constants.dart
 
@@ -63,6 +64,7 @@ class GratiStellarApp extends StatelessWidget {
 
     // Initialize services (these are singletons/static, so safe to create here)
     final authService = AuthService();
+    final syncStatusService = SyncStatusService();
     final firestoreService = FirestoreService();
     final localDataSource = LocalDataSource();
     final remoteDataSource = RemoteDataSource(firestoreService);
@@ -84,6 +86,7 @@ class GratiStellarApp extends StatelessWidget {
 
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: syncStatusService),
         // Galaxy Provider FIRST
         ChangeNotifierProvider(
           create: (_) => GalaxyProvider(
@@ -98,6 +101,7 @@ class GratiStellarApp extends StatelessWidget {
             final gratitudeProvider = GratitudeProvider(
               repository: repository,
               authService: authService,
+              syncStatusService: syncStatusService,
               random: math.Random(),
             );
 
@@ -114,6 +118,7 @@ class GratiStellarApp extends StatelessWidget {
               gratitudeProvider = GratitudeProvider(
                 repository: repository,
                 authService: authService,
+                syncStatusService: syncStatusService,
                 random: math.Random(),
               );
 

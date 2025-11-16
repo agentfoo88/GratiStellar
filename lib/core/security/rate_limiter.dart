@@ -10,7 +10,8 @@ class RateLimiter {
   static const Map<String, RateLimitConfig> _limits = {
     // Firestore operations (these need protection)
     'firestore_write': RateLimitConfig(maxRequests: 100, windowMinutes: 1),
-    'sync_operation': RateLimitConfig(maxRequests: 5, windowMinutes: 5),
+    'sync_operation': RateLimitConfig(maxRequests: 20, windowMinutes: 5), // Increased from 5 to 20
+    'firestore_quota': RateLimitConfig(maxRequests: 10, windowMinutes: 30), // Server-side quota errors
 
     // User actions (generous limits - UI animations provide natural throttling)
     'create_gratitude': RateLimitConfig(maxRequests: 60, windowMinutes: 1),
@@ -41,6 +42,13 @@ class RateLimiter {
 
     // Record this request
     history.add(now);
+
+    // Log remaining quota (helpful for debugging)
+    final remaining = config.maxRequests - history.length;
+    if (operation == 'sync_operation') {
+      print('✓ Rate limit OK for $operation ($remaining/${config.maxRequests} remaining)');
+    }
+
     return true;
   }
 

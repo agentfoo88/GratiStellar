@@ -79,6 +79,18 @@ class FirestoreService {
       await StorageService.saveLastSyncTime(DateTime.now());
       print('✅ Delta upload complete: $totalUploaded stars');
 
+    } on FirebaseException catch (e) {
+      // Handle Firestore-specific errors
+      if (e.code == 'resource-exhausted') {
+        print('❌ Firestore quota exceeded: ${e.message}');
+        throw RateLimitException('firestore_quota', Duration(minutes: 30));
+      } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        print('❌ Network error during upload: ${e.message}');
+        throw Exception('Network error: ${e.message}');
+      } else {
+        print('❌ Firebase error during upload: ${e.code} - ${e.message}');
+        rethrow;
+      }
     } catch (e) {
       print('❌ Delta upload failed: $e');
       rethrow;
@@ -126,6 +138,18 @@ class FirestoreService {
       print('✅ Delta download complete: ${stars.length} stars');
       return stars;
 
+    } on FirebaseException catch (e) {
+      // Handle Firestore-specific errors
+      if (e.code == 'resource-exhausted') {
+        print('❌ Firestore quota exceeded: ${e.message}');
+        throw RateLimitException('firestore_quota', Duration(minutes: 30));
+      } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        print('❌ Network error during download: ${e.message}');
+        throw Exception('Network error: ${e.message}');
+      } else {
+        print('❌ Firebase error during download: ${e.code} - ${e.message}');
+        rethrow;
+      }
     } catch (e) {
       print('❌ Delta download failed: $e');
       rethrow;
@@ -253,6 +277,18 @@ class FirestoreService {
       print('✅ Delta sync complete. Total stars: ${mergedStars.length}');
       return mergedStars;
 
+    } on FirebaseException catch (e) {
+      // Handle Firestore-specific errors
+      if (e.code == 'resource-exhausted') {
+        print('❌ Firestore quota exceeded: ${e.message}');
+        throw RateLimitException('firestore_quota', Duration(minutes: 30));
+      } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        print('❌ Network error during sync: ${e.message}');
+        throw Exception('Network error: ${e.message}');
+      } else {
+        print('❌ Firebase error during sync: ${e.code} - ${e.message}');
+        rethrow;
+      }
     } catch (e) {
       print('❌ Delta sync failed: $e');
       rethrow;

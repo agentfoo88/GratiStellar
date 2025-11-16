@@ -50,9 +50,20 @@ class GalaxyRemoteDataSource {
 
       await collection.doc(galaxy.id).set(galaxy.toJson());
       print('☁️ Saved galaxy ${galaxy.name} to Firestore');
+    } on FirebaseException catch (e) {
+      // Handle Firestore-specific errors gracefully
+      if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        print('! Network error saving galaxy: ${e.message}');
+        // Don't throw - local data still works
+      } else if (e.code == 'permission-denied') {
+        print('! Permission error saving galaxy: ${e.message}');
+        // Don't throw - local data still works
+      } else {
+        print('! Firebase error saving galaxy: ${e.code} - ${e.message}');
+      }
     } catch (e) {
-      print('⚠️ Error saving galaxy to Firestore: $e');
-      rethrow;
+      print('! Error saving galaxy to Firestore: $e');
+      // Don't rethrow - allow app to continue with local data
     }
   }
 
@@ -65,11 +76,23 @@ class GalaxyRemoteDataSource {
         return;
       }
 
-      await collection.doc(galaxy.id).update(galaxy.toJson());
+      // Use .set(merge: true) instead of .update() to handle non-existent documents
+      await collection.doc(galaxy.id).set(galaxy.toJson(), SetOptions(merge: true));
       print('☁️ Updated galaxy ${galaxy.name} in Firestore');
+    } on FirebaseException catch (e) {
+      // Handle Firestore-specific errors gracefully
+      if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        print('! Network error updating galaxy: ${e.message}');
+        // Don't throw - local data still works
+      } else if (e.code == 'permission-denied') {
+        print('! Permission error updating galaxy: ${e.message}');
+        // Don't throw - local data still works
+      } else {
+        print('! Firebase error updating galaxy: ${e.code} - ${e.message}');
+      }
     } catch (e) {
-      print('⚠️ Error updating galaxy in Firestore: $e');
-      rethrow;
+      print('! Error updating galaxy in Firestore: $e');
+      // Don't rethrow - allow app to continue with local data
     }
   }
 
@@ -82,14 +105,26 @@ class GalaxyRemoteDataSource {
         return;
       }
 
-      await collection.doc(galaxyId).update({
+      // Use .set(merge: true) instead of .update() to handle non-existent documents
+      await collection.doc(galaxyId).set({
         'deleted': true,
         'deletedAt': DateTime.now().millisecondsSinceEpoch,
-      });
+      }, SetOptions(merge: true));
       print('☁️ Soft deleted galaxy $galaxyId in Firestore');
+    } on FirebaseException catch (e) {
+      // Handle Firestore-specific errors gracefully
+      if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        print('! Network error deleting galaxy: ${e.message}');
+        // Don't throw - local data still works
+      } else if (e.code == 'permission-denied') {
+        print('! Permission error deleting galaxy: ${e.message}');
+        // Don't throw - local data still works
+      } else {
+        print('! Firebase error deleting galaxy: ${e.code} - ${e.message}');
+      }
     } catch (e) {
-      print('⚠️ Error deleting galaxy from Firestore: $e');
-      rethrow;
+      print('! Error deleting galaxy from Firestore: $e');
+      // Don't rethrow - allow app to continue with local data
     }
   }
 

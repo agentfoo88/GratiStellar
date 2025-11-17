@@ -17,6 +17,7 @@ class GalaxyProvider extends ChangeNotifier {
   String? _activeGalaxyId;
   final bool _isLoading = false;
   bool _isSwitching = false;
+  bool _isInitialized = false; // Guard against duplicate initialization
 
   GalaxyProvider({
     required GalaxyRepository galaxyRepository,
@@ -64,7 +65,14 @@ class GalaxyProvider extends ChangeNotifier {
 
   /// Initialize - load galaxies and set active
   Future<void> initialize() async {
+    // Guard against duplicate initialization
+    if (_isInitialized) {
+      print('ℹ️ Galaxy system already initialized, skipping...');
+      return;
+    }
+
     try {
+      _isInitialized = true;
       await loadGalaxies();
 
       // Load the saved active galaxy ID from storage
@@ -92,6 +100,17 @@ class GalaxyProvider extends ChangeNotifier {
         await _gratitudeRepository.migrateStarsToActiveGalaxy(_activeGalaxyId!);
       }
 
+      // SAFETY: Ensure local galaxies are backed up to cloud if authenticated
+      // This handles: email just linked, missed sync during login, etc.
+      if (_galaxies.isNotEmpty) {
+        // syncToCloud() handles auth check internally and no-ops if not authenticated
+        syncToCloud().catchError((e) {
+          print('⚠️ Background galaxy sync failed during init: $e');
+          // Not critical - will sync on next galaxy switch
+        });
+        // Don't await - run in background to avoid blocking initialization
+      }
+
       print('✅ Galaxy system initialized, active: $_activeGalaxyId');
     } catch (e) {
       print('❌ Galaxy initialization failed: $e');
@@ -102,10 +121,72 @@ class GalaxyProvider extends ChangeNotifier {
   Future<void> loadGalaxies() async {
     try {
       _galaxies = await _galaxyRepository.getGalaxies();
+      
+      // RECONCILIATION: Verify star counts match reality
+      await _reconcileStarCounts();
+      
       notifyListeners();
     } catch (e) {
       print('⚠️ Error loading galaxies: $e');
       rethrow;
+    }
+  }
+  
+  /// Reconcile star counts - verify cached counts match actual star data
+  /// This fixes drift caused by failed updates, sync issues, or data corruption
+  Future<void> _reconcileStarCounts() async {
+    try {
+      // Get all stars (unfiltered) to count per galaxy
+      final allStars = await _gratitudeRepository.getAllGratitudesUnfiltered();
+      
+      // Count stars per galaxy (excluding deleted)
+      final Map<String, int> actualCounts = {};
+      final Set<String> validGalaxyIds = _galaxies.map((g) => g.id).toSet();
+      int orphanedStars = 0;
+      
+      for (final star in allStars) {
+        if (!star.deleted) {
+          // Check for orphaned stars (pointing to non-existent galaxies)
+          if (!validGalaxyIds.contains(star.galaxyId)) {
+            orphanedStars++;
+            print('⚠️ Found orphaned star "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" pointing to deleted galaxy: ${star.galaxyId}');
+            // Don't count orphaned stars - they need manual cleanup
+            continue;
+          }
+          
+          actualCounts[star.galaxyId] = (actualCounts[star.galaxyId] ?? 0) + 1;
+        }
+      }
+      
+      if (orphanedStars > 0) {
+        print('⚠️ Found $orphanedStars orphaned stars - consider manual cleanup');
+      }
+      
+      // Check each galaxy for mismatch
+      bool needsUpdate = false;
+      final updatedGalaxies = <GalaxyMetadata>[];
+      
+      for (final galaxy in _galaxies) {
+        final actualCount = actualCounts[galaxy.id] ?? 0;
+        
+        if (galaxy.starCount != actualCount) {
+          print('🔄 Reconciling galaxy "${galaxy.name}": metadata says ${galaxy.starCount}, actual is $actualCount');
+          updatedGalaxies.add(galaxy.copyWith(starCount: actualCount));
+          needsUpdate = true;
+        } else {
+          updatedGalaxies.add(galaxy);
+        }
+      }
+      
+      // Save corrected counts if any mismatches found
+      if (needsUpdate) {
+        _galaxies = updatedGalaxies;
+        await _galaxyRepository.saveGalaxies(_galaxies);
+        print('✅ Reconciled star counts for ${updatedGalaxies.length} galaxies');
+      }
+    } catch (e) {
+      print('⚠️ Error reconciling star counts: $e');
+      // Don't rethrow - this is a background operation
     }
   }
 
@@ -127,9 +208,9 @@ class GalaxyProvider extends ChangeNotifier {
         // Use proper method to set active galaxy (updates repo, lastViewed, etc.)
         await setActiveGalaxy(galaxy.id);
 
-        // Reload gratitudes to show stars from new galaxy
+        // Reload gratitudes to show stars from new galaxy (wait for sync)
         try {
-          await _gratitudeProvider.loadGratitudes();
+          await _gratitudeProvider.loadGratitudes(waitForSync: true);
         } catch (e) {
           print('⚠️ Failed to load gratitudes during switch: $e');
           // Continue anyway - don't block the switch
@@ -137,6 +218,8 @@ class GalaxyProvider extends ChangeNotifier {
       }
 
       notifyListeners();
+      
+      print('✅ Created galaxy: ${galaxy.name} (${galaxy.id})');
       return galaxy;
     } catch (e) {
       print('⚠️ Error creating galaxy: $e');
@@ -149,6 +232,12 @@ class GalaxyProvider extends ChangeNotifier {
     Future<void> Function()? onFadeOut,
     Future<void> Function()? onFadeIn,
   }) async {
+    // Validate galaxy exists
+    if (!_galaxies.any((g) => g.id == galaxyId)) {
+      print('⚠️ Cannot switch to non-existent galaxy: $galaxyId');
+      throw Exception('Galaxy $galaxyId does not exist');
+    }
+    
     if (_activeGalaxyId == galaxyId) {
       print('ℹ️ Already on galaxy $galaxyId');
       return;
@@ -172,18 +261,21 @@ class GalaxyProvider extends ChangeNotifier {
       // Step 3: Reload galaxies to update lastViewedAt
       await loadGalaxies();
 
-      // Step 4: Reload gratitudes with new galaxy filter
+      // Step 4: Reload gratitudes with new galaxy filter AND wait for sync
       print('🔄 Galaxy switch: reloading gratitudes for galaxy $galaxyId');
-      await _gratitudeProvider.loadGratitudes();
+      await _gratitudeProvider.loadGratitudes(waitForSync: true);
 
-      print('🔄 Galaxy switch: loaded ${_gratitudeProvider.gratitudeStars.length} stars');
+      final starCount = _gratitudeProvider.gratitudeStars.length;
+      print('🔄 Galaxy switch: loaded $starCount stars (synced)');
 
       // Step 5: Fade in animation callback
       if (onFadeIn != null) {
         await onFadeIn();
       }
 
-      print('✅ Switched to galaxy $galaxyId');
+      // Get galaxy name for logging
+      final galaxyName = _galaxies.firstWhere((g) => g.id == galaxyId).name;
+      print('✅ Switched to galaxy "$galaxyName" ($starCount stars)');
     } catch (e) {
       print('⚠️ Error switching galaxy: $e');
       rethrow;
@@ -195,6 +287,12 @@ class GalaxyProvider extends ChangeNotifier {
 
   /// Set active galaxy without animation (for internal use)
   Future<void> setActiveGalaxy(String galaxyId) async {
+    // Validate galaxy exists
+    if (!_galaxies.any((g) => g.id == galaxyId)) {
+      print('⚠️ Cannot set non-existent galaxy as active: $galaxyId');
+      throw Exception('Galaxy $galaxyId does not exist');
+    }
+    
     if (_activeGalaxyId == galaxyId) {
       print('ℹ️ Already on galaxy $galaxyId');
       return;
@@ -205,11 +303,14 @@ class GalaxyProvider extends ChangeNotifier {
       _activeGalaxyId = galaxyId;
       await loadGalaxies();
 
-      // Reload gratitudes to show stars from new galaxy
-      await _gratitudeProvider.loadGratitudes();
+      // Reload gratitudes to show stars from new galaxy (wait for sync)
+      await _gratitudeProvider.loadGratitudes(waitForSync: true);
 
       notifyListeners();
-      print('✅ Set active galaxy: $galaxyId');
+      
+      // Get galaxy name for better logging
+      final galaxyName = _galaxies.firstWhere((g) => g.id == galaxyId).name;
+      print('✅ Set active galaxy: "$galaxyName" ($galaxyId)');
     } catch (e) {
       print('⚠️ Error setting active galaxy: $e');
       rethrow;
@@ -234,7 +335,12 @@ class GalaxyProvider extends ChangeNotifier {
       await _galaxyRepository.updateGalaxy(updatedGalaxy);
       await loadGalaxies();
 
-      print('✅ Renamed galaxy to: $newName');
+      print('✅ Renamed galaxy to: "$truncatedName"');
+      
+      // Sync to cloud immediately if authenticated (don't wait)
+      syncToCloud().catchError((e) {
+        print('⚠️ Failed to sync renamed galaxy to cloud: $e');
+      });
     } catch (e) {
       print('⚠️ Error renaming galaxy: $e');
       rethrow;
@@ -244,17 +350,29 @@ class GalaxyProvider extends ChangeNotifier {
   /// Delete a galaxy (cascade delete stars)
   Future<void> deleteGalaxy(String galaxyId) async {
     try {
+      final galaxyName = _galaxies.firstWhere((g) => g.id == galaxyId, orElse: () => 
+        GalaxyMetadata(id: galaxyId, name: 'Unknown', createdAt: DateTime.now())
+      ).name;
+      
       await _galaxyRepository.deleteGalaxy(galaxyId);
       await loadGalaxies();
 
-      // If we deleted the active galaxy, update active ID
+      // If we deleted the active galaxy, update active ID and reload
       if (_activeGalaxyId == galaxyId) {
         _activeGalaxyId = await _galaxyRepository.getActiveGalaxyId();
         _gratitudeRepository.setActiveGalaxyId(_activeGalaxyId);
+        
+        // Reload gratitudes for new active galaxy
+        await _gratitudeProvider.loadGratitudes();
       }
 
       notifyListeners();
-      print('✅ Deleted galaxy $galaxyId');
+      print('✅ Deleted galaxy "$galaxyName" ($galaxyId)');
+      
+      // Sync deletion to cloud immediately if authenticated (don't wait)
+      syncToCloud().catchError((e) {
+        print('⚠️ Failed to sync galaxy deletion to cloud: $e');
+      });
     } catch (e) {
       print('⚠️ Error deleting galaxy: $e');
       rethrow;
@@ -266,9 +384,18 @@ class GalaxyProvider extends ChangeNotifier {
     try {
       await _galaxyRepository.restoreGalaxy(galaxyId);
       await loadGalaxies();
+      
+      final galaxyName = _galaxies.firstWhere((g) => g.id == galaxyId, orElse: () =>
+        GalaxyMetadata(id: galaxyId, name: 'Unknown', createdAt: DateTime.now())
+      ).name;
+      
       notifyListeners();
-
-      print('✅ Restored galaxy $galaxyId');
+      print('✅ Restored galaxy "$galaxyName" ($galaxyId)');
+      
+      // Sync restoration to cloud immediately if authenticated (don't wait)
+      syncToCloud().catchError((e) {
+        print('⚠️ Failed to sync galaxy restoration to cloud: $e');
+      });
     } catch (e) {
       print('⚠️ Error restoring galaxy: $e');
       rethrow;
@@ -301,7 +428,19 @@ class GalaxyProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print('⚠️ Error syncing galaxies from cloud: $e');
-      rethrow;
+      
+      // If cloud sync fails but we have local galaxies, try to upload them
+      // This handles the case where Firebase has no galaxy data yet
+      if (_galaxies.isNotEmpty) {
+        print('🔄 Attempting to upload local galaxies to cloud as fallback...');
+        try {
+          await syncToCloud();
+        } catch (uploadError) {
+          print('⚠️ Fallback upload also failed: $uploadError');
+        }
+      }
+      
+      // Don't rethrow - app continues with local data
     }
   }
 
@@ -321,6 +460,7 @@ class GalaxyProvider extends ChangeNotifier {
       await _galaxyRepository.clearAll();
       _galaxies = [];
       _activeGalaxyId = null;
+      _isInitialized = false; // Reset initialization flag
       notifyListeners();
     } catch (e) {
       print('⚠️ Error clearing galaxy data: $e');

@@ -62,6 +62,7 @@ class GratitudeProvider extends ChangeNotifier {
   bool _isSyncing = false;
   DateTime? _lastSuccessfulSync;
   int _retryAttempts = 0;
+  bool _needsResyncAfterCurrent = false; // Flag to re-sync after current sync completes
 
   // Getters
   List<GratitudeStar> get gratitudeStars => _gratitudeStars;
@@ -140,7 +141,10 @@ class GratitudeProvider extends ChangeNotifier {
   }
 
   /// Load gratitudes from storage
-  Future<void> loadGratitudes() async {
+  /// 
+  /// If [waitForSync] is true, this method will wait for cloud sync to complete
+  /// before returning. This is important for galaxy switching to ensure fresh data.
+  Future<void> loadGratitudes({bool waitForSync = false}) async {
     final result = await _loadGratitudesUseCase(NoParams());
 
     // Deduplicate by ID (in case of storage corruption or sync issues)
@@ -159,30 +163,57 @@ class GratitudeProvider extends ChangeNotifier {
     // Purge old deleted items (30+ days)
     final purgedStars = await _purgeOldDeletedUseCase(PurgeOldDeletedParams(dedupedStars));
 
-    // Filter out deleted items for display
-    _gratitudeStars = purgedStars.where((star) => !star.deleted).toList();
+    // Filter for display: only non-deleted stars from the current galaxy
+    // CRITICAL: Must filter by galaxy ID to match syncWithCloud() behavior!
+    _gratitudeStars = purgedStars
+        .where((star) =>
+            !star.deleted &&
+            star.galaxyId == _galaxyProvider.activeGalaxyId)
+        .toList();
     _isLoading = false;
     notifyListeners();
 
     // Sync with cloud if needed
     if (result.shouldSyncWithCloud) {
-      // Don't block on sync - run in background
-      syncWithCloud().catchError((e) {
-        print('⚠️ Background sync failed: $e');
-      });
+      if (waitForSync) {
+        // Wait for sync to complete (used for galaxy switching)
+        try {
+          // Add 30-second timeout to prevent hanging indefinitely
+          await syncWithCloud().timeout(
+            Duration(seconds: 30),
+            onTimeout: () {
+              print('⏱️ Sync timeout during galaxy switch - continuing with local data');
+              throw TimeoutException('Sync timed out after 30 seconds');
+            },
+          );
+          print('✅ Sync completed during load');
+        } catch (e) {
+          print('⚠️ Sync failed during load: $e');
+          // Don't rethrow - we still have local data
+          // Update sync status to show error
+          _syncStatusService.markError(e.toString());
+        }
+      } else {
+        // Don't block on sync - run in background (normal startup behavior)
+        syncWithCloud().catchError((e) {
+          print('⚠️ Background sync failed: $e');
+        });
+      }
     }
   }
 
   /// Sync with cloud
-  Future<void> syncWithCloud() async {
+  Future<void> syncWithCloud({bool force = false}) async {
     // Check if already syncing (mutex)
     if (_isSyncing) {
-      print('⏸️ Sync already in progress, skipping...');
+      print('⏸️ Sync already in progress, marking for re-sync after completion...');
+      _needsResyncAfterCurrent = true;
+      _hasPendingChanges = true; // Ensure re-sync isn't skipped
       return;
     }
 
-    // Smart sync: Skip if recently synced and no pending changes
-    if (_lastSuccessfulSync != null && !_hasPendingChanges) {
+    // Smart sync: Skip if recently synced and no pending changes (unless forced)
+    if (!force && _lastSuccessfulSync != null && !_hasPendingChanges) {
       final timeSinceLastSync = DateTime.now().difference(_lastSuccessfulSync!);
       if (timeSinceLastSync < Duration(minutes: 5)) {
         print('⏭️ Skipping sync - recently synced ${timeSinceLastSync.inMinutes}m ago with no pending changes');
@@ -191,9 +222,19 @@ class GratitudeProvider extends ChangeNotifier {
     }
 
     _isSyncing = true;
+    final wasResync = _needsResyncAfterCurrent;
+    _needsResyncAfterCurrent = false; // Clear flag at start
+    
     try {
       // Get ALL stars (unfiltered) for sync to prevent data loss across galaxies
       final allStarsUnfiltered = await _repository.getAllGratitudesUnfiltered();
+      
+      // DEBUG: Log what we're syncing
+      print('📋 Preparing to sync ${allStarsUnfiltered.length} stars:');
+      for (final star in allStarsUnfiltered) {
+        print('   - "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" (${star.id}) galaxy:${star.galaxyId} deleted:${star.deleted}');
+      }
+      
       final result = await _syncGratitudesUseCase(
         SyncGratitudesParams(localStars: allStarsUnfiltered),
       );
@@ -222,12 +263,32 @@ class GratitudeProvider extends ChangeNotifier {
       _lastSuccessfulSync = DateTime.now();
       _retryAttempts = 0;
 
+      // RECONCILIATION: Update galaxy star count after sync (in case cloud had different data)
+      await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
+
       notifyListeners();
     } catch (e) {
       print('⚠️ Sync failed: $e');
       rethrow; // Let caller handle the error
     } finally {
       _isSyncing = false;
+      
+      // If changes were made during sync, trigger another sync immediately
+      if (wasResync || _needsResyncAfterCurrent) {
+        print('🔄 Changes occurred during sync, triggering immediate re-sync (force=true)...');
+        final hadPendingChanges = _needsResyncAfterCurrent;
+        _needsResyncAfterCurrent = false;
+        // Run in background to avoid blocking
+        Future.delayed(Duration(milliseconds: 100), () {
+          syncWithCloud(force: true).catchError((e) {
+            print('⚠️ Re-sync failed: $e');
+            // If re-sync fails and we had pending changes, keep the flag set
+            if (hadPendingChanges) {
+              _hasPendingChanges = true;
+            }
+          });
+        });
+      }
     }
   }
 
@@ -266,8 +327,19 @@ class GratitudeProvider extends ChangeNotifier {
       // Save to repository (includes cloud sync if authenticated)
       final allStars = await _repository.getAllGratitudesUnfiltered();
       await _repository.addGratitude(_animatingStar!, allStars);
-      // Schedule background sync
-      _markPendingAndScheduleSync();
+      
+      // CRITICAL: For single star adds, sync immediately instead of debouncing
+      // This prevents data loss if app crashes before 30-second timer fires
+      if (_authService.hasEmailAccount) {
+        print('💾 Star added - triggering immediate sync');
+        _markPendingChanges(); // Mark pending but don't schedule timer
+        // Sync in background without blocking UI
+        _performBackgroundSync().catchError((e) {
+          print('⚠️ Immediate sync failed: $e');
+          // Fallback: schedule debounced sync as backup
+          _scheduleSync();
+        });
+      }
 
       // Update galaxy star count
       await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
@@ -289,8 +361,16 @@ class GratitudeProvider extends ChangeNotifier {
 
     _gratitudeStars = updatedStars;
     notifyListeners();
-    // Schedule background sync
-    _markPendingAndScheduleSync();
+    
+    // CRITICAL: Sync immediately for data safety
+    if (_authService.hasEmailAccount) {
+      print('💾 Star updated - triggering immediate sync');
+      _markPendingChanges();
+      _performBackgroundSync().catchError((e) {
+        print('⚠️ Immediate sync failed: $e');
+        _scheduleSync(); // Fallback to debounced
+      });
+    }
   }
 
   /// Delete a gratitude
@@ -315,8 +395,16 @@ class GratitudeProvider extends ChangeNotifier {
     await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
 
     notifyListeners();
-    // Schedule background sync
-    _markPendingAndScheduleSync();
+    
+    // CRITICAL: Sync immediately for data safety (deletion is important to sync)
+    if (_authService.hasEmailAccount) {
+      print('💾 Star deleted - triggering immediate sync');
+      _markPendingChanges();
+      _performBackgroundSync().catchError((e) {
+        print('⚠️ Immediate sync failed: $e');
+        _scheduleSync(); // Fallback to debounced
+      });
+    }
   }
 
   /// Toggle show all gratitudes mode
@@ -459,8 +547,16 @@ class GratitudeProvider extends ChangeNotifier {
 
     // Update galaxy star count
     await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
-    // Schedule background sync
-    _markPendingAndScheduleSync();
+    
+    // CRITICAL: Sync immediately for data safety (restoration is important)
+    if (_authService.hasEmailAccount) {
+      print('💾 Star restored - triggering immediate sync');
+      _markPendingChanges();
+      _performBackgroundSync().catchError((e) {
+        print('⚠️ Immediate sync failed: $e');
+        _scheduleSync(); // Fallback to debounced
+      });
+    }
   }
 
   /// Permanently delete a gratitude
@@ -485,6 +581,12 @@ class GratitudeProvider extends ChangeNotifier {
     _hasPendingChanges = true;
     _syncStatusService.markPending();
     _scheduleSync();
+  }
+  
+  /// Mark changes as pending without scheduling sync (for manual sync triggering)
+  void _markPendingChanges() {
+    _hasPendingChanges = true;
+    _syncStatusService.markPending();
   }
 
   /// Schedule a debounced sync (batches multiple changes)

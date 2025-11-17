@@ -297,7 +297,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     setState(() => _isLoading = true);
 
     try {
-      // switchGalaxy handles everything: sets active, updates filter, loads gratitudes
+      // switchGalaxy handles everything: sets active, updates filter, loads gratitudes, AND syncs
       await galaxyProvider.switchGalaxy(galaxyId);
 
       if (context.mounted) {
@@ -325,7 +325,10 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
             backgroundColor: Colors.red,
           ),
         );
-        // Reset loading state on error (dialog still visible)
+      }
+    } finally {
+      // Always reset loading state (whether success or error)
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }

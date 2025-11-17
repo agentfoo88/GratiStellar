@@ -340,6 +340,16 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         if (!_isAppInBackground) {
           _isAppInBackground = true;
           _animationManager.pauseAll();
+          
+          // CRITICAL: Force immediate sync when app goes to background
+          // This prevents data loss if app is killed by system
+          final provider = context.read<GratitudeProvider>();
+          if (provider.hasPendingChanges && _authService.hasEmailAccount) {
+            print('📤 App backgrounding - forcing immediate sync');
+            provider.forceSync().catchError((e) {
+              print('⚠️ Background sync failed: $e');
+            });
+          }
         }
         break;
 

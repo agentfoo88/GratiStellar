@@ -64,20 +64,40 @@ class FirestoreService {
             ? i + batchSize
             : starsToUpload.length;
 
+        // Track what we're uploading for debugging
+        final List<String> starIds = [];
+        
         for (var j = i; j < end; j++) {
           final star = starsToUpload[j];
           final docRef = _starsCollection!.doc(star.id);
           batch.set(docRef, star.toJson());
+          starIds.add(star.id);
         }
 
+        print('   📤 Uploading batch with star IDs: ${starIds.join(", ")}');
         await batch.commit();
         totalUploaded += (end - i);
-        print('   Uploaded batch: $totalUploaded / ${starsToUpload.length}');
+        print('   ✅ Batch committed: $totalUploaded / ${starsToUpload.length}');
       }
 
       // Save sync timestamp
       await StorageService.saveLastSyncTime(DateTime.now());
       print('✅ Delta upload complete: $totalUploaded stars');
+      
+      // VERIFICATION: Check if all stars actually made it to Firebase
+      if (totalUploaded > 0 && totalUploaded <= 20) { // Only verify small syncs to avoid rate limits
+        try {
+          final snapshot = await _starsCollection!.limit(totalUploaded + 5).get();
+          final actualCount = snapshot.docs.length;
+          if (actualCount < totalUploaded) {
+            print('⚠️ MISMATCH: Uploaded $totalUploaded but Firebase shows $actualCount documents!');
+          } else {
+            print('✅ Verification: Firebase has at least $actualCount stars');
+          }
+        } catch (e) {
+          print('⚠️ Could not verify upload: $e');
+        }
+      }
 
     } on FirebaseException catch (e) {
       // Handle Firestore-specific errors

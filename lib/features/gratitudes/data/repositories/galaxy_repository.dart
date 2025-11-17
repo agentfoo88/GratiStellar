@@ -278,17 +278,25 @@ class GalaxyRepository {
 
     try {
       final localGalaxies = await getGalaxies();
+      
+      print('☁️ Syncing ${localGalaxies.length} galaxies to cloud...');
+      
+      // Sync each galaxy individually (Firebase doesn't support batch for subcollections)
+      int syncedCount = 0;
       for (final galaxy in localGalaxies) {
         await _remoteDataSource.saveGalaxy(galaxy);
+        syncedCount++;
+        print('   ☁️ Synced galaxy $syncedCount/${localGalaxies.length}: ${galaxy.name}');
       }
 
-      // Also sync active galaxy
+      // Also sync active galaxy ID
       final activeId = await getActiveGalaxyId();
       if (activeId != null) {
         await _remoteDataSource.setActiveGalaxyId(activeId);
+        print('   ☁️ Synced active galaxy: $activeId');
       }
 
-      print('☁️ Synced ${localGalaxies.length} galaxies to cloud');
+      print('✅ Synced ${localGalaxies.length} galaxies to cloud');
     } catch (e) {
       print('⚠️ Failed to sync galaxies to cloud: $e');
       rethrow;

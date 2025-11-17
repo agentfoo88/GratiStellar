@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../storage.dart';
 import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
+import '../features/gratitudes/presentation/state/galaxy_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,7 +42,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
       print('🔄 Triggering cloud sync with ${localStars.length} local stars');
 
-      // Check if there's an old anonymous account to merge
+      // STEP 1: Sync stars
       final mergedFromUid = await _checkForMergedAccount();
 
       if (mergedFromUid != null) {
@@ -59,13 +61,38 @@ class _SignInScreenState extends State<SignInScreen> {
         } else {
           print('📤 No cloud data, uploading local stars...');
           await firestoreService.uploadStars(localStars);
+          print('✅ Uploaded ${localStars.length} stars');
         }
       }
 
-      print('✅ Cloud sync complete');
+      // STEP 2: Sync ALL galaxies to cloud (CRITICAL!)
+      if (mounted) {
+        print('☁️ Syncing galaxies to cloud...');
+        try {
+          final galaxyProvider = context.read<GalaxyProvider>();
+          
+          // Ensure galaxies are loaded before syncing
+          if (galaxyProvider.galaxies.isEmpty) {
+            print('📋 Loading galaxies before sync...');
+            await galaxyProvider.loadGalaxies();
+          }
+          
+          await galaxyProvider.syncToCloud();
+          print('✅ All galaxies synced to cloud');
+        } catch (e, stack) {
+          print('⚠️ Galaxy sync failed: $e');
+          print('Stack trace: $stack');
+          // Continue anyway - stars are safe, galaxies will sync on next switch
+        }
+      } else {
+        print('⚠️ Widget not mounted, skipping galaxy sync');
+      }
+
+      print('✅ Cloud sync complete (stars + galaxies)');
     } catch (e) {
-      print('⚠️ Sync failed: $e');
+      print('⚠️ Cloud sync failed: $e');
       // Don't show error to user - local data is still safe
+      // Sync will retry on next app launch or galaxy switch
     }
   }
 
@@ -157,8 +184,8 @@ class _SignInScreenState extends State<SignInScreen> {
           // Mark current user as local data owner
           await _setLocalDataOwner();
 
-          // Trigger sync - stars loaded fresh inside sync function
-          _triggerCloudSync();
+          // Trigger sync - stars AND galaxies loaded fresh inside sync function
+          await _triggerCloudSync();
         }
       } else {
         await _authService.signInWithEmail(email, password);
@@ -170,8 +197,8 @@ class _SignInScreenState extends State<SignInScreen> {
           // Mark current user as local data owner
           await _setLocalDataOwner();
 
-          // Trigger sync - stars loaded fresh inside sync function
-          _triggerCloudSync();
+          // Trigger sync - stars AND galaxies loaded fresh inside sync function
+          await _triggerCloudSync();
         }
       }
     } catch (e) {  // ADDED catch block

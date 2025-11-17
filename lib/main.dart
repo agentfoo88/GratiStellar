@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'background.dart';
+import 'core/utils/app_logger.dart';
 import 'features/gratitudes/data/datasources/local_data_source.dart';
 import 'features/gratitudes/data/datasources/remote_data_source.dart';
 import 'features/gratitudes/data/repositories/gratitude_repository.dart';
@@ -27,7 +28,7 @@ import 'services/sync_status_service.dart';
 // UI SCALE and ANIMATION CONFIGURATION found in constants.dart
 
 void main() async {
-  print('🚀 App starting...');
+  AppLogger.start('🚀 App starting...');
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase with generated options
@@ -38,15 +39,15 @@ void main() async {
   // Initialize Crashlytics
   await CrashlyticsService().initialize();
 
-  print('📦 Loading textures...');
+  AppLogger.data('📦 Loading textures...');
   try {
     CrashlyticsService().log('Starting texture loading');
     await BackgroundService.loadTextures();
     CrashlyticsService().log('Textures loaded successfully');
-    print('✅ Textures loaded, starting app');
+    AppLogger.success('✅ Textures loaded, starting app');
   } catch (e, stack) {
     CrashlyticsService().recordError(e, stack, reason: 'Texture loading failed');
-    print('⚠️ Texture loading error: $e (continuing anyway)');
+    AppLogger.error('⚠️ Texture loading error: $e (continuing anyway)');
   }
 
   // Note: Layer cache will be initialized per screen size in GratitudeScreen
@@ -60,7 +61,7 @@ class GratiStellarApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('🏗️ Building GratiStellarApp');
+    AppLogger.start('🏗️ Building GratiStellarApp');
 
     // Initialize services (these are singletons/static, so safe to create here)
     final authService = AuthService();

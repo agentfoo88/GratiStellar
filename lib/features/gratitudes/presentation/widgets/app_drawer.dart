@@ -10,6 +10,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/layer_cache_service.dart';
 import '../../../../storage.dart';
+import '../../../backup/presentation/widgets/backup_dialog.dart';
+import '../../../backup/presentation/widgets/restore_dialog.dart';
 import '../state/gratitude_provider.dart';
 
 /// App navigation drawer widget
@@ -320,6 +322,88 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             height: 1,
           ),
 
+          // Export Backup
+          ListTile(
+            leading: Icon(
+              Icons.backup,
+              color: Color(0xFFFFE135),
+              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+            ),
+            title: Text(
+              l10n.exportBackup,
+              style: FontScaling.getBodyMedium(context).copyWith(
+                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+              ),
+            ),
+            subtitle: Text(
+              l10n.exportBackupSubtitle,
+              style: FontScaling.getCaption(context),
+            ),
+            onTap: () async {
+              // Show backup dialog
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final result = await showDialog<bool>(
+                context: context,
+                builder: (context) => const BackupDialog(),
+              );
+              
+              if (result == true) {
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.backupCreatedSimple),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+          ),
+
+          Divider(
+            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            height: 1,
+          ),
+
+          // Restore Backup
+          ListTile(
+            leading: Icon(
+              Icons.restore,
+              color: Color(0xFFFFE135),
+              size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+            ),
+            title: Text(
+              l10n.restoreBackup,
+              style: FontScaling.getBodyMedium(context).copyWith(
+                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+              ),
+            ),
+            subtitle: Text(
+              l10n.restoreBackupSubtitle,
+              style: FontScaling.getCaption(context),
+            ),
+            onTap: () async {
+              // Show restore dialog
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final result = await showDialog<bool>(
+                context: context,
+                builder: (context) => const RestoreDialog(),
+              );
+              
+              if (result == true) {
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.backupRestoredSimple),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+          ),
+
+          Divider(
+            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            height: 1,
+          ),
+
           // Send Feedback
           SemanticHelper.label(
             label: l10n.feedbackMenuItem,
@@ -437,9 +521,13 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
               // Clear sync timestamp to force full download
               await StorageService.clearLastSyncTime();
 
+              if (!context.mounted) return;
+
               // Reload gratitudes - will trigger full sync
               final gratitudeProvider = Provider.of<GratitudeProvider>(context, listen: false);
               await gratitudeProvider.loadGratitudes();
+
+              if (!context.mounted) return;
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
 import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
+import '../core/utils/app_logger.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -46,22 +47,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     });
 
     try {
-      print('🔵 Attempting anonymous sign-in with name: $name');
+      AppLogger.auth('🔵 Attempting anonymous sign-in with name: $name');
       final user = await _authService.signInAnonymously(name);
-      print('🔵 Sign-in result: ${user?.uid ?? "null"}');
+      AppLogger.auth('🔵 Sign-in result: ${user?.uid ?? "null"}');
 
       if (user != null && mounted) {
-        print('🔵 User signed in successfully, navigation should happen automatically');
+        AppLogger.auth('🔵 User signed in successfully, navigation should happen automatically');
         // Navigation will be handled by auth state listener in main.dart
       } else if (mounted) {
-        print('🔴 Sign-in returned null user');
+        AppLogger.auth('🔴 Sign-in returned null user');
         setState(() {
           _errorMessage = 'Failed to create account. Please try again.';
           _isLoading = false;
         });
       }
     } catch (e) {
-      print('🔴 Sign-in exception: $e');
+      AppLogger.auth('🔴 Sign-in exception: $e');
       if (mounted) {
         setState(() {
           _errorMessage = 'An error occurred. Please try again.';

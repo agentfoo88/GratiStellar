@@ -102,15 +102,15 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
       child: Container(
         padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A2238).withOpacity(0.95),
+          color: const Color(0xFF1A2238).withValues(alpha:0.95),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFFFE135).withOpacity(0.3),
+            color: const Color(0xFFFFE135).withValues(alpha:0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha:0.5),
               blurRadius: 20,
               spreadRadius: 5,
             ),
@@ -130,7 +130,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                 padding:
                     EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha:0.3),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: SvgPicture.asset(
@@ -176,7 +176,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                   hintText: AppLocalizations.of(context)!.hexColorHint,
                   hintStyle: FontScaling.getInputHint(context),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.1),
+                  fillColor: Colors.white.withValues(alpha:0.1),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -223,7 +223,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                       decoration: InputDecoration(
                         labelText: 'R',
                         filled: true,
-                        fillColor: Colors.red.withOpacity(0.1),
+                        fillColor: Colors.red.withValues(alpha:0.1),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -249,7 +249,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                       decoration: InputDecoration(
                         labelText: 'G',
                         filled: true,
-                        fillColor: Colors.green.withOpacity(0.1),
+                        fillColor: Colors.green.withValues(alpha:0.1),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -275,7 +275,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                       decoration: InputDecoration(
                         labelText: 'B',
                         filled: true,
-                        fillColor: Colors.blue.withOpacity(0.1),
+                        fillColor: Colors.blue.withValues(alpha:0.1),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -308,7 +308,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                     child: Text(
                       AppLocalizations.of(context)!.cancelButton,
                       style: FontScaling.getButtonText(context).copyWith(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha:0.6),
                       ),
                     ),
                   ),

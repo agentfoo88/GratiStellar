@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'gratitude_stars.dart';
 import 'utils/compression_utils.dart';
+import 'core/utils/app_logger.dart';
 
 // Extension to add Gaussian distribution to Random
 extension RandomGaussian on math.Random {
@@ -305,7 +306,7 @@ class StorageService {
       final oldStarsJson = prefs.getStringList(_starsKey);
 
       if (oldStarsJson != null && oldStarsJson.isNotEmpty) {
-        print('📦 Migrating ${oldStarsJson.length} stars from unencrypted to encrypted storage');
+        AppLogger.data('📦 Migrating ${oldStarsJson.length} stars from unencrypted to encrypted storage');
 
         // Parse old data
         final stars = oldStarsJson.map((starString) {
@@ -317,7 +318,7 @@ class StorageService {
         final saveSucceeded = await saveGratitudeStars(stars);
 
         if (!saveSucceeded) {
-          print('⚠️ Migration failed - keeping old data as backup');
+          AppLogger.error('⚠️ Migration failed - keeping old data as backup');
           return stars;
         }
 
@@ -325,24 +326,24 @@ class StorageService {
         try {
           final encryptedData = await _secureStorage.read(key: _starsKey);
           if (encryptedData == null || encryptedData.isEmpty) {
-            print('⚠️ Could not verify encrypted data - keeping old data as backup');
+            AppLogger.warning('⚠️ Could not verify encrypted data - keeping old data as backup');
             return stars;
           }
 
           // Verify it parses correctly
           final verification = json.decode(encryptedData) as List;
           if (verification.length != stars.length) {
-            print('⚠️ Encrypted data mismatch - keeping old data as backup');
+            AppLogger.warning('⚠️ Encrypted data mismatch - keeping old data as backup');
             return stars;
           }
         } catch (e) {
-          print('⚠️ Verification failed: $e - keeping old data as backup');
+          AppLogger.error('⚠️ Verification failed: $e - keeping old data as backup');
           return stars;
         }
 
         // ONLY NOW delete old unencrypted data
         await prefs.remove(_starsKey);
-        print('✅ Migration complete - old data removed');
+        AppLogger.success('✅ Migration complete - old data removed');
 
         return stars;
       }
@@ -384,7 +385,7 @@ class StorageService {
       await prefs.remove('anonymous_uid');
       await prefs.remove('local_data_owner_uid');
 
-      print('🗑️ Cleared all local storage');
+      AppLogger.data('🗑️ Cleared all local storage');
     } catch (e) {
       debugPrint('⚠️ Error clearing storage: $e');
     }
@@ -395,7 +396,7 @@ class StorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('last_synced_at', timestamp.millisecondsSinceEpoch);
-      print('💾 Saved last sync time: $timestamp');
+      AppLogger.sync('💾 Saved last sync time: $timestamp');
     } catch (e) {
       debugPrint('⚠️ Error saving last sync time: $e');
     }
@@ -421,7 +422,7 @@ class StorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('last_synced_at');
-      print('🗑️ Cleared last sync time');
+      AppLogger.sync('🗑️ Cleared last sync time');
     } catch (e) {
       debugPrint('⚠️ Error clearing last sync time: $e');
     }
@@ -434,7 +435,7 @@ class StorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_fontScaleKey, scale);
-      print('💾 Saved font scale: $scale');
+      AppLogger.data('💾 Saved font scale: $scale');
     } catch (e) {
       debugPrint('⚠️ Error saving font scale: $e');
     }
@@ -466,5 +467,95 @@ class StorageService {
     star.createdAt.isAfter(today) &&
         star.createdAt.isBefore(today.add(Duration(days: 1)))
     );
+  }
+}
+
+/// Backup data model for export/import functionality
+class BackupData {
+  final String version;
+  final String appVersion;
+  final DateTime createdAt;
+  final List<GratitudeStar> stars;
+  final List<Map<String, dynamic>> galaxies;
+  final Map<String, dynamic> preferences;
+  final Map<String, dynamic>? metadata;
+
+  BackupData({
+    required this.version,
+    required this.appVersion,
+    required this.createdAt,
+    required this.stars,
+    required this.galaxies,
+    required this.preferences,
+    this.metadata,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'version': version,
+      'appVersion': appVersion,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'stars': stars.map((star) => star.toJson()).toList(),
+      'galaxies': galaxies,
+      'preferences': preferences,
+      'metadata': metadata,
+    };
+  }
+
+  factory BackupData.fromJson(Map<String, dynamic> json) {
+    return BackupData(
+      version: json['version'] as String,
+      appVersion: json['appVersion'] as String,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(json['createdAt']),
+      stars: (json['stars'] as List)
+          .map((starJson) => GratitudeStar.fromJson(starJson))
+          .toList(),
+      galaxies: List<Map<String, dynamic>>.from(json['galaxies'] ?? []),
+      preferences: Map<String, dynamic>.from(json['preferences'] ?? {}),
+      metadata: json['metadata'] != null
+          ? Map<String, dynamic>.from(json['metadata'])
+          : null,
+    );
+  }
+
+  /// Get a summary of backup contents for display
+  String getSummary() {
+    final starCount = stars.where((s) => !s.deleted).length;
+    final deletedCount = stars.where((s) => s.deleted).length;
+    final galaxyCount = galaxies.length;
+    
+    final parts = <String>[];
+    parts.add('$starCount gratitude${starCount == 1 ? '' : 's'}');
+    if (deletedCount > 0) {
+      parts.add('$deletedCount deleted');
+    }
+    parts.add('$galaxyCount ${galaxyCount == 1 ? 'galaxy' : 'galaxies'}');
+    
+    return parts.join(', ');
+  }
+
+  /// Validate backup data integrity
+  bool validate() {
+    try {
+      // Check version format
+      if (version.isEmpty) return false;
+      
+      // Check app version
+      if (appVersion.isEmpty) return false;
+      
+      // Validate stars have required fields
+      for (final star in stars) {
+        if (star.id.isEmpty || star.text.isEmpty) return false;
+      }
+      
+      // Validate galaxies have required fields
+      for (final galaxy in galaxies) {
+        if (galaxy['id'] == null || galaxy['name'] == null) return false;
+      }
+      
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

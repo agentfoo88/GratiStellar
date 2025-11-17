@@ -3,6 +3,7 @@ import '../../../../storage.dart';
 import '../../../../services/auth_service.dart';
 import '../../data/repositories/gratitude_repository.dart';
 import 'use_case.dart';
+import '../../../../core/utils/app_logger.dart';
 
 class LoadGratitudesResult {
   final List<GratitudeStar> stars;
@@ -25,18 +26,18 @@ class LoadGratitudesUseCase extends UseCase<LoadGratitudesResult, NoParams> {
 
   @override
   Future<LoadGratitudesResult> call(NoParams params) async {
-    print('💾 Loading gratitudes...');
+    AppLogger.data('💾 Loading gratitudes...');
 
     await _checkFirstRun();
     await _restoreAnonymousSessionIfNeeded();
     await _verifyDataOwnership();
 
     final stars = await repository.getGratitudes();
-    print('🎯 Loaded ${stars.length} gratitude stars');
+    AppLogger.data('🎯 Loaded ${stars.length} gratitude stars');
 
     final shouldSync = authService.hasEmailAccount;
     if (shouldSync) {
-      print('🔄 User has email account, cloud sync needed');
+      AppLogger.auth('🔄 User has email account, cloud sync needed');
     }
 
     return LoadGratitudesResult(
@@ -51,39 +52,39 @@ class LoadGratitudesUseCase extends UseCase<LoadGratitudesResult, NoParams> {
       final hasRunBefore = prefs.getBool('has_run_before') ?? false;
 
       if (!hasRunBefore) {
-        print('🆕 First run detected - clearing any stale data');
+        AppLogger.data('🆕 First run detected - clearing any stale data');
         await repository.clearAllData();
         await prefs.setBool('has_run_before', true);
-        print('✅ First run setup complete');
+        AppLogger.success('✅ First run setup complete');
       }
     } catch (e) {
-      print('⚠️ Error checking first run: $e');
+      AppLogger.error('⚠️ Error checking first run: $e');
     }
   }
 
   Future<void> _restoreAnonymousSessionIfNeeded() async {
     try {
       if (authService.isSignedIn) {
-        print('✓ User already signed in, skipping session restoration');
+        AppLogger.auth('✓ User already signed in, skipping session restoration');
         return;
       }
 
       final savedUid = await authService.getSavedAnonymousUid();
 
       if (savedUid != null) {
-        print('🔄 Found saved anonymous UID: $savedUid');
+        AppLogger.data('🔄 Found saved anonymous UID: $savedUid');
         await Future.delayed(Duration(milliseconds: 500));
 
         if (authService.isSignedIn && authService.currentUser?.uid == savedUid) {
-          print('✅ Anonymous session restored successfully');
+          AppLogger.success('✅ Anonymous session restored successfully');
         } else {
-          print('⚠️ Saved session expired or invalid');
+          AppLogger.warning('⚠️ Saved session expired or invalid');
         }
       } else {
-        print('ℹ️ No saved anonymous UID found');
+        AppLogger.data('ℹ️ No saved anonymous UID found');
       }
     } catch (e) {
-      print('⚠️ Error restoring anonymous session: $e');
+      AppLogger.error('⚠️ Error restoring anonymous session: $e');
     }
   }
 
@@ -94,7 +95,7 @@ class LoadGratitudesUseCase extends UseCase<LoadGratitudesResult, NoParams> {
       final localDataOwner = prefs.getString('local_data_owner_uid');
 
       if (localDataOwner != null && localDataOwner != currentUid) {
-        print('⚠️ Local data belongs to different user. Clearing...');
+        AppLogger.warning('⚠️ Local data belongs to different user. Clearing...');
         await repository.clearAllData();
         await prefs.setString('local_data_owner_uid', currentUid!);
       }

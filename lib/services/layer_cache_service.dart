@@ -7,6 +7,7 @@ import 'dart:io';
 import '../background.dart';
 import '../starfield.dart';
 import 'crashlytics_service.dart';
+import '../core/utils/app_logger.dart';
 
 /// Service for pre-rendering and caching static visual layers
 class LayerCacheService {
@@ -51,7 +52,7 @@ class LayerCacheService {
       crashlytics.log('Layer cache initialization complete');
     } catch (e, stack) {
       crashlytics.recordError(e, stack, reason: 'Layer cache initialization failed');
-      print('⚠️ Layer cache failed: $e');
+      AppLogger.error('⚠️ Layer cache failed: $e');
       // Don't throw - app can work without cache (just slower)
     }
   }
@@ -178,9 +179,9 @@ class LayerCacheService {
         );
       }
 
-      print('✅ Layers cached to disk');
+      AppLogger.success('✅ Layers cached to disk');
     } catch (e) {
-      print('⚠️ Failed to save layer cache: $e');
+      AppLogger.error('⚠️ Failed to save layer cache: $e');
     }
   }
 
@@ -199,7 +200,7 @@ class LayerCacheService {
       final cachedSize = await sizeFile.readAsString();
       final currentSize = '${screenSize.width}x${screenSize.height}';
       if (cachedSize != currentSize) {
-        print('📐 Screen size changed, regenerating cache');
+        AppLogger.info('📐 Screen size changed, regenerating cache');
         return false;
       }
 
@@ -223,7 +224,7 @@ class LayerCacheService {
 
       return _backgroundImage != null && _vanGoghBaseImage != null && _nebulaBaseImage != null;
     } catch (e) {
-      print('⚠️ Failed to load layer cache: $e');
+      AppLogger.error('⚠️ Failed to load layer cache: $e');
       return false;
     }
   }
@@ -236,7 +237,7 @@ class LayerCacheService {
 
       if (await cacheDir.exists()) {
         await cacheDir.delete(recursive: true);
-        print('🗑️ Layer cache cleared');
+        AppLogger.data('🗑️ Layer cache cleared');
       }
 
       _backgroundImage = null;
@@ -244,7 +245,7 @@ class LayerCacheService {
       _nebulaBaseImage = null;
       _initialized = false;
     } catch (e) {
-      print('⚠️ Failed to clear cache: $e');
+      AppLogger.error('⚠️ Failed to clear cache: $e');
     }
   }
 }

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/utils/app_logger.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -24,36 +25,36 @@ class AuthService {
   // Sign in anonymously with display name
   Future<User?> signInAnonymously(String displayName) async {
     try {
-      print('🔵 Step 1: Starting Firebase anonymous sign-in...');
+      AppLogger.auth('🔵 Step 1: Starting Firebase anonymous sign-in...');
       final userCredential = await _auth.signInAnonymously();
-      print('🔵 Step 2: Firebase sign-in completed');
+      AppLogger.auth('🔵 Step 2: Firebase sign-in completed');
 
       final user = userCredential.user;
-      print('🔵 Step 3: Got user: ${user?.uid ?? "null"}');
+      AppLogger.info('🔵 Step 3: Got user: ${user?.uid ?? "null"}');
 
       if (user != null) {
-        print('🔵 Step 4: Saving anonymous UID to SharedPreferences...');
+        AppLogger.info('🔵 Step 4: Saving anonymous UID to SharedPreferences...');
         await _saveAnonymousUid(user.uid);
-        print('🔵 Step 5: UID saved successfully');
+        AppLogger.success('🔵 Step 5: UID saved successfully');
 
-        print('🔵 Step 6: Updating display name...');
+        AppLogger.info('🔵 Step 6: Updating display name...');
         await user.updateDisplayName(displayName);
-        print('🔵 Step 7: Display name updated');
+        AppLogger.info('🔵 Step 7: Display name updated');
 
-        print('🔵 Step 8: Creating user profile in Firestore...');
+        AppLogger.data('🔵 Step 8: Creating user profile in Firestore...');
         await _firestore.collection('users').doc(user.uid).set({
           'displayName': displayName,
           'createdAt': FieldValue.serverTimestamp(),
           'isAnonymous': true,
           'lastSeen': FieldValue.serverTimestamp(),
         });
-        print('🔵 Step 9: Firestore profile created');
+        AppLogger.data('🔵 Step 9: Firestore profile created');
       }
 
-      print('🔵 Step 10: Returning user');
+      AppLogger.info('🔵 Step 10: Returning user');
       return user;
     } catch (e) {
-      print('🔴 Error signing in anonymously: $e');
+      AppLogger.auth('🔴 Error signing in anonymously: $e');
       return null;
     }
   }
@@ -92,13 +93,13 @@ class AuthService {
         // Clear anonymous UID since account is now linked to email
         await _clearAnonymousUid();
 
-        print('✅ Successfully linked anonymous account to email');
+        AppLogger.auth('✅ Successfully linked anonymous account to email');
         return userCredential.user;
 
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use' || e.code == 'credential-already-in-use') {
           // Email already exists - we need to merge data
-          print('⚠️ Email already in use. Attempting to merge data...');
+          AppLogger.auth('⚠️ Email already in use. Attempting to merge data...');
 
           // Save current anonymous user's data reference
           final anonymousUid = user.uid;
@@ -110,7 +111,7 @@ class AuthService {
             password: password,
           );
 
-          print('✅ Signed into existing account: ${existingAccountCredential.user!.uid}');
+          AppLogger.auth('✅ Signed into existing account: ${existingAccountCredential.user!.uid}');
 
           // If anonymous user had a display name and existing account doesn't, transfer it
           if (anonymousDisplayName != null &&
@@ -143,7 +144,7 @@ class AuthService {
         rethrow;
       }
     } catch (e) {
-      print('❌ Error linking email/password: $e');
+      AppLogger.auth('❌ Error linking email/password: $e');
       rethrow;
     }
   }
@@ -165,7 +166,7 @@ class AuthService {
 
       return userCredential.user;
     } catch (e) {
-      print('Error signing in with email: $e');
+      AppLogger.auth('Error signing in with email: $e');
       rethrow;
     }
   }
@@ -180,9 +181,9 @@ class AuthService {
       // Sign out from Firebase
       await _auth.signOut();
 
-      print('✅ Signed out and cleared local data');
+      AppLogger.auth('✅ Signed out and cleared local data');
     } catch (e) {
-      print('⚠️ Error during sign out: $e');
+      AppLogger.auth('⚠️ Error during sign out: $e');
       // Still attempt sign out even if clear fails
       await _auth.signOut();
     }
@@ -194,9 +195,9 @@ class AuthService {
       // Use StorageService's centralized clear method
       await StorageService.clearAllData();
 
-      print('🗑️ Cleared all local user data');
+      AppLogger.data('🗑️ Cleared all local user data');
     } catch (e) {
-      print('⚠️ Error clearing local data: $e');
+      AppLogger.error('⚠️ Error clearing local data: $e');
       rethrow;
     }
   }
@@ -216,7 +217,7 @@ class AuthService {
       final doc = await _firestore.collection('users').doc(user.uid).get();
       return doc.data()?['displayName'] as String?;
     } catch (e) {
-      print('Error getting display name: $e');
+      AppLogger.error('Error getting display name: $e');
       return null;
     }
   }
@@ -226,9 +227,9 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('anonymous_uid', uid);
-      print('💾 Saved anonymous UID: $uid');
+      AppLogger.data('💾 Saved anonymous UID: $uid');
     } catch (e) {
-      print('⚠️ Error saving anonymous UID: $e');
+      AppLogger.error('⚠️ Error saving anonymous UID: $e');
     }
   }
 
@@ -238,7 +239,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString('anonymous_uid');
     } catch (e) {
-      print('⚠️ Error getting saved anonymous UID: $e');
+      AppLogger.error('⚠️ Error getting saved anonymous UID: $e');
       return null;
     }
   }
@@ -248,9 +249,9 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('anonymous_uid');
-      print('🗑️ Cleared saved anonymous UID');
+      AppLogger.data('🗑️ Cleared saved anonymous UID');
     } catch (e) {
-      print('⚠️ Error clearing anonymous UID: $e');
+      AppLogger.error('⚠️ Error clearing anonymous UID: $e');
     }
   }
 
@@ -271,9 +272,9 @@ class AuthService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      print('✅ Display name updated to: $displayName');
+      AppLogger.success('✅ Display name updated to: $displayName');
     } catch (e) {
-      print('❌ Error updating display name: $e');
+      AppLogger.error('❌ Error updating display name: $e');
       rethrow;
     }
   }

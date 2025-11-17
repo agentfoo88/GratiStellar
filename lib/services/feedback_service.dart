@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../storage.dart';
+import '../core/utils/app_logger.dart';
 
 class FeedbackService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -41,10 +42,10 @@ class FeedbackService {
 
       await _firestore.collection('feedback').doc(feedback.id).set(feedback.toJson());
 
-      print('✅ Feedback submitted: ${feedback.id}');
+      AppLogger.success('✅ Feedback submitted: ${feedback.id}');
       return true;
     } catch (e) {
-      print('❌ Error submitting feedback: $e');
+      AppLogger.error('❌ Error submitting feedback: $e');
       return false;
     }
   }

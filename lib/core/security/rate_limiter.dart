@@ -1,4 +1,4 @@
-
+import '../utils/app_logger.dart';
 
 /// Client-side rate limiting to prevent abuse
 /// Tracks operations and enforces limits
@@ -36,7 +36,7 @@ class RateLimiter {
 
     // Check if under limit
     if (history.length >= config.maxRequests) {
-      print('⚠️ Rate limit exceeded for $operation (${history.length}/${config.maxRequests})');
+      AppLogger.warning('⚠️ Rate limit exceeded for $operation (${history.length}/${config.maxRequests})');
       return false;
     }
 
@@ -46,7 +46,7 @@ class RateLimiter {
     // Log remaining quota (helpful for debugging)
     final remaining = config.maxRequests - history.length;
     if (operation == 'sync_operation') {
-      print('✓ Rate limit OK for $operation ($remaining/${config.maxRequests} remaining)');
+      AppLogger.info('✓ Rate limit OK for $operation ($remaining/${config.maxRequests} remaining)');
     }
 
     return true;

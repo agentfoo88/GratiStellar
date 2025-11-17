@@ -38,7 +38,7 @@ class ColorGrid extends StatelessWidget {
               ) : null,
               boxShadow: isSelected ? [
                 BoxShadow(
-                  color: StarColors.palette[index].withOpacity(0.5),
+                  color: StarColors.palette[index].withValues(alpha:0.5),
                   blurRadius: 8,
                   spreadRadius: 2,
                 ),

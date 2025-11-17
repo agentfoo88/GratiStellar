@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:archive/archive.dart';
+import '../core/utils/app_logger.dart';
 
 class CompressionUtils {
   // Minimum text length to compress (shorter text isn't worth the overhead)
@@ -29,7 +30,7 @@ class CompressionUtils {
 
       return null; // Compression didn't help
     } catch (e) {
-      print('⚠️ Compression error: $e');
+      AppLogger.error('⚠️ Compression error: $e');
       return null;
     }
   }
@@ -46,7 +47,7 @@ class CompressionUtils {
       // Convert bytes back to string
       return utf8.decode(decompressed);
     } catch (e) {
-      print('⚠️ Decompression error: $e');
+      AppLogger.error('⚠️ Decompression error: $e');
       // Return original if decompression fails (backward compatibility)
       return compressedText;
     }

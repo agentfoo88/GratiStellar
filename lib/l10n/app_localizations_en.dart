@@ -665,4 +665,118 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get save => 'Save';
+
+  @override
+  String get exportBackup => 'Export Backup';
+
+  @override
+  String get exportBackupSubtitle => 'Create encrypted backup file';
+
+  @override
+  String get exportBackupDescription =>
+      'Create an encrypted backup of all your gratitudes, galaxies, and preferences.';
+
+  @override
+  String get backupWhatsIncluded => 'What\'s included:';
+
+  @override
+  String get backupIncludesGratitudes => 'All gratitude entries';
+
+  @override
+  String get backupIncludesGalaxies => 'All galaxies';
+
+  @override
+  String get backupIncludesPreferences => 'App preferences';
+
+  @override
+  String get backupEncrypted => 'Encrypted for security';
+
+  @override
+  String get createBackup => 'Create Backup';
+
+  @override
+  String get creatingBackup => 'Creating backup...';
+
+  @override
+  String backupCreatedSuccess(String summary) {
+    return 'Backup created successfully!\n$summary';
+  }
+
+  @override
+  String get backupCreatedSimple => 'Backup created successfully!';
+
+  @override
+  String get backupCreateFailed => 'Failed to create backup';
+
+  @override
+  String get restoreBackup => 'Restore Backup';
+
+  @override
+  String get restoreBackupSubtitle => 'Import data from backup file';
+
+  @override
+  String get restoreBackupDescription =>
+      'Select a backup file to restore your data.';
+
+  @override
+  String get selectBackupFile => 'Select Backup File';
+
+  @override
+  String get changeFile => 'Change File';
+
+  @override
+  String get validBackup => 'Valid Backup';
+
+  @override
+  String get invalidBackup => 'Invalid backup file';
+
+  @override
+  String backupCreated(String date) {
+    return 'Created: $date';
+  }
+
+  @override
+  String backupAppVersion(String version) {
+    return 'App Version: $version';
+  }
+
+  @override
+  String get restoreStrategy => 'Restore Strategy:';
+
+  @override
+  String get restoreStrategyMerge => 'Merge (Recommended)';
+
+  @override
+  String get restoreStrategyMergeDescription =>
+      'Keep all data, prefer newer versions';
+
+  @override
+  String get restoreStrategyReplace => 'Replace All';
+
+  @override
+  String get restoreStrategyReplaceDescription =>
+      'Delete current data, use only backup';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get validatingBackup => 'Validating backup...';
+
+  @override
+  String get restoringBackup => 'Restoring backup...';
+
+  @override
+  String backupRestoredSuccess(String summary) {
+    return 'Backup restored successfully!\n$summary';
+  }
+
+  @override
+  String get backupRestoredSimple => 'Backup restored successfully!';
+
+  @override
+  String get backupRestoreFailed => 'Failed to import backup';
+
+  @override
+  String get retry => 'Retry';
 }

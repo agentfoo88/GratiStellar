@@ -20,6 +20,7 @@ import '../../domain/usecases/sync_gratitudes_use_case.dart';
 import '../../domain/usecases/update_gratitude_use_case.dart';
 import '../../domain/usecases/use_case.dart';
 import 'galaxy_provider.dart';
+import '../../../../core/utils/app_logger.dart';
 
 /// Provider for gratitude state management
 ///
@@ -107,11 +108,11 @@ class GratitudeProvider extends ChangeNotifier {
     _authSubscription = _authService.authStateChanges.listen((user) {
       if (user == null) {
         // User signed out - clear all state
-        print('👤 User signed out, clearing state...');
+        AppLogger.auth('👤 User signed out, clearing state...');
         clearState();
       } else {
         // User signed in - reload their data
-        print('👤 Auth state changed, reloading gratitudes...');
+        AppLogger.auth('👤 Auth state changed, reloading gratitudes...');
         loadGratitudes();
       }
     });
@@ -124,7 +125,7 @@ class GratitudeProvider extends ChangeNotifier {
 
   /// Clear all state (called on sign out)
   void clearState() {
-    print('🗑️ Clearing provider state');
+    AppLogger.data('🗑️ Clearing provider state');
     _gratitudeStars = [];
     _isLoading = true;
     _showAllGratitudes = false;
@@ -156,7 +157,7 @@ class GratitudeProvider extends ChangeNotifier {
         seenIds.add(star.id);
         dedupedStars.add(star);
       } else {
-        print('⚠️ Duplicate star detected and removed: ${star.id}');
+        AppLogger.warning('⚠️ Duplicate star detected and removed: ${star.id}');
       }
     }
 
@@ -182,13 +183,13 @@ class GratitudeProvider extends ChangeNotifier {
           await syncWithCloud().timeout(
             Duration(seconds: 30),
             onTimeout: () {
-              print('⏱️ Sync timeout during galaxy switch - continuing with local data');
+              AppLogger.sync('⏱️ Sync timeout during galaxy switch - continuing with local data');
               throw TimeoutException('Sync timed out after 30 seconds');
             },
           );
-          print('✅ Sync completed during load');
+          AppLogger.sync('✅ Sync completed during load');
         } catch (e) {
-          print('⚠️ Sync failed during load: $e');
+          AppLogger.sync('⚠️ Sync failed during load: $e');
           // Don't rethrow - we still have local data
           // Update sync status to show error
           _syncStatusService.markError(e.toString());
@@ -196,7 +197,7 @@ class GratitudeProvider extends ChangeNotifier {
       } else {
         // Don't block on sync - run in background (normal startup behavior)
         syncWithCloud().catchError((e) {
-          print('⚠️ Background sync failed: $e');
+          AppLogger.sync('⚠️ Background sync failed: $e');
         });
       }
     }
@@ -206,7 +207,7 @@ class GratitudeProvider extends ChangeNotifier {
   Future<void> syncWithCloud({bool force = false}) async {
     // Check if already syncing (mutex)
     if (_isSyncing) {
-      print('⏸️ Sync already in progress, marking for re-sync after completion...');
+      AppLogger.sync('⏸️ Sync already in progress, marking for re-sync after completion...');
       _needsResyncAfterCurrent = true;
       _hasPendingChanges = true; // Ensure re-sync isn't skipped
       return;
@@ -216,7 +217,7 @@ class GratitudeProvider extends ChangeNotifier {
     if (!force && _lastSuccessfulSync != null && !_hasPendingChanges) {
       final timeSinceLastSync = DateTime.now().difference(_lastSuccessfulSync!);
       if (timeSinceLastSync < Duration(minutes: 5)) {
-        print('⏭️ Skipping sync - recently synced ${timeSinceLastSync.inMinutes}m ago with no pending changes');
+        AppLogger.sync('⏭️ Skipping sync - recently synced ${timeSinceLastSync.inMinutes}m ago with no pending changes');
         return;
       }
     }
@@ -230,9 +231,9 @@ class GratitudeProvider extends ChangeNotifier {
       final allStarsUnfiltered = await _repository.getAllGratitudesUnfiltered();
       
       // DEBUG: Log what we're syncing
-      print('📋 Preparing to sync ${allStarsUnfiltered.length} stars:');
+      AppLogger.sync('📋 Preparing to sync ${allStarsUnfiltered.length} stars:');
       for (final star in allStarsUnfiltered) {
-        print('   - "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" (${star.id}) galaxy:${star.galaxyId} deleted:${star.deleted}');
+        AppLogger.info('   - "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" (${star.id}) galaxy:${star.galaxyId} deleted:${star.deleted}');
       }
       
       final result = await _syncGratitudesUseCase(
@@ -268,20 +269,20 @@ class GratitudeProvider extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      print('⚠️ Sync failed: $e');
+      AppLogger.sync('⚠️ Sync failed: $e');
       rethrow; // Let caller handle the error
     } finally {
       _isSyncing = false;
       
       // If changes were made during sync, trigger another sync immediately
       if (wasResync || _needsResyncAfterCurrent) {
-        print('🔄 Changes occurred during sync, triggering immediate re-sync (force=true)...');
+        AppLogger.sync('🔄 Changes occurred during sync, triggering immediate re-sync (force=true)...');
         final hadPendingChanges = _needsResyncAfterCurrent;
         _needsResyncAfterCurrent = false;
         // Run in background to avoid blocking
         Future.delayed(Duration(milliseconds: 100), () {
           syncWithCloud(force: true).catchError((e) {
-            print('⚠️ Re-sync failed: $e');
+            AppLogger.sync('⚠️ Re-sync failed: $e');
             // If re-sync fails and we had pending changes, keep the flag set
             if (hadPendingChanges) {
               _hasPendingChanges = true;
@@ -331,11 +332,11 @@ class GratitudeProvider extends ChangeNotifier {
       // CRITICAL: For single star adds, sync immediately instead of debouncing
       // This prevents data loss if app crashes before 30-second timer fires
       if (_authService.hasEmailAccount) {
-        print('💾 Star added - triggering immediate sync');
+        AppLogger.sync('💾 Star added - triggering immediate sync');
         _markPendingChanges(); // Mark pending but don't schedule timer
         // Sync in background without blocking UI
         _performBackgroundSync().catchError((e) {
-          print('⚠️ Immediate sync failed: $e');
+          AppLogger.sync('⚠️ Immediate sync failed: $e');
           // Fallback: schedule debounced sync as backup
           _scheduleSync();
         });
@@ -364,10 +365,10 @@ class GratitudeProvider extends ChangeNotifier {
     
     // CRITICAL: Sync immediately for data safety
     if (_authService.hasEmailAccount) {
-      print('💾 Star updated - triggering immediate sync');
+      AppLogger.sync('💾 Star updated - triggering immediate sync');
       _markPendingChanges();
       _performBackgroundSync().catchError((e) {
-        print('⚠️ Immediate sync failed: $e');
+        AppLogger.sync('⚠️ Immediate sync failed: $e');
         _scheduleSync(); // Fallback to debounced
       });
     }
@@ -398,10 +399,10 @@ class GratitudeProvider extends ChangeNotifier {
     
     // CRITICAL: Sync immediately for data safety (deletion is important to sync)
     if (_authService.hasEmailAccount) {
-      print('💾 Star deleted - triggering immediate sync');
+      AppLogger.sync('💾 Star deleted - triggering immediate sync');
       _markPendingChanges();
       _performBackgroundSync().catchError((e) {
-        print('⚠️ Immediate sync failed: $e');
+        AppLogger.sync('⚠️ Immediate sync failed: $e');
         _scheduleSync(); // Fallback to debounced
       });
     }
@@ -479,7 +480,7 @@ class GratitudeProvider extends ChangeNotifier {
     // Select random star from available pool
     _activeMindfulnessStar = availableStars[_random.nextInt(availableStars.length)];
 
-    print('🧘 Provider selected star: "${_activeMindfulnessStar?.text}"');
+    AppLogger.info('🧘 Provider selected star: "${_activeMindfulnessStar?.text}"');
     notifyListeners();
   }
 
@@ -550,10 +551,10 @@ class GratitudeProvider extends ChangeNotifier {
     
     // CRITICAL: Sync immediately for data safety (restoration is important)
     if (_authService.hasEmailAccount) {
-      print('💾 Star restored - triggering immediate sync');
+      AppLogger.sync('💾 Star restored - triggering immediate sync');
       _markPendingChanges();
       _performBackgroundSync().catchError((e) {
-        print('⚠️ Immediate sync failed: $e');
+        AppLogger.sync('⚠️ Immediate sync failed: $e');
         _scheduleSync(); // Fallback to debounced
       });
     }
@@ -576,13 +577,6 @@ class GratitudeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Mark changes as pending and schedule background sync
-  void _markPendingAndScheduleSync() {
-    _hasPendingChanges = true;
-    _syncStatusService.markPending();
-    _scheduleSync();
-  }
-  
   /// Mark changes as pending without scheduling sync (for manual sync triggering)
   void _markPendingChanges() {
     _hasPendingChanges = true;
@@ -599,22 +593,22 @@ class GratitudeProvider extends ChangeNotifier {
       _performBackgroundSync();
     });
 
-    print('⏱️ Sync scheduled for 30 seconds from now');
+    AppLogger.sync('⏱️ Sync scheduled for 30 seconds from now');
   }
 
   /// Perform the actual background sync
   Future<void> _performBackgroundSync() async {
     if (!_authService.hasEmailAccount) {
-      print('📵 Not signed in, skipping sync');
+      AppLogger.auth('📵 Not signed in, skipping sync');
       return;
     }
 
     if (!_syncStatusService.canSync) {
-      print('📵 Cannot sync (offline or already syncing)');
+      AppLogger.sync('📵 Cannot sync (offline or already syncing)');
       return;
     }
 
-    print('🔄 Starting background sync...');
+    AppLogger.sync('🔄 Starting background sync...');
     _syncStatusService.markSyncing();
 
     try {
@@ -622,14 +616,14 @@ class GratitudeProvider extends ChangeNotifier {
 
       _hasPendingChanges = false;
       _syncStatusService.markSynced();
-      print('✅ Background sync complete');
+      AppLogger.sync('✅ Background sync complete');
     } catch (e) {
-      print('❌ Background sync failed: $e');
+      AppLogger.sync('❌ Background sync failed: $e');
       _syncStatusService.markError(e.toString());
 
       // Handle rate limit errors - DON'T retry automatically
       if (e is RateLimitException) {
-        print('! Rate limit exceeded - waiting for reset, no automatic retry');
+        AppLogger.info('! Rate limit exceeded - waiting for reset, no automatic retry');
         // User can manually retry later or wait for next change to trigger sync
         return;
       }
@@ -639,14 +633,14 @@ class GratitudeProvider extends ChangeNotifier {
       const maxRetries = 3;
 
       if (_retryAttempts > maxRetries) {
-        print('❌ Max retry attempts reached ($maxRetries), giving up');
+        AppLogger.error('❌ Max retry attempts reached ($maxRetries), giving up');
         _retryAttempts = 0; // Reset for next sync trigger
         return;
       }
 
       // Exponential backoff: 2min, 4min, 8min
       final backoffMinutes = 2 * math.pow(2, _retryAttempts - 1).toInt();
-      print('🔄 Scheduling retry #$_retryAttempts in $backoffMinutes minutes...');
+      AppLogger.info('🔄 Scheduling retry #$_retryAttempts in $backoffMinutes minutes...');
 
       _syncDebouncer = Timer(Duration(minutes: backoffMinutes), () {
         _performBackgroundSync();
@@ -658,6 +652,22 @@ class GratitudeProvider extends ChangeNotifier {
   Future<void> forceSync() async {
     _syncDebouncer?.cancel(); // Cancel scheduled sync
     await _performBackgroundSync();
+  }
+
+  /// Restore data from backup
+  Future<void> restoreFromBackup(List<GratitudeStar> backupStars) async {
+    _gratitudeStars = backupStars;
+    
+    // Save to local storage
+    await StorageService.saveGratitudeStars(_gratitudeStars);
+    
+    // If signed in, sync to cloud
+    if (_authService.hasEmailAccount) {
+      _scheduleSync(); // This will trigger cloud sync
+    }
+    
+    notifyListeners();
+    AppLogger.success('✅ Restored ${backupStars.length} stars from backup');
   }
 
   @override

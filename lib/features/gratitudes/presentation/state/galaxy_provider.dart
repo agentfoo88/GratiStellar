@@ -3,6 +3,7 @@ import '../../../../galaxy_metadata.dart';
 import '../../../gratitudes/data/repositories/galaxy_repository.dart';
 import '../../../gratitudes/data/repositories/gratitude_repository.dart';
 import 'gratitude_provider.dart';
+import '../../../../core/utils/app_logger.dart';
 
 /// Provider for galaxy state management
 ///
@@ -67,7 +68,7 @@ class GalaxyProvider extends ChangeNotifier {
   Future<void> initialize() async {
     // Guard against duplicate initialization
     if (_isInitialized) {
-      print('ℹ️ Galaxy system already initialized, skipping...');
+      AppLogger.warning('ℹ️ Galaxy system already initialized, skipping...');
       return;
     }
 
@@ -77,15 +78,15 @@ class GalaxyProvider extends ChangeNotifier {
 
       // Load the saved active galaxy ID from storage
       _activeGalaxyId = await _galaxyRepository.getActiveGalaxyId();
-      print('📝 Loaded active galaxy from storage: $_activeGalaxyId');
+      AppLogger.data('📝 Loaded active galaxy from storage: $_activeGalaxyId');
 
       // If no active galaxy, create a default one
       if (_activeGalaxyId == null && _galaxies.isEmpty) {
-        print('📝 No galaxies found, creating default galaxy');
+        AppLogger.start('📝 No galaxies found, creating default galaxy');
         await createGalaxy(name: 'My First Galaxy', switchToNew: true);
       } else if (_activeGalaxyId == null && _galaxies.isNotEmpty) {
         // Set first galaxy as active
-        print('📝 Setting first galaxy as active');
+        AppLogger.info('📝 Setting first galaxy as active');
         _activeGalaxyId = _galaxies.first.id;
         await _galaxyRepository.setActiveGalaxy(_activeGalaxyId!);
         notifyListeners();
@@ -94,7 +95,7 @@ class GalaxyProvider extends ChangeNotifier {
       // Set the active galaxy filter in the gratitude repository
       if (_activeGalaxyId != null) {
         _gratitudeRepository.setActiveGalaxyId(_activeGalaxyId);
-        print('🔧 Set gratitude repository filter to: $_activeGalaxyId');
+        AppLogger.info('🔧 Set gratitude repository filter to: $_activeGalaxyId');
 
         // Migrate existing stars to active galaxy (one-time migration)
         await _gratitudeRepository.migrateStarsToActiveGalaxy(_activeGalaxyId!);
@@ -105,15 +106,15 @@ class GalaxyProvider extends ChangeNotifier {
       if (_galaxies.isNotEmpty) {
         // syncToCloud() handles auth check internally and no-ops if not authenticated
         syncToCloud().catchError((e) {
-          print('⚠️ Background galaxy sync failed during init: $e');
+          AppLogger.sync('⚠️ Background galaxy sync failed during init: $e');
           // Not critical - will sync on next galaxy switch
         });
         // Don't await - run in background to avoid blocking initialization
       }
 
-      print('✅ Galaxy system initialized, active: $_activeGalaxyId');
+      AppLogger.success('✅ Galaxy system initialized, active: $_activeGalaxyId');
     } catch (e) {
-      print('❌ Galaxy initialization failed: $e');
+      AppLogger.error('❌ Galaxy initialization failed: $e');
     }
   }
 
@@ -127,7 +128,7 @@ class GalaxyProvider extends ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('⚠️ Error loading galaxies: $e');
+      AppLogger.error('⚠️ Error loading galaxies: $e');
       rethrow;
     }
   }
@@ -149,7 +150,7 @@ class GalaxyProvider extends ChangeNotifier {
           // Check for orphaned stars (pointing to non-existent galaxies)
           if (!validGalaxyIds.contains(star.galaxyId)) {
             orphanedStars++;
-            print('⚠️ Found orphaned star "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" pointing to deleted galaxy: ${star.galaxyId}');
+            AppLogger.warning('⚠️ Found orphaned star "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" pointing to deleted galaxy: ${star.galaxyId}');
             // Don't count orphaned stars - they need manual cleanup
             continue;
           }
@@ -159,7 +160,7 @@ class GalaxyProvider extends ChangeNotifier {
       }
       
       if (orphanedStars > 0) {
-        print('⚠️ Found $orphanedStars orphaned stars - consider manual cleanup');
+        AppLogger.warning('⚠️ Found $orphanedStars orphaned stars - consider manual cleanup');
       }
       
       // Check each galaxy for mismatch
@@ -170,7 +171,7 @@ class GalaxyProvider extends ChangeNotifier {
         final actualCount = actualCounts[galaxy.id] ?? 0;
         
         if (galaxy.starCount != actualCount) {
-          print('🔄 Reconciling galaxy "${galaxy.name}": metadata says ${galaxy.starCount}, actual is $actualCount');
+          AppLogger.data('🔄 Reconciling galaxy "${galaxy.name}": metadata says ${galaxy.starCount}, actual is $actualCount');
           updatedGalaxies.add(galaxy.copyWith(starCount: actualCount));
           needsUpdate = true;
         } else {
@@ -182,10 +183,10 @@ class GalaxyProvider extends ChangeNotifier {
       if (needsUpdate) {
         _galaxies = updatedGalaxies;
         await _galaxyRepository.saveGalaxies(_galaxies);
-        print('✅ Reconciled star counts for ${updatedGalaxies.length} galaxies');
+        AppLogger.success('✅ Reconciled star counts for ${updatedGalaxies.length} galaxies');
       }
     } catch (e) {
-      print('⚠️ Error reconciling star counts: $e');
+      AppLogger.error('⚠️ Error reconciling star counts: $e');
       // Don't rethrow - this is a background operation
     }
   }
@@ -212,17 +213,17 @@ class GalaxyProvider extends ChangeNotifier {
         try {
           await _gratitudeProvider.loadGratitudes(waitForSync: true);
         } catch (e) {
-          print('⚠️ Failed to load gratitudes during switch: $e');
+          AppLogger.error('⚠️ Failed to load gratitudes during switch: $e');
           // Continue anyway - don't block the switch
         }
       }
 
       notifyListeners();
       
-      print('✅ Created galaxy: ${galaxy.name} (${galaxy.id})');
+      AppLogger.success('✅ Created galaxy: ${galaxy.name} (${galaxy.id})');
       return galaxy;
     } catch (e) {
-      print('⚠️ Error creating galaxy: $e');
+      AppLogger.error('⚠️ Error creating galaxy: $e');
       rethrow;
     }
   }
@@ -234,12 +235,12 @@ class GalaxyProvider extends ChangeNotifier {
   }) async {
     // Validate galaxy exists
     if (!_galaxies.any((g) => g.id == galaxyId)) {
-      print('⚠️ Cannot switch to non-existent galaxy: $galaxyId');
+      AppLogger.warning('⚠️ Cannot switch to non-existent galaxy: $galaxyId');
       throw Exception('Galaxy $galaxyId does not exist');
     }
     
     if (_activeGalaxyId == galaxyId) {
-      print('ℹ️ Already on galaxy $galaxyId');
+      AppLogger.info('ℹ️ Already on galaxy $galaxyId');
       return;
     }
 
@@ -256,17 +257,17 @@ class GalaxyProvider extends ChangeNotifier {
       await _galaxyRepository.setActiveGalaxy(galaxyId);
       _activeGalaxyId = galaxyId;
 
-      print('🔄 Galaxy switch: set active to $galaxyId');
+      AppLogger.info('🔄 Galaxy switch: set active to $galaxyId');
 
       // Step 3: Reload galaxies to update lastViewedAt
       await loadGalaxies();
 
       // Step 4: Reload gratitudes with new galaxy filter AND wait for sync
-      print('🔄 Galaxy switch: reloading gratitudes for galaxy $galaxyId');
+      AppLogger.data('🔄 Galaxy switch: reloading gratitudes for galaxy $galaxyId');
       await _gratitudeProvider.loadGratitudes(waitForSync: true);
 
       final starCount = _gratitudeProvider.gratitudeStars.length;
-      print('🔄 Galaxy switch: loaded $starCount stars (synced)');
+      AppLogger.sync('🔄 Galaxy switch: loaded $starCount stars (synced)');
 
       // Step 5: Fade in animation callback
       if (onFadeIn != null) {
@@ -275,9 +276,9 @@ class GalaxyProvider extends ChangeNotifier {
 
       // Get galaxy name for logging
       final galaxyName = _galaxies.firstWhere((g) => g.id == galaxyId).name;
-      print('✅ Switched to galaxy "$galaxyName" ($starCount stars)');
+      AppLogger.success('✅ Switched to galaxy "$galaxyName" ($starCount stars)');
     } catch (e) {
-      print('⚠️ Error switching galaxy: $e');
+      AppLogger.error('⚠️ Error switching galaxy: $e');
       rethrow;
     } finally {
       _isSwitching = false;
@@ -289,12 +290,12 @@ class GalaxyProvider extends ChangeNotifier {
   Future<void> setActiveGalaxy(String galaxyId) async {
     // Validate galaxy exists
     if (!_galaxies.any((g) => g.id == galaxyId)) {
-      print('⚠️ Cannot set non-existent galaxy as active: $galaxyId');
+      AppLogger.warning('⚠️ Cannot set non-existent galaxy as active: $galaxyId');
       throw Exception('Galaxy $galaxyId does not exist');
     }
     
     if (_activeGalaxyId == galaxyId) {
-      print('ℹ️ Already on galaxy $galaxyId');
+      AppLogger.info('ℹ️ Already on galaxy $galaxyId');
       return;
     }
 
@@ -310,9 +311,9 @@ class GalaxyProvider extends ChangeNotifier {
       
       // Get galaxy name for better logging
       final galaxyName = _galaxies.firstWhere((g) => g.id == galaxyId).name;
-      print('✅ Set active galaxy: "$galaxyName" ($galaxyId)');
+      AppLogger.success('✅ Set active galaxy: "$galaxyName" ($galaxyId)');
     } catch (e) {
-      print('⚠️ Error setting active galaxy: $e');
+      AppLogger.error('⚠️ Error setting active galaxy: $e');
       rethrow;
     }
   }
@@ -322,7 +323,7 @@ class GalaxyProvider extends ChangeNotifier {
     try {
       final index = _galaxies.indexWhere((g) => g.id == galaxyId);
       if (index == -1) {
-        print('⚠️ Galaxy $galaxyId not found');
+        AppLogger.warning('⚠️ Galaxy $galaxyId not found');
         return;
       }
 
@@ -335,14 +336,14 @@ class GalaxyProvider extends ChangeNotifier {
       await _galaxyRepository.updateGalaxy(updatedGalaxy);
       await loadGalaxies();
 
-      print('✅ Renamed galaxy to: "$truncatedName"');
+      AppLogger.success('✅ Renamed galaxy to: "$truncatedName"');
       
       // Sync to cloud immediately if authenticated (don't wait)
       syncToCloud().catchError((e) {
-        print('⚠️ Failed to sync renamed galaxy to cloud: $e');
+        AppLogger.sync('⚠️ Failed to sync renamed galaxy to cloud: $e');
       });
     } catch (e) {
-      print('⚠️ Error renaming galaxy: $e');
+      AppLogger.error('⚠️ Error renaming galaxy: $e');
       rethrow;
     }
   }
@@ -367,14 +368,14 @@ class GalaxyProvider extends ChangeNotifier {
       }
 
       notifyListeners();
-      print('✅ Deleted galaxy "$galaxyName" ($galaxyId)');
+      AppLogger.success('✅ Deleted galaxy "$galaxyName" ($galaxyId)');
       
       // Sync deletion to cloud immediately if authenticated (don't wait)
       syncToCloud().catchError((e) {
-        print('⚠️ Failed to sync galaxy deletion to cloud: $e');
+        AppLogger.sync('⚠️ Failed to sync galaxy deletion to cloud: $e');
       });
     } catch (e) {
-      print('⚠️ Error deleting galaxy: $e');
+      AppLogger.error('⚠️ Error deleting galaxy: $e');
       rethrow;
     }
   }
@@ -390,14 +391,14 @@ class GalaxyProvider extends ChangeNotifier {
       ).name;
       
       notifyListeners();
-      print('✅ Restored galaxy "$galaxyName" ($galaxyId)');
+      AppLogger.success('✅ Restored galaxy "$galaxyName" ($galaxyId)');
       
       // Sync restoration to cloud immediately if authenticated (don't wait)
       syncToCloud().catchError((e) {
-        print('⚠️ Failed to sync galaxy restoration to cloud: $e');
+        AppLogger.sync('⚠️ Failed to sync galaxy restoration to cloud: $e');
       });
     } catch (e) {
-      print('⚠️ Error restoring galaxy: $e');
+      AppLogger.error('⚠️ Error restoring galaxy: $e');
       rethrow;
     }
   }
@@ -411,7 +412,7 @@ class GalaxyProvider extends ChangeNotifier {
       await loadGalaxies();
       notifyListeners();
     } catch (e) {
-      print('⚠️ Error updating star count: $e');
+      AppLogger.error('⚠️ Error updating star count: $e');
     }
   }
 
@@ -427,16 +428,16 @@ class GalaxyProvider extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      print('⚠️ Error syncing galaxies from cloud: $e');
+      AppLogger.sync('⚠️ Error syncing galaxies from cloud: $e');
       
       // If cloud sync fails but we have local galaxies, try to upload them
       // This handles the case where Firebase has no galaxy data yet
       if (_galaxies.isNotEmpty) {
-        print('🔄 Attempting to upload local galaxies to cloud as fallback...');
+        AppLogger.sync('🔄 Attempting to upload local galaxies to cloud as fallback...');
         try {
           await syncToCloud();
         } catch (uploadError) {
-          print('⚠️ Fallback upload also failed: $uploadError');
+          AppLogger.sync('⚠️ Fallback upload also failed: $uploadError');
         }
       }
       
@@ -449,7 +450,7 @@ class GalaxyProvider extends ChangeNotifier {
     try {
       await _galaxyRepository.syncToCloud();
     } catch (e) {
-      print('⚠️ Error syncing galaxies to cloud: $e');
+      AppLogger.sync('⚠️ Error syncing galaxies to cloud: $e');
       rethrow;
     }
   }
@@ -463,7 +464,27 @@ class GalaxyProvider extends ChangeNotifier {
       _isInitialized = false; // Reset initialization flag
       notifyListeners();
     } catch (e) {
-      print('⚠️ Error clearing galaxy data: $e');
+      AppLogger.error('⚠️ Error clearing galaxy data: $e');
     }
+  }
+
+  /// Restore galaxies from backup
+  Future<void> restoreFromBackup(List<GalaxyMetadata> backupGalaxies) async {
+    _galaxies = backupGalaxies;
+
+    // Save to local storage
+    await _galaxyRepository.saveGalaxies(_galaxies);
+    
+    // If we don't have an active galaxy, set to first one
+    if (_activeGalaxyId == null && _galaxies.isNotEmpty) {
+      _activeGalaxyId = _galaxies.first.id;
+      await _galaxyRepository.setActiveGalaxy(_activeGalaxyId!);
+    }
+
+    // Sync to cloud (repository handles auth check internally)
+    await syncToCloud();
+    
+    notifyListeners();
+    AppLogger.success('✅ Restored ${backupGalaxies.length} galaxies from backup');
   }
 }

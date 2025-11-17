@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3, Vector4, Matrix4;
 import 'core/accessibility/motion_helper.dart';
 import 'storage.dart';
+import 'core/utils/app_logger.dart';
 
 class CameraController extends ChangeNotifier {
   // Camera state
@@ -139,7 +140,7 @@ class CameraController extends ChangeNotifier {
     // Ensure minimum bounds
     _maxPanDistance = math.max(_maxPanDistance, 2000.0);
 
-    print('🎯 Pan distance at ${_scale.toStringAsFixed(1)}x zoom: ${_maxPanDistance.toStringAsFixed(0)}px (padding: ${(paddingFactor * 100).toStringAsFixed(0)}%)');
+    AppLogger.info('🎯 Pan distance at ${_scale.toStringAsFixed(1)}x zoom: ${_maxPanDistance.toStringAsFixed(0)}px (padding: ${(paddingFactor * 100).toStringAsFixed(0)}%)');
   }
 
   // Update camera position during drag
@@ -363,7 +364,7 @@ class CameraController extends ChangeNotifier {
       screenSize.height / 2 - centerY * targetScale,
     );
 
-    print('📐 Fit all: bounds ($minX, $minY) to ($maxX, $maxY), scale: $targetScale');
+    AppLogger.info('📐 Fit all: bounds ($minX, $minY) to ($maxX, $maxY), scale: $targetScale');
 
     animateTo(
       targetPosition: targetPosition,
@@ -461,10 +462,10 @@ class CameraControlsOverlay extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.7),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withOpacity(0.9),
+                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFFFFE135).withOpacity(0.3),
+                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -487,10 +488,10 @@ class CameraControlsOverlay extends StatelessWidget {
                       color: Colors.transparent,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withOpacity(0.9),
+                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(controlSize / 2),
                           border: Border.all(
-                            color: const Color(0xFFFFE135).withOpacity(0.3),
+                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -550,10 +551,10 @@ class CameraControlsOverlay extends StatelessWidget {
                       color: Colors.transparent,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withOpacity(0.9),
+                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(controlSize / 2),
                           border: Border.all(
-                            color: const Color(0xFFFFE135).withOpacity(0.3),
+                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -591,10 +592,10 @@ class CameraControlsOverlay extends StatelessWidget {
                       color: Colors.transparent,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withOpacity(0.9),
+                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(controlSize / 2),
                           border: Border.all(
-                            color: const Color(0xFFFFE135).withOpacity(0.3),
+                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),

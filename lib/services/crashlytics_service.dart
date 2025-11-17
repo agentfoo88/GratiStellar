@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
+import '../core/utils/app_logger.dart';
 
 /// Service for crash reporting and analytics
 class CrashlyticsService {
@@ -29,9 +30,9 @@ class CrashlyticsService {
       await _logDeviceInfo();
 
       _initialized = true;
-      print('✅ Crashlytics initialized');
+      AppLogger.error('✅ Crashlytics initialized');
     } catch (e) {
-      print('⚠️ Failed to initialize Crashlytics: $e');
+      AppLogger.error('⚠️ Failed to initialize Crashlytics: $e');
     }
   }
 
@@ -49,7 +50,7 @@ class CrashlyticsService {
         FirebaseCrashlytics.instance.setCustomKey('device_brand', androidInfo.brand);
         FirebaseCrashlytics.instance.setCustomKey('android_release', androidInfo.version.release);
 
-        print('📱 Device: ${androidInfo.manufacturer} ${androidInfo.model} (Android ${androidInfo.version.sdkInt})');
+        AppLogger.info('📱 Device: ${androidInfo.manufacturer} ${androidInfo.model} (Android ${androidInfo.version.sdkInt})');
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
 
@@ -57,10 +58,10 @@ class CrashlyticsService {
         FirebaseCrashlytics.instance.setCustomKey('device_model', iosInfo.model);
         FirebaseCrashlytics.instance.setCustomKey('device_name', iosInfo.name);
 
-        print('📱 Device: ${iosInfo.model} (iOS ${iosInfo.systemVersion})');
+        AppLogger.info('📱 Device: ${iosInfo.model} (iOS ${iosInfo.systemVersion})');
       }
     } catch (e) {
-      print('⚠️ Could not get device info: $e');
+      AppLogger.warning('⚠️ Could not get device info: $e');
     }
   }
 

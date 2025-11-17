@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/constants.dart';
+import '../utils/app_logger.dart';
 
 /// Manages all animation controllers for the gratitude visualization
 ///
@@ -84,7 +85,7 @@ class AnimationManager {
     });
 
     _isInitialized = true;
-    print('🎭 AnimationManager initialized with ${_reduceMotion ? "REDUCED" : "FULL"} motion');
+    AppLogger.start('🎭 AnimationManager initialized with ${_reduceMotion ? "REDUCED" : "FULL"} motion');
   }
 
   /// Start the birth animation with a specific duration
@@ -135,6 +136,6 @@ class AnimationManager {
     _starController.dispose();
     _birthController?.dispose();
     _isInitialized = false;
-    print('🎭 AnimationManager disposed');
+    AppLogger.info('🎭 AnimationManager disposed');
   }
 }

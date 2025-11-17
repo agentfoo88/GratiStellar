@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../core/utils/app_logger.dart';
 
 /// Remote data source for galaxy metadata operations
 class GalaxyRemoteDataSource {
@@ -25,7 +26,7 @@ class GalaxyRemoteDataSource {
     try {
       final collection = _getGalaxyCollection();
       if (collection == null) {
-        print('⚠️ No user authenticated, cannot load galaxies from Firestore');
+        AppLogger.auth('⚠️ No user authenticated, cannot load galaxies from Firestore');
         return [];
       }
 
@@ -34,7 +35,7 @@ class GalaxyRemoteDataSource {
           .map((doc) => GalaxyMetadata.fromJson(doc.data() as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('⚠️ Error loading galaxies from Firestore: $e');
+      AppLogger.error('⚠️ Error loading galaxies from Firestore: $e');
       rethrow;
     }
   }
@@ -44,25 +45,25 @@ class GalaxyRemoteDataSource {
     try {
       final collection = _getGalaxyCollection();
       if (collection == null) {
-        print('⚠️ No user authenticated, cannot save galaxy to Firestore');
+        AppLogger.auth('⚠️ No user authenticated, cannot save galaxy to Firestore');
         return;
       }
 
       await collection.doc(galaxy.id).set(galaxy.toJson());
-      print('☁️ Saved galaxy ${galaxy.name} to Firestore');
+      AppLogger.data('☁️ Saved galaxy ${galaxy.name} to Firestore');
     } on FirebaseException catch (e) {
       // Handle Firestore-specific errors gracefully
       if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        print('! Network error saving galaxy: ${e.message}');
+        AppLogger.sync('! Network error saving galaxy: ${e.message}');
         // Don't throw - local data still works
       } else if (e.code == 'permission-denied') {
-        print('! Permission error saving galaxy: ${e.message}');
+        AppLogger.error('! Permission error saving galaxy: ${e.message}');
         // Don't throw - local data still works
       } else {
-        print('! Firebase error saving galaxy: ${e.code} - ${e.message}');
+        AppLogger.sync('! Firebase error saving galaxy: ${e.code} - ${e.message}');
       }
     } catch (e) {
-      print('! Error saving galaxy to Firestore: $e');
+      AppLogger.error('! Error saving galaxy to Firestore: $e');
       // Don't rethrow - allow app to continue with local data
     }
   }
@@ -72,26 +73,26 @@ class GalaxyRemoteDataSource {
     try {
       final collection = _getGalaxyCollection();
       if (collection == null) {
-        print('⚠️ No user authenticated, cannot update galaxy in Firestore');
+        AppLogger.auth('⚠️ No user authenticated, cannot update galaxy in Firestore');
         return;
       }
 
       // Use .set(merge: true) instead of .update() to handle non-existent documents
       await collection.doc(galaxy.id).set(galaxy.toJson(), SetOptions(merge: true));
-      print('☁️ Updated galaxy ${galaxy.name} in Firestore');
+      AppLogger.data('☁️ Updated galaxy ${galaxy.name} in Firestore');
     } on FirebaseException catch (e) {
       // Handle Firestore-specific errors gracefully
       if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        print('! Network error updating galaxy: ${e.message}');
+        AppLogger.sync('! Network error updating galaxy: ${e.message}');
         // Don't throw - local data still works
       } else if (e.code == 'permission-denied') {
-        print('! Permission error updating galaxy: ${e.message}');
+        AppLogger.error('! Permission error updating galaxy: ${e.message}');
         // Don't throw - local data still works
       } else {
-        print('! Firebase error updating galaxy: ${e.code} - ${e.message}');
+        AppLogger.sync('! Firebase error updating galaxy: ${e.code} - ${e.message}');
       }
     } catch (e) {
-      print('! Error updating galaxy in Firestore: $e');
+      AppLogger.error('! Error updating galaxy in Firestore: $e');
       // Don't rethrow - allow app to continue with local data
     }
   }
@@ -101,7 +102,7 @@ class GalaxyRemoteDataSource {
     try {
       final collection = _getGalaxyCollection();
       if (collection == null) {
-        print('⚠️ No user authenticated, cannot delete galaxy from Firestore');
+        AppLogger.auth('⚠️ No user authenticated, cannot delete galaxy from Firestore');
         return;
       }
 
@@ -110,20 +111,20 @@ class GalaxyRemoteDataSource {
         'deleted': true,
         'deletedAt': DateTime.now().millisecondsSinceEpoch,
       }, SetOptions(merge: true));
-      print('☁️ Soft deleted galaxy $galaxyId in Firestore');
+      AppLogger.data('☁️ Soft deleted galaxy $galaxyId in Firestore');
     } on FirebaseException catch (e) {
       // Handle Firestore-specific errors gracefully
       if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        print('! Network error deleting galaxy: ${e.message}');
+        AppLogger.sync('! Network error deleting galaxy: ${e.message}');
         // Don't throw - local data still works
       } else if (e.code == 'permission-denied') {
-        print('! Permission error deleting galaxy: ${e.message}');
+        AppLogger.error('! Permission error deleting galaxy: ${e.message}');
         // Don't throw - local data still works
       } else {
-        print('! Firebase error deleting galaxy: ${e.code} - ${e.message}');
+        AppLogger.sync('! Firebase error deleting galaxy: ${e.code} - ${e.message}');
       }
     } catch (e) {
-      print('! Error deleting galaxy from Firestore: $e');
+      AppLogger.error('! Error deleting galaxy from Firestore: $e');
       // Don't rethrow - allow app to continue with local data
     }
   }
@@ -138,7 +139,7 @@ class GalaxyRemoteDataSource {
       final data = doc.data();
       return data?['activeGalaxyId'] as String?;
     } catch (e) {
-      print('⚠️ Error getting active galaxy ID from Firestore: $e');
+      AppLogger.error('⚠️ Error getting active galaxy ID from Firestore: $e');
       return null;
     }
   }
@@ -148,7 +149,7 @@ class GalaxyRemoteDataSource {
     try {
       final userId = _authService.currentUser?.uid;
       if (userId == null) {
-        print('⚠️ No user authenticated, cannot set active galaxy in Firestore');
+        AppLogger.auth('⚠️ No user authenticated, cannot set active galaxy in Firestore');
         return;
       }
 
@@ -156,9 +157,9 @@ class GalaxyRemoteDataSource {
         {'activeGalaxyId': galaxyId},
         SetOptions(merge: true),
       );
-      print('☁️ Set active galaxy $galaxyId in Firestore');
+      AppLogger.data('☁️ Set active galaxy $galaxyId in Firestore');
     } catch (e) {
-      print('⚠️ Error setting active galaxy ID in Firestore: $e');
+      AppLogger.error('⚠️ Error setting active galaxy ID in Firestore: $e');
       rethrow;
     }
   }

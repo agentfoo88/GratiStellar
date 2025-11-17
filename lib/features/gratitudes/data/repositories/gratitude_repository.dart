@@ -6,6 +6,7 @@ import '../../../../services/auth_service.dart';
 import '../../../../storage.dart';
 import '../datasources/local_data_source.dart';
 import '../datasources/remote_data_source.dart';
+import '../../../../core/utils/app_logger.dart';
 
 /// Repository for gratitude data operations
 ///
@@ -30,30 +31,30 @@ class GratitudeRepository {
   Future<List<GratitudeStar>> getGratitudes() async {
     final allStars = await _localDataSource.loadStars();
 
-    print('🌌 Repository: Loading stars, activeGalaxyId: $_activeGalaxyId');
-    print('🌌 All stars: ${allStars.length}');
+    AppLogger.data('🌌 Repository: Loading stars, activeGalaxyId: $_activeGalaxyId');
+    AppLogger.info('🌌 All stars: ${allStars.length}');
 
     // Debug: Show what galaxy IDs the stars actually have
-    print('🌌 Star galaxy IDs:');
+    AppLogger.info('🌌 Star galaxy IDs:');
     for (final star in allStars) {
-      print('   - "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" → galaxyId: "${star.galaxyId}" (deleted: ${star.deleted})');
+      AppLogger.info('   - "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" → galaxyId: "${star.galaxyId}" (deleted: ${star.deleted})');
     }
 
     // Filter by active galaxy if set
     if (_activeGalaxyId != null) {
       final filtered = allStars.where((star) => star.galaxyId == _activeGalaxyId).toList();
-      print('🌌 Filtered stars for galaxy $_activeGalaxyId: ${filtered.length}');
+      AppLogger.info('🌌 Filtered stars for galaxy $_activeGalaxyId: ${filtered.length}');
       return filtered;
     }
 
-    print('🌌 No active galaxy, returning all ${allStars.length} stars');
+    AppLogger.info('🌌 No active galaxy, returning all ${allStars.length} stars');
     return allStars;
   }
 
   /// Set the active galaxy ID for filtering
   void setActiveGalaxyId(String? galaxyId) {
     _activeGalaxyId = galaxyId;
-    print('🌌 Active galaxy set to: $galaxyId');
+    AppLogger.info('🌌 Active galaxy set to: $galaxyId');
   }
 
   /// Get the current active galaxy ID
@@ -75,7 +76,7 @@ class GratitudeRepository {
     await _localDataSource.saveStars(updatedStars);
 
     // Cloud sync happens via debounced timer to prevent UI freezing
-    print('💾 Star saved locally: ${star.id}');
+    AppLogger.data('💾 Star saved locally: ${star.id}');
   }
 
   /// Update an existing gratitude (local + cloud if authenticated)
@@ -88,7 +89,7 @@ class GratitudeRepository {
       await _localDataSource.saveStars(updatedStars);
 
       // Cloud sync happens via debounced timer to prevent UI freezing
-      print('💾 Star updated locally: ${star.id}');
+      AppLogger.data('💾 Star updated locally: ${star.id}');
     }
   }
 
@@ -102,13 +103,13 @@ class GratitudeRepository {
       await _localDataSource.saveStars(updatedStars);
 
       // Cloud sync happens via debounced timer to prevent UI freezing
-      print('💾 Star deleted locally: ${deletedStar.id}');
+      AppLogger.data('💾 Star deleted locally: ${deletedStar.id}');
     }
   }
 
   /// Sync with cloud - merge local and remote data
   Future<List<GratitudeStar>> syncWithCloud(List<GratitudeStar> localStars) async {
-    print('🔄 Starting cloud sync...');
+    AppLogger.sync('🔄 Starting cloud sync...');
 
     try {
       // Add timeout to prevent hanging on poor connectivity
@@ -117,25 +118,25 @@ class GratitudeRepository {
 
       if (hasCloudData) {
         // Delta sync - merge changes
-        print('📥 Cloud data exists, syncing...');
+        AppLogger.sync('📥 Cloud data exists, syncing...');
         final mergedStars = await _remoteDataSource.syncStars(localStars)
             .timeout(Duration(seconds: 30));
         await _localDataSource.saveStars(mergedStars);
-        print('✅ Sync complete! Total stars: ${mergedStars.length}');
+        AppLogger.sync('✅ Sync complete! Total stars: ${mergedStars.length}');
         return mergedStars;
       } else {
         // First sync - upload local to cloud
-        print('📤 No cloud data, uploading local stars...');
+        AppLogger.sync('📤 No cloud data, uploading local stars...');
         await _remoteDataSource.uploadStars(localStars)
             .timeout(Duration(seconds: 30));
-        print('✅ Local stars uploaded to cloud');
+        AppLogger.sync('✅ Local stars uploaded to cloud');
         return localStars;
       }
     } on TimeoutException {
-      print('⏱️ Sync timeout - will retry later');
+      AppLogger.sync('⏱️ Sync timeout - will retry later');
       rethrow;
     } catch (e) {
-      print('❌ Sync failed: $e');
+      AppLogger.sync('❌ Sync failed: $e');
       rethrow;
     }
   }
@@ -185,7 +186,7 @@ class GratitudeRepository {
         try {
           await _remoteDataSource.updateStar(restoredStar);
         } catch (e) {
-          print('⚠️ Failed to sync star restore to cloud: $e');
+          AppLogger.sync('⚠️ Failed to sync star restore to cloud: $e');
         }
       }
     }
@@ -195,9 +196,9 @@ class GratitudeRepository {
   Future<void> deleteFromCloud(String starId) async {
     try {
       await _remoteDataSource.deleteStar(starId);
-      print('✅ Deleted star $starId from cloud');
+      AppLogger.sync('✅ Deleted star $starId from cloud');
     } catch (e) {
-      print('⚠️ Failed to delete star from cloud: $e');
+      AppLogger.sync('⚠️ Failed to delete star from cloud: $e');
       // Don't rethrow - this is a background sync operation
     }
   }
@@ -216,7 +217,7 @@ class GratitudeRepository {
 
     final purgedCount = allStars.length - updatedStars.length;
     if (purgedCount > 0) {
-      print('🗑️ Purged $purgedCount old deleted items');
+      AppLogger.data('🗑️ Purged $purgedCount old deleted items');
       await _localDataSource.saveStars(updatedStars);
     }
 
@@ -232,7 +233,7 @@ class GratitudeRepository {
       final migratedStars = allStars.map((star) {
         // If star has no galaxy ID, assign it to the active galaxy
         if (star.galaxyId.isEmpty || star.galaxyId == 'default') {
-          print('📝 Migrating star "${star.text}" to galaxy $activeGalaxyId');
+          AppLogger.info('📝 Migrating star "${star.text}" to galaxy $activeGalaxyId');
           needsSave = true;
           return star.copyWith(galaxyId: activeGalaxyId);
         }
@@ -241,10 +242,10 @@ class GratitudeRepository {
 
       if (needsSave) {
         await _localDataSource.saveStars(migratedStars);
-        print('✅ Migrated ${migratedStars.length} stars to active galaxy');
+        AppLogger.success('✅ Migrated ${migratedStars.length} stars to active galaxy');
       }
     } catch (e) {
-      print('❌ Star migration failed: $e');
+      AppLogger.error('❌ Star migration failed: $e');
     }
   }
 }

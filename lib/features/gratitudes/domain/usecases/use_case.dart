@@ -6,11 +6,11 @@
 /// Each use case should do ONE thing and do it well (Single Responsibility).
 ///
 /// Type parameters:
-/// - [Type]: The return type of the use case
+/// - [T]: The return type of the use case
 /// - [Params]: The parameters required to execute the use case
-abstract class UseCase<Type, Params> {
+abstract class UseCase<T, Params> {
   /// Execute the use case with given parameters
-  Future<Type> call(Params params);
+  Future<T> call(Params params);
 }
 
 /// Use this when a use case doesn't need parameters

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/app_logger.dart';
 
 /// Helper for respecting user's reduced motion preferences
 ///
@@ -49,6 +50,6 @@ class MotionHelper {
   static void debugTouchTarget(BuildContext context, String elementName, double size) {
     final minSize = 48.0;
     final status = size >= minSize ? "✅ PASS" : "❌ FAIL";
-    print("Touch Target: $elementName = ${size.toStringAsFixed(1)}dp $status (min: ${minSize}dp)");
+    AppLogger.info("Touch Target: $elementName = ${size.toStringAsFixed(1)}dp $status (min: ${minSize}dp)");
   }
 }

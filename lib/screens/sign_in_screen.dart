@@ -9,6 +9,7 @@ import '../features/gratitudes/presentation/state/galaxy_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/utils/app_logger.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -40,57 +41,57 @@ class _SignInScreenState extends State<SignInScreen> {
       // (User might have added stars between auth and sync)
       final localStars = await StorageService.loadGratitudeStars();
 
-      print('🔄 Triggering cloud sync with ${localStars.length} local stars');
+      AppLogger.sync('🔄 Triggering cloud sync with ${localStars.length} local stars');
 
       // STEP 1: Sync stars
       final mergedFromUid = await _checkForMergedAccount();
 
       if (mergedFromUid != null) {
-        print('🔀 Merging data from anonymous account: $mergedFromUid');
+        AppLogger.auth('🔀 Merging data from anonymous account: $mergedFromUid');
         await firestoreService.mergeStarsFromAnonymousAccount(mergedFromUid, localStars);
       } else {
         // Check if cloud has data
         final hasCloudData = await firestoreService.hasCloudData();
 
         if (hasCloudData) {
-          print('📥 Cloud has data, syncing...');
+          AppLogger.sync('📥 Cloud has data, syncing...');
           // Don't just upload - sync to merge
           final mergedStars = await firestoreService.syncStars(localStars);
           await StorageService.saveGratitudeStars(mergedStars);
-          print('✅ Synced ${mergedStars.length} stars');
+          AppLogger.sync('✅ Synced ${mergedStars.length} stars');
         } else {
-          print('📤 No cloud data, uploading local stars...');
+          AppLogger.sync('📤 No cloud data, uploading local stars...');
           await firestoreService.uploadStars(localStars);
-          print('✅ Uploaded ${localStars.length} stars');
+          AppLogger.sync('✅ Uploaded ${localStars.length} stars');
         }
       }
 
       // STEP 2: Sync ALL galaxies to cloud (CRITICAL!)
       if (mounted) {
-        print('☁️ Syncing galaxies to cloud...');
+        AppLogger.sync('☁️ Syncing galaxies to cloud...');
         try {
           final galaxyProvider = context.read<GalaxyProvider>();
           
           // Ensure galaxies are loaded before syncing
           if (galaxyProvider.galaxies.isEmpty) {
-            print('📋 Loading galaxies before sync...');
+            AppLogger.sync('📋 Loading galaxies before sync...');
             await galaxyProvider.loadGalaxies();
           }
           
           await galaxyProvider.syncToCloud();
-          print('✅ All galaxies synced to cloud');
+          AppLogger.sync('✅ All galaxies synced to cloud');
         } catch (e, stack) {
-          print('⚠️ Galaxy sync failed: $e');
-          print('Stack trace: $stack');
+          AppLogger.sync('⚠️ Galaxy sync failed: $e');
+          AppLogger.info('Stack trace: $stack');
           // Continue anyway - stars are safe, galaxies will sync on next switch
         }
       } else {
-        print('⚠️ Widget not mounted, skipping galaxy sync');
+        AppLogger.sync('⚠️ Widget not mounted, skipping galaxy sync');
       }
 
-      print('✅ Cloud sync complete (stars + galaxies)');
+      AppLogger.sync('✅ Cloud sync complete (stars + galaxies)');
     } catch (e) {
-      print('⚠️ Cloud sync failed: $e');
+      AppLogger.sync('⚠️ Cloud sync failed: $e');
       // Don't show error to user - local data is still safe
       // Sync will retry on next app launch or galaxy switch
     }
@@ -108,7 +109,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
       return userDoc.data()?['mergedFromAnonymous'] as String?;
     } catch (e) {
-      print('⚠️ Error checking for merged account: $e');
+      AppLogger.auth('⚠️ Error checking for merged account: $e');
       return null;
     }
   }
@@ -213,7 +214,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   String _getErrorMessage(String error) {
     final l10n = AppLocalizations.of(context)!;
-    print('Firebase error: $error');
+    AppLogger.sync('Firebase error: $error');
 
     if (error.contains('email-already-in-use')) {
       return l10n.errorEmailInUse;
@@ -253,10 +254,10 @@ class _SignInScreenState extends State<SignInScreen> {
       if (user != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('local_data_owner_uid', user.uid);
-        print('✅ Set local data owner: ${user.uid}');
+        AppLogger.success('✅ Set local data owner: ${user.uid}');
       }
     } catch (e) {
-      print('⚠️ Error setting data owner: $e');
+      AppLogger.error('⚠️ Error setting data owner: $e');
       // Non-critical, continue anyway
     }
   }

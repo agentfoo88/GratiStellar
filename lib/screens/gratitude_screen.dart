@@ -35,6 +35,7 @@ import '../storage.dart';
 import '../widgets/app_dialog.dart';
 import 'sign_in_screen.dart';
 import 'trash_screen.dart';
+import '../core/utils/app_logger.dart';
 
 class GratitudeScreen extends StatefulWidget {
   const GratitudeScreen({super.key});
@@ -80,6 +81,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
       await provider.completeBirthAnimation();
 
+      if (!mounted) return;
+
       // Update camera bounds for new star
       _cameraController.updateBounds(provider.gratitudeStars, MediaQuery.of(context).size);
 
@@ -92,7 +95,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       _isRegeneratingLayers = true;
     });
 
-    print('🔄 Regenerating layers for size: $newSize');
+    AppLogger.info('🔄 Regenerating layers for size: $newSize');
 
     try {
       // Clear old cache
@@ -109,9 +112,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       _allVanGoghStars = VanGoghStarService.generateVanGoghStars(newSize);
       _animatedVanGoghStars = _allVanGoghStars.skip((_allVanGoghStars.length * 0.9).round()).toList();
 
-      print('✅ Layers regenerated successfully');
+      AppLogger.success('✅ Layers regenerated successfully');
     } catch (e) {
-      print('⚠️ Layer regeneration failed: $e');
+      AppLogger.error('⚠️ Layer regeneration failed: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -126,7 +129,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   @override
   void initState() {
-    print('🎬 GratitudeScreen initState starting...');
+    AppLogger.start('🎬 GratitudeScreen initState starting...');
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _cameraController = CameraController();
@@ -160,16 +163,16 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final staticCount = (_allVanGoghStars.length * 0.9).round(); // 90% static
     _animatedVanGoghStars = _allVanGoghStars.skip(staticCount).toList(); // Last 10% animate
 
-    print('📐 Screen: ${screenSize.width.round()}x${screenSize.height.round()}');
-    print('   🎨 Using cached layers (background, $staticCount Van Gogh stars)');
-    print('   ✨ Animating: ${_animatedVanGoghStars.length} Van Gogh stars');
-    print('   📍 Camera bounds: ${_allVanGoghStars.length} Van Gogh stars (for reference only)');
+    AppLogger.info('📐 Screen: ${screenSize.width.round()}x${screenSize.height.round()}');
+    AppLogger.info('   🎨 Using cached layers (background, $staticCount Van Gogh stars)');
+    AppLogger.info('   ✨ Animating: ${_animatedVanGoghStars.length} Van Gogh stars');
+    AppLogger.info('   📍 Camera bounds: ${_allVanGoghStars.length} Van Gogh stars (for reference only)');
 
     try {
       _initializePrecomputedElements();
-      print('✅ Precomputed elements initialized');
+      AppLogger.success('✅ Precomputed elements initialized');
     } catch (e) {
-      print('❌ Error in initialization: $e');
+      AppLogger.error('❌ Error in initialization: $e');
     }
 
     _loadFontScale();
@@ -187,13 +190,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // First time seeing the size - just store it, don't regenerate
     if (_lastKnownSize == null) {
       _lastKnownSize = currentSize;
-      print('📐 Initial screen size detected: $currentSize');
+      AppLogger.start('📐 Initial screen size detected: $currentSize');
 
       // Allow regeneration after 3 seconds (after splash/initialization)
       Future.delayed(Duration(seconds: 3), () {
         if (mounted) {
           _allowRegeneration = true;
-          print('✅ Regeneration now allowed');
+          AppLogger.success('✅ Regeneration now allowed');
         }
       });
       return;
@@ -201,7 +204,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     // Don't regenerate if not allowed yet (still initializing)
     if (!_allowRegeneration) {
-      print('📐 Size changed but regeneration blocked (still initializing)');
+      AppLogger.start('📐 Size changed but regeneration blocked (still initializing)');
       _lastKnownSize = currentSize;
       return;
     }
@@ -217,12 +220,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     // Don't regenerate if cache isn't ready yet
     if (!_layerCacheInitialized) {
-      print('📐 Size changed but cache not ready, skipping regeneration');
+      AppLogger.warning('📐 Size changed but cache not ready, skipping regeneration');
       _lastKnownSize = currentSize;
       return;
     }
 
-    print('📐 Screen size changed: $_lastKnownSize → $currentSize');
+    AppLogger.info('📐 Screen size changed: $_lastKnownSize → $currentSize');
     _lastKnownSize = currentSize;
 
     // Cancel previous timer if exists
@@ -257,20 +260,20 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           _nebulaAssetImage = frameInfo.image;
         });
       }
-      print('✅ Nebula asset loaded');
+      AppLogger.success('✅ Nebula asset loaded');
     } catch (e) {
-      print('⚠️ Failed to load nebula asset: $e');
+      AppLogger.error('⚠️ Failed to load nebula asset: $e');
     }
   }
 
   void _initializePrecomputedElements() {
-    print('🌟 Starting initialization...');
+    AppLogger.start('🌟 Starting initialization...');
 
     _glowPatterns = GratitudeStarService.generateGlowPatterns();
-    print('✨ Generated ${_glowPatterns.length} glow patterns');
+    AppLogger.info('✨ Generated ${_glowPatterns.length} glow patterns');
 
     _backgroundGradients = BackgroundService.generateBackgroundGradients();
-    print('🎨 Generated ${_backgroundGradients.length} background gradients');
+    AppLogger.info('🎨 Generated ${_backgroundGradients.length} background gradients');
   }
 
   Future<void> _initializeLayerCache(Size screenSize) async {
@@ -287,10 +290,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       }
 
       crashlytics.log('Layer cache ready');
-      print('✅ Layer cache initialized');
+      AppLogger.success('✅ Layer cache initialized');
     } catch (e, stack) {
       crashlytics.recordError(e, stack, reason: 'Layer cache initialization failed');
-      print('⚠️ Layer cache failed: $e');
+      AppLogger.error('⚠️ Layer cache failed: $e');
       // App continues without cache (will be slower but still works)
     }
   }
@@ -345,9 +348,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           // This prevents data loss if app is killed by system
           final provider = context.read<GratitudeProvider>();
           if (provider.hasPendingChanges && _authService.hasEmailAccount) {
-            print('📤 App backgrounding - forcing immediate sync');
+            AppLogger.sync('📤 App backgrounding - forcing immediate sync');
             provider.forceSync().catchError((e) {
-              print('⚠️ Background sync failed: $e');
+              AppLogger.sync('⚠️ Background sync failed: $e');
             });
           }
         }
@@ -393,6 +396,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       colorPresetIndex: colorIndex,
       customColor: customColor,
     );
+
+    if (!mounted) return;
 
     _gratitudeController.clear();
 
@@ -500,7 +505,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final starWorldX = star.worldX * screenSize.width;
     final starWorldY = star.worldY * screenSize.height;
 
-    print('🧘 Navigating to mindfulness star at world: ($starWorldX, $starWorldY)');
+    AppLogger.info('🧘 Navigating to mindfulness star at world: ($starWorldX, $starWorldY)');
 
     // Position at 40% from top (not center) with slow 2-second animation
     final targetPosition = Offset(
@@ -649,7 +654,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha:0.3),
           shape: BoxShape.circle,
         ),
         child: IconButton(
@@ -1234,7 +1239,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final activeMindfulnessStar = provider.activeMindfulnessStar;
     final mindfulnessInterval = provider.mindfulnessInterval;
 
-    print('🏗️ Building GratitudeScreen, isLoading: $isLoading, stars: ${gratitudeStars.length}');
+    AppLogger.data('🏗️ Building GratitudeScreen, isLoading: $isLoading, stars: ${gratitudeStars.length}');
 
     // Navigate to mindfulness star when it changes (with deduplication)
     if (mindfulnessMode && activeMindfulnessStar != null) {

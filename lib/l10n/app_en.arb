@@ -574,5 +574,162 @@
         "save": "Save",
         "@save": {
           "description": "Save button text"
+        },
+
+        "exportBackup": "Export Backup",
+        "@exportBackup": {
+          "description": "Menu item and dialog title for exporting backup"
+        },
+        "exportBackupSubtitle": "Create encrypted backup file",
+        "@exportBackupSubtitle": {
+          "description": "Subtitle for export backup menu item"
+        },
+        "exportBackupDescription": "Create an encrypted backup of all your gratitudes, galaxies, and preferences.",
+        "@exportBackupDescription": {
+          "description": "Description of what backup export does"
+        },
+        "backupWhatsIncluded": "What's included:",
+        "@backupWhatsIncluded": {
+          "description": "Header for list of backup contents"
+        },
+        "backupIncludesGratitudes": "All gratitude entries",
+        "@backupIncludesGratitudes": {
+          "description": "Backup includes gratitudes"
+        },
+        "backupIncludesGalaxies": "All galaxies",
+        "@backupIncludesGalaxies": {
+          "description": "Backup includes galaxies"
+        },
+        "backupIncludesPreferences": "App preferences",
+        "@backupIncludesPreferences": {
+          "description": "Backup includes preferences"
+        },
+        "backupEncrypted": "Encrypted for security",
+        "@backupEncrypted": {
+          "description": "Backup is encrypted"
+        },
+        "createBackup": "Create Backup",
+        "@createBackup": {
+          "description": "Button text to create backup"
+        },
+        "creatingBackup": "Creating backup...",
+        "@creatingBackup": {
+          "description": "Status message while creating backup"
+        },
+        "backupCreatedSuccess": "Backup created successfully!\n{summary}",
+        "@backupCreatedSuccess": {
+          "description": "Success message after backup creation",
+          "placeholders": {
+            "summary": {
+              "type": "String"
+            }
+          }
+        },
+        "backupCreatedSimple": "Backup created successfully!",
+        "@backupCreatedSimple": {
+          "description": "Simple success message for backup"
+        },
+        "backupCreateFailed": "Failed to create backup",
+        "@backupCreateFailed": {
+          "description": "Error message when backup creation fails"
+        },
+        "restoreBackup": "Restore Backup",
+        "@restoreBackup": {
+          "description": "Menu item and dialog title for restoring backup"
+        },
+        "restoreBackupSubtitle": "Import data from backup file",
+        "@restoreBackupSubtitle": {
+          "description": "Subtitle for restore backup menu item"
+        },
+        "restoreBackupDescription": "Select a backup file to restore your data.",
+        "@restoreBackupDescription": {
+          "description": "Description of restore backup process"
+        },
+        "selectBackupFile": "Select Backup File",
+        "@selectBackupFile": {
+          "description": "Button text to select backup file"
+        },
+        "changeFile": "Change File",
+        "@changeFile": {
+          "description": "Button text to change selected file"
+        },
+        "validBackup": "Valid Backup",
+        "@validBackup": {
+          "description": "Label indicating backup file is valid"
+        },
+        "invalidBackup": "Invalid backup file",
+        "@invalidBackup": {
+          "description": "Error for invalid backup file"
+        },
+        "backupCreated": "Created: {date}",
+        "@backupCreated": {
+          "description": "Shows when backup was created",
+          "placeholders": {
+            "date": {
+              "type": "String"
+            }
+          }
+        },
+        "backupAppVersion": "App Version: {version}",
+        "@backupAppVersion": {
+          "description": "Shows app version of backup",
+          "placeholders": {
+            "version": {
+              "type": "String"
+            }
+          }
+        },
+        "restoreStrategy": "Restore Strategy:",
+        "@restoreStrategy": {
+          "description": "Label for restore strategy selection"
+        },
+        "restoreStrategyMerge": "Merge (Recommended)",
+        "@restoreStrategyMerge": {
+          "description": "Merge restore strategy option"
+        },
+        "restoreStrategyMergeDescription": "Keep all data, prefer newer versions",
+        "@restoreStrategyMergeDescription": {
+          "description": "Description of merge strategy"
+        },
+        "restoreStrategyReplace": "Replace All",
+        "@restoreStrategyReplace": {
+          "description": "Replace all restore strategy option"
+        },
+        "restoreStrategyReplaceDescription": "Delete current data, use only backup",
+        "@restoreStrategyReplaceDescription": {
+          "description": "Description of replace strategy"
+        },
+        "restore": "Restore",
+        "@restore": {
+          "description": "Button text to restore backup"
+        },
+        "validatingBackup": "Validating backup...",
+        "@validatingBackup": {
+          "description": "Status while validating backup file"
+        },
+        "restoringBackup": "Restoring backup...",
+        "@restoringBackup": {
+          "description": "Status while restoring backup"
+        },
+        "backupRestoredSuccess": "Backup restored successfully!\n{summary}",
+        "@backupRestoredSuccess": {
+          "description": "Success message after restore",
+          "placeholders": {
+            "summary": {
+              "type": "String"
+            }
+          }
+        },
+        "backupRestoredSimple": "Backup restored successfully!",
+        "@backupRestoredSimple": {
+          "description": "Simple success message for restore"
+        },
+        "backupRestoreFailed": "Failed to import backup",
+        "@backupRestoreFailed": {
+          "description": "Error message when restore fails"
+        },
+        "retry": "Retry",
+        "@retry": {
+          "description": "Button text to retry an operation"
         }
     }

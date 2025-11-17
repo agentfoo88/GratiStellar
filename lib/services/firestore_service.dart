@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/security/rate_limiter.dart';
 import '../storage.dart';
+import '../core/utils/app_logger.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -38,18 +39,18 @@ class FirestoreService {
 
       if (lastSyncTime == null) {
         // First sync - upload everything
-        print('📤 First sync - uploading all ${localStars.length} stars');
+        AppLogger.sync('📤 First sync - uploading all ${localStars.length} stars');
         starsToUpload = localStars;
       } else {
         // Delta sync - only upload stars modified since last sync
         starsToUpload = localStars.where((star) {
-          return star.updatedAt.isAfter(lastSyncTime);
+          return !star.updatedAt.isBefore(lastSyncTime);
         }).toList();
-        print('📤 Delta sync - uploading ${starsToUpload.length} stars (modified since $lastSyncTime)');
+        AppLogger.sync('📤 Delta sync - uploading ${starsToUpload.length} stars (modified since $lastSyncTime)');
       }
 
       if (starsToUpload.isEmpty) {
-        print('✅ No stars to upload');
+        AppLogger.sync('✅ No stars to upload');
         await StorageService.saveLastSyncTime(DateTime.now());
         return;
       }
@@ -74,15 +75,15 @@ class FirestoreService {
           starIds.add(star.id);
         }
 
-        print('   📤 Uploading batch with star IDs: ${starIds.join(", ")}');
+        AppLogger.sync('   📤 Uploading batch with star IDs: ${starIds.join(", ")}');
         await batch.commit();
         totalUploaded += (end - i);
-        print('   ✅ Batch committed: $totalUploaded / ${starsToUpload.length}');
+        AppLogger.sync('   ✅ Batch committed: $totalUploaded / ${starsToUpload.length}');
       }
 
       // Save sync timestamp
       await StorageService.saveLastSyncTime(DateTime.now());
-      print('✅ Delta upload complete: $totalUploaded stars');
+      AppLogger.sync('✅ Delta upload complete: $totalUploaded stars');
       
       // VERIFICATION: Check if all stars actually made it to Firebase
       if (totalUploaded > 0 && totalUploaded <= 20) { // Only verify small syncs to avoid rate limits
@@ -90,29 +91,29 @@ class FirestoreService {
           final snapshot = await _starsCollection!.limit(totalUploaded + 5).get();
           final actualCount = snapshot.docs.length;
           if (actualCount < totalUploaded) {
-            print('⚠️ MISMATCH: Uploaded $totalUploaded but Firebase shows $actualCount documents!');
+            AppLogger.sync('⚠️ MISMATCH: Uploaded $totalUploaded but Firebase shows $actualCount documents!');
           } else {
-            print('✅ Verification: Firebase has at least $actualCount stars');
+            AppLogger.sync('✅ Verification: Firebase has at least $actualCount stars');
           }
         } catch (e) {
-          print('⚠️ Could not verify upload: $e');
+          AppLogger.sync('⚠️ Could not verify upload: $e');
         }
       }
 
     } on FirebaseException catch (e) {
       // Handle Firestore-specific errors
       if (e.code == 'resource-exhausted') {
-        print('❌ Firestore quota exceeded: ${e.message}');
+        AppLogger.error('❌ Firestore quota exceeded: ${e.message}');
         throw RateLimitException('firestore_quota', Duration(minutes: 30));
       } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        print('❌ Network error during upload: ${e.message}');
+        AppLogger.sync('❌ Network error during upload: ${e.message}');
         throw Exception('Network error: ${e.message}');
       } else {
-        print('❌ Firebase error during upload: ${e.code} - ${e.message}');
+        AppLogger.sync('❌ Firebase error during upload: ${e.code} - ${e.message}');
         rethrow;
       }
     } catch (e) {
-      print('❌ Delta upload failed: $e');
+      AppLogger.sync('❌ Delta upload failed: $e');
       rethrow;
     }
   }
@@ -131,13 +132,13 @@ class FirestoreService {
 
       if (lastSyncTime != null) {
         // Delta sync - only get stars modified since last sync
-        print('📥 Delta sync - downloading stars modified since $lastSyncTime');
+        AppLogger.sync('📥 Delta sync - downloading stars modified since $lastSyncTime');
         query = query
             .where('updatedAt', isGreaterThan: lastSyncTime.millisecondsSinceEpoch)
             .where('deleted', isEqualTo: false);  // Don't download deleted stars
       } else {
         // First sync - download everything
-        print('📥 First sync - downloading all stars');
+        AppLogger.sync('📥 First sync - downloading all stars');
         query = query.where('deleted', isEqualTo: false);
       }
 
@@ -148,30 +149,30 @@ class FirestoreService {
         try {
           return GratitudeStar.fromJson(doc.data() as Map<String, dynamic>);
         } catch (e) {
-          print('⚠️ Error parsing star ${doc.id}: $e');
+          AppLogger.error('⚠️ Error parsing star ${doc.id}: $e');
           return null;
         }
       })
           .whereType<GratitudeStar>()
           .toList();
 
-      print('✅ Delta download complete: ${stars.length} stars');
+      AppLogger.sync('✅ Delta download complete: ${stars.length} stars');
       return stars;
 
     } on FirebaseException catch (e) {
       // Handle Firestore-specific errors
       if (e.code == 'resource-exhausted') {
-        print('❌ Firestore quota exceeded: ${e.message}');
+        AppLogger.error('❌ Firestore quota exceeded: ${e.message}');
         throw RateLimitException('firestore_quota', Duration(minutes: 30));
       } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        print('❌ Network error during download: ${e.message}');
+        AppLogger.sync('❌ Network error during download: ${e.message}');
         throw Exception('Network error: ${e.message}');
       } else {
-        print('❌ Firebase error during download: ${e.code} - ${e.message}');
+        AppLogger.sync('❌ Firebase error during download: ${e.code} - ${e.message}');
         rethrow;
       }
     } catch (e) {
-      print('❌ Delta download failed: $e');
+      AppLogger.sync('❌ Delta download failed: $e');
       rethrow;
     }
   }
@@ -189,9 +190,9 @@ class FirestoreService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      print('✅ Star soft deleted: $starId');
+      AppLogger.success('✅ Star soft deleted: $starId');
     } catch (e) {
-      print('❌ Soft delete failed: $e');
+      AppLogger.error('❌ Soft delete failed: $e');
       rethrow;
     }
   }
@@ -210,7 +211,7 @@ class FirestoreService {
 
       if (lastCleanup != null &&
           now - lastCleanup < Duration(days: 1).inMilliseconds) {
-        print('ℹ️ Cleanup already ran today, skipping');
+        AppLogger.warning('ℹ️ Cleanup already ran today, skipping');
         return;
       }
 
@@ -223,7 +224,7 @@ class FirestoreService {
       final snapshot = await query.get();
 
       if (snapshot.docs.isEmpty) {
-        print('✅ No stale deleted stars to clean up');
+        AppLogger.success('✅ No stale deleted stars to clean up');
         await prefs.setInt('last_cleanup_at', now);
         return;
       }
@@ -247,10 +248,10 @@ class FirestoreService {
       }
 
       await prefs.setInt('last_cleanup_at', now);
-      print('✅ Cleaned up $totalDeleted stale deleted stars');
+      AppLogger.success('✅ Cleaned up $totalDeleted stale deleted stars');
 
     } catch (e) {
-      print('❌ Cleanup failed: $e');
+      AppLogger.error('❌ Cleanup failed: $e');
       // Don't rethrow - cleanup failures shouldn't block the app
     }
   }
@@ -261,7 +262,7 @@ class FirestoreService {
       throw Exception('No user signed in');
     }
 
-    print('🔄 Starting DELTA sync...');
+    AppLogger.sync('🔄 Starting DELTA sync...');
 
     try {
       // Run cleanup in background (don't await)
@@ -269,7 +270,7 @@ class FirestoreService {
 
       // Download stars modified since last sync
       final cloudDeltaStars = await downloadDeltaStars();
-      print('   Cloud delta: ${cloudDeltaStars.length} stars');
+      AppLogger.sync('   Cloud delta: ${cloudDeltaStars.length} stars');
 
       // Create a map of local stars by ID for fast lookup
       final localStarsMap = {for (var star in localStars) star.id: star};
@@ -294,23 +295,23 @@ class FirestoreService {
       // Upload local stars modified since last sync
       await uploadDeltaStars(mergedStars);
 
-      print('✅ Delta sync complete. Total stars: ${mergedStars.length}');
+      AppLogger.sync('✅ Delta sync complete. Total stars: ${mergedStars.length}');
       return mergedStars;
 
     } on FirebaseException catch (e) {
       // Handle Firestore-specific errors
       if (e.code == 'resource-exhausted') {
-        print('❌ Firestore quota exceeded: ${e.message}');
+        AppLogger.error('❌ Firestore quota exceeded: ${e.message}');
         throw RateLimitException('firestore_quota', Duration(minutes: 30));
       } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        print('❌ Network error during sync: ${e.message}');
+        AppLogger.sync('❌ Network error during sync: ${e.message}');
         throw Exception('Network error: ${e.message}');
       } else {
-        print('❌ Firebase error during sync: ${e.code} - ${e.message}');
+        AppLogger.sync('❌ Firebase error during sync: ${e.code} - ${e.message}');
         rethrow;
       }
     } catch (e) {
-      print('❌ Delta sync failed: $e');
+      AppLogger.sync('❌ Delta sync failed: $e');
       rethrow;
     }
   }
@@ -326,11 +327,11 @@ class FirestoreService {
     }
 
     if (stars.isEmpty) {
-      print('📤 No stars to upload');
+      AppLogger.sync('📤 No stars to upload');
       return;
     }
 
-    print('📤 Uploading ${stars.length} stars to Firestore...');
+    AppLogger.sync('📤 Uploading ${stars.length} stars to Firestore...');
 
     // Firestore batch limit is 500 operations
     const batchSize = 500;
@@ -346,10 +347,10 @@ class FirestoreService {
       }
 
       await batch.commit();
-      print('📤 Uploaded batch ${i ~/ batchSize + 1} (${batchStars.length} stars)');
+      AppLogger.sync('📤 Uploaded batch ${i ~/ batchSize + 1} (${batchStars.length} stars)');
     }
 
-    print('✅ All stars uploaded successfully');
+    AppLogger.sync('✅ All stars uploaded successfully');
   }
 
   // Download all stars from Firestore
@@ -358,7 +359,7 @@ class FirestoreService {
       throw Exception('No user signed in');
     }
 
-    print('📥 Downloading stars from Firestore...');
+    AppLogger.sync('📥 Downloading stars from Firestore...');
 
     final snapshot = await _starsCollection!.get();
     final stars = snapshot.docs
@@ -366,14 +367,14 @@ class FirestoreService {
       try {
         return GratitudeStar.fromJson(doc.data() as Map<String, dynamic>);
       } catch (e) {
-        print('⚠️ Error parsing star ${doc.id}: $e');
+        AppLogger.error('⚠️ Error parsing star ${doc.id}: $e');
         return null;
       }
     })
         .whereType<GratitudeStar>()
         .toList();
 
-    print('✅ Downloaded ${stars.length} stars');
+    AppLogger.sync('✅ Downloaded ${stars.length} stars');
     return stars;
   }
 
@@ -383,7 +384,7 @@ class FirestoreService {
       throw Exception('No user signed in');
     }
 
-    print('🔀 Merging stars from anonymous account: $anonymousUid');
+    AppLogger.auth('🔀 Merging stars from anonymous account: $anonymousUid');
 
     try {
       // Try to get stars from the old anonymous account
@@ -398,14 +399,14 @@ class FirestoreService {
         try {
           return GratitudeStar.fromJson(doc.data());
         } catch (e) {
-          print('⚠️ Error parsing old star ${doc.id}: $e');
+          AppLogger.error('⚠️ Error parsing old star ${doc.id}: $e');
           return null;
         }
       })
           .whereType<GratitudeStar>()
           .toList();
 
-      print('   Found ${oldCloudStars.length} stars in old anonymous account');
+      AppLogger.auth('   Found ${oldCloudStars.length} stars in old anonymous account');
 
       // Combine old cloud stars with local stars
       final allStarsToMerge = [...localStars, ...oldCloudStars];
@@ -420,15 +421,15 @@ class FirestoreService {
       }
 
       final mergedStars = starMap.values.toList();
-      print('   Merged to ${mergedStars.length} unique stars');
+      AppLogger.info('   Merged to ${mergedStars.length} unique stars');
 
       // Upload all merged stars to the new account
       await uploadStars(mergedStars);
 
-      print('✅ Successfully merged anonymous account data');
+      AppLogger.auth('✅ Successfully merged anonymous account data');
 
     } catch (e) {
-      print('⚠️ Could not merge anonymous account data: $e');
+      AppLogger.auth('⚠️ Could not merge anonymous account data: $e');
       // Not critical - just upload local stars
       await uploadStars(localStars);
     }
@@ -440,9 +441,9 @@ class FirestoreService {
 
     try {
       await _starsCollection!.doc(star.id).set(star.toJson());
-      print('➕ Star added to Firestore: ${star.id}');
+      AppLogger.data('➕ Star added to Firestore: ${star.id}');
     } catch (e) {
-      print('❌ Error adding star to Firestore: $e');
+      AppLogger.error('❌ Error adding star to Firestore: $e');
       // Don't throw - local data is still saved
     }
   }
@@ -453,9 +454,9 @@ class FirestoreService {
 
     try {
       await _starsCollection!.doc(star.id).update(star.toJson());
-      print('✏️ Star updated in Firestore: ${star.id}');
+      AppLogger.data('✏️ Star updated in Firestore: ${star.id}');
     } catch (e) {
-      print('❌ Error updating star in Firestore: $e');
+      AppLogger.error('❌ Error updating star in Firestore: $e');
       // Don't throw - local data is still saved
     }
   }
@@ -467,9 +468,9 @@ class FirestoreService {
     try {
       // Use soft delete instead of hard delete
       await softDeleteStar(starId);
-      print('✅ Star deleted: $starId');
+      AppLogger.success('✅ Star deleted: $starId');
     } catch (e) {
-      print('❌ Delete failed: $e');
+      AppLogger.error('❌ Delete failed: $e');
       // Don't throw - local data is still updated
     }
   }
@@ -484,7 +485,7 @@ class FirestoreService {
         'lastSync': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
-      print('⚠️ Error updating last sync: $e');
+      AppLogger.sync('⚠️ Error updating last sync: $e');
     }
   }
 
@@ -496,7 +497,7 @@ class FirestoreService {
       final snapshot = await _starsCollection!.limit(1).get();
       return snapshot.docs.isNotEmpty;
     } catch (e) {
-      print('⚠️ Error checking cloud data: $e');
+      AppLogger.sync('⚠️ Error checking cloud data: $e');
       return false;
     }
   }
@@ -505,7 +506,7 @@ class FirestoreService {
     if (_starsCollection == null) return;
 
     try {
-      print('🔄 Checking for stars needing migration...');
+      AppLogger.info('🔄 Checking for stars needing migration...');
 
       // Get all stars
       final snapshot = await _starsCollection!.get();
@@ -549,12 +550,12 @@ class FirestoreService {
 
       if (migrated > 0) {
         await batch.commit();
-        print('✅ Migrated $migrated old stars');
+        AppLogger.success('✅ Migrated $migrated old stars');
       } else {
-        print('✅ All stars already migrated');
+        AppLogger.success('✅ All stars already migrated');
       }
     } catch (e) {
-      print('❌ Migration failed: $e');
+      AppLogger.error('❌ Migration failed: $e');
     }
   }
 }

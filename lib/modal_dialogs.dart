@@ -47,7 +47,7 @@ class GratitudeDialogs {
   static void showMindfulnessNoStars(BuildContext context) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha:0.7),
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -55,15 +55,15 @@ class GratitudeDialogs {
             constraints: const BoxConstraints(maxWidth: 500, minWidth: 400),
             padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A2238).withOpacity(0.95),
+              color: const Color(0xFF1A2238).withValues(alpha:0.95),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: const Color(0xFFFFE135).withOpacity(0.3),
+                color: const Color(0xFFFFE135).withValues(alpha:0.3),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha:0.5),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -87,7 +87,7 @@ class GratitudeDialogs {
                 Text(
                   AppLocalizations.of(context)!.mindfulnessNoStarsMessage,
                   style: FontScaling.getBodyMedium(context).copyWith(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha:0.7),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -118,7 +118,7 @@ class GratitudeDialogs {
   }) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha:0.7),
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -126,15 +126,15 @@ class GratitudeDialogs {
             constraints: const BoxConstraints(maxWidth: 500, minWidth: 400),
             padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A2238).withOpacity(0.95),
+              color: const Color(0xFF1A2238).withValues(alpha:0.95),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.red.withOpacity(0.5),
+                color: Colors.red.withValues(alpha:0.5),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha:0.5),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -160,13 +160,13 @@ class GratitudeDialogs {
                 Container(
                   padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 12)),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha:0.05),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '"${star.text}"',
                     style: FontScaling.getBodySmall(context).copyWith(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha:0.7),
                       fontStyle: FontStyle.italic,
                     ),
                     textAlign: TextAlign.center,
@@ -178,7 +178,7 @@ class GratitudeDialogs {
                 Text(
                   AppLocalizations.of(context)!.deleteWarning,
                   style: FontScaling.getBodySmall(context).copyWith(
-                    color: Colors.red.withOpacity(0.7),
+                    color: Colors.red.withValues(alpha:0.7),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -191,7 +191,7 @@ class GratitudeDialogs {
                       child: Text(
                         AppLocalizations.of(context)!.cancelButton,
                         style: FontScaling.getButtonText(context).copyWith(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha:0.6),
                         ),
                       ),
                     ),
@@ -239,7 +239,7 @@ class GratitudeDialogs {
   }) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha:0.7),
       builder: (BuildContext dialogContext) {
         return ColorPickerDialog(
           currentStar: currentStar,
@@ -265,7 +265,7 @@ class GratitudeDialogs {
 
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha:0.7),
       builder: (BuildContext context) {
         bool showColorPicker = false; // Collapsed by default
         int? selectedColorIndex; // null = use random
@@ -282,17 +282,17 @@ class GratitudeDialogs {
                 constraints: const BoxConstraints(maxWidth: 500, minWidth: 400),
                 padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A2238).withOpacity(0.95),
+                  color: const Color(0xFF1A2238).withValues(alpha:0.95),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: isOverLimit
                         ? Colors.red
-                        : const Color(0xFFFFE135).withOpacity(0.3),
+                        : const Color(0xFFFFE135).withValues(alpha:0.3),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha:0.5),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -323,17 +323,17 @@ class GratitudeDialogs {
                             hintText: AppLocalizations.of(context)!.createStarHint,
                             hintStyle: FontScaling.getInputHint(context),
                             filled: true,
-                            fillColor: Colors.white.withOpacity(0.1),
+                            fillColor: Colors.white.withValues(alpha:0.1),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(
-                                color: const Color(0xFFFFE135).withOpacity(0.3),
+                                color: const Color(0xFFFFE135).withValues(alpha:0.3),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(
-                                color: const Color(0xFFFFE135).withOpacity(0.3),
+                                color: const Color(0xFFFFE135).withValues(alpha:0.3),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -346,7 +346,7 @@ class GratitudeDialogs {
                             counterStyle: FontScaling.getCaption(context).copyWith(
                               color: isOverLimit
                                   ? Colors.red
-                                  : Colors.white.withOpacity(0.6),
+                                  : Colors.white.withValues(alpha:0.6),
                             ),
                           ),
                           style: FontScaling.getInputText(context),
@@ -395,7 +395,7 @@ class GratitudeDialogs {
                           Container(
                             padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 12)),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha:0.3),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: SvgPicture.asset(
@@ -458,7 +458,7 @@ class GratitudeDialogs {
                             label: Text(
                               AppLocalizations.of(context)!.customColorButton,
                               style: FontScaling.getButtonText(context).copyWith(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha:0.7),
                               ),
                             ),
                           ),
@@ -479,7 +479,7 @@ class GratitudeDialogs {
                           child: Text(
                             AppLocalizations.of(context)!.cancelButton,
                             style: FontScaling.getButtonText(context).copyWith(
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha:0.6),
                             ),
                           ),
                         ),
@@ -553,7 +553,7 @@ class GratitudeDialogs {
   }) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha:0.7),
       builder: (BuildContext dialogContext) {
         return EditStarDialog(
           star: star,
@@ -597,7 +597,7 @@ class GratitudeDialogs {
             Text(
               label,
               style: FontScaling.getCaption(context).copyWith(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha:0.8),
               ),
             ),
           ],

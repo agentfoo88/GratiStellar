@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../galaxy_metadata.dart';
+import '../../../../core/utils/app_logger.dart';
 
 /// Local data source for galaxy metadata operations
 class GalaxyLocalDataSource {
@@ -26,7 +27,7 @@ class GalaxyLocalDataSource {
           .map((json) => GalaxyMetadata.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('⚠️ Error loading galaxies from local storage: $e');
+      AppLogger.error('⚠️ Error loading galaxies from local storage: $e');
       return [];
     }
   }
@@ -37,9 +38,9 @@ class GalaxyLocalDataSource {
       final jsonList = galaxies.map((g) => g.toJson()).toList();
       final jsonString = json.encode(jsonList);
       await _secureStorage.write(key: _galaxiesKey, value: jsonString);
-      print('💾 Saved ${galaxies.length} galaxies to local storage');
+      AppLogger.data('💾 Saved ${galaxies.length} galaxies to local storage');
     } catch (e) {
-      print('⚠️ Error saving galaxies to local storage: $e');
+      AppLogger.error('⚠️ Error saving galaxies to local storage: $e');
       rethrow;
     }
   }
@@ -50,7 +51,7 @@ class GalaxyLocalDataSource {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_activeGalaxyKey);
     } catch (e) {
-      print('⚠️ Error getting active galaxy ID: $e');
+      AppLogger.error('⚠️ Error getting active galaxy ID: $e');
       return null;
     }
   }
@@ -60,9 +61,9 @@ class GalaxyLocalDataSource {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_activeGalaxyKey, galaxyId);
-      print('✅ Set active galaxy: $galaxyId');
+      AppLogger.success('✅ Set active galaxy: $galaxyId');
     } catch (e) {
-      print('⚠️ Error setting active galaxy ID: $e');
+      AppLogger.error('⚠️ Error setting active galaxy ID: $e');
       rethrow;
     }
   }
@@ -73,9 +74,9 @@ class GalaxyLocalDataSource {
       await _secureStorage.delete(key: _galaxiesKey);
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_activeGalaxyKey);
-      print('🗑️ Cleared all galaxy data from local storage');
+      AppLogger.data('🗑️ Cleared all galaxy data from local storage');
     } catch (e) {
-      print('⚠️ Error clearing galaxy data: $e');
+      AppLogger.error('⚠️ Error clearing galaxy data: $e');
     }
   }
 }

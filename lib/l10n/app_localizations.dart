@@ -1317,6 +1317,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get save;
+
+  /// Menu item and dialog title for exporting backup
+  ///
+  /// In en, this message translates to:
+  /// **'Export Backup'**
+  String get exportBackup;
+
+  /// Subtitle for export backup menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Create encrypted backup file'**
+  String get exportBackupSubtitle;
+
+  /// Description of what backup export does
+  ///
+  /// In en, this message translates to:
+  /// **'Create an encrypted backup of all your gratitudes, galaxies, and preferences.'**
+  String get exportBackupDescription;
+
+  /// Header for list of backup contents
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s included:'**
+  String get backupWhatsIncluded;
+
+  /// Backup includes gratitudes
+  ///
+  /// In en, this message translates to:
+  /// **'All gratitude entries'**
+  String get backupIncludesGratitudes;
+
+  /// Backup includes galaxies
+  ///
+  /// In en, this message translates to:
+  /// **'All galaxies'**
+  String get backupIncludesGalaxies;
+
+  /// Backup includes preferences
+  ///
+  /// In en, this message translates to:
+  /// **'App preferences'**
+  String get backupIncludesPreferences;
+
+  /// Backup is encrypted
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted for security'**
+  String get backupEncrypted;
+
+  /// Button text to create backup
+  ///
+  /// In en, this message translates to:
+  /// **'Create Backup'**
+  String get createBackup;
+
+  /// Status message while creating backup
+  ///
+  /// In en, this message translates to:
+  /// **'Creating backup...'**
+  String get creatingBackup;
+
+  /// Success message after backup creation
+  ///
+  /// In en, this message translates to:
+  /// **'Backup created successfully!\n{summary}'**
+  String backupCreatedSuccess(String summary);
+
+  /// Simple success message for backup
+  ///
+  /// In en, this message translates to:
+  /// **'Backup created successfully!'**
+  String get backupCreatedSimple;
+
+  /// Error message when backup creation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create backup'**
+  String get backupCreateFailed;
+
+  /// Menu item and dialog title for restoring backup
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Backup'**
+  String get restoreBackup;
+
+  /// Subtitle for restore backup menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Import data from backup file'**
+  String get restoreBackupSubtitle;
+
+  /// Description of restore backup process
+  ///
+  /// In en, this message translates to:
+  /// **'Select a backup file to restore your data.'**
+  String get restoreBackupDescription;
+
+  /// Button text to select backup file
+  ///
+  /// In en, this message translates to:
+  /// **'Select Backup File'**
+  String get selectBackupFile;
+
+  /// Button text to change selected file
+  ///
+  /// In en, this message translates to:
+  /// **'Change File'**
+  String get changeFile;
+
+  /// Label indicating backup file is valid
+  ///
+  /// In en, this message translates to:
+  /// **'Valid Backup'**
+  String get validBackup;
+
+  /// Error for invalid backup file
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid backup file'**
+  String get invalidBackup;
+
+  /// Shows when backup was created
+  ///
+  /// In en, this message translates to:
+  /// **'Created: {date}'**
+  String backupCreated(String date);
+
+  /// Shows app version of backup
+  ///
+  /// In en, this message translates to:
+  /// **'App Version: {version}'**
+  String backupAppVersion(String version);
+
+  /// Label for restore strategy selection
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Strategy:'**
+  String get restoreStrategy;
+
+  /// Merge restore strategy option
+  ///
+  /// In en, this message translates to:
+  /// **'Merge (Recommended)'**
+  String get restoreStrategyMerge;
+
+  /// Description of merge strategy
+  ///
+  /// In en, this message translates to:
+  /// **'Keep all data, prefer newer versions'**
+  String get restoreStrategyMergeDescription;
+
+  /// Replace all restore strategy option
+  ///
+  /// In en, this message translates to:
+  /// **'Replace All'**
+  String get restoreStrategyReplace;
+
+  /// Description of replace strategy
+  ///
+  /// In en, this message translates to:
+  /// **'Delete current data, use only backup'**
+  String get restoreStrategyReplaceDescription;
+
+  /// Button text to restore backup
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// Status while validating backup file
+  ///
+  /// In en, this message translates to:
+  /// **'Validating backup...'**
+  String get validatingBackup;
+
+  /// Status while restoring backup
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring backup...'**
+  String get restoringBackup;
+
+  /// Success message after restore
+  ///
+  /// In en, this message translates to:
+  /// **'Backup restored successfully!\n{summary}'**
+  String backupRestoredSuccess(String summary);
+
+  /// Simple success message for restore
+  ///
+  /// In en, this message translates to:
+  /// **'Backup restored successfully!'**
+  String get backupRestoredSimple;
+
+  /// Error message when restore fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to import backup'**
+  String get backupRestoreFailed;
+
+  /// Button text to retry an operation
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,7 @@ import '../../../../services/auth_service.dart';
 import '../datasources/galaxy_local_data_source.dart';
 import '../datasources/galaxy_remote_data_source.dart';
 import 'gratitude_repository.dart';
+import '../../../../core/utils/app_logger.dart';
 
 /// Repository for galaxy metadata operations
 ///
@@ -54,7 +55,7 @@ class GalaxyRepository {
       try {
         await _remoteDataSource.saveGalaxy(galaxy);
       } catch (e) {
-        print('⚠️ Failed to save galaxy to cloud: $e');
+        AppLogger.sync('⚠️ Failed to save galaxy to cloud: $e');
       }
     }
 
@@ -63,7 +64,7 @@ class GalaxyRepository {
       await setActiveGalaxy(galaxy.id);
     }
 
-    print('✨ Created galaxy: ${galaxy.name}');
+    AppLogger.start('✨ Created galaxy: ${galaxy.name}');
     return galaxy;
   }
 
@@ -81,11 +82,11 @@ class GalaxyRepository {
         try {
           await _remoteDataSource.updateGalaxy(galaxy);
         } catch (e) {
-          print('⚠️ Failed to update galaxy in cloud: $e');
+          AppLogger.sync('⚠️ Failed to update galaxy in cloud: $e');
         }
       }
 
-      print('📝 Updated galaxy: ${galaxy.name}');
+      AppLogger.info('📝 Updated galaxy: ${galaxy.name}');
     }
   }
 
@@ -98,7 +99,7 @@ class GalaxyRepository {
     final index = galaxies.indexWhere((g) => g.id == galaxyId);
 
     if (index == -1) {
-      print('⚠️ Galaxy $galaxyId not found');
+      AppLogger.warning('⚠️ Galaxy $galaxyId not found');
       return;
     }
 
@@ -125,7 +126,7 @@ class GalaxyRepository {
         await _remoteDataSource.deleteGalaxy(galaxyId);
         // Note: Star deletions will sync via normal delta sync
       } catch (e) {
-        print('⚠️ Failed to delete galaxy in cloud: $e');
+        AppLogger.sync('⚠️ Failed to delete galaxy in cloud: $e');
       }
     }
 
@@ -144,7 +145,7 @@ class GalaxyRepository {
       }
     }
 
-    print('🗑️ Deleted galaxy and ${updatedStars.where((s) => s.galaxyId == galaxyId && s.deleted).length} stars');
+    AppLogger.data('🗑️ Deleted galaxy and ${updatedStars.where((s) => s.galaxyId == galaxyId && s.deleted).length} stars');
   }
 
   /// Restore a deleted galaxy (and its stars)
@@ -154,7 +155,7 @@ class GalaxyRepository {
     final index = galaxies.indexWhere((g) => g.id == galaxyId);
 
     if (index == -1) {
-      print('⚠️ Galaxy $galaxyId not found');
+      AppLogger.warning('⚠️ Galaxy $galaxyId not found');
       return;
     }
 
@@ -187,11 +188,11 @@ class GalaxyRepository {
         await _remoteDataSource.updateGalaxy(restoredGalaxy);
         // Note: Star restorations will sync via normal delta sync
       } catch (e) {
-        print('⚠️ Failed to restore galaxy in cloud: $e');
+        AppLogger.sync('⚠️ Failed to restore galaxy in cloud: $e');
       }
     }
 
-    print('♻️ Restored galaxy ${galaxy.name}');
+    AppLogger.data('♻️ Restored galaxy ${galaxy.name}');
   }
 
   /// Get the active galaxy ID
@@ -208,7 +209,7 @@ class GalaxyRepository {
           await _localDataSource.setActiveGalaxyId(activeId);
         }
       } catch (e) {
-        print('⚠️ Failed to get active galaxy from cloud: $e');
+        AppLogger.sync('⚠️ Failed to get active galaxy from cloud: $e');
       }
     }
 
@@ -217,7 +218,7 @@ class GalaxyRepository {
 
   /// Set the active galaxy
   Future<void> setActiveGalaxy(String galaxyId) async {
-    print('🌌 Setting active galaxy: $galaxyId');
+    AppLogger.info('🌌 Setting active galaxy: $galaxyId');
 
     // 1. Save locally FIRST
     await _localDataSource.setActiveGalaxyId(galaxyId);
@@ -238,17 +239,17 @@ class GalaxyRepository {
     // 4. Sync to cloud if authenticated (don't block on this)
     if (_authService.hasEmailAccount) {
       _remoteDataSource.setActiveGalaxyId(galaxyId).catchError((e) {
-        print('⚠️ Failed to set active galaxy in cloud: $e');
+        AppLogger.sync('⚠️ Failed to set active galaxy in cloud: $e');
       });
     }
 
-    print('✅ Active galaxy set: $galaxyId');
+    AppLogger.success('✅ Active galaxy set: $galaxyId');
   }
 
   /// Sync galaxies from cloud to local
   Future<void> syncFromCloud() async {
     if (!_authService.hasEmailAccount) {
-      print('⚠️ Not authenticated, skipping galaxy sync');
+      AppLogger.auth('⚠️ Not authenticated, skipping galaxy sync');
       return;
     }
 
@@ -262,9 +263,9 @@ class GalaxyRepository {
         await setActiveGalaxy(cloudActiveId);
       }
 
-      print('☁️ Synced ${cloudGalaxies.length} galaxies from cloud');
+      AppLogger.sync('☁️ Synced ${cloudGalaxies.length} galaxies from cloud');
     } catch (e) {
-      print('⚠️ Failed to sync galaxies from cloud: $e');
+      AppLogger.sync('⚠️ Failed to sync galaxies from cloud: $e');
       rethrow;
     }
   }
@@ -272,33 +273,33 @@ class GalaxyRepository {
   /// Sync galaxies from local to cloud
   Future<void> syncToCloud() async {
     if (!_authService.hasEmailAccount) {
-      print('⚠️ Not authenticated, skipping galaxy sync');
+      AppLogger.auth('⚠️ Not authenticated, skipping galaxy sync');
       return;
     }
 
     try {
       final localGalaxies = await getGalaxies();
       
-      print('☁️ Syncing ${localGalaxies.length} galaxies to cloud...');
+      AppLogger.sync('☁️ Syncing ${localGalaxies.length} galaxies to cloud...');
       
       // Sync each galaxy individually (Firebase doesn't support batch for subcollections)
       int syncedCount = 0;
       for (final galaxy in localGalaxies) {
         await _remoteDataSource.saveGalaxy(galaxy);
         syncedCount++;
-        print('   ☁️ Synced galaxy $syncedCount/${localGalaxies.length}: ${galaxy.name}');
+        AppLogger.sync('   ☁️ Synced galaxy $syncedCount/${localGalaxies.length}: ${galaxy.name}');
       }
 
       // Also sync active galaxy ID
       final activeId = await getActiveGalaxyId();
       if (activeId != null) {
         await _remoteDataSource.setActiveGalaxyId(activeId);
-        print('   ☁️ Synced active galaxy: $activeId');
+        AppLogger.sync('   ☁️ Synced active galaxy: $activeId');
       }
 
-      print('✅ Synced ${localGalaxies.length} galaxies to cloud');
+      AppLogger.sync('✅ Synced ${localGalaxies.length} galaxies to cloud');
     } catch (e) {
-      print('⚠️ Failed to sync galaxies to cloud: $e');
+      AppLogger.sync('⚠️ Failed to sync galaxies to cloud: $e');
       rethrow;
     }
   }
@@ -318,7 +319,7 @@ class GalaxyRepository {
   Future<void> clearAll() async {
     await _localDataSource.clearAll();
     _gratitudeRepository.setActiveGalaxyId(null);
-    print('🗑️ Cleared all galaxy data');
+    AppLogger.data('🗑️ Cleared all galaxy data');
   }
 
   /// Migrate existing stars to a galaxy
@@ -329,7 +330,7 @@ class GalaxyRepository {
     ).toList();
 
     if (starsNeedingMigration.isEmpty) {
-      print('✅ No stars need migration');
+      AppLogger.success('✅ No stars need migration');
       return;
     }
 
@@ -341,6 +342,6 @@ class GalaxyRepository {
     }).toList();
 
     await _gratitudeRepository.saveGratitudes(updatedStars);
-    print('✅ Migrated ${starsNeedingMigration.length} stars to galaxy $galaxyId');
+    AppLogger.success('✅ Migrated ${starsNeedingMigration.length} stars to galaxy $galaxyId');
   }
 }

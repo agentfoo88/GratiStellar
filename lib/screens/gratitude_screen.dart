@@ -98,23 +98,30 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     AppLogger.info('🔄 Regenerating layers for size: $newSize');
 
     try {
+      // CAPTURE context-dependent objects BEFORE async gaps
+      final gratitudeProvider = context.read<GratitudeProvider>();
+      final currentStars = gratitudeProvider.gratitudeStars;
+
       // Clear old cache
       await LayerCacheService().clearCache();
 
       // Regenerate for new size
       await LayerCacheService().initialize(newSize);
 
-      // Update camera bounds
-      final provider = context.read<GratitudeProvider>();
-      _cameraController.updateBounds(provider.gratitudeStars, newSize);
+      // Update camera bounds (safe because we captured stars earlier)
+      _cameraController.updateBounds(currentStars, newSize);
 
       // Regenerate Van Gogh stars for new size
       _allVanGoghStars = VanGoghStarService.generateVanGoghStars(newSize);
-      _animatedVanGoghStars = _allVanGoghStars.skip((_allVanGoghStars.length * 0.9).round()).toList();
+      _animatedVanGoghStars = _allVanGoghStars
+          .skip((_allVanGoghStars.length * 0.9).round())
+          .toList();
 
       AppLogger.success('✅ Layers regenerated successfully');
+
     } catch (e) {
       AppLogger.error('⚠️ Layer regeneration failed: $e');
+
     } finally {
       if (mounted) {
         setState(() {

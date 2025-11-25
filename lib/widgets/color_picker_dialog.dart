@@ -59,9 +59,9 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
   }
 
   void _updateColorControllers(Color color) {
-    final r = color.red;
-    final g = color.green;
-    final b = color.blue;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
     _hexController.text =
         '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'
             .toUpperCase();

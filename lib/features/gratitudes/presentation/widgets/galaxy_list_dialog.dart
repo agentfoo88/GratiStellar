@@ -476,30 +476,36 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
     setState(() => _isCreating = true);
 
     try {
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
       final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+
       await galaxyProvider.createGalaxy(name: name, switchToNew: true);
 
-      if (context.mounted) {
-        Navigator.of(context).pop(); // Close create dialog
-        Navigator.of(context).pop(); // Close galaxy list dialog
+      if (navigator.mounted) {
+        navigator.pop(); // Close create dialog
+        navigator.pop(); // Close galaxy list dialog
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Created new galaxy: $name'),
-            backgroundColor: Color(0xFF1A2238),
+            backgroundColor: const Color(0xFF1A2238),
             duration: Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to create galaxy: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+      ScaffoldMessengerState? messenger;
+      if (mounted) {
+        messenger = ScaffoldMessenger.of(context);
       }
+
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text('Failed to create galaxy: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isCreating = false);
@@ -618,29 +624,35 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
     setState(() => _isRenaming = true);
 
     try {
+      // Capture context-dependent objects BEFORE the async gap
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
       final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+
       await galaxyProvider.renameGalaxy(widget.galaxy.id, name);
 
-      if (context.mounted) {
-        Navigator.of(context).pop();
+      // Use only the captured objects after the await
+      if (navigator.mounted) {
+        navigator.pop();
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Renamed galaxy to: $name'),
-            backgroundColor: Color(0xFF1A2238),
+            backgroundColor: const Color(0xFF1A2238),
             duration: Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to rename galaxy: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      // Safe fallback — do NOT use Navigator.of(context) here
+      final messenger = mounted ? ScaffoldMessenger.of(context) : null;
+
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text('Failed to rename galaxy: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isRenaming = false);

@@ -322,15 +322,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password is too weak. Use at least 6 characters.';
 
   @override
-  String get errorUserNotFound =>
-      'No account found with this email.\n\nTap \"Create Account\" below to link your data.';
+  String get errorUserNotFound => 'No account found with this email.';
 
   @override
   String get errorWrongPassword => 'Incorrect password. Please try again.';
 
   @override
   String get errorInvalidCredential =>
-      'No account found with this email.\n\nTap \"Create Account\" below to link your data.';
+      'Invalid credentials. Please check your email and password.';
 
   @override
   String get errorCredentialInUse =>
@@ -345,14 +344,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Network error. Check your internet connection.';
 
   @override
-  String get errorNoUserSignedIn => 'Session expired. Please restart the app.';
+  String get errorNoUserSignedIn => 'Session expired. Please sign in again.';
 
   @override
   String get errorAlreadyLinked =>
-      'Your account is already linked to an email address.';
+      'This account is already linked to another user.';
 
   @override
-  String get errorGeneric => 'An error occurred. Please try again.';
+  String get errorGeneric => 'An unexpected error occurred.';
 
   @override
   String get signOutButton => 'Sign Out';
@@ -825,4 +824,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Retry';
+
+  @override
+  String get errorSyncFailed =>
+      'Sync failed. Your changes will be retried automatically.';
+
+  @override
+  String get errorTimeout => 'Request timed out. Please check your connection.';
+
+  @override
+  String get errorPermissionDenied =>
+      'Permission denied. Please sign in again.';
+
+  @override
+  String get errorQuotaExceeded =>
+      'Daily quota exceeded. Please try again tomorrow.';
+
+  @override
+  String get errorServiceUnavailable =>
+      'Service temporarily unavailable. Please try again.';
+
+  @override
+  String get errorEmailOrPasswordIncorrect =>
+      'Email or password incorrect. Double-check your credentials.';
 }

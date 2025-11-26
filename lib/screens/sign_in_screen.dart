@@ -10,6 +10,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/utils/app_logger.dart';
+import '../core/error/error_context.dart';
+import '../core/error/error_handler.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -202,44 +204,39 @@ class _SignInScreenState extends State<SignInScreen> {
           await _triggerCloudSync();
         }
       }
-    } catch (e) {  // ADDED catch block
+    } catch (e, stack) {
+      // Special handling for invalid-credential based on sign-up vs sign-in context
+      String errorMessage;
+
+      if (e is FirebaseAuthException && e.code == 'invalid-credential') {
+        if (_isSignUp) {
+          // During sign-up, invalid-credential usually means email already exists
+          errorMessage = mounted && AppLocalizations.of(context) != null
+              ? AppLocalizations.of(context)!.errorEmailInUse
+              : 'This email is already registered. Try signing in instead.';
+        } else {
+          // During sign-in, be more specific about what might be wrong
+          errorMessage = mounted && AppLocalizations.of(context) != null
+              ? AppLocalizations.of(context)!.errorEmailOrPasswordIncorrect
+              : 'Email or password incorrect. Double-check your credentials.';
+        }
+      } else {
+        // Handle all other errors with ErrorHandler
+        final error = ErrorHandler.handle(
+          e,
+          stack,
+          context: ErrorContext.auth,
+          l10n: mounted ? AppLocalizations.of(context) : null,
+        );
+        errorMessage = error.userMessage;
+      }
+
       if (mounted) {
         setState(() {
-          _errorMessage = _getErrorMessage(e.toString());
+          _errorMessage = errorMessage;
           _isLoading = false;
         });
       }
-    }
-  }
-
-  String _getErrorMessage(String error) {
-    final l10n = AppLocalizations.of(context)!;
-    AppLogger.sync('Firebase error: $error');
-
-    if (error.contains('email-already-in-use')) {
-      return l10n.errorEmailInUse;
-    } else if (error.contains('invalid-email')) {
-      return l10n.errorInvalidEmail;
-    } else if (error.contains('weak-password')) {
-      return l10n.errorWeakPassword;
-    } else if (error.contains('user-not-found')) {
-      return l10n.errorUserNotFound;
-    } else if (error.contains('wrong-password')) {
-      return l10n.errorWrongPassword;
-    } else if (error.contains('invalid-credential')) {
-      return _isSignUp ? l10n.errorEmailInUse : l10n.errorInvalidCredential;
-    } else if (error.contains('credential-already-in-use')) {
-      return l10n.errorCredentialInUse;
-    } else if (error.contains('too-many-requests')) {
-      return l10n.errorTooManyRequests;
-    } else if (error.contains('network-request-failed')) {
-      return l10n.errorNetworkFailed;
-    } else if (error.contains('No user signed in')) {
-      return l10n.errorNoUserSignedIn;
-    } else if (error.contains('Account is already linked')) {
-      return l10n.errorAlreadyLinked;
-    } else {
-      return '${l10n.errorGeneric}\n${error.split(':').last.trim()}';
     }
   }
 

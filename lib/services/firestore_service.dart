@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/error/error_context.dart';
+import '../core/error/error_handler.dart';
 import '../core/security/rate_limiter.dart';
 import '../storage.dart';
 import '../core/utils/app_logger.dart';
@@ -14,6 +16,43 @@ class FirestoreService {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return null;
     return _firestore.collection('users').doc(userId).collection('stars');
+  }
+
+  /// Helper method to execute Firestore operations with consistent error handling
+  ///
+  /// Wraps operations with ErrorHandler to convert FirebaseExceptions into
+  /// appropriate RateLimitExceptions or generic Exceptions with user-friendly messages.
+  Future<T> _executeFirestoreOperation<T>(
+    Future<T> Function() operation,
+    String operationName,
+  ) async {
+    try {
+      return await operation();
+    } on FirebaseException catch (e, stack) {
+      // Handle Firestore-specific errors with ErrorHandler
+      if (e.code == 'resource-exhausted') {
+        // Convert to RateLimitException for quota exceeded
+        AppLogger.error('❌ Firestore quota exceeded: ${e.message}');
+        throw RateLimitException('firestore_quota', Duration(minutes: 30));
+      } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        // Network errors - retriable
+        AppLogger.sync('❌ Network error during $operationName: ${e.message}');
+        throw Exception('Network error: ${e.message}');
+      } else {
+        // Other Firebase errors - let ErrorHandler handle them
+        final error = ErrorHandler.handle(e, stack, context: ErrorContext.database);
+        AppLogger.sync('❌ Firebase error during $operationName: ${error.technicalMessage}');
+        throw Exception(error.userMessage);
+      }
+    } catch (e, stack) {
+      // Catch-all for unexpected errors
+      if (e is RateLimitException) {
+        rethrow; // Don't wrap RateLimitException
+      }
+      final error = ErrorHandler.handle(e, stack, context: ErrorContext.database);
+      AppLogger.sync('❌ $operationName failed: ${error.technicalMessage}');
+      throw Exception(error.userMessage);
+    }
   }
 
   // ============================================================================
@@ -31,7 +70,7 @@ class FirestoreService {
       throw Exception('No user signed in');
     }
 
-    try {
+    return _executeFirestoreOperation(() async {
       // Get last sync time
       final lastSyncTime = await StorageService.getLastSyncTime();
 
@@ -67,7 +106,7 @@ class FirestoreService {
 
         // Track what we're uploading for debugging
         final List<String> starIds = [];
-        
+
         for (var j = i; j < end; j++) {
           final star = starsToUpload[j];
           final docRef = _starsCollection!.doc(star.id);
@@ -84,7 +123,7 @@ class FirestoreService {
       // Save sync timestamp
       await StorageService.saveLastSyncTime(DateTime.now());
       AppLogger.sync('✅ Delta upload complete: $totalUploaded stars');
-      
+
       // VERIFICATION: Check if all stars actually made it to Firebase
       if (totalUploaded > 0 && totalUploaded <= 20) { // Only verify small syncs to avoid rate limits
         try {
@@ -99,23 +138,7 @@ class FirestoreService {
           AppLogger.sync('⚠️ Could not verify upload: $e');
         }
       }
-
-    } on FirebaseException catch (e) {
-      // Handle Firestore-specific errors
-      if (e.code == 'resource-exhausted') {
-        AppLogger.error('❌ Firestore quota exceeded: ${e.message}');
-        throw RateLimitException('firestore_quota', Duration(minutes: 30));
-      } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        AppLogger.sync('❌ Network error during upload: ${e.message}');
-        throw Exception('Network error: ${e.message}');
-      } else {
-        AppLogger.sync('❌ Firebase error during upload: ${e.code} - ${e.message}');
-        rethrow;
-      }
-    } catch (e) {
-      AppLogger.sync('❌ Delta upload failed: $e');
-      rethrow;
-    }
+    }, 'upload');
   }
 
   // Download only stars modified since last sync (DELTA SYNC)
@@ -124,7 +147,7 @@ class FirestoreService {
       throw Exception('No user signed in');
     }
 
-    try {
+    return _executeFirestoreOperation(() async {
       // Get last sync time
       final lastSyncTime = await StorageService.getLastSyncTime();
 
@@ -158,23 +181,7 @@ class FirestoreService {
 
       AppLogger.sync('✅ Delta download complete: ${stars.length} stars');
       return stars;
-
-    } on FirebaseException catch (e) {
-      // Handle Firestore-specific errors
-      if (e.code == 'resource-exhausted') {
-        AppLogger.error('❌ Firestore quota exceeded: ${e.message}');
-        throw RateLimitException('firestore_quota', Duration(minutes: 30));
-      } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        AppLogger.sync('❌ Network error during download: ${e.message}');
-        throw Exception('Network error: ${e.message}');
-      } else {
-        AppLogger.sync('❌ Firebase error during download: ${e.code} - ${e.message}');
-        rethrow;
-      }
-    } catch (e) {
-      AppLogger.sync('❌ Delta download failed: $e');
-      rethrow;
-    }
+    }, 'download');
   }
 
   // Download all stars for a specific galaxy (used when switching galaxies)
@@ -183,9 +190,9 @@ class FirestoreService {
       throw Exception('No user signed in');
     }
 
-    try {
+    return _executeFirestoreOperation(() async {
       AppLogger.sync('📥 Downloading all stars for galaxy: $galaxyId');
-      
+
       final query = _starsCollection!
           .where('galaxyId', isEqualTo: galaxyId)
           .where('deleted', isEqualTo: false);
@@ -206,22 +213,7 @@ class FirestoreService {
 
       AppLogger.sync('✅ Downloaded ${stars.length} stars for galaxy $galaxyId');
       return stars;
-
-    } on FirebaseException catch (e) {
-      if (e.code == 'resource-exhausted') {
-        AppLogger.error('❌ Firestore quota exceeded: ${e.message}');
-        throw RateLimitException('firestore_quota', Duration(minutes: 30));
-      } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        AppLogger.sync('❌ Network error during download: ${e.message}');
-        throw Exception('Network error: ${e.message}');
-      } else {
-        AppLogger.sync('❌ Firebase error during download: ${e.code} - ${e.message}');
-        rethrow;
-      }
-    } catch (e) {
-      AppLogger.sync('❌ Galaxy download failed: $e');
-      rethrow;
-    }
+    }, 'galaxy download');
   }
 
   // Soft delete a star (mark as deleted, don't actually remove)
@@ -311,7 +303,7 @@ class FirestoreService {
 
     AppLogger.sync('🔄 Starting DELTA sync...');
 
-    try {
+    return _executeFirestoreOperation(() async {
       // Run cleanup in background (don't await)
       cleanupStaleDeletedStars();
 
@@ -344,23 +336,7 @@ class FirestoreService {
 
       AppLogger.sync('✅ Delta sync complete. Total stars: ${mergedStars.length}');
       return mergedStars;
-
-    } on FirebaseException catch (e) {
-      // Handle Firestore-specific errors
-      if (e.code == 'resource-exhausted') {
-        AppLogger.error('❌ Firestore quota exceeded: ${e.message}');
-        throw RateLimitException('firestore_quota', Duration(minutes: 30));
-      } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        AppLogger.sync('❌ Network error during sync: ${e.message}');
-        throw Exception('Network error: ${e.message}');
-      } else {
-        AppLogger.sync('❌ Firebase error during sync: ${e.code} - ${e.message}');
-        rethrow;
-      }
-    } catch (e) {
-      AppLogger.sync('❌ Delta sync failed: $e');
-      rethrow;
-    }
+    }, 'sync');
   }
 
   // ============================================================================

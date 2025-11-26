@@ -664,76 +664,76 @@ abstract class AppLocalizations {
   /// **'Password must be at least 6 characters'**
   String get errorPasswordLength;
 
-  /// Error when email is already in use
+  /// Error when email is already in use during sign up
   ///
   /// In en, this message translates to:
   /// **'This email is already registered. Try signing in instead.'**
   String get errorEmailInUse;
 
-  /// Error for invalid email format
+  /// Error when email format is invalid
   ///
   /// In en, this message translates to:
   /// **'Invalid email address format.'**
   String get errorInvalidEmail;
 
-  /// Error for weak password
+  /// Error when password doesn't meet requirements
   ///
   /// In en, this message translates to:
   /// **'Password is too weak. Use at least 6 characters.'**
   String get errorWeakPassword;
 
-  /// Error when user account not found
+  /// Error when user account doesn't exist
   ///
   /// In en, this message translates to:
-  /// **'No account found with this email.\n\nTap \"Create Account\" below to link your data.'**
+  /// **'No account found with this email.'**
   String get errorUserNotFound;
 
-  /// Error for wrong password
+  /// Error when password is incorrect
   ///
   /// In en, this message translates to:
   /// **'Incorrect password. Please try again.'**
   String get errorWrongPassword;
 
-  /// Error for invalid credentials
+  /// Error when credentials are invalid
   ///
   /// In en, this message translates to:
-  /// **'No account found with this email.\n\nTap \"Create Account\" below to link your data.'**
+  /// **'Invalid credentials. Please check your email and password.'**
   String get errorInvalidCredential;
 
-  /// Error when credential already in use
+  /// Error when credential is already in use
   ///
   /// In en, this message translates to:
   /// **'This email is already linked to another account.'**
   String get errorCredentialInUse;
 
-  /// Error for too many requests
+  /// Error when too many auth attempts made
   ///
   /// In en, this message translates to:
   /// **'Too many failed attempts. Please try again later.'**
   String get errorTooManyRequests;
 
-  /// Error for network failure
+  /// Error when network request fails
   ///
   /// In en, this message translates to:
   /// **'Network error. Check your internet connection.'**
   String get errorNetworkFailed;
 
-  /// Error when no user is signed in
+  /// Error when user session is lost
   ///
   /// In en, this message translates to:
-  /// **'Session expired. Please restart the app.'**
+  /// **'Session expired. Please sign in again.'**
   String get errorNoUserSignedIn;
 
-  /// Error when account already linked
+  /// Error when trying to link an account that's already linked
   ///
   /// In en, this message translates to:
-  /// **'Your account is already linked to an email address.'**
+  /// **'This account is already linked to another user.'**
   String get errorAlreadyLinked;
 
-  /// Generic error message
+  /// Generic fallback error message
   ///
   /// In en, this message translates to:
-  /// **'An error occurred. Please try again.'**
+  /// **'An unexpected error occurred.'**
   String get errorGeneric;
 
   /// Button to sign out
@@ -1587,6 +1587,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get retry;
+
+  /// Error when sync operation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed. Your changes will be retried automatically.'**
+  String get errorSyncFailed;
+
+  /// Error when operation times out
+  ///
+  /// In en, this message translates to:
+  /// **'Request timed out. Please check your connection.'**
+  String get errorTimeout;
+
+  /// Error when user lacks permissions
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied. Please sign in again.'**
+  String get errorPermissionDenied;
+
+  /// Error when Firebase quota is exceeded
+  ///
+  /// In en, this message translates to:
+  /// **'Daily quota exceeded. Please try again tomorrow.'**
+  String get errorQuotaExceeded;
+
+  /// Error when service is temporarily down
+  ///
+  /// In en, this message translates to:
+  /// **'Service temporarily unavailable. Please try again.'**
+  String get errorServiceUnavailable;
+
+  /// Error when email or password is wrong during sign-in
+  ///
+  /// In en, this message translates to:
+  /// **'Email or password incorrect. Double-check your credentials.'**
+  String get errorEmailOrPasswordIncorrect;
 }
 
 class _AppLocalizationsDelegate

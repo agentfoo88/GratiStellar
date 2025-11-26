@@ -5,6 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/config/constants.dart';
+import '../../../../core/error/error_context.dart';
+import '../../../../core/error/error_handler.dart';
+import '../../../../core/error/retry_policy.dart';
 import '../../../../core/security/rate_limiter.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/sync_status_service.dart';
@@ -62,7 +65,6 @@ class GratitudeProvider extends ChangeNotifier {
   // Sync coordination
   bool _isSyncing = false;
   DateTime? _lastSuccessfulSync;
-  int _retryAttempts = 0;
   bool _needsResyncAfterCurrent = false; // Flag to re-sync after current sync completes
 
   // Getters
@@ -262,7 +264,6 @@ class GratitudeProvider extends ChangeNotifier {
 
       // Track successful sync
       _lastSuccessfulSync = DateTime.now();
-      _retryAttempts = 0;
 
       // RECONCILIATION: Update galaxy star count after sync (in case cloud had different data)
       await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
@@ -619,39 +620,39 @@ class GratitudeProvider extends ChangeNotifier {
     _syncStatusService.markSyncing();
 
     try {
-      await syncWithCloud();
+      // Use ErrorHandler's retry logic with exponential backoff
+      await ErrorHandler.withRetry(
+        operation: () async {
+          await syncWithCloud();
+        },
+        context: ErrorContext.sync,
+        policy: RetryPolicy.sync, // 3 attempts, 2min/4min/8min backoff
+        onRetry: (attempt, delay) {
+          final minutes = delay.inMinutes;
+          AppLogger.info('🔄 Retry attempt #$attempt scheduled in $minutes minutes...');
+        },
+      );
 
+      // Sync succeeded
       _hasPendingChanges = false;
       _syncStatusService.markSynced();
       AppLogger.sync('✅ Background sync complete');
-    } catch (e) {
-      AppLogger.sync('❌ Background sync failed: $e');
-      _syncStatusService.markError(e.toString());
+    } catch (e, stack) {
+      // Handle error with ErrorHandler for consistent logging and reporting
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.sync,
+      );
 
-      // Handle rate limit errors - DON'T retry automatically
-      if (e is RateLimitException) {
-        AppLogger.info('! Rate limit exceeded - waiting for reset, no automatic retry');
-        // User can manually retry later or wait for next change to trigger sync
-        return;
-      }
+      AppLogger.sync('❌ Background sync failed after retries: ${error.technicalMessage}');
+      _syncStatusService.markError(error.userMessage);
 
-      // For other errors (network, etc.), retry with exponential backoff
-      _retryAttempts++;
-      const maxRetries = 3;
-
-      if (_retryAttempts > maxRetries) {
-        AppLogger.error('❌ Max retry attempts reached ($maxRetries), giving up');
-        _retryAttempts = 0; // Reset for next sync trigger
-        return;
-      }
-
-      // Exponential backoff: 2min, 4min, 8min
-      final backoffMinutes = 2 * math.pow(2, _retryAttempts - 1).toInt();
-      AppLogger.info('🔄 Scheduling retry #$_retryAttempts in $backoffMinutes minutes...');
-
-      _syncDebouncer = Timer(Duration(minutes: backoffMinutes), () {
-        _performBackgroundSync();
-      });
+      // Note: ErrorHandler.withRetry() already handles:
+      // - RateLimitException (no retry, thrown immediately)
+      // - Exponential backoff (2min, 4min, 8min)
+      // - Max 3 attempts
+      // So we don't need manual retry logic here anymore
     }
   }
 

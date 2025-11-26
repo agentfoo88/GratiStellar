@@ -2,6 +2,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/error/error_context.dart';
+import '../../../../core/error/error_handler.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../storage.dart';
@@ -59,9 +61,17 @@ class _RestoreDialogState extends State<RestoreDialog> {
 
         await _validateFile();
       }
-    } catch (e) {
+    } catch (e, stack) {
+      // Handle file picker errors with ErrorHandler
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.backup,
+        l10n: mounted ? AppLocalizations.of(context) : null,
+      );
+
       setState(() {
-        _errorMessage = 'Failed to select file: $e';
+        _errorMessage = error.userMessage;
       });
     }
   }
@@ -89,9 +99,17 @@ class _RestoreDialogState extends State<RestoreDialog> {
         }
         _isProcessing = false;
       });
-    } catch (e) {
+    } catch (e, stack) {
+      // Handle validation errors with ErrorHandler
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.backup,
+        l10n: mounted ? AppLocalizations.of(context) : null,
+      );
+
       setState(() {
-        _errorMessage = 'Validation error: $e';
+        _errorMessage = error.userMessage;
         _selectedFilePath = null;
         _isProcessing = false;
       });
@@ -158,9 +176,17 @@ class _RestoreDialogState extends State<RestoreDialog> {
           _isProcessing = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      // Handle import errors with ErrorHandler
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.backup,
+        l10n: mounted ? AppLocalizations.of(context) : null,
+      );
+
       setState(() {
-        _errorMessage = 'Import error: $e';
+        _errorMessage = error.userMessage;
         _isProcessing = false;
       });
     }

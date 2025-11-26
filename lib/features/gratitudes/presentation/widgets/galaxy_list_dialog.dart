@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/config/constants.dart';
+import '../../../../core/error/error_context.dart';
+import '../../../../core/error/error_handler.dart';
 import '../../../../font_scaling.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -296,6 +298,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
   Future<void> _switchToGalaxy(BuildContext context, String galaxyId, GalaxyProvider galaxyProvider) async {
     setState(() => _isLoading = true);
 
+    // Capture l10n before async gap to avoid BuildContext warning
+    final l10n = mounted ? AppLocalizations.of(context) : null;
+
     try {
       // switchGalaxy handles everything: sets active, updates filter, loads gratitudes, AND syncs
       await galaxyProvider.switchGalaxy(galaxyId);
@@ -316,12 +321,20 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      // Handle error with ErrorHandler for user-friendly message
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.galaxy,
+        l10n: l10n,  // Use captured value
+      );
+
       // Only show error if dialog is still mounted
       if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.galaxySwitchFailed(e.toString())),
+            content: Text(AppLocalizations.of(context)!.galaxySwitchFailed(error.userMessage)),
             backgroundColor: Colors.red,
           ),
         );
@@ -475,6 +488,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 
     setState(() => _isCreating = true);
 
+    // Capture l10n before async gap
     final l10n = AppLocalizations.of(context)!;
 
     try {
@@ -495,7 +509,15 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      // Handle error with ErrorHandler for user-friendly message
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.galaxy,
+        l10n: l10n,  // Use captured value
+      );
+
       ScaffoldMessengerState? messenger;
       if (mounted) {
         messenger = ScaffoldMessenger.of(context);
@@ -503,7 +525,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(l10n.galaxyCreateFailed(e.toString())),
+          content: Text(l10n.galaxyCreateFailed(error.userMessage)),
           backgroundColor: Colors.red,
         ),
       );
@@ -640,19 +662,27 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
         messenger.showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.galaxyRenamedSuccess(name)),
+            content: Text(l10n.galaxyRenamedSuccess(name)),
             backgroundColor: const Color(0xFF1A2238),
             duration: Duration(seconds: 2),
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      // Handle error with ErrorHandler for user-friendly message
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.galaxy,
+        l10n: l10n,  // Use captured value
+      );
+
       // Safe fallback — do NOT use Navigator.of(context) here
       final messenger = mounted ? ScaffoldMessenger.of(context) : null;
 
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(l10n.galaxyRenameFailed(e.toString())),
+          content: Text(l10n.galaxyRenameFailed(error.userMessage)),
           backgroundColor: Colors.red,
         ),
       );

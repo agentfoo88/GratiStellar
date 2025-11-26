@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/error/error_context.dart';
+import '../../../../core/error/error_handler.dart';
 import '../../../../font_scaling.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -71,17 +73,27 @@ class _BackupDialogState extends State<BackupDialog> {
         // Save the backup file with guaranteed extension
         final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
 
+        // Capture l10n before async operation
+        final l10n = mounted ? AppLocalizations.of(context) : null;
+
         String? savedPath;
         try {
           savedPath = await useCase.saveBackupFile(
             result.filePath!,
             'gratistellar_backup_$timestamp.gratistellar',
           );
-        } catch (saveError) {
-          // Handle file_saver specific errors
+        } catch (saveError, stack) {
+          // Handle file_saver specific errors with ErrorHandler
+          final error = ErrorHandler.handle(
+            saveError,
+            stack,
+            context: ErrorContext.backup,
+            l10n: l10n,
+          );
+
           if (!mounted) return;
           setState(() {
-            _errorMessage = 'Failed to save file: $saveError';
+            _errorMessage = error.userMessage;
             _isExporting = false;
           });
           return;
@@ -116,10 +128,18 @@ class _BackupDialogState extends State<BackupDialog> {
           _isExporting = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      // Handle unexpected errors with ErrorHandler
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.backup,
+        l10n: mounted ? AppLocalizations.of(context) : null,
+      );
+
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Unexpected error: $e';
+        _errorMessage = error.userMessage;
         _isExporting = false;
       });
     }

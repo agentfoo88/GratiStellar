@@ -141,6 +141,56 @@ class GratitudeRepository {
     }
   }
 
+  /// Sync stars for a specific galaxy from cloud (bypasses delta sync)
+  /// This ensures all stars for the galaxy are downloaded, even if they weren't modified recently
+  Future<void> syncGalaxyFromCloud(String galaxyId) async {
+    if (!_authService.hasEmailAccount) {
+      AppLogger.sync('⚠️ Not authenticated, skipping galaxy sync');
+      return;
+    }
+
+    AppLogger.sync('🌌 Syncing galaxy $galaxyId from cloud...');
+
+    try {
+      // Download ALL stars for this galaxy from cloud
+      final cloudStars = await _remoteDataSource.downloadStarsForGalaxy(galaxyId)
+          .timeout(Duration(seconds: 30));
+
+      // Get all local stars
+      final localStars = await _localDataSource.loadStars();
+      final localStarsMap = {for (var star in localStars) star.id: star};
+
+      // Merge cloud stars into local (cloud is source of truth for this galaxy)
+      for (final cloudStar in cloudStars) {
+        final localStar = localStarsMap[cloudStar.id];
+        
+        if (localStar == null) {
+          // New star from cloud - add it
+          localStarsMap[cloudStar.id] = cloudStar;
+          AppLogger.sync('   📥 Added star from cloud: ${cloudStar.id}');
+        } else {
+          // Star exists - use newer version
+          if (cloudStar.updatedAt.isAfter(localStar.updatedAt)) {
+            localStarsMap[cloudStar.id] = cloudStar;
+            AppLogger.sync('   📥 Updated star from cloud: ${cloudStar.id}');
+          }
+        }
+      }
+
+      // Save merged stars back to local storage
+      final mergedStars = localStarsMap.values.toList();
+      await _localDataSource.saveStars(mergedStars);
+
+      AppLogger.success('✅ Galaxy sync complete: ${cloudStars.length} stars synced for galaxy $galaxyId');
+    } on TimeoutException {
+      AppLogger.sync('⏱️ Galaxy sync timeout - will retry later');
+      rethrow;
+    } catch (e) {
+      AppLogger.sync('❌ Galaxy sync failed: $e');
+      rethrow;
+    }
+  }
+
   /// Clear all local data
   Future<void> clearAllData() async {
     await _localDataSource.clearAll();

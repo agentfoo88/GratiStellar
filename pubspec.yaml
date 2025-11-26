@@ -2,7 +2,7 @@ name: gratistellar
 description: "Build your universe of thankfulness with a peaceful gratitude tracker"
 publish_to: "none"
 
-version: 1.0.0+1
+version: 0.9.10
 
 environment:
   sdk: ^3.9.2
@@ -28,6 +28,7 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   archive: ^4.0.7
   file_picker: ^8.1.6
+  file_saver: ^0.3.1
   crypto: ^3.0.6
 
   # Firebase & Auth

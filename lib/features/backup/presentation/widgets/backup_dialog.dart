@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../font_scaling.dart';
+import '../../../../galaxy_metadata.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../storage.dart';
 import '../../../gratitudes/presentation/state/galaxy_provider.dart';
-import '../../../gratitudes/presentation/state/gratitude_provider.dart';
 import '../../data/repositories/backup_repository.dart';
 import '../../domain/usecases/export_backup_use_case.dart';
 
@@ -30,13 +30,32 @@ class _BackupDialogState extends State<BackupDialog> {
     });
 
     try {
-      final gratitudeProvider = context.read<GratitudeProvider>();
       final galaxyProvider = context.read<GalaxyProvider>();
 
-      // Get current data
-      final stars = gratitudeProvider.gratitudeStars;
+      // Get ALL data (unfiltered - we want ALL galaxies' stars in the backup!)
+      // CRITICAL: Load directly from storage to get ALL stars from ALL galaxies,
+      // not just the currently active galaxy
+      final stars = await StorageService.loadGratitudeStars();  // Get ALL stars
       final galaxies = galaxyProvider.galaxies;
       final fontScale = await StorageService.getFontScale();
+
+      // Log what we're backing up
+      debugPrint('📦 Creating backup:');
+      debugPrint('   Total stars: ${stars.length}');
+      debugPrint('   Total galaxies: ${galaxies.length}');
+      
+      // Show stars by galaxy for verification
+      final starsByGalaxy = <String, int>{};
+      for (final star in stars) {
+        starsByGalaxy[star.galaxyId] = (starsByGalaxy[star.galaxyId] ?? 0) + 1;
+      }
+      for (final entry in starsByGalaxy.entries) {
+        final galaxyName = galaxies.firstWhere(
+          (g) => g.id == entry.key,
+          orElse: () => GalaxyMetadata(id: entry.key, name: 'Unknown', createdAt: DateTime.now()),
+        ).name;
+        debugPrint('   - $galaxyName: ${entry.value} stars');
+      }
 
       // Create use case and execute
       final repository = BackupRepository();
@@ -49,29 +68,56 @@ class _BackupDialogState extends State<BackupDialog> {
       );
 
       if (result.success && result.filePath != null) {
-        // Share the backup file
-        await useCase.shareBackupFile(
-          result.filePath!,
-          'gratistellar_backup.gratistellar',
-        );
+        // Save the backup file with guaranteed extension
+        final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
 
-        setState(() {
-          _successMessage = 'Backup created successfully!\n${result.backup?.getSummary()}';
-          _isExporting = false;
-        });
+        String? savedPath;
+        try {
+          savedPath = await useCase.saveBackupFile(
+            result.filePath!,
+            'gratistellar_backup_$timestamp.gratistellar',
+          );
+        } catch (saveError) {
+          // Handle file_saver specific errors
+          if (!mounted) return;
+          setState(() {
+            _errorMessage = 'Failed to save file: $saveError';
+            _isExporting = false;
+          });
+          return;
+        }
 
-        // Auto-close after showing success
-        await Future.delayed(Duration(seconds: 2));
-        if (mounted) {
-          Navigator.of(context).pop(true);
+        // Check if widget is still mounted after async operation
+        if (!mounted) return;
+
+        if (savedPath != null) {
+          // User successfully saved the file
+          setState(() {
+            _successMessage = 'Backup saved successfully!\n${result.backup?.getSummary()}';
+            _isExporting = false;
+          });
+
+          // Auto-close after showing success
+          await Future.delayed(Duration(seconds: 2));
+          if (mounted) {
+            Navigator.of(context).pop(true);
+          }
+        } else {
+          // User canceled the save dialog
+          setState(() {
+            _errorMessage = 'Backup canceled - file was not saved';
+            _isExporting = false;
+          });
         }
       } else {
+        if (!mounted) return;
         setState(() {
           _errorMessage = result.errorMessage ?? 'Failed to create backup';
           _isExporting = false;
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Unexpected error: $e';
         _isExporting = false;

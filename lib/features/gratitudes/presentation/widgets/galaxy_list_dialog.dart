@@ -310,7 +310,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
         // Show confirmation on main screen context
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Switched to $galaxyName'),
+            content: Text(AppLocalizations.of(context)!.galaxySwitchedSuccess(galaxyName)),
             duration: Duration(seconds: 2),
             backgroundColor: Color(0xFF1A2238),
           ),
@@ -321,7 +321,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
       if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to switch galaxy: $e'),
+            content: Text(AppLocalizations.of(context)!.galaxySwitchFailed(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -475,11 +475,12 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 
     setState(() => _isCreating = true);
 
+    final l10n = AppLocalizations.of(context)!;
+
     try {
       final navigator = Navigator.of(context);
       final messenger = ScaffoldMessenger.of(context);
       final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
-
       await galaxyProvider.createGalaxy(name: name, switchToNew: true);
 
       if (navigator.mounted) {
@@ -488,7 +489,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Created new galaxy: $name'),
+            content: Text(l10n.galaxyCreatedSuccess(name)),
             backgroundColor: const Color(0xFF1A2238),
             duration: Duration(seconds: 2),
           ),
@@ -502,7 +503,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 
       messenger?.showSnackBar(
         SnackBar(
-          content: Text('Failed to create galaxy: $e'),
+          content: Text(l10n.galaxyCreateFailed(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -623,6 +624,8 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
     setState(() => _isRenaming = true);
 
+    final l10n = AppLocalizations.of(context)!;
+
     try {
       // Capture context-dependent objects BEFORE the async gap
       final navigator = Navigator.of(context);
@@ -637,7 +640,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Renamed galaxy to: $name'),
+            content: Text(AppLocalizations.of(context)!.galaxyRenamedSuccess(name)),
             backgroundColor: const Color(0xFF1A2238),
             duration: Duration(seconds: 2),
           ),
@@ -649,7 +652,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
       messenger?.showSnackBar(
         SnackBar(
-          content: Text('Failed to rename galaxy: $e'),
+          content: Text(l10n.galaxyRenameFailed(e.toString())),
           backgroundColor: Colors.red,
         ),
       );

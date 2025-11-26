@@ -36,67 +36,69 @@ class AppDialog {
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Icon (optional)
-                if (icon != null) ...[
-                  Icon(
-                    icon,
-                    color: iconColor ?? Color(0xFFFFE135),
-                    size: FontScaling.getResponsiveIconSize(context, 48),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Icon (optional)
+                  if (icon != null) ...[
+                    Icon(
+                      icon,
+                      color: iconColor ?? Color(0xFFFFE135),
+                      size: FontScaling.getResponsiveIconSize(context, 48),
+                    ),
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                  ],
+
+                  // Title
+                  Text(
+                    title,
+                    style: FontScaling.getModalTitle(context),
+                    textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-                ],
 
-                // Title
-                Text(
-                  title,
-                  style: FontScaling.getModalTitle(context),
-                  textAlign: TextAlign.center,
-                ),
-
-                // Message or custom content
-                if (message != null || content != null) ...[
-                  SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-                  if (content != null)
-                    content
-                  else if (message != null)
-                    Text(
-                      message,
-                      style: FontScaling.getBodyMedium(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.8),
+                  // Message or custom content
+                  if (message != null || content != null) ...[
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+                    if (content != null)
+                      content
+                    else if (message != null)
+                      Text(
+                        message,
+                        style: FontScaling.getBodyMedium(context).copyWith(
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                ],
+                  ],
 
-                // Actions
-                if (actions != null && actions.isNotEmpty) ...[
-                  SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-                  if (actions.length == 1)
-                  // Single action - full width
-                    SizedBox(
-                      width: double.infinity,
-                      child: _buildActionButton(context, actions[0]),
-                    )
-                  else
-                  // Multiple actions - row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: actions.map((action) {
-                        return Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: FontScaling.getResponsiveSpacing(context, 4),
+                  // Actions
+                  if (actions != null && actions.isNotEmpty) ...[
+                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
+                    if (actions.length == 1)
+                    // Single action - full width
+                      SizedBox(
+                        width: double.infinity,
+                        child: _buildActionButton(context, actions[0]),
+                      )
+                    else
+                    // Multiple actions - row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: actions.map((action) {
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: FontScaling.getResponsiveSpacing(context, 4),
+                              ),
+                              child: _buildActionButton(context, action),
                             ),
-                            child: _buildActionButton(context, action),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                          );
+                        }).toList(),
+                      ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );

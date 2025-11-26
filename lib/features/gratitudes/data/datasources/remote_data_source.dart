@@ -21,6 +21,11 @@ class RemoteDataSource {
     return await _firestoreService.syncStars(localStars);
   }
 
+  /// Download all stars for a specific galaxy (bypasses delta sync)
+  Future<List<GratitudeStar>> downloadStarsForGalaxy(String galaxyId) async {
+    return await _firestoreService.downloadStarsForGalaxy(galaxyId);
+  }
+
   /// Upload stars to cloud (first sync)
   Future<void> uploadStars(List<GratitudeStar> stars) async {
     await _firestoreService.uploadStars(stars);

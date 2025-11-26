@@ -4,6 +4,7 @@ import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../font_scaling.dart';
 import '../../../../galaxy_metadata.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Individual galaxy list item widget
 ///
@@ -24,6 +25,7 @@ class GalaxyListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SemanticHelper.label(
       label: '${galaxy.name}, ${galaxy.starCount} stars',
       hint: isActive
@@ -95,11 +97,11 @@ class GalaxyListItem extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              'ACTIVE',
+                              l10n.galaxyActiveBadge,
                               style: FontScaling.getCaption(context).copyWith(
                                 color: Color(0xFF1A2238),
                                 fontWeight: FontWeight.bold,
-                                fontSize: 10,
+                                fontSize: FontScaling.mobileCaption * 0.75,
                               ),
                             ),
                           ),

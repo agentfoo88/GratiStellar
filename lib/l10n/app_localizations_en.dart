@@ -654,6 +654,52 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String galaxySwitchedSuccess(String galaxyName) {
+    return 'Switched to $galaxyName';
+  }
+
+  @override
+  String galaxySwitchFailed(String error) {
+    return 'Failed to switch galaxy: $error';
+  }
+
+  @override
+  String galaxyCreatedSuccess(String name) {
+    return 'Created new galaxy: $name';
+  }
+
+  @override
+  String galaxyCreateFailed(String error) {
+    return 'Failed to create galaxy: $error';
+  }
+
+  @override
+  String galaxyRenamedSuccess(String name) {
+    return 'Renamed galaxy to: $name';
+  }
+
+  @override
+  String galaxyRenameFailed(String error) {
+    return 'Failed to rename galaxy: $error';
+  }
+
+  @override
+  String get galaxyActiveBadge => 'ACTIVE';
+
+  @override
+  String get adjustingStarFieldMessage => 'Adjusting star field...';
+
+  @override
+  String get debugRecoverDataTitle => '🚨 RECOVER DATA FROM CLOUD';
+
+  @override
+  String get debugRecoverDataSubtitle => 'Force full sync from Firebase';
+
+  @override
+  String get debugSyncCompleteMessage =>
+      'Full sync complete! Check your stars.';
+
+  @override
   String galaxyItem(String name, int starCount) {
     return '$name - $starCount stars';
   }

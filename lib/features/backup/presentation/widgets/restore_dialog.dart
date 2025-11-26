@@ -29,15 +29,30 @@ class _RestoreDialogState extends State<RestoreDialog> {
 
   Future<void> _pickFile() async {
     try {
+      // Use FileType.any because custom extensions are not reliably supported
+      // on all platforms (especially Android). We'll validate the extension ourselves.
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['gratistellar'],
-        dialogTitle: 'Select Backup File',
+        type: FileType.any,
+        dialogTitle: 'Select GratiStellar Backup File',
+        allowMultiple: false,
+        withData: false,
+        withReadStream: false,
       );
 
       if (result != null && result.files.single.path != null) {
+        final filePath = result.files.single.path!;
+
+        // Validate file extension - CRITICAL since we're allowing any file type
+        if (!filePath.toLowerCase().endsWith('.gratistellar')) {
+          setState(() {
+            _errorMessage = 'Please select a valid .gratistellar backup file.\n'
+                'Selected file: ${filePath.split('/').last}';
+          });
+          return;
+        }
+        
         setState(() {
-          _selectedFilePath = result.files.single.path;
+          _selectedFilePath = filePath;
           _errorMessage = null;
           _validatedBackup = null;
         });

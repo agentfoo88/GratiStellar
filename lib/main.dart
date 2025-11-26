@@ -8,15 +8,16 @@ import 'package:provider/provider.dart';
 
 import 'background.dart';
 import 'core/utils/app_logger.dart';
-import 'features/gratitudes/data/datasources/local_data_source.dart';
-import 'features/gratitudes/data/datasources/remote_data_source.dart';
-import 'features/gratitudes/data/repositories/gratitude_repository.dart';
-import 'features/gratitudes/presentation/state/gratitude_provider.dart';
 import 'features/gratitudes/data/datasources/galaxy_local_data_source.dart';
 import 'features/gratitudes/data/datasources/galaxy_remote_data_source.dart';
+import 'features/gratitudes/data/datasources/local_data_source.dart';
+import 'features/gratitudes/data/datasources/remote_data_source.dart';
 import 'features/gratitudes/data/repositories/galaxy_repository.dart';
+import 'features/gratitudes/data/repositories/gratitude_repository.dart';
 import 'features/gratitudes/presentation/state/galaxy_provider.dart';
+import 'features/gratitudes/presentation/state/gratitude_provider.dart';
 import 'firebase_options.dart';
+import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/gratitude_screen.dart';
 import 'screens/welcome_screen.dart';
@@ -167,7 +168,7 @@ class GratiStellarApp extends StatelessWidget {
           fontFamily: 'JosefinSans',
           textTheme: TextTheme(
             bodyMedium: TextStyle(
-              fontSize: 24.0,
+              fontSize: FontScaling.mobileBody,
               fontWeight: FontWeight.w500,
             ),
           ),

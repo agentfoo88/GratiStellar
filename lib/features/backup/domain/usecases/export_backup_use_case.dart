@@ -1,4 +1,6 @@
-import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+
+import 'package:file_saver/file_saver.dart';
 
 import '../../../../galaxy_metadata.dart';
 import '../../../../storage.dart';
@@ -44,6 +46,10 @@ class ExportBackupUseCase {
   /// 
   /// Collects all user data (stars, galaxies, preferences) and creates
   /// an encrypted backup file.
+  /// 
+  /// IMPORTANT: [stars] parameter must include ALL stars from ALL galaxies,
+  /// not just the currently active galaxy. Use StorageService.loadGratitudeStars()
+  /// to get the complete unfiltered list.
   Future<ExportBackupResult> execute({
     required List<GratitudeStar> stars,
     required List<GalaxyMetadata> galaxies,
@@ -73,20 +79,31 @@ class ExportBackupUseCase {
     }
   }
 
-  /// Share the backup file
+  /// Save the backup file with guaranteed extension
   ///
-  /// Opens the system share dialog to allow user to save/send the backup file
-  Future<void> shareBackupFile(String filePath, String filename) async {
+  /// Opens a "Save As" dialog to allow user to save the backup file.
+  /// Returns the saved file path on success, or null if user canceled.
+  Future<String?> saveBackupFile(String filePath, String filename) async {
     try {
-      final params = ShareParams(
-        files: [XFile(filePath)],
-        subject: 'GratiStellar Backup',
-        text: 'Your GratiStellar data backup. Keep this file safe!',
+      // Read the encrypted backup file
+      final file = File(filePath);
+      final bytes = await file.readAsBytes();
+
+      // Extract filename without extension (file_saver adds it automatically)
+      final nameWithoutExt = filename.replaceAll('.gratistellar', '');
+
+      // Save with guaranteed .gratistellar extension
+      final savedPath = await FileSaver.instance.saveAs(
+        name: nameWithoutExt,
+        bytes: bytes,
+        fileExtension: 'gratistellar',
+        mimeType: MimeType.other,
       );
 
-      await SharePlus.instance.share(params);
+      // savedPath is null if user canceled, otherwise contains the saved file path
+      return savedPath;
     } catch (e) {
-      throw BackupException('Failed to share backup file', e);
+      throw BackupException('Failed to save backup file', e);
     }
   }
 }

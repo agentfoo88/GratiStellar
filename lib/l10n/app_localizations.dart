@@ -1300,6 +1300,72 @@ abstract class AppLocalizations {
   /// **'{name} (Active) - {starCount} stars'**
   String activeGalaxyItem(String name, int starCount);
 
+  /// Success message when switching to a different galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to {galaxyName}'**
+  String galaxySwitchedSuccess(String galaxyName);
+
+  /// Error message when galaxy switch fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to switch galaxy: {error}'**
+  String galaxySwitchFailed(String error);
+
+  /// Success message when new galaxy is created
+  ///
+  /// In en, this message translates to:
+  /// **'Created new galaxy: {name}'**
+  String galaxyCreatedSuccess(String name);
+
+  /// Error message when galaxy creation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create galaxy: {error}'**
+  String galaxyCreateFailed(String error);
+
+  /// Success message when galaxy is renamed
+  ///
+  /// In en, this message translates to:
+  /// **'Renamed galaxy to: {name}'**
+  String galaxyRenamedSuccess(String name);
+
+  /// Error message when galaxy rename fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to rename galaxy: {error}'**
+  String galaxyRenameFailed(String error);
+
+  /// Badge text shown on the currently active galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE'**
+  String get galaxyActiveBadge;
+
+  /// Loading message shown when regenerating star positions
+  ///
+  /// In en, this message translates to:
+  /// **'Adjusting star field...'**
+  String get adjustingStarFieldMessage;
+
+  /// Debug menu title for force sync feature
+  ///
+  /// In en, this message translates to:
+  /// **'🚨 RECOVER DATA FROM CLOUD'**
+  String get debugRecoverDataTitle;
+
+  /// Debug menu subtitle for force sync feature
+  ///
+  /// In en, this message translates to:
+  /// **'Force full sync from Firebase'**
+  String get debugRecoverDataSubtitle;
+
+  /// Success message after debug force sync
+  ///
+  /// In en, this message translates to:
+  /// **'Full sync complete! Check your stars.'**
+  String get debugSyncCompleteMessage;
+
   /// Accessibility label for galaxy item
   ///
   /// In en, this message translates to:

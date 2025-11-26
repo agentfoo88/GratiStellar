@@ -547,6 +547,80 @@
             }
           }
         },
+        "galaxySwitchedSuccess": "Switched to {galaxyName}",
+          "@galaxySwitchedSuccess": {
+            "description": "Success message when switching to a different galaxy",
+            "placeholders": {
+              "galaxyName": {
+                "type": "String"
+              }
+            }
+          },
+          "galaxySwitchFailed": "Failed to switch galaxy: {error}",
+          "@galaxySwitchFailed": {
+            "description": "Error message when galaxy switch fails",
+            "placeholders": {
+              "error": {
+                "type": "String"
+              }
+            }
+          },
+          "galaxyCreatedSuccess": "Created new galaxy: {name}",
+          "@galaxyCreatedSuccess": {
+            "description": "Success message when new galaxy is created",
+            "placeholders": {
+              "name": {
+                "type": "String"
+              }
+            }
+          },
+          "galaxyCreateFailed": "Failed to create galaxy: {error}",
+          "@galaxyCreateFailed": {
+            "description": "Error message when galaxy creation fails",
+            "placeholders": {
+              "error": {
+                "type": "String"
+              }
+            }
+          },
+          "galaxyRenamedSuccess": "Renamed galaxy to: {name}",
+          "@galaxyRenamedSuccess": {
+            "description": "Success message when galaxy is renamed",
+            "placeholders": {
+              "name": {
+                "type": "String"
+              }
+            }
+          },
+          "galaxyRenameFailed": "Failed to rename galaxy: {error}",
+          "@galaxyRenameFailed": {
+            "description": "Error message when galaxy rename fails",
+            "placeholders": {
+              "error": {
+                "type": "String"
+              }
+            }
+          },
+          "galaxyActiveBadge": "ACTIVE",
+          "@galaxyActiveBadge": {
+            "description": "Badge text shown on the currently active galaxy"
+          },
+          "adjustingStarFieldMessage": "Adjusting star field...",
+          "@adjustingStarFieldMessage": {
+            "description": "Loading message shown when regenerating star positions"
+          },
+          "debugRecoverDataTitle": "🚨 RECOVER DATA FROM CLOUD",
+          "@debugRecoverDataTitle": {
+            "description": "Debug menu title for force sync feature"
+          },
+          "debugRecoverDataSubtitle": "Force full sync from Firebase",
+          "@debugRecoverDataSubtitle": {
+            "description": "Debug menu subtitle for force sync feature"
+          },
+          "debugSyncCompleteMessage": "Full sync complete! Check your stars.",
+          "@debugSyncCompleteMessage": {
+            "description": "Success message after debug force sync"
+          },
         "galaxyItem": "{name} - {starCount} stars",
         "@galaxyItem": {
           "description": "Accessibility label for galaxy item",

@@ -1235,6 +1235,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GratitudeProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     // Get all state from provider
     final gratitudeStars = provider.gratitudeStars;
@@ -1486,10 +1487,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           ),
                           SizedBox(height: 16),
                           Text(
-                            'Adjusting star field...',
-                            style: TextStyle(
+                            l10n.adjustingStarFieldMessage,
+                            style: FontScaling.getBodyMedium(context).copyWith(
                               color: Colors.white,
-                              fontSize: 16,
                             ),
                           ),
                         ],

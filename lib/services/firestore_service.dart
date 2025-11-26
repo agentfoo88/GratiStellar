@@ -177,6 +177,53 @@ class FirestoreService {
     }
   }
 
+  // Download all stars for a specific galaxy (used when switching galaxies)
+  Future<List<GratitudeStar>> downloadStarsForGalaxy(String galaxyId) async {
+    if (_starsCollection == null) {
+      throw Exception('No user signed in');
+    }
+
+    try {
+      AppLogger.sync('📥 Downloading all stars for galaxy: $galaxyId');
+      
+      final query = _starsCollection!
+          .where('galaxyId', isEqualTo: galaxyId)
+          .where('deleted', isEqualTo: false);
+
+      final snapshot = await query.get();
+
+      final stars = snapshot.docs
+          .map((doc) {
+        try {
+          return GratitudeStar.fromJson(doc.data() as Map<String, dynamic>);
+        } catch (e) {
+          AppLogger.error('⚠️ Error parsing star ${doc.id}: $e');
+          return null;
+        }
+      })
+          .whereType<GratitudeStar>()
+          .toList();
+
+      AppLogger.sync('✅ Downloaded ${stars.length} stars for galaxy $galaxyId');
+      return stars;
+
+    } on FirebaseException catch (e) {
+      if (e.code == 'resource-exhausted') {
+        AppLogger.error('❌ Firestore quota exceeded: ${e.message}');
+        throw RateLimitException('firestore_quota', Duration(minutes: 30));
+      } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        AppLogger.sync('❌ Network error during download: ${e.message}');
+        throw Exception('Network error: ${e.message}');
+      } else {
+        AppLogger.sync('❌ Firebase error during download: ${e.code} - ${e.message}');
+        rethrow;
+      }
+    } catch (e) {
+      AppLogger.sync('❌ Galaxy download failed: $e');
+      rethrow;
+    }
+  }
+
   // Soft delete a star (mark as deleted, don't actually remove)
   Future<void> softDeleteStar(String starId) async {
     if (_starsCollection == null) {

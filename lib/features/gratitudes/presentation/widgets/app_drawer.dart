@@ -469,7 +469,9 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
               ),
               subtitle: Text(
                 l10n.regenerateBackgroundLayers,
-                style: TextStyle(color: Colors.white60, fontSize: 15),
+                style: FontScaling.getCaption(context).copyWith(
+                  color: Colors.white60,
+                ),
               ),
               onTap: () async {
                 Navigator.of(context).pop(); // Close drawer
@@ -513,8 +515,8 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           // TEMPORARY RECOVERY OPTION
           ListTile(
             leading: Icon(Icons.cloud_download, color: Colors.red),
-            title: Text('🚨 RECOVER DATA FROM CLOUD'),
-            subtitle: Text('Force full sync from Firebase'),
+            title: Text(l10n.debugRecoverDataTitle),
+            subtitle: Text(l10n.debugRecoverDataSubtitle),
             onTap: () async {
               Navigator.pop(context);
 
@@ -531,7 +533,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Full sync complete! Check your stars.'),
+                  content: Text(l10n.debugSyncCompleteMessage),
                   backgroundColor: Colors.green,
                 ),
               );

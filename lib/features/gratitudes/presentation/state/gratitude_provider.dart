@@ -300,6 +300,13 @@ class GratitudeProvider extends ChangeNotifier {
         int? colorPresetIndex,
         Color? customColor,
       }) async {
+    // Safety check: Ensure galaxy system is initialized
+    if (_galaxyProvider.activeGalaxyId == null) {
+      AppLogger.error('❌ Cannot create star: No active galaxy (initialization incomplete)');
+      throw StateError(
+          'Galaxy system not initialized. Please wait a moment and try again.'
+      );
+    }
     final star = await _addGratitudeUseCase(
       AddGratitudeParams(
         text: text,
@@ -656,18 +663,31 @@ class GratitudeProvider extends ChangeNotifier {
 
   /// Restore data from backup
   Future<void> restoreFromBackup(List<GratitudeStar> backupStars) async {
-    _gratitudeStars = backupStars;
-    
-    // Save to local storage
-    await StorageService.saveGratitudeStars(_gratitudeStars);
-    
-    // If signed in, sync to cloud
+    // Save ALL backup stars to local storage (unfiltered)
+    await StorageService.saveGratitudeStars(backupStars);
+
+    // Filter stars for current active galaxy for display
+    _gratitudeStars = backupStars
+        .where((star) =>
+            !star.deleted &&
+            star.galaxyId == _galaxyProvider.activeGalaxyId)
+        .toList();
+
+    // Update galaxy star count to match restored data
+    await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
+
+    // If signed in, sync to cloud immediately
     if (_authService.hasEmailAccount) {
-      _scheduleSync(); // This will trigger cloud sync
+      AppLogger.sync('💾 Backup restored - triggering immediate sync');
+      _markPendingChanges();
+      _performBackgroundSync().catchError((e) {
+        AppLogger.sync('⚠️ Sync after restore failed: $e');
+        _scheduleSync(); // Fallback to debounced
+      });
     }
-    
+
     notifyListeners();
-    AppLogger.success('✅ Restored ${backupStars.length} stars from backup');
+    AppLogger.success('✅ Restored ${backupStars.length} total stars from backup (${_gratitudeStars.length} in active galaxy)');
   }
 
   @override

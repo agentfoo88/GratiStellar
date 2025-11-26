@@ -262,14 +262,25 @@ class GalaxyProvider extends ChangeNotifier {
       // Step 3: Reload galaxies to update lastViewedAt
       await loadGalaxies();
 
-      // Step 4: Reload gratitudes with new galaxy filter AND wait for sync
+      // Step 4: CRITICAL FIX - Sync this specific galaxy from cloud first
+      // This ensures all stars for this galaxy are downloaded, even if they
+      // weren't modified recently (fixes delta sync issue)
+      AppLogger.sync('🔄 Galaxy switch: syncing galaxy $galaxyId from cloud...');
+      try {
+        await _gratitudeRepository.syncGalaxyFromCloud(galaxyId);
+      } catch (e) {
+        AppLogger.sync('⚠️ Galaxy-specific sync failed: $e (continuing with local data)');
+        // Continue even if sync fails - we'll use local data
+      }
+
+      // Step 5: Reload gratitudes with new galaxy filter AND wait for full sync
       AppLogger.data('🔄 Galaxy switch: reloading gratitudes for galaxy $galaxyId');
       await _gratitudeProvider.loadGratitudes(waitForSync: true);
 
       final starCount = _gratitudeProvider.gratitudeStars.length;
       AppLogger.sync('🔄 Galaxy switch: loaded $starCount stars (synced)');
 
-      // Step 5: Fade in animation callback
+      // Step 6: Fade in animation callback
       if (onFadeIn != null) {
         await onFadeIn();
       }
@@ -304,6 +315,14 @@ class GalaxyProvider extends ChangeNotifier {
       _activeGalaxyId = galaxyId;
       await loadGalaxies();
 
+      // Sync this specific galaxy from cloud to ensure all stars are present
+      AppLogger.sync('🔄 Set active galaxy: syncing galaxy $galaxyId from cloud...');
+      try {
+        await _gratitudeRepository.syncGalaxyFromCloud(galaxyId);
+      } catch (e) {
+        AppLogger.sync('⚠️ Galaxy-specific sync failed: $e (continuing with local data)');
+      }
+
       // Reload gratitudes to show stars from new galaxy (wait for sync)
       await _gratitudeProvider.loadGratitudes(waitForSync: true);
 
@@ -311,7 +330,8 @@ class GalaxyProvider extends ChangeNotifier {
       
       // Get galaxy name for better logging
       final galaxyName = _galaxies.firstWhere((g) => g.id == galaxyId).name;
-      AppLogger.success('✅ Set active galaxy: "$galaxyName" ($galaxyId)');
+      final starCount = _gratitudeProvider.gratitudeStars.length;
+      AppLogger.success('✅ Set active galaxy: "$galaxyName" ($starCount stars)');
     } catch (e) {
       AppLogger.error('⚠️ Error setting active galaxy: $e');
       rethrow;
@@ -474,16 +494,28 @@ class GalaxyProvider extends ChangeNotifier {
 
     // Save to local storage
     await _galaxyRepository.saveGalaxies(_galaxies);
-    
+
     // If we don't have an active galaxy, set to first one
     if (_activeGalaxyId == null && _galaxies.isNotEmpty) {
       _activeGalaxyId = _galaxies.first.id;
       await _galaxyRepository.setActiveGalaxy(_activeGalaxyId!);
     }
 
+    // Update gratitude repository filter to match active galaxy
+    if (_activeGalaxyId != null) {
+      _gratitudeRepository.setActiveGalaxyId(_activeGalaxyId);
+      AppLogger.info('🔧 Updated gratitude repository filter to: $_activeGalaxyId');
+    }
+
+    // Reconcile star counts after restore
+    await _reconcileStarCounts();
+
     // Sync to cloud (repository handles auth check internally)
-    await syncToCloud();
-    
+    syncToCloud().catchError((e) {
+      AppLogger.sync('⚠️ Cloud sync after galaxy restore failed: $e');
+      // Don't block restore on sync failure
+    });
+
     notifyListeners();
     AppLogger.success('✅ Restored ${backupGalaxies.length} galaxies from backup');
   }

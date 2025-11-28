@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(flutter gen-l10n:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(dir:*)",
+      "Bash(flutter pub get:*)"
     ],
     "deny": [],
     "ask": []

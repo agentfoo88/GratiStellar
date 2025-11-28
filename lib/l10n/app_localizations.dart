@@ -766,10 +766,10 @@ abstract class AppLocalizations {
   /// **'Sign In with Email'**
   String get signInWithEmailMenuItem;
 
-  /// Default display name when user has no name set
+  /// Default display name for anonymous users
   ///
   /// In en, this message translates to:
-  /// **'User'**
+  /// **'Grateful User'**
   String get defaultUserName;
 
   /// Title for account section
@@ -1623,6 +1623,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email or password incorrect. Double-check your credentials.'**
   String get errorEmailOrPasswordIncorrect;
+
+  /// Title for first-star reminder prompt bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re off to a great start!'**
+  String get reminderPromptTitle;
+
+  /// Body text for reminder prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like a daily reminder to reflect on your gratitude?'**
+  String get reminderPromptBody;
+
+  /// Additional context about smart reminder logic
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll only remind you on days you haven\'t created a star yet.'**
+  String get reminderPromptSubtext;
+
+  /// Button to enable daily reminders
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Reminder ✨'**
+  String get enableReminderButton;
+
+  /// Accessibility hint for enable button
+  ///
+  /// In en, this message translates to:
+  /// **'Set up daily gratitude reminder'**
+  String get enableReminderHint;
+
+  /// Button to dismiss reminder prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe Later'**
+  String get maybeLaterButton;
+
+  /// Title for time picker dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Choose reminder time'**
+  String get reminderTimePickerTitle;
+
+  /// Toast message when reminder is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reminder enabled!'**
+  String get reminderEnabledSuccess;
+
+  /// Toast message when reminder is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reminder disabled'**
+  String get reminderDisabledSuccess;
+
+  /// Toast message when time is changed
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder time updated'**
+  String get reminderTimeUpdatedSuccess;
+
+  /// Error message when permission is denied
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission denied'**
+  String get reminderPermissionDenied;
+
+  /// Settings menu item title
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Reminder'**
+  String get dailyReminderTitle;
+
+  /// Accessibility label for reminder setting
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reminder setting'**
+  String get dailyReminderSetting;
+
+  /// Accessibility hint when enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reminder is enabled, tap to change time'**
+  String get dailyReminderEnabledHint;
+
+  /// Accessibility hint when disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Enable daily gratitude reminder'**
+  String get dailyReminderDisabledHint;
+
+  /// Display text showing reminder time
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me at {time}'**
+  String reminderTimeDisplay(String time);
+
+  /// Age verification question for COPPA compliance
+  ///
+  /// In en, this message translates to:
+  /// **'Are you 13 years or older?'**
+  String get ageGateQuestion;
+
+  /// Button to confirm user is 13 or older
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, I\'m 13 or older'**
+  String get ageGateYesButton;
+
+  /// Button to indicate user is under 13
+  ///
+  /// In en, this message translates to:
+  /// **'No, I\'m under 13'**
+  String get ageGateNoButton;
+
+  /// Accessibility hint for yes button
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm you are 13 or older to continue'**
+  String get ageGateYesHint;
+
+  /// Accessibility hint for no button
+  ///
+  /// In en, this message translates to:
+  /// **'Indicate you are under 13'**
+  String get ageGateNoHint;
+
+  /// Title for under-13 dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Age Requirement'**
+  String get ageGateUnder13Title;
+
+  /// Message shown to users under 13
+  ///
+  /// In en, this message translates to:
+  /// **'You must be at least 13 years old to use GratiStellar. Thank you for your interest!'**
+  String get ageGateUnder13Message;
+
+  /// Title for consent screen
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & Terms'**
+  String get consentTitle;
+
+  /// Introduction message for consent screen
+  ///
+  /// In en, this message translates to:
+  /// **'Before we begin, please review our privacy practices:'**
+  String get consentMessage;
+
+  /// First privacy bullet point
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is stored securely and privately'**
+  String get consentBullet1;
+
+  /// Second privacy bullet point
+  ///
+  /// In en, this message translates to:
+  /// **'We never share your gratitudes with anyone'**
+  String get consentBullet2;
+
+  /// Third privacy bullet point
+  ///
+  /// In en, this message translates to:
+  /// **'You can export or delete your data anytime'**
+  String get consentBullet3;
+
+  /// First part of privacy policy checkbox text
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and accept the '**
+  String get consentPrivacyPart1;
+
+  /// Clickable privacy policy link text
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get consentPrivacyLink;
+
+  /// First part of terms checkbox text
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and accept the '**
+  String get consentTermsPart1;
+
+  /// Clickable terms link text
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get consentTermsLink;
+
+  /// Accessibility label for privacy checkbox
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy acceptance checkbox'**
+  String get consentPrivacyCheckbox;
+
+  /// Accessibility label for terms checkbox
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service acceptance checkbox'**
+  String get consentTermsCheckbox;
+
+  /// Button to accept policies and create account
+  ///
+  /// In en, this message translates to:
+  /// **'Accept & Continue'**
+  String get consentAcceptButton;
+
+  /// Accessibility hint when button is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Create account and start using GratiStellar'**
+  String get consentAcceptHint;
+
+  /// Accessibility hint when button is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'You must accept both policies to continue'**
+  String get consentAcceptDisabledHint;
+
+  /// Error message when URL fails to open
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open link. Please check your internet connection.'**
+  String get consentUrlError;
+
+  /// Title for name collection screen
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your name?'**
+  String get nameCollectionTitle;
+
+  /// Subtitle explaining why we ask for name
+  ///
+  /// In en, this message translates to:
+  /// **'This helps personalize your gratitude journey'**
+  String get nameCollectionSubtitle;
+
+  /// Accessibility label for name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get nameCollectionLabel;
+
+  /// Accessibility hint for name input
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your name to continue'**
+  String get nameCollectionHint;
+
+  /// Placeholder text for name input
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Alex'**
+  String get nameCollectionPlaceholder;
+
+  /// Button to create account with name
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get nameCollectionButton;
+
+  /// Accessibility hint for continue button
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account and start using GratiStellar'**
+  String get nameCollectionButtonHint;
 }
 
 class _AppLocalizationsDelegate

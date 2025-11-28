@@ -370,7 +370,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInWithEmailMenuItem => 'Sign In with Email';
 
   @override
-  String get defaultUserName => 'User';
+  String get defaultUserName => 'Grateful User';
 
   @override
   String get accountTitle => 'Account';
@@ -847,4 +847,150 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorEmailOrPasswordIncorrect =>
       'Email or password incorrect. Double-check your credentials.';
+
+  @override
+  String get reminderPromptTitle => 'You\'re off to a great start!';
+
+  @override
+  String get reminderPromptBody =>
+      'Would you like a daily reminder to reflect on your gratitude?';
+
+  @override
+  String get reminderPromptSubtext =>
+      'We\'ll only remind you on days you haven\'t created a star yet.';
+
+  @override
+  String get enableReminderButton => 'Enable Reminder ✨';
+
+  @override
+  String get enableReminderHint => 'Set up daily gratitude reminder';
+
+  @override
+  String get maybeLaterButton => 'Maybe Later';
+
+  @override
+  String get reminderTimePickerTitle => 'Choose reminder time';
+
+  @override
+  String get reminderEnabledSuccess => 'Daily reminder enabled!';
+
+  @override
+  String get reminderDisabledSuccess => 'Daily reminder disabled';
+
+  @override
+  String get reminderTimeUpdatedSuccess => 'Reminder time updated';
+
+  @override
+  String get reminderPermissionDenied => 'Notification permission denied';
+
+  @override
+  String get dailyReminderTitle => 'Daily Reminder';
+
+  @override
+  String get dailyReminderSetting => 'Daily reminder setting';
+
+  @override
+  String get dailyReminderEnabledHint =>
+      'Daily reminder is enabled, tap to change time';
+
+  @override
+  String get dailyReminderDisabledHint => 'Enable daily gratitude reminder';
+
+  @override
+  String reminderTimeDisplay(String time) {
+    return 'Remind me at $time';
+  }
+
+  @override
+  String get ageGateQuestion => 'Are you 13 years or older?';
+
+  @override
+  String get ageGateYesButton => 'Yes, I\'m 13 or older';
+
+  @override
+  String get ageGateNoButton => 'No, I\'m under 13';
+
+  @override
+  String get ageGateYesHint => 'Confirm you are 13 or older to continue';
+
+  @override
+  String get ageGateNoHint => 'Indicate you are under 13';
+
+  @override
+  String get ageGateUnder13Title => 'Age Requirement';
+
+  @override
+  String get ageGateUnder13Message =>
+      'You must be at least 13 years old to use GratiStellar. Thank you for your interest!';
+
+  @override
+  String get consentTitle => 'Privacy & Terms';
+
+  @override
+  String get consentMessage =>
+      'Before we begin, please review our privacy practices:';
+
+  @override
+  String get consentBullet1 => 'Your data is stored securely and privately';
+
+  @override
+  String get consentBullet2 => 'We never share your gratitudes with anyone';
+
+  @override
+  String get consentBullet3 => 'You can export or delete your data anytime';
+
+  @override
+  String get consentPrivacyPart1 => 'I have read and accept the ';
+
+  @override
+  String get consentPrivacyLink => 'Privacy Policy';
+
+  @override
+  String get consentTermsPart1 => 'I have read and accept the ';
+
+  @override
+  String get consentTermsLink => 'Terms of Service';
+
+  @override
+  String get consentPrivacyCheckbox => 'Privacy Policy acceptance checkbox';
+
+  @override
+  String get consentTermsCheckbox => 'Terms of Service acceptance checkbox';
+
+  @override
+  String get consentAcceptButton => 'Accept & Continue';
+
+  @override
+  String get consentAcceptHint => 'Create account and start using GratiStellar';
+
+  @override
+  String get consentAcceptDisabledHint =>
+      'You must accept both policies to continue';
+
+  @override
+  String get consentUrlError =>
+      'Could not open link. Please check your internet connection.';
+
+  @override
+  String get nameCollectionTitle => 'What\'s your name?';
+
+  @override
+  String get nameCollectionSubtitle =>
+      'This helps personalize your gratitude journey';
+
+  @override
+  String get nameCollectionLabel => 'Your name';
+
+  @override
+  String get nameCollectionHint => 'Enter your name to continue';
+
+  @override
+  String get nameCollectionPlaceholder => 'e.g., Alex';
+
+  @override
+  String get nameCollectionButton => 'Continue';
+
+  @override
+  String get nameCollectionButtonHint =>
+      'Create your account and start using GratiStellar';
 }

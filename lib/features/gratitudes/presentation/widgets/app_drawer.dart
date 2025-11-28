@@ -8,6 +8,7 @@ import '../../../../core/config/constants.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../services/daily_reminder_service.dart';
 import '../../../../services/layer_cache_service.dart';
 import '../../../../storage.dart';
 import '../../../backup/presentation/widgets/backup_dialog.dart';
@@ -61,11 +62,23 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
     }
   }
 
+  double _getResponsiveDrawerWidth(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth < 500) {
+      return screenWidth * 0.85;
+    } else if (screenWidth < 900) {
+      return 320;
+    } else {
+      return 360;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return Drawer(
+      width: _getResponsiveDrawerWidth(context),
       backgroundColor: Color(0xFF1A2238).withValues(alpha: 0.98),
       child: ListView(
         padding: EdgeInsets.zero,
@@ -73,10 +86,10 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           // Header with Icon and Title side-by-side
           Container(
             padding: EdgeInsets.fromLTRB(
-              FontScaling.getResponsiveSpacing(context, 16),
-              MediaQuery.of(context).padding.top + FontScaling.getResponsiveSpacing(context, 16),
-              FontScaling.getResponsiveSpacing(context, 16),
-              FontScaling.getResponsiveSpacing(context, 16),
+              FontScaling.getResponsiveSpacing(context, 12),
+              MediaQuery.of(context).padding.top + FontScaling.getResponsiveSpacing(context, 12),
+              FontScaling.getResponsiveSpacing(context, 12),
+              FontScaling.getResponsiveSpacing(context, 12),
             ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -213,7 +226,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 8),
+                    SizedBox(height: 4),
                     Text(
                       '${(textScaleFactor * 100).round()}%',
                       style: FontScaling.getBodySmall(context).copyWith(
@@ -257,11 +270,129 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         color: Colors.white70,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: 4),
                   ],
                 );
               },
             ),
+          ),
+
+          Divider(color: Colors.white24),
+
+          // Daily Reminder Setting
+          Consumer<DailyReminderService>(
+            builder: (context, reminderService, child) {
+              return SemanticHelper.label(
+                label: l10n.dailyReminderSetting,
+                hint: reminderService.isEnabled
+                    ? l10n.dailyReminderEnabledHint
+                    : l10n.dailyReminderDisabledHint,
+                isButton: true,
+                child: ListTile(
+                  leading: Icon(
+                    reminderService.isEnabled
+                        ? Icons.notifications_active
+                        : Icons.notifications_none,
+                    color: const Color(0xFFFFE135),
+                    size: FontScaling.getResponsiveIconSize(context, 24) *
+                        UIConstants.universalUIScale,
+                  ),
+                  title: Text(
+                    l10n.dailyReminderTitle,
+                    style: FontScaling.getBodyMedium(context).copyWith(
+                      fontSize: FontScaling.getBodyMedium(context).fontSize! *
+                          UIConstants.universalUIScale,
+                    ),
+                  ),
+                  subtitle: reminderService.isEnabled
+                      ? Text(
+                          l10n.reminderTimeDisplay(
+                            reminderService.reminderTime.format(context),
+                          ),
+                          style: FontScaling.getCaption(context).copyWith(
+                            fontSize: FontScaling.getCaption(context).fontSize! *
+                                UIConstants.universalUIScale,
+                          ),
+                        )
+                      : null,
+                  trailing: Switch(
+                    value: reminderService.isEnabled,
+                    activeTrackColor: const Color(0xFFFFE135),
+                    onChanged: (value) async {
+                      if (value) {
+                        // Enable flow: show time picker → request permission → schedule
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime: reminderService.reminderTime,
+                          helpText: l10n.reminderTimePickerTitle,
+                        );
+
+                        if (time != null) {
+                          final granted =
+                              await reminderService.requestPermission();
+                          if (granted) {
+                            await reminderService.scheduleReminder(time);
+                            await reminderService.setEnabled(true);
+
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.reminderEnabledSuccess),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.reminderPermissionDenied),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      } else {
+                        // Disable flow: cancel and disable
+                        await reminderService.cancelReminder();
+                        await reminderService.setEnabled(false);
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(l10n.reminderDisabledSuccess)),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                  onTap: reminderService.isEnabled
+                      ? () async {
+                          // If already enabled, tapping changes the time
+                          final time = await showTimePicker(
+                            context: context,
+                            initialTime: reminderService.reminderTime,
+                            helpText: l10n.reminderTimePickerTitle,
+                          );
+
+                          if (time != null) {
+                            await reminderService.scheduleReminder(time);
+
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.reminderTimeUpdatedSuccess),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      : null,
+                ),
+              );
+            },
           ),
 
           Divider(color: Colors.white24),

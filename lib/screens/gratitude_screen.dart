@@ -27,12 +27,14 @@ import '../list_view_screen.dart';
 import '../modal_dialogs.dart';
 import '../services/auth_service.dart';
 import '../services/crashlytics_service.dart';
+import '../services/daily_reminder_service.dart';
 import '../services/feedback_service.dart';
 import '../services/layer_cache_service.dart';
 import '../services/sync_status_service.dart';
 import '../starfield.dart';
 import '../storage.dart';
 import '../widgets/app_dialog.dart';
+import '../widgets/reminder_prompt_bottom_sheet.dart';
 import 'sign_in_screen.dart';
 import 'trash_screen.dart';
 import '../core/utils/app_logger.dart';
@@ -87,7 +89,33 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       _cameraController.updateBounds(provider.gratitudeStars, MediaQuery.of(context).size);
 
       _animationManager.resetBirthAnimation();
+
+      // Check if we should show reminder prompt
+      _checkAndShowReminderPrompt();
     }
+  }
+
+  // Check if we should show the reminder prompt
+  void _checkAndShowReminderPrompt() async {
+    final reminderService = context.read<DailyReminderService>();
+
+    // Check if already shown (only gating mechanism)
+    if (reminderService.hasShownPrompt) return;
+
+    // Wait 2 seconds after birth animation completes
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    // Show bottom sheet
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      builder: (context) => const ReminderPromptBottomSheet(),
+    );
   }
 
   Future<void> _regenerateLayersForNewSize(Size newSize) async {

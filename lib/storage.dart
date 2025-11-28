@@ -385,6 +385,12 @@ class StorageService {
       await prefs.remove('anonymous_uid');
       await prefs.remove('local_data_owner_uid');
 
+      // Clear reminder preferences on sign-out
+      await prefs.remove('reminder_enabled');
+      await prefs.remove('reminder_hour');
+      await prefs.remove('reminder_minute');
+      await prefs.remove('reminder_prompt_shown');
+
       AppLogger.data('🗑️ Cleared all local storage');
     } catch (e) {
       debugPrint('⚠️ Error clearing storage: $e');

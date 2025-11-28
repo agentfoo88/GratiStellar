@@ -20,10 +20,12 @@ import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/gratitude_screen.dart';
-import 'screens/welcome_screen.dart';
+import 'screens/onboarding/splash_screen.dart';
 import 'services/auth_service.dart';
 import 'services/crashlytics_service.dart';
+import 'services/daily_reminder_service.dart';
 import 'services/firestore_service.dart';
+import 'services/onboarding_service.dart';
 import 'services/sync_status_service.dart';
 
 // UI SCALE and ANIMATION CONFIGURATION found in constants.dart
@@ -60,6 +62,31 @@ void main() async {
 class GratiStellarApp extends StatelessWidget {
   const GratiStellarApp({super.key});
 
+  /// Build loading screen shown during async checks
+  Widget _buildLoadingScreen() {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF4A6FA5),
+              Color(0xFF166088),
+              Color(0xFF0B1426),
+              Color(0xFF2C3E50),
+            ],
+          ),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFFFFE135),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     AppLogger.start('🏗️ Building GratiStellarApp');
@@ -89,6 +116,9 @@ class GratiStellarApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: syncStatusService),
+        ChangeNotifierProvider(
+          create: (_) => DailyReminderService()..initialize(),
+        ),
         // Galaxy Provider FIRST
         ChangeNotifierProvider(
           create: (_) => GalaxyProvider(
@@ -204,42 +234,45 @@ class GratiStellarApp extends StatelessWidget {
           ),
         ),
 
-        // Auth-aware routing
-        home: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            // Show loading while checking auth state
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Scaffold(
-                body: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0xFF4A6FA5),
-                        Color(0xFF166088),
-                        Color(0xFF0B1426),
-                        Color(0xFF2C3E50),
-                      ],
-                    ),
-                  ),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFFFE135),
-                    ),
-                  ),
-                ),
-              );
+        // Onboarding-aware routing with Firebase auth state listener
+        home: FutureBuilder<bool>(
+          future: OnboardingService().isOnboardingComplete(),
+          builder: (context, onboardingSnapshot) {
+            // Show loading while checking onboarding status
+            if (onboardingSnapshot.connectionState == ConnectionState.waiting) {
+              return _buildLoadingScreen();
             }
 
-            // If user is signed in, show main app
-            if (snapshot.hasData) {
-              return GratitudeScreen();
+            final onboardingComplete = onboardingSnapshot.data ?? false;
+
+            if (!onboardingComplete) {
+              // First time user - start onboarding flow
+              return SplashScreen();
             }
 
-            // Otherwise, show welcome screen
-            return WelcomeScreen();
+            // Onboarding complete - use auth state listener
+            return StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, authSnapshot) {
+                // Show loading while checking auth state
+                if (authSnapshot.connectionState == ConnectionState.waiting) {
+                  return _buildLoadingScreen();
+                }
+
+                // If authenticated, show main app
+                if (authSnapshot.hasData) {
+                  return GratitudeScreen();
+                }
+
+                // Edge case: onboarding complete but no user
+                // This shouldn't happen, but if it does, restart onboarding
+                AppLogger.warning('Onboarding complete but no user - restarting onboarding');
+                Future.microtask(() async {
+                  await OnboardingService().resetOnboarding();
+                });
+                return SplashScreen();
+              },
+            );
           },
         ),
       ),

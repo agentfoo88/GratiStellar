@@ -877,5 +877,194 @@
         "errorAlreadyLinked": "This account is already linked to another user.",
         "@errorAlreadyLinked": {
           "description": "Error when trying to link an account that's already linked"
+        },
+        "reminderPromptTitle": "You're off to a great start!",
+        "@reminderPromptTitle": {
+          "description": "Title for first-star reminder prompt bottom sheet"
+        },
+        "reminderPromptBody": "Would you like a daily reminder to reflect on your gratitude?",
+        "@reminderPromptBody": {
+          "description": "Body text for reminder prompt"
+        },
+        "reminderPromptSubtext": "We'll only remind you on days you haven't created a star yet.",
+        "@reminderPromptSubtext": {
+          "description": "Additional context about smart reminder logic"
+        },
+        "enableReminderButton": "Enable Reminder ✨",
+        "@enableReminderButton": {
+          "description": "Button to enable daily reminders"
+        },
+        "enableReminderHint": "Set up daily gratitude reminder",
+        "@enableReminderHint": {
+          "description": "Accessibility hint for enable button"
+        },
+        "maybeLaterButton": "Maybe Later",
+        "@maybeLaterButton": {
+          "description": "Button to dismiss reminder prompt"
+        },
+        "reminderTimePickerTitle": "Choose reminder time",
+        "@reminderTimePickerTitle": {
+          "description": "Title for time picker dialog"
+        },
+        "reminderEnabledSuccess": "Daily reminder enabled!",
+        "@reminderEnabledSuccess": {
+          "description": "Toast message when reminder is enabled"
+        },
+        "reminderDisabledSuccess": "Daily reminder disabled",
+        "@reminderDisabledSuccess": {
+          "description": "Toast message when reminder is disabled"
+        },
+        "reminderTimeUpdatedSuccess": "Reminder time updated",
+        "@reminderTimeUpdatedSuccess": {
+          "description": "Toast message when time is changed"
+        },
+        "reminderPermissionDenied": "Notification permission denied",
+        "@reminderPermissionDenied": {
+          "description": "Error message when permission is denied"
+        },
+        "dailyReminderTitle": "Daily Reminder",
+        "@dailyReminderTitle": {
+          "description": "Settings menu item title"
+        },
+        "dailyReminderSetting": "Daily reminder setting",
+        "@dailyReminderSetting": {
+          "description": "Accessibility label for reminder setting"
+        },
+        "dailyReminderEnabledHint": "Daily reminder is enabled, tap to change time",
+        "@dailyReminderEnabledHint": {
+          "description": "Accessibility hint when enabled"
+        },
+        "dailyReminderDisabledHint": "Enable daily gratitude reminder",
+        "@dailyReminderDisabledHint": {
+          "description": "Accessibility hint when disabled"
+        },
+        "reminderTimeDisplay": "Remind me at {time}",
+        "@reminderTimeDisplay": {
+          "placeholders": {
+            "time": {
+              "type": "String"
+            }
+          },
+          "description": "Display text showing reminder time"
+        },
+        "defaultUserName": "Grateful User",
+        "@defaultUserName": {
+          "description": "Default display name for anonymous users"
+        },
+        "ageGateQuestion": "Are you 13 years or older?",
+        "@ageGateQuestion": {
+          "description": "Age verification question for COPPA compliance"
+        },
+        "ageGateYesButton": "Yes, I'm 13 or older",
+        "@ageGateYesButton": {
+          "description": "Button to confirm user is 13 or older"
+        },
+        "ageGateNoButton": "No, I'm under 13",
+        "@ageGateNoButton": {
+          "description": "Button to indicate user is under 13"
+        },
+        "ageGateYesHint": "Confirm you are 13 or older to continue",
+        "@ageGateYesHint": {
+          "description": "Accessibility hint for yes button"
+        },
+        "ageGateNoHint": "Indicate you are under 13",
+        "@ageGateNoHint": {
+          "description": "Accessibility hint for no button"
+        },
+        "ageGateUnder13Title": "Age Requirement",
+        "@ageGateUnder13Title": {
+          "description": "Title for under-13 dialog"
+        },
+        "ageGateUnder13Message": "You must be at least 13 years old to use GratiStellar. Thank you for your interest!",
+        "@ageGateUnder13Message": {
+          "description": "Message shown to users under 13"
+        },
+        "consentTitle": "Privacy & Terms",
+        "@consentTitle": {
+          "description": "Title for consent screen"
+        },
+        "consentMessage": "Before we begin, please review our privacy practices:",
+        "@consentMessage": {
+          "description": "Introduction message for consent screen"
+        },
+        "consentBullet1": "Your data is stored securely and privately",
+        "@consentBullet1": {
+          "description": "First privacy bullet point"
+        },
+        "consentBullet2": "We never share your gratitudes with anyone",
+        "@consentBullet2": {
+          "description": "Second privacy bullet point"
+        },
+        "consentBullet3": "You can export or delete your data anytime",
+        "@consentBullet3": {
+          "description": "Third privacy bullet point"
+        },
+        "consentPrivacyPart1": "I have read and accept the ",
+        "@consentPrivacyPart1": {
+          "description": "First part of privacy policy checkbox text"
+        },
+        "consentPrivacyLink": "Privacy Policy",
+        "@consentPrivacyLink": {
+          "description": "Clickable privacy policy link text"
+        },
+        "consentTermsPart1": "I have read and accept the ",
+        "@consentTermsPart1": {
+          "description": "First part of terms checkbox text"
+        },
+        "consentTermsLink": "Terms of Service",
+        "@consentTermsLink": {
+          "description": "Clickable terms link text"
+        },
+        "consentPrivacyCheckbox": "Privacy Policy acceptance checkbox",
+        "@consentPrivacyCheckbox": {
+          "description": "Accessibility label for privacy checkbox"
+        },
+        "consentTermsCheckbox": "Terms of Service acceptance checkbox",
+        "@consentTermsCheckbox": {
+          "description": "Accessibility label for terms checkbox"
+        },
+        "consentAcceptButton": "Accept & Continue",
+        "@consentAcceptButton": {
+          "description": "Button to accept policies and create account"
+        },
+        "consentAcceptHint": "Create account and start using GratiStellar",
+        "@consentAcceptHint": {
+          "description": "Accessibility hint when button is enabled"
+        },
+        "consentAcceptDisabledHint": "You must accept both policies to continue",
+        "@consentAcceptDisabledHint": {
+          "description": "Accessibility hint when button is disabled"
+        },
+        "consentUrlError": "Could not open link. Please check your internet connection.",
+        "@consentUrlError": {
+          "description": "Error message when URL fails to open"
+        },
+        "nameCollectionTitle": "What's your name?",
+        "@nameCollectionTitle": {
+          "description": "Title for name collection screen"
+        },
+        "nameCollectionSubtitle": "This helps personalize your gratitude journey",
+        "@nameCollectionSubtitle": {
+          "description": "Subtitle explaining why we ask for name"
+        },
+        "nameCollectionLabel": "Your name",
+        "@nameCollectionLabel": {
+          "description": "Accessibility label for name input field"
+        },
+        "nameCollectionHint": "Enter your name to continue",
+        "@nameCollectionHint": {
+          "description": "Accessibility hint for name input"
+        },
+        "nameCollectionPlaceholder": "e.g., Alex",
+        "@nameCollectionPlaceholder": {
+          "description": "Placeholder text for name input"
+        },
+        "nameCollectionButton": "Continue",
+        "@nameCollectionButton": {
+          "description": "Button to create account with name"
+        },
+        "nameCollectionButtonHint": "Create your account and start using GratiStellar",
+        "@nameCollectionButtonHint": {
+          "description": "Accessibility hint for continue button"
         }
     }

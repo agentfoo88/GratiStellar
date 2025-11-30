@@ -972,6 +972,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not open link. Please check your internet connection.';
 
   @override
+  String get consentUrlErrorNoBrowser =>
+      'No browser app found. Please install a web browser to view this link.';
+
+  @override
+  String get consentUrlErrorUnsupported =>
+      'This link cannot be opened. The URL format is not supported.';
+
+  @override
+  String get consentUrlErrorNetwork =>
+      'Cannot connect to the internet. Please check your connection and try again.';
+
+  @override
+  String get consentCopyUrlButton => 'Copy Link';
+
+  @override
+  String get consentUrlCopied => 'Link copied to clipboard';
+
+  @override
+  String get consentRetryButton => 'Retry';
+
+  @override
   String get nameCollectionTitle => 'What\'s your name?';
 
   @override

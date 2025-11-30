@@ -1852,6 +1852,42 @@ abstract class AppLocalizations {
   /// **'Could not open link. Please check your internet connection.'**
   String get consentUrlError;
 
+  /// Error when no browser application is available
+  ///
+  /// In en, this message translates to:
+  /// **'No browser app found. Please install a web browser to view this link.'**
+  String get consentUrlErrorNoBrowser;
+
+  /// Error when URL scheme is not supported
+  ///
+  /// In en, this message translates to:
+  /// **'This link cannot be opened. The URL format is not supported.'**
+  String get consentUrlErrorUnsupported;
+
+  /// Error when network connection is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot connect to the internet. Please check your connection and try again.'**
+  String get consentUrlErrorNetwork;
+
+  /// Button to copy URL to clipboard as fallback
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Link'**
+  String get consentCopyUrlButton;
+
+  /// Success message when URL is copied
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied to clipboard'**
+  String get consentUrlCopied;
+
+  /// Button to retry opening URL
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get consentRetryButton;
+
   /// Title for name collection screen
   ///
   /// In en, this message translates to:

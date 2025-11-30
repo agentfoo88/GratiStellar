@@ -31,6 +31,9 @@ enum ErrorContext {
   /// Input validation errors
   validation,
 
+  /// External URL launching operations
+  url,
+
   /// Unknown or unclassified errors
   unknown,
 }

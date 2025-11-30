@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 import '../../core/accessibility/semantic_helper.dart';
 import '../../core/config/app_config.dart';
 import '../../core/config/constants.dart';
+import '../../core/error/error_handler.dart';
+import '../../core/error/error_context.dart';
 import '../../core/utils/app_logger.dart';
 import '../../font_scaling.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/url_launch_service.dart';
 import 'name_collection_screen.dart';
 
 /// Privacy and Terms of Service consent screen
@@ -23,28 +26,73 @@ class _ConsentScreenState extends State<ConsentScreen> {
   bool _privacyAccepted = false;
   bool _termsAccepted = false;
   String? _errorMessage;
+  String? _failedUrl; // Track which URL failed for retry
+  bool _isRetriable = false; // Track if error is retriable
 
-  /// Open URL in external browser
+  /// Open URL in external browser with comprehensive error handling
   Future<void> _openUrl(String url) async {
-    final uri = Uri.parse(url);
+    // Clear previous errors
+    setState(() {
+      _errorMessage = null;
+      _failedUrl = null;
+      _isRetriable = false;
+    });
+
+    final l10n = AppLocalizations.of(context)!;
+
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (!mounted) return;
-        final l10n = AppLocalizations.of(context)!;
-        setState(() {
-          _errorMessage = l10n.consentUrlError;
-        });
-      }
-    } catch (e) {
-      AppLogger.error('Failed to open URL: $e');
+      await UrlLaunchService.launchUrlSafely(url);
+    } catch (e, stack) {
+      AppLogger.error('Failed to open URL: $url', 'CONSENT', e);
+
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
+
+      // Use ErrorHandler to map exception to user-friendly message
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.url,
+        l10n: l10n,
+        metadata: {'url': url},
+      );
+
       setState(() {
-        _errorMessage = l10n.consentUrlError;
+        _errorMessage = error.userMessage;
+        _failedUrl = url;
+        _isRetriable = error.isRetriable;
       });
     }
+  }
+
+  /// Retry opening the last failed URL
+  Future<void> _retryOpenUrl() async {
+    if (_failedUrl != null) {
+      await _openUrl(_failedUrl!);
+    }
+  }
+
+  /// Copy URL to clipboard as fallback
+  Future<void> _copyUrlToClipboard(String url) async {
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context)!;
+
+    // Show success feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.consentUrlCopied),
+        duration: const Duration(seconds: 2),
+        backgroundColor: const Color(0xFF4A6FA5),
+      ),
+    );
+
+    // Clear error state
+    setState(() {
+      _errorMessage = null;
+      _failedUrl = null;
+      _isRetriable = false;
+    });
   }
 
   /// Handle acceptance - navigate to name collection screen
@@ -325,7 +373,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                       ),
                     ),
 
-                    // Error message
+                    // Enhanced error message with actions
                     if (_errorMessage != null) ...[
                       SizedBox(
                         height: FontScaling.getResponsiveSpacing(context, 16) *
@@ -343,12 +391,72 @@ class _ConsentScreenState extends State<ConsentScreen> {
                             color: Colors.red.withValues(alpha: 0.3),
                           ),
                         ),
-                        child: Text(
-                          _errorMessage!,
-                          style: FontScaling.getBodySmall(context).copyWith(
-                            color: Colors.red.withValues(alpha: 0.9),
-                          ),
-                          textAlign: TextAlign.center,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Error message
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red.withValues(alpha: 0.9),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: FontScaling.getBodySmall(context).copyWith(
+                                      color: Colors.red.withValues(alpha: 0.9),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            // Action buttons
+                            if (_failedUrl != null) ...[
+                              SizedBox(
+                                height: FontScaling.getResponsiveSpacing(context, 12) *
+                                    UIConstants.universalUIScale,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  // Copy URL button (always show as fallback)
+                                  TextButton.icon(
+                                    onPressed: () => _copyUrlToClipboard(_failedUrl!),
+                                    icon: const Icon(Icons.copy, size: 16),
+                                    label: Text(l10n.consentCopyUrlButton),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: const Color(0xFFFFE135),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Retry button (only if retriable)
+                                  if (_isRetriable) ...[
+                                    const SizedBox(width: 8),
+                                    TextButton.icon(
+                                      onPressed: _retryOpenUrl,
+                                      icon: const Icon(Icons.refresh, size: 16),
+                                      label: Text(l10n.consentRetryButton),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: const Color(0xFFFFE135),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],

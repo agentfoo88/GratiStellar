@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,18 +35,63 @@ void main() async {
   AppLogger.start('🚀 App starting...');
   WidgetsFlutterBinding.ensureInitialized();
 
+  AppLogger.data('🔥 Initializing Firebase...');
   // Initialize Firebase with generated options
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  // Initialize Crashlytics
-  await CrashlyticsService().initialize();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(
+      const Duration(seconds: 10), // Increased timeout for slower devices
+      onTimeout: () {
+        AppLogger.error('❌ Firebase initialization timed out!');
+        throw TimeoutException('Firebase init timeout');
+      },
+    );
+    AppLogger.success('✅ Firebase initialized');
+    
+    // Verify Firebase is actually ready by checking if we can access it
+    if (Firebase.apps.isEmpty) {
+      throw Exception('Firebase apps list is empty after initialization');
+    }
+    
+    // Initialize Crashlytics only if Firebase is ready
+    AppLogger.data('💥 Initializing Crashlytics...');
+    try {
+      await CrashlyticsService().initialize().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          AppLogger.error('❌ Crashlytics initialization timed out!');
+          throw TimeoutException('Crashlytics init timeout');
+        },
+      );
+      AppLogger.success('✅ Crashlytics initialized');
+    } catch (e) {
+      AppLogger.error('❌ Crashlytics failed: $e (continuing anyway)');
+    }
+  } catch (e, stack) {
+    AppLogger.error('❌ Firebase initialization failed: $e');
+    // Only try to log to Crashlytics if Firebase might be partially initialized
+    try {
+      if (Firebase.apps.isNotEmpty) {
+        CrashlyticsService().recordError(e, stack, reason: 'Firebase initialization failed');
+      }
+    } catch (_) {
+      // Ignore - Crashlytics might not be available
+    }
+    // Don't throw - let the app continue and handle gracefully
+    // The app will show onboarding which doesn't require Firebase immediately
+  }
 
   AppLogger.data('📦 Loading textures...');
   try {
     CrashlyticsService().log('Starting texture loading');
-    await BackgroundService.loadTextures();
+    await BackgroundService.loadTextures().timeout(
+      const Duration(seconds: 3),
+      onTimeout: () {
+        AppLogger.error('❌ Texture loading timed out!');
+        throw TimeoutException('Texture loading timeout');
+      },
+    );
     CrashlyticsService().log('Textures loaded successfully');
     AppLogger.success('✅ Textures loaded, starting app');
   } catch (e, stack) {
@@ -56,6 +102,7 @@ void main() async {
   // Note: Layer cache will be initialized per screen size in GratitudeScreen
   // This is because we need to know the actual screen size first
 
+  AppLogger.start('🏃 Running app...');
   runApp(GratiStellarApp());
 }
 
@@ -85,6 +132,16 @@ class GratiStellarApp extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Check if Firebase is ready to use
+  bool _isFirebaseReady() {
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (e) {
+      AppLogger.error('Error checking Firebase readiness: $e');
+      return false;
+    }
   }
 
   @override
@@ -243,6 +300,13 @@ class GratiStellarApp extends StatelessWidget {
               return _buildLoadingScreen();
             }
 
+            // Handle errors in onboarding check
+            if (onboardingSnapshot.hasError) {
+              AppLogger.error('Error checking onboarding status: ${onboardingSnapshot.error}');
+              // On error, default to showing onboarding (safe fallback)
+              return SplashScreen();
+            }
+
             final onboardingComplete = onboardingSnapshot.data ?? false;
 
             if (!onboardingComplete) {
@@ -251,28 +315,60 @@ class GratiStellarApp extends StatelessWidget {
             }
 
             // Onboarding complete - use auth state listener
-            return StreamBuilder<User?>(
-              stream: FirebaseAuth.instance.authStateChanges(),
-              builder: (context, authSnapshot) {
-                // Show loading while checking auth state
-                if (authSnapshot.connectionState == ConnectionState.waiting) {
-                  return _buildLoadingScreen();
-                }
+            // Check if Firebase is ready before accessing auth
+            if (!_isFirebaseReady()) {
+              AppLogger.warning('Firebase not ready, showing onboarding as fallback');
+              return SplashScreen();
+            }
 
-                // If authenticated, show main app
-                if (authSnapshot.hasData) {
-                  return GratitudeScreen();
-                }
+            // Wrap in try-catch to handle Firebase initialization issues
+            try {
+              return StreamBuilder<User?>(
+                stream: FirebaseAuth.instance.authStateChanges(),
+                builder: (context, authSnapshot) {
+                  // Show loading while checking auth state
+                  if (authSnapshot.connectionState == ConnectionState.waiting) {
+                    return _buildLoadingScreen();
+                  }
 
-                // Edge case: onboarding complete but no user
-                // This shouldn't happen, but if it does, restart onboarding
-                AppLogger.warning('Onboarding complete but no user - restarting onboarding');
-                Future.microtask(() async {
-                  await OnboardingService().resetOnboarding();
-                });
-                return SplashScreen();
-              },
-            );
+                  // Handle errors in auth stream
+                  if (authSnapshot.hasError) {
+                    AppLogger.error('Error in auth state stream: ${authSnapshot.error}');
+                    // On error, restart onboarding as safe fallback
+                    Future.microtask(() async {
+                      try {
+                        await OnboardingService().resetOnboarding();
+                      } catch (e) {
+                        AppLogger.error('Error resetting onboarding: $e');
+                      }
+                    });
+                    return SplashScreen();
+                  }
+
+                  // If authenticated, show main app
+                  if (authSnapshot.hasData) {
+                    return GratitudeScreen();
+                  }
+
+                  // Edge case: onboarding complete but no user
+                  // This shouldn't happen, but if it does, restart onboarding
+                  AppLogger.warning('Onboarding complete but no user - restarting onboarding');
+                  Future.microtask(() async {
+                    try {
+                      await OnboardingService().resetOnboarding();
+                    } catch (e) {
+                      AppLogger.error('Error resetting onboarding: $e');
+                    }
+                  });
+                  return SplashScreen();
+                },
+              );
+            } catch (e, stack) {
+              AppLogger.error('Error accessing Firebase Auth: $e');
+              CrashlyticsService().recordError(e, stack, reason: 'Firebase Auth access error');
+              // Fallback to onboarding if Firebase Auth fails
+              return SplashScreen();
+            }
           },
         ),
       ),

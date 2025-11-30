@@ -6,6 +6,7 @@ import '../security/rate_limiter.dart';
 import 'app_error.dart';
 import 'error_context.dart';
 import 'error_severity.dart';
+import 'url_exceptions.dart';
 
 /// Maps exceptions to AppError objects with user-friendly messages
 ///
@@ -43,6 +44,11 @@ class ErrorMapper {
 
     if (exception is BackupException) {
       return _mapBackupException(exception, stackTrace, l10n);
+    }
+
+    // URL Launch Exceptions
+    if (exception is UrlLaunchException) {
+      return _mapUrlLaunchException(exception, stackTrace, l10n);
     }
 
     if (exception is ValidationException) {
@@ -284,6 +290,44 @@ class ErrorMapper {
       technicalMessage: 'TimeoutException: ${e.message ?? 'No message'}',
       isRetriable: true,
       metadata: {'duration': e.duration?.inSeconds},
+    );
+  }
+
+  static AppError _mapUrlLaunchException(
+    UrlLaunchException e,
+    StackTrace? stackTrace,
+    AppLocalizations? l10n,
+  ) {
+    String userMessage;
+    ErrorSeverity severity = ErrorSeverity.warning;
+    bool isRetriable = false;
+
+    if (e is BrowserNotAvailableException) {
+      userMessage = l10n?.consentUrlErrorNoBrowser ??
+          'No browser app found. Please install a web browser to view this link.';
+      severity = ErrorSeverity.error;
+    } else if (e is UrlNotSupportedException) {
+      userMessage = l10n?.consentUrlErrorUnsupported ??
+          'This link cannot be opened. The URL format is not supported.';
+      severity = ErrorSeverity.error;
+    } else if (e is NetworkException) {
+      userMessage = l10n?.consentUrlErrorNetwork ??
+          'Cannot connect to the internet. Please check your connection and try again.';
+      isRetriable = true;
+    } else {
+      userMessage = l10n?.consentUrlError ??
+          'Could not open link. Please try again later.';
+    }
+
+    return AppError(
+      originalError: e,
+      stackTrace: stackTrace,
+      severity: severity,
+      context: ErrorContext.url,
+      userMessage: userMessage,
+      technicalMessage: 'UrlLaunchException: ${e.message} - ${e.url}',
+      isRetriable: isRetriable,
+      metadata: {'url': e.url},
     );
   }
 

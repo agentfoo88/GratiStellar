@@ -30,7 +30,7 @@ class CrashlyticsService {
       await _logDeviceInfo();
 
       _initialized = true;
-      AppLogger.error('✅ Crashlytics initialized');
+      AppLogger.success('✅ Crashlytics initialized');
     } catch (e) {
       AppLogger.error('⚠️ Failed to initialize Crashlytics: $e');
     }

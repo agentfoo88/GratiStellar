@@ -5,7 +5,11 @@
       "Bash(flutter gen-l10n:*)",
       "Bash(flutter analyze:*)",
       "Bash(dir:*)",
-      "Bash(flutter pub get:*)"
+      "Bash(flutter pub get:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(adb logcat:*)",
+      "Bash(adb shell:*)",
+      "Bash(flutter clean:*)"
     ],
     "deny": [],
     "ask": []

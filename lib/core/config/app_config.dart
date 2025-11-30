@@ -10,18 +10,12 @@ class AppConfig {
   // ============================================================================
 
   /// Privacy Policy URL
-  ///
-  /// ⚠️ IMPORTANT: Update this with your actual privacy policy URL before production!
-  /// This placeholder URL should be replaced with your hosted privacy policy.
   static const String privacyPolicyUrl =
-      'https://gratistellar.github.io/legal/PRIVACY_POLICY';
+      'https://agentfoo88.github.io/GratiStellar-legal/PRIVACY_POLICY.md';
 
   /// Terms of Service URL
-  ///
-  /// ⚠️ IMPORTANT: Update this with your actual terms of service URL before production!
-  /// This placeholder URL should be replaced with your hosted terms of service.
   static const String termsOfServiceUrl =
-      'https://gratistellar.github.io/legal/TERMS_OF_SERVICE';
+      'https://agentfoo88.github.io/GratiStellar-legal/TERMS_OF_SERVICE.md';
 
   // ============================================================================
   // CONSENT TRACKING

@@ -1039,6 +1039,30 @@
         "@consentUrlError": {
           "description": "Error message when URL fails to open"
         },
+        "consentUrlErrorNoBrowser": "No browser app found. Please install a web browser to view this link.",
+        "@consentUrlErrorNoBrowser": {
+          "description": "Error when no browser application is available"
+        },
+        "consentUrlErrorUnsupported": "This link cannot be opened. The URL format is not supported.",
+        "@consentUrlErrorUnsupported": {
+          "description": "Error when URL scheme is not supported"
+        },
+        "consentUrlErrorNetwork": "Cannot connect to the internet. Please check your connection and try again.",
+        "@consentUrlErrorNetwork": {
+          "description": "Error when network connection is unavailable"
+        },
+        "consentCopyUrlButton": "Copy Link",
+        "@consentCopyUrlButton": {
+          "description": "Button to copy URL to clipboard as fallback"
+        },
+        "consentUrlCopied": "Link copied to clipboard",
+        "@consentUrlCopied": {
+          "description": "Success message when URL is copied"
+        },
+        "consentRetryButton": "Retry",
+        "@consentRetryButton": {
+          "description": "Button to retry opening URL"
+        },
         "nameCollectionTitle": "What's your name?",
         "@nameCollectionTitle": {
           "description": "Title for name collection screen"

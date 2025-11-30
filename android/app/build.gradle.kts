@@ -24,7 +24,7 @@ android {
     defaultConfig {
         applicationId = "grati.stellar.app"
         minSdk = flutter.minSdkVersion  // CHANGED: Firebase requires 21 minimum
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 35  // Set to 35 to match device API level
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true  // CHANGED: = instead of just 'true'

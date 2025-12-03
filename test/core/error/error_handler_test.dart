@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../security/rate_limiter.dart';
-import '../utils/app_logger.dart';
-import 'error_handler.dart';
-import 'error_context.dart';
-import 'retry_policy.dart';
+import 'package:gratistellar/core/security/rate_limiter.dart';
+import 'package:gratistellar/core/utils/app_logger.dart';
+import 'package:gratistellar/core/error/error_handler.dart';
+import 'package:gratistellar/core/error/error_context.dart';
+import 'package:gratistellar/core/error/retry_policy.dart';
 
 /// Test file to verify ErrorHandler functionality
 ///

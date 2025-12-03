@@ -81,7 +81,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
     // Show success feedback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(l10n.consentUrlCopied),
+        content: Text(l10n.consentUrlCopied, style: FontScaling.getBodyMedium(context)),
         duration: const Duration(seconds: 2),
         backgroundColor: const Color(0xFF4A6FA5),
       ),

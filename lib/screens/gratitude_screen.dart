@@ -62,7 +62,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   // List<OrganicNebulaRegion> _organicNebulaRegions = []; // ADD THIS
   late AnimationManager _animationManager;
   late CameraController _cameraController;
-  bool _showBranding = true;
+  bool _showBranding = false; // Disabled - using enhanced splash screen instead
   bool _isAppInBackground = false;
   bool _isMultiFingerGesture = false;
   DateTime? _lastScrollTime;
@@ -571,7 +571,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.mindfulnessNoStarsMessage),
+          content: Text(l10n.mindfulnessNoStarsMessage, style: FontScaling.getBodyMedium(context)),
           backgroundColor: Color(0xFF1A2238),
           duration: Duration(seconds: 3),
         ),
@@ -1211,6 +1211,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
                               final feedbackService = FeedbackService();
                               final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              final textStyle = FontScaling.getBodyMedium(context);
 
                               final success = await feedbackService.submitFeedback(
                                 type: selectedType,
@@ -1222,7 +1223,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                                 scaffoldMessenger.showSnackBar(  // ← Use captured reference
                                   SnackBar(
                                     content: Text(
-                                        success ? l10n.feedbackSuccess : l10n.feedbackError
+                                        success ? l10n.feedbackSuccess : l10n.feedbackError,
+                                        style: textStyle,
                                     ),
                                     backgroundColor: success ? Colors.green : Colors.red,
                                   ),

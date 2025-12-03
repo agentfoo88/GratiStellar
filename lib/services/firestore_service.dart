@@ -538,7 +538,15 @@ class FirestoreService {
       final batch = _firestore.batch();
 
       for (final doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
+        if (data == null) {
+          AppLogger.warning('Document ${doc.id} has no data, skipping');
+          continue;
+        }
+        if (data is! Map<String, dynamic>) {
+          AppLogger.error('Invalid document format for ${doc.id}');
+          continue;
+        }
         bool needsMigration = false;
         Map<String, dynamic> updates = {};
 

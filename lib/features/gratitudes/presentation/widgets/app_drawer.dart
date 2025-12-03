@@ -1,15 +1,19 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/accessibility/semantic_helper.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../screens/onboarding/enhanced_splash_screen.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/daily_reminder_service.dart';
 import '../../../../services/layer_cache_service.dart';
+import '../../../../services/url_launch_service.dart';
 import '../../../../storage.dart';
 import '../../../backup/presentation/widgets/backup_dialog.dart';
 import '../../../backup/presentation/widgets/restore_dialog.dart';
@@ -83,45 +87,63 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Header with Icon and Title side-by-side
-          Container(
-            padding: EdgeInsets.fromLTRB(
-              FontScaling.getResponsiveSpacing(context, 12),
-              MediaQuery.of(context).padding.top + FontScaling.getResponsiveSpacing(context, 12),
-              FontScaling.getResponsiveSpacing(context, 12),
-              FontScaling.getResponsiveSpacing(context, 12),
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF4A6FA5).withValues(alpha: 0.3),
-                  Color(0xFF1A2238),
-                ],
-              ),
-            ),
-            child: Row(
-              children: [
-                SemanticHelper.decorative(
-                  child: SvgPicture.asset(
-                    'assets/icon_star.svg',
-                    width: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
-                    height: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
-                    colorFilter: ColorFilter.mode(Color(0xFFFFE135), BlendMode.srcIn),
-                  ),
-                ),
-                SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
-                Expanded(
-                  child: Text(
-                    l10n.appTitle,
-                    style: FontScaling.getHeadingMedium(context).copyWith(
-                      fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
-                      color: Color(0xFFFFE135),
+          // Header with Icon and Title side-by-side (TAPPABLE)
+          SemanticHelper.label(
+            label: l10n.aboutMenuItem,
+            hint: l10n.viewAppInfo,
+            isButton: true,
+            child: InkWell(
+              onTap: () async {
+                Navigator.pop(context); // Close drawer
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const EnhancedSplashScreen(
+                      displayMode: SplashDisplayMode.about,
                     ),
                   ),
+                );
+              },
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                  FontScaling.getResponsiveSpacing(context, 12),
+                  MediaQuery.of(context).padding.top + FontScaling.getResponsiveSpacing(context, 12),
+                  FontScaling.getResponsiveSpacing(context, 12),
+                  FontScaling.getResponsiveSpacing(context, 12),
                 ),
-              ],
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF4A6FA5).withValues(alpha: 0.3),
+                      Color(0xFF1A2238),
+                    ],
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    SemanticHelper.decorative(
+                      child: SvgPicture.asset(
+                        'assets/icon_star.svg',
+                        width: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
+                        height: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
+                        colorFilter: ColorFilter.mode(Color(0xFFFFE135), BlendMode.srcIn),
+                      ),
+                    ),
+                    SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
+                    Expanded(
+                      child: Text(
+                        l10n.appTitle,
+                        style: FontScaling.getHeadingMedium(context).copyWith(
+                          fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
+                          color: Color(0xFFFFE135),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
 
@@ -337,7 +359,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(l10n.reminderEnabledSuccess),
+                                  content: Text(l10n.reminderEnabledSuccess, style: FontScaling.getBodyMedium(context)),
                                   backgroundColor: Colors.green,
                                 ),
                               );
@@ -346,7 +368,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(l10n.reminderPermissionDenied),
+                                  content: Text(l10n.reminderPermissionDenied, style: FontScaling.getBodyMedium(context)),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -361,7 +383,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text(l10n.reminderDisabledSuccess)),
+                                content: Text(l10n.reminderDisabledSuccess, style: FontScaling.getBodyMedium(context))),
                           );
                         }
                       }
@@ -382,7 +404,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(l10n.reminderTimeUpdatedSuccess),
+                                  content: Text(l10n.reminderTimeUpdatedSuccess, style: FontScaling.getBodyMedium(context)),
                                   backgroundColor: Colors.green,
                                 ),
                               );
@@ -473,15 +495,16 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             onTap: () async {
               // Show backup dialog
               final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final textStyle = FontScaling.getBodyMedium(context);
               final result = await showDialog<bool>(
                 context: context,
                 builder: (context) => const BackupDialog(),
               );
-              
+
               if (result == true) {
                 scaffoldMessenger.showSnackBar(
                   SnackBar(
-                    content: Text(l10n.backupCreatedSimple),
+                    content: Text(l10n.backupCreatedSimple, style: textStyle),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -514,15 +537,16 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             onTap: () async {
               // Show restore dialog
               final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final textStyle = FontScaling.getBodyMedium(context);
               final result = await showDialog<bool>(
                 context: context,
                 builder: (context) => const RestoreDialog(),
               );
-              
+
               if (result == true) {
                 scaffoldMessenger.showSnackBar(
                   SnackBar(
-                    content: Text(l10n.backupRestoredSimple),
+                    content: Text(l10n.backupRestoredSimple, style: textStyle),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -561,6 +585,84 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             height: 1,
           ),
 
+          // Privacy Policy
+          SemanticHelper.label(
+            label: l10n.privacyPolicyMenuItem,
+            hint: l10n.viewLegalDocuments,
+            isButton: true,
+            child: ListTile(
+              leading: Icon(
+                Icons.privacy_tip_outlined,
+                color: Color(0xFFFFE135),
+                size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+              ),
+              title: Text(
+                l10n.privacyPolicyMenuItem,
+                style: FontScaling.getBodyMedium(context).copyWith(
+                  fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                ),
+              ),
+              onTap: () async {
+                try {
+                  await UrlLaunchService.launchUrlSafely(AppConfig.privacyPolicyUrl);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Could not open Privacy Policy: $e', style: FontScaling.getBodyMedium(context)),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+
+          Divider(
+            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            height: 1,
+          ),
+
+          // Terms of Service
+          SemanticHelper.label(
+            label: l10n.termsOfServiceMenuItem,
+            hint: l10n.viewLegalDocuments,
+            isButton: true,
+            child: ListTile(
+              leading: Icon(
+                Icons.description_outlined,
+                color: Color(0xFFFFE135),
+                size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+              ),
+              title: Text(
+                l10n.termsOfServiceMenuItem,
+                style: FontScaling.getBodyMedium(context).copyWith(
+                  fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                ),
+              ),
+              onTap: () async {
+                try {
+                  await UrlLaunchService.launchUrlSafely(AppConfig.termsOfServiceUrl);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Could not open Terms of Service: $e', style: FontScaling.getBodyMedium(context)),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+
+          Divider(
+            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            height: 1,
+          ),
+
           // Exit
           SemanticHelper.label(
             label: l10n.exitButton,
@@ -587,8 +689,10 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             height: 1,
           ),
 
-          // Clear Layer Cache
-          SemanticHelper.label(
+          // DEBUG ONLY: Developer options
+          if (kDebugMode) ...[
+            // Clear Layer Cache
+            SemanticHelper.label(
             label: l10n.clearLayerCache,
             hint: l10n.regenerateBackgroundHint,
             isButton: true,
@@ -611,16 +715,35 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: Text(l10n.clearCacheTitle),
-                    content: Text(l10n.clearCacheMessage),
+                    backgroundColor: Color(0xFF1A2238),
+                    title: Text(
+                      l10n.clearCacheTitle,
+                      style: FontScaling.getModalTitle(context),
+                    ),
+                    content: Text(
+                      l10n.clearCacheMessage,
+                      style: FontScaling.getBodyMedium(context).copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(false),
-                        child: Text(l10n.cancel),
+                        child: Text(
+                          l10n.cancel,
+                          style: FontScaling.getButtonText(context).copyWith(
+                            color: Colors.white70,
+                          ),
+                        ),
                       ),
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(true),
-                        child: Text(l10n.clearCache),
+                        child: Text(
+                          l10n.clearCache,
+                          style: FontScaling.getButtonText(context).copyWith(
+                            color: Color(0xFFFFE135),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -633,7 +756,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(l10n.cacheCleared),
+                        content: Text(l10n.cacheCleared, style: FontScaling.getBodyMedium(context)),
                         duration: Duration(seconds: 3),
                       ),
                     );
@@ -664,12 +787,13 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(l10n.debugSyncCompleteMessage),
+                  content: Text(l10n.debugSyncCompleteMessage, style: FontScaling.getBodyMedium(context)),
                   backgroundColor: Colors.green,
                 ),
               );
             },
           ),
+          ], // End DEBUG ONLY section
 
           // Version number at bottom
           FutureBuilder<PackageInfo>(

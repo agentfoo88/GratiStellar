@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../core/utils/app_logger.dart';
 import '../screens/gratitude_screen.dart';
-import '../screens/onboarding/splash_screen.dart';
+import '../screens/onboarding/enhanced_splash_screen.dart';
 
 /// Service to manage onboarding state and flow
 ///
@@ -67,7 +68,7 @@ class OnboardingService {
   ///
   /// Returns:
   /// - GratitudeScreen if onboarding is complete
-  /// - SplashScreen if onboarding is not complete (starts onboarding flow)
+  /// - EnhancedSplashScreen if onboarding is not complete (starts onboarding flow)
   Future<Widget> getInitialScreen() async {
     final onboardingComplete = await isOnboardingComplete();
 
@@ -76,8 +77,10 @@ class OnboardingService {
       return GratitudeScreen();
     }
 
-    AppLogger.info('🚀 Starting onboarding flow with SplashScreen');
-    return SplashScreen();
+    AppLogger.info('🚀 Starting onboarding flow with EnhancedSplashScreen');
+    return const EnhancedSplashScreen(
+      displayMode: SplashDisplayMode.onboarding,
+    );
   }
 
   /// Reset onboarding state (for development/testing purposes)

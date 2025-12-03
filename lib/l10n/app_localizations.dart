@@ -1915,7 +1915,7 @@ abstract class AppLocalizations {
   /// Placeholder text for name input
   ///
   /// In en, this message translates to:
-  /// **'e.g., Alex'**
+  /// **'e.g., Stella'**
   String get nameCollectionPlaceholder;
 
   /// Button to create account with name
@@ -1929,6 +1929,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create your account and start using GratiStellar'**
   String get nameCollectionButtonHint;
+
+  /// App tagline shown on splash/about screen
+  ///
+  /// In en, this message translates to:
+  /// **'Build your universe of thankfulness'**
+  String get appTagline;
+
+  /// Hint text for onboarding splash screen
+  ///
+  /// In en, this message translates to:
+  /// **'Tap anywhere to continue'**
+  String get tapToContinue;
+
+  /// Hint text for about screen
+  ///
+  /// In en, this message translates to:
+  /// **'Tap anywhere to close'**
+  String get tapToDismiss;
+
+  /// Credits text on about screen
+  ///
+  /// In en, this message translates to:
+  /// **'Created by {author}'**
+  String createdBy(String author);
+
+  /// Accessibility label for drawer header tap to about
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutMenuItem;
+
+  /// Accessibility hint for drawer header
+  ///
+  /// In en, this message translates to:
+  /// **'View app information and credits'**
+  String get viewAppInfo;
+
+  /// Menu item for legal documents
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get legalMenuItem;
+
+  /// Menu item for privacy policy
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicyMenuItem;
+
+  /// Menu item for terms of service
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfServiceMenuItem;
+
+  /// Accessibility hint for legal menu items
+  ///
+  /// In en, this message translates to:
+  /// **'View privacy policy and terms'**
+  String get viewLegalDocuments;
 }
 
 class _AppLocalizationsDelegate

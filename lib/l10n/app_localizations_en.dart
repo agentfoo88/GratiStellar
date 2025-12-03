@@ -1006,7 +1006,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nameCollectionHint => 'Enter your name to continue';
 
   @override
-  String get nameCollectionPlaceholder => 'e.g., Alex';
+  String get nameCollectionPlaceholder => 'e.g., Stella';
 
   @override
   String get nameCollectionButton => 'Continue';
@@ -1014,4 +1014,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get nameCollectionButtonHint =>
       'Create your account and start using GratiStellar';
+
+  @override
+  String get appTagline => 'Build your universe of thankfulness';
+
+  @override
+  String get tapToContinue => 'Tap anywhere to continue';
+
+  @override
+  String get tapToDismiss => 'Tap anywhere to close';
+
+  @override
+  String createdBy(String author) {
+    return 'Created by $author';
+  }
+
+  @override
+  String get aboutMenuItem => 'About';
+
+  @override
+  String get viewAppInfo => 'View app information and credits';
+
+  @override
+  String get legalMenuItem => 'Legal';
+
+  @override
+  String get privacyPolicyMenuItem => 'Privacy Policy';
+
+  @override
+  String get termsOfServiceMenuItem => 'Terms of Service';
+
+  @override
+  String get viewLegalDocuments => 'View privacy policy and terms';
 }

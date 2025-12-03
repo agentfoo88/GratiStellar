@@ -200,11 +200,21 @@ class TrashScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancelButton, style: TextStyle(color: Colors.white70)),
+            child: Text(
+              l10n.cancelButton,
+              style: FontScaling.getButtonText(context).copyWith(
+                color: Colors.white70,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.restoreButton, style: TextStyle(color: Color(0xFFFFE135))),
+            child: Text(
+              l10n.restoreButton,
+              style: FontScaling.getButtonText(context).copyWith(
+                color: Color(0xFFFFE135),
+              ),
+            ),
           ),
         ],
       ),
@@ -216,7 +226,7 @@ class TrashScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.gratitudeRestored),
+            content: Text(l10n.gratitudeRestored, style: FontScaling.getBodyMedium(context)),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -276,7 +286,7 @@ class TrashScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.gratitudePermanentlyDeleted),
+            content: Text(l10n.gratitudePermanentlyDeleted, style: FontScaling.getBodyMedium(context)),
             backgroundColor: Colors.red[700],
             duration: Duration(seconds: 2),
           ),

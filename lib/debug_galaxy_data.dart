@@ -84,7 +84,11 @@ class GalaxyDataDebugger {
       AppLogger.info('   Active galaxy: ${activeId ?? "(none)"}');
       
       if (galaxyJson != null) {
-        final galaxies = (jsonDecode(galaxyJson) as List)
+        final decoded = jsonDecode(galaxyJson);
+        if (decoded is! List) {
+          throw FormatException('Expected List, got ${decoded.runtimeType}');
+        }
+        final galaxies = decoded
             .map((json) => GalaxyMetadata.fromJson(json as Map<String, dynamic>))
             .toList();
         

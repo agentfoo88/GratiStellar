@@ -295,8 +295,12 @@ class StorageService {
 
       if (encryptedData != null) {
         // Decrypt and parse
-        final starsJsonList = json.decode(encryptedData) as List;
-        return starsJsonList.map((starJson) {
+        final decoded = json.decode(encryptedData);
+        if (decoded is! List) {
+          AppLogger.error('Invalid backup format: expected List, got ${decoded.runtimeType}');
+          throw FormatException('Invalid backup data format');
+        }
+        return decoded.map((starJson) {
           return GratitudeStar.fromJson(starJson);
         }).toList();
       }
@@ -331,7 +335,11 @@ class StorageService {
           }
 
           // Verify it parses correctly
-          final verification = json.decode(encryptedData) as List;
+          final verification = json.decode(encryptedData);
+          if (verification is! List) {
+            AppLogger.error('Invalid backup format: expected List, got ${verification.runtimeType}');
+            throw FormatException('Invalid backup data format');
+          }
           if (verification.length != stars.length) {
             AppLogger.warning('⚠️ Encrypted data mismatch - keeping old data as backup');
             return stars;

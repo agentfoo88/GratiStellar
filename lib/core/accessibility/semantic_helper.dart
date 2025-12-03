@@ -25,7 +25,8 @@ class SemanticHelper {
 
   /// Announce a message to screen readers
   static void announce(BuildContext context, String message) {
-    SemanticsService.announce(message, TextDirection.ltr);
+    final view = View.of(context);
+    SemanticsService.sendAnnouncement(view, message, TextDirection.ltr);
   }
 
   /// Mark a widget as decorative (excluded from screen readers)

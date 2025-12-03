@@ -21,7 +21,8 @@ import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/gratitude_screen.dart';
-import 'screens/onboarding/splash_screen.dart';
+import 'screens/onboarding/age_gate_screen.dart';
+import 'screens/onboarding/enhanced_splash_screen.dart';
 import 'services/auth_service.dart';
 import 'services/crashlytics_service.dart';
 import 'services/daily_reminder_service.dart';
@@ -108,41 +109,6 @@ void main() async {
 
 class GratiStellarApp extends StatelessWidget {
   const GratiStellarApp({super.key});
-
-  /// Build loading screen shown during async checks
-  Widget _buildLoadingScreen() {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF4A6FA5),
-              Color(0xFF166088),
-              Color(0xFF0B1426),
-              Color(0xFF2C3E50),
-            ],
-          ),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFFFFE135),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Check if Firebase is ready to use
-  bool _isFirebaseReady() {
-    try {
-      return Firebase.apps.isNotEmpty;
-    } catch (e) {
-      AppLogger.error('Error checking Firebase readiness: $e');
-      return false;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -291,87 +257,141 @@ class GratiStellarApp extends StatelessWidget {
           ),
         ),
 
-        // Onboarding-aware routing with Firebase auth state listener
-        home: FutureBuilder<bool>(
-          future: OnboardingService().isOnboardingComplete(),
-          builder: (context, onboardingSnapshot) {
-            // Show loading while checking onboarding status
-            if (onboardingSnapshot.connectionState == ConnectionState.waiting) {
-              return _buildLoadingScreen();
-            }
+        // Always show splash first, then route based on state
+        home: const _SplashWrapper(),
+      ),
+    );
+  }
+}
 
-            // Handle errors in onboarding check
-            if (onboardingSnapshot.hasError) {
-              AppLogger.error('Error checking onboarding status: ${onboardingSnapshot.error}');
-              // On error, default to showing onboarding (safe fallback)
-              return SplashScreen();
-            }
+/// Wrapper widget that shows splash screen first, then navigates to appropriate screen
+class _SplashWrapper extends StatefulWidget {
+  const _SplashWrapper();
 
-            final onboardingComplete = onboardingSnapshot.data ?? false;
+  @override
+  State<_SplashWrapper> createState() => _SplashWrapperState();
+}
 
-            if (!onboardingComplete) {
-              // First time user - start onboarding flow
-              return SplashScreen();
-            }
+class _SplashWrapperState extends State<_SplashWrapper> {
+  bool _splashComplete = false;
 
-            // Onboarding complete - use auth state listener
-            // Check if Firebase is ready before accessing auth
-            if (!_isFirebaseReady()) {
-              AppLogger.warning('Firebase not ready, showing onboarding as fallback');
-              return SplashScreen();
-            }
-
-            // Wrap in try-catch to handle Firebase initialization issues
-            try {
-              return StreamBuilder<User?>(
-                stream: FirebaseAuth.instance.authStateChanges(),
-                builder: (context, authSnapshot) {
-                  // Show loading while checking auth state
-                  if (authSnapshot.connectionState == ConnectionState.waiting) {
-                    return _buildLoadingScreen();
-                  }
-
-                  // Handle errors in auth stream
-                  if (authSnapshot.hasError) {
-                    AppLogger.error('Error in auth state stream: ${authSnapshot.error}');
-                    // On error, restart onboarding as safe fallback
-                    Future.microtask(() async {
-                      try {
-                        await OnboardingService().resetOnboarding();
-                      } catch (e) {
-                        AppLogger.error('Error resetting onboarding: $e');
-                      }
-                    });
-                    return SplashScreen();
-                  }
-
-                  // If authenticated, show main app
-                  if (authSnapshot.hasData) {
-                    return GratitudeScreen();
-                  }
-
-                  // Edge case: onboarding complete but no user
-                  // This shouldn't happen, but if it does, restart onboarding
-                  AppLogger.warning('Onboarding complete but no user - restarting onboarding');
-                  Future.microtask(() async {
-                    try {
-                      await OnboardingService().resetOnboarding();
-                    } catch (e) {
-                      AppLogger.error('Error resetting onboarding: $e');
-                    }
-                  });
-                  return SplashScreen();
-                },
-              );
-            } catch (e, stack) {
-              AppLogger.error('Error accessing Firebase Auth: $e');
-              CrashlyticsService().recordError(e, stack, reason: 'Firebase Auth access error');
-              // Fallback to onboarding if Firebase Auth fails
-              return SplashScreen();
-            }
-          },
+  /// Build a simple loading screen
+  Widget _buildLoadingScreen() {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
         ),
       ),
+    );
+  }
+
+  /// Check if Firebase is ready
+  bool _isFirebaseReady() {
+    try {
+      Firebase.app();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_splashComplete) {
+      // Show splash screen first
+      return EnhancedSplashScreen(
+        displayMode: SplashDisplayMode.onboarding,
+        onComplete: () {
+          // Mark splash as complete and rebuild to show main content
+          if (mounted) {
+            setState(() {
+              _splashComplete = true;
+            });
+          }
+        },
+      );
+    }
+
+    // After splash, show the appropriate screen based on onboarding/auth state
+    return FutureBuilder<bool>(
+      future: OnboardingService().isOnboardingComplete(),
+      builder: (context, onboardingSnapshot) {
+        // Show loading while checking onboarding status
+        if (onboardingSnapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingScreen();
+        }
+
+        // Handle errors in onboarding check
+        if (onboardingSnapshot.hasError) {
+          AppLogger.error('Error checking onboarding status: ${onboardingSnapshot.error}');
+          // On error, navigate to age gate to restart onboarding
+          return const AgeGateScreen();
+        }
+
+        final onboardingComplete = onboardingSnapshot.data ?? false;
+
+        if (!onboardingComplete) {
+          // First time user - start onboarding flow with age gate
+          return const AgeGateScreen();
+        }
+
+        // Onboarding complete - use auth state listener
+        // Check if Firebase is ready before accessing auth
+        if (!_isFirebaseReady()) {
+          AppLogger.warning('Firebase not ready, showing age gate as fallback');
+          return const AgeGateScreen();
+        }
+
+        // Wrap in try-catch to handle Firebase initialization issues
+        try {
+          return StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, authSnapshot) {
+              // Show loading while checking auth state
+              if (authSnapshot.connectionState == ConnectionState.waiting) {
+                return _buildLoadingScreen();
+              }
+
+              // Handle errors in auth stream
+              if (authSnapshot.hasError) {
+                AppLogger.error('Error in auth state stream: ${authSnapshot.error}');
+                // On error, restart onboarding as safe fallback
+                Future.microtask(() async {
+                  try {
+                    await OnboardingService().resetOnboarding();
+                  } catch (e) {
+                    AppLogger.error('Error resetting onboarding: $e');
+                  }
+                });
+                return const AgeGateScreen();
+              }
+
+              // If authenticated, show main app
+              if (authSnapshot.hasData) {
+                return GratitudeScreen();
+              }
+
+              // Edge case: onboarding complete but no user
+              // This shouldn't happen, but if it does, restart onboarding
+              AppLogger.warning('Onboarding complete but no user - restarting onboarding');
+              Future.microtask(() async {
+                try {
+                  await OnboardingService().resetOnboarding();
+                } catch (e) {
+                  AppLogger.error('Error resetting onboarding: $e');
+                }
+              });
+              return const AgeGateScreen();
+            },
+          );
+        } catch (e, stack) {
+          AppLogger.error('Error accessing Firebase Auth: $e');
+          CrashlyticsService().recordError(e, stack, reason: 'Firebase Auth access error');
+          // Fallback to age gate if Firebase Auth fails
+          return const AgeGateScreen();
+        }
+      },
     );
   }
 }

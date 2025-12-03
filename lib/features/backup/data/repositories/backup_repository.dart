@@ -108,12 +108,15 @@ class BackupRepository {
       
       // Decrypt data
       final jsonString = await _decryptData(encryptedData);
-      
+
       // Parse JSON
-      final jsonData = json.decode(jsonString) as Map<String, dynamic>;
-      
+      final decoded = json.decode(jsonString);
+      if (decoded is! Map<String, dynamic>) {
+        throw FormatException('Invalid backup format: expected Map, got ${decoded.runtimeType}');
+      }
+
       // Create BackupData object
-      final backup = BackupData.fromJson(jsonData);
+      final backup = BackupData.fromJson(decoded);
       
       // Validate backup
       if (!backup.validate()) {

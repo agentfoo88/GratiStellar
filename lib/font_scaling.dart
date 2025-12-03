@@ -17,12 +17,12 @@ class FontScaling {
   static const double mobileCaption = 16.0;   // 14 + 2
   static const double mobileButton = 16.0;    // 14 + 2
 
-// Tablet (500-900px)
-  static const double tabletHeadline = 30.0;  // 28 + 2
-  static const double tabletTitle = 22.0;     // 20 + 2
-  static const double tabletBody = 16.0;      // 14 + 2
-  static const double tabletCaption = 14.0;   // 12 + 2
-  static const double tabletButton = 14.0;    // 12 + 2
+// Tablet (500-900px) - Larger for better readability
+  static const double tabletHeadline = 40.0;  // Increased from 30.0
+  static const double tabletTitle = 28.0;     // Increased from 22.0
+  static const double tabletBody = 20.0;      // Increased from 16.0
+  static const double tabletCaption = 18.0;   // Increased from 14.0
+  static const double tabletButton = 18.0;    // Increased from 14.0
 
 // Desktop (> 900px)
   static const double desktopHeadline = 26.0; // 24 + 2

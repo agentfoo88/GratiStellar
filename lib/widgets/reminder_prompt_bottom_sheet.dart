@@ -31,7 +31,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
       if (!granted) {
         if (!mounted) return;
         scaffoldMessenger.showSnackBar(SnackBar(
-          content: Text(l10n.reminderPermissionDenied),
+          content: Text(l10n.reminderPermissionDenied, style: FontScaling.getBodyMedium(context)),
           backgroundColor: Colors.red,
         ));
         setState(() => _isProcessing = false);
@@ -64,7 +64,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(l10n.reminderEnabledSuccess)),
+            Expanded(child: Text(l10n.reminderEnabledSuccess, style: FontScaling.getBodyMedium(context))),
           ],
         ),
         backgroundColor: const Color(0xFF4CAF50),
@@ -75,7 +75,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
     } catch (e) {
       if (!mounted) return;
       scaffoldMessenger.showSnackBar(SnackBar(
-        content: Text('Error enabling reminder: $e'),
+        content: Text('Error enabling reminder: $e', style: FontScaling.getBodyMedium(context)),
         backgroundColor: Colors.red,
       ));
       setState(() => _isProcessing = false);

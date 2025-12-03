@@ -45,16 +45,19 @@ class _EditStarDialogState extends State<EditStarDialog> {
 
   // Dialog owns its controllers (disposed when dialog closes)
   late final TextEditingController editTextController;
+  late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
     editTextController = TextEditingController(text: widget.star.text);
+    _focusNode = FocusNode();
   }
 
   @override
   void dispose() {
     editTextController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -125,7 +128,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
                       controller: editTextController,
                       textCapitalization: TextCapitalization.sentences,
                       autofocus: true,
-                      focusNode: FocusNode(),
+                      focusNode: _focusNode,
                       maxLength: maxCharacters, // <--- ADD THIS LINE
                       maxLines: null, // Allow unlimited lines visually, but limit characters
                       keyboardType: TextInputType.multiline, // <--- ADD THIS LINE for better multi-line input

@@ -1079,7 +1079,7 @@
         "@nameCollectionHint": {
           "description": "Accessibility hint for name input"
         },
-        "nameCollectionPlaceholder": "e.g., Alex",
+        "nameCollectionPlaceholder": "e.g., Stella",
         "@nameCollectionPlaceholder": {
           "description": "Placeholder text for name input"
         },
@@ -1090,5 +1090,50 @@
         "nameCollectionButtonHint": "Create your account and start using GratiStellar",
         "@nameCollectionButtonHint": {
           "description": "Accessibility hint for continue button"
+        },
+        "appTagline": "Build your universe of thankfulness",
+        "@appTagline": {
+          "description": "App tagline shown on splash/about screen"
+        },
+        "tapToContinue": "Tap anywhere to continue",
+        "@tapToContinue": {
+          "description": "Hint text for onboarding splash screen"
+        },
+        "tapToDismiss": "Tap anywhere to close",
+        "@tapToDismiss": {
+          "description": "Hint text for about screen"
+        },
+        "createdBy": "Created by {author}",
+        "@createdBy": {
+          "description": "Credits text on about screen",
+          "placeholders": {
+            "author": {
+              "type": "String"
+            }
+          }
+        },
+        "aboutMenuItem": "About",
+        "@aboutMenuItem": {
+          "description": "Accessibility label for drawer header tap to about"
+        },
+        "viewAppInfo": "View app information and credits",
+        "@viewAppInfo": {
+          "description": "Accessibility hint for drawer header"
+        },
+        "legalMenuItem": "Legal",
+        "@legalMenuItem": {
+          "description": "Menu item for legal documents"
+        },
+        "privacyPolicyMenuItem": "Privacy Policy",
+        "@privacyPolicyMenuItem": {
+          "description": "Menu item for privacy policy"
+        },
+        "termsOfServiceMenuItem": "Terms of Service",
+        "@termsOfServiceMenuItem": {
+          "description": "Menu item for terms of service"
+        },
+        "viewLegalDocuments": "View privacy policy and terms",
+        "@viewLegalDocuments": {
+          "description": "Accessibility hint for legal menu items"
         }
     }

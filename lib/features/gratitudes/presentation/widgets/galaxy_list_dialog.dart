@@ -315,7 +315,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
         // Show confirmation on main screen context
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.galaxySwitchedSuccess(galaxyName)),
+            content: Text(AppLocalizations.of(context)!.galaxySwitchedSuccess(galaxyName), style: FontScaling.getBodyMedium(context)),
             duration: Duration(seconds: 2),
             backgroundColor: Color(0xFF1A2238),
           ),
@@ -334,7 +334,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
       if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.galaxySwitchFailed(error.userMessage)),
+            content: Text(AppLocalizations.of(context)!.galaxySwitchFailed(error.userMessage), style: FontScaling.getBodyMedium(context)),
             backgroundColor: Colors.red,
           ),
         );
@@ -488,8 +488,9 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 
     setState(() => _isCreating = true);
 
-    // Capture l10n before async gap
+    // Capture l10n and textStyle before async gap
     final l10n = AppLocalizations.of(context)!;
+    final textStyle = FontScaling.getBodyMedium(context);
 
     try {
       final navigator = Navigator.of(context);
@@ -503,7 +504,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 
         messenger.showSnackBar(
           SnackBar(
-            content: Text(l10n.galaxyCreatedSuccess(name)),
+            content: Text(l10n.galaxyCreatedSuccess(name), style: textStyle),
             backgroundColor: const Color(0xFF1A2238),
             duration: Duration(seconds: 2),
           ),
@@ -525,7 +526,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(l10n.galaxyCreateFailed(error.userMessage)),
+          content: Text(l10n.galaxyCreateFailed(error.userMessage), style: textStyle),
           backgroundColor: Colors.red,
         ),
       );
@@ -647,6 +648,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
     setState(() => _isRenaming = true);
 
     final l10n = AppLocalizations.of(context)!;
+    final textStyle = FontScaling.getBodyMedium(context);
 
     try {
       // Capture context-dependent objects BEFORE the async gap
@@ -662,7 +664,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
         messenger.showSnackBar(
           SnackBar(
-            content: Text(l10n.galaxyRenamedSuccess(name)),
+            content: Text(l10n.galaxyRenamedSuccess(name), style: textStyle),
             backgroundColor: const Color(0xFF1A2238),
             duration: Duration(seconds: 2),
           ),
@@ -682,7 +684,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(l10n.galaxyRenameFailed(error.userMessage)),
+          content: Text(l10n.galaxyRenameFailed(error.userMessage), style: textStyle),
           backgroundColor: Colors.red,
         ),
       );

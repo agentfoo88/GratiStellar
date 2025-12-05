@@ -573,7 +573,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       }
       return;
     }
-
     _cameraController.animateTo(
       targetPosition: targetPosition,
       targetScale: mindfulnessZoom,  // Use same constant for consistency

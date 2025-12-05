@@ -160,8 +160,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
-  bool _hasInitializedAnimations = false;
-
   @override
   void initState() {
     AppLogger.start('🎬 GratitudeScreen initState starting...');
@@ -169,14 +167,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     WidgetsBinding.instance.addObserver(this);
     _cameraController = CameraController();
 
+    // Initialize AnimationManager synchronously to avoid race condition
+    // where build() tries to access _starController before initialization completes
     _animationManager = AnimationManager();
-// Initialize animations immediately
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_hasInitializedAnimations) {
-        _animationManager.initialize(this, _completeBirthAnimation, reduceMotion: false);
-        _hasInitializedAnimations = true;
-      }
-    });
+    _animationManager.initialize(this, _completeBirthAnimation, reduceMotion: false);
 
     // Generate static universe based on full screen size
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
@@ -534,23 +528,55 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   Future<void> _navigateToMindfulnessStar(GratitudeStar star) async {
+    const double mindfulnessZoom = 2.0;  // Define target zoom as constant
+
     final screenSize = MediaQuery.of(context).size;
 
-    // Calculate world position
+    // Calculate world position in pixels
     final starWorldX = star.worldX * screenSize.width;
     final starWorldY = star.worldY * screenSize.height;
+    final starWorldPos = Offset(starWorldX, starWorldY);
 
     AppLogger.info('🧘 Navigating to mindfulness star at world: ($starWorldX, $starWorldY)');
 
-    // Position at 40% from top (not center) with slow 2-second animation
-    final targetPosition = Offset(
-      screenSize.width / 2 - starWorldX * _cameraController.scale,
-      screenSize.height * 0.4 - starWorldY * _cameraController.scale, // 40% from top
+    // Calculate where we want the star to appear on screen (40% from top, centered horizontally)
+    final desiredScreenPos = Offset(
+      screenSize.width / 2,
+      screenSize.height * 0.4, // 40% from top
     );
+
+    // Calculate the camera position needed to place the star at desiredScreenPos
+    // At target zoom level (mindfulnessZoom), the camera position should be:
+    // cameraPos = desiredScreenPos - (starWorldPos * targetZoom)
+    final targetPosition = Offset(
+      desiredScreenPos.dx - starWorldPos.dx * mindfulnessZoom,
+      desiredScreenPos.dy - starWorldPos.dy * mindfulnessZoom,
+    );
+
+    // Safety check: ensure target position is reasonable (not NaN or infinite)
+    if (!targetPosition.dx.isFinite || !targetPosition.dy.isFinite) {
+      AppLogger.error('⚠️ Invalid target position calculated: $targetPosition');
+      // Fallback: use simpler calculation
+      final fallbackPosition = Offset(
+        screenSize.width / 2 - starWorldX * mindfulnessZoom,
+        screenSize.height * 0.4 - starWorldY * mindfulnessZoom,
+      );
+      if (fallbackPosition.dx.isFinite && fallbackPosition.dy.isFinite) {
+        _cameraController.animateTo(
+          targetPosition: fallbackPosition,
+          targetScale: mindfulnessZoom,
+          duration: Duration(milliseconds: 2000),
+          curve: Curves.easeInOutCubic,
+          vsync: this,
+          context: context,
+        );
+      }
+      return;
+    }
 
     _cameraController.animateTo(
       targetPosition: targetPosition,
-      targetScale: _cameraController.scale, // Keep current zoom
+      targetScale: mindfulnessZoom,  // Use same constant for consistency
       duration: Duration(milliseconds: 2000), // 2 seconds - slow and graceful
       curve: Curves.easeInOutCubic,
       vsync: this,
@@ -609,15 +635,15 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  void _showStarDetailsFromList(GratitudeStar star, VoidCallback refreshList) {
+  void _showStarDetailsFromList(GratitudeStar star) {
     _showStarDetails(
       star,
       onJumpToStar: () {
         Navigator.of(context).popUntil((route) => route.isFirst);
         _jumpToStar(star);
       },
-      onAfterSave: refreshList,     // ← Add this
-      onAfterDelete: refreshList,   // ← Add this
+      // No need for onAfterSave/onAfterDelete callbacks
+      // Provider.notifyListeners() will auto-update the Consumer
     );
   }
 
@@ -633,14 +659,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _navigateToListView() async {
-    final provider = context.read<GratitudeProvider>();
-
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ListViewScreen(
-          stars: provider.gratitudeStars,
-          onStarTap: (star, refreshList) => _showStarDetailsFromList(star, refreshList),
+          onStarTap: _showStarDetailsFromList,
           onJumpToStar: (star) {},
         ),
       ),

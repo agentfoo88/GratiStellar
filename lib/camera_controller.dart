@@ -93,6 +93,11 @@ class CameraController extends ChangeNotifier {
   // Inverse transform for converting screen to world coordinates
   Offset screenToWorld(Offset screenPoint) {
     final adjustedPoint = screenPoint - _position;
+    // Safety: ensure scale is never zero (should be clamped to minScale, but be defensive)
+    if (_scale.abs() < 0.001) {
+      AppLogger.warning('⚠️ Very small scale detected in screenToWorld: $_scale, using minScale');
+      return adjustedPoint / minScale;
+    }
     return adjustedPoint / _scale;
   }
 
@@ -157,8 +162,8 @@ class CameraController extends ChangeNotifier {
     final Offset constrainedPosition;
     final Offset constrainedParallaxPosition;
 
-    if (distance > _maxPanDistance) {
-      // Constrain to circle boundary
+    if (distance > _maxPanDistance && distance > 0) {
+      // Constrain to circle boundary (guard against division by zero)
       final factor = _maxPanDistance / distance;
       constrainedPosition = newPosition * factor;
       constrainedParallaxPosition = newParallaxPosition * factor;
@@ -218,8 +223,8 @@ class CameraController extends ChangeNotifier {
                   idealNewPosition.dy * idealNewPosition.dy
           );
 
-          if (distance > _maxPanDistance) {
-            // Constrain to circle boundary
+          if (distance > _maxPanDistance && distance > 0) {
+            // Constrain to circle boundary (guard against division by zero)
             final factor = _maxPanDistance / distance;
             _position = idealNewPosition * factor;
             _parallaxPosition = idealNewPosition * factor;
@@ -288,10 +293,49 @@ class CameraController extends ChangeNotifier {
 
     final curvedAnimation = CurvedAnimation(parent: _animationController!, curve: curve);
 
+    // Constrain target position to valid bounds if provided
+    Offset? constrainedTargetPosition = targetPosition;
     if (targetPosition != null) {
+      final distance = math.sqrt(
+        targetPosition.dx * targetPosition.dx +
+        targetPosition.dy * targetPosition.dy
+      );
+
+      // Use bounds for target scale if animating scale, otherwise current bounds
+      double boundsForTarget = _maxPanDistance;
+      if (targetScale != null && _stars.isNotEmpty && _screenSize != Size.zero) {
+        // Temporarily calculate what bounds would be at target scale
+        final tempScale = _scale;
+        _scale = math.max(minScale, math.min(maxScale, targetScale));
+        updateBounds(_stars, _screenSize);
+        boundsForTarget = _maxPanDistance;
+        _scale = tempScale; // Restore current scale
+        updateBounds(_stars, _screenSize); // Restore current bounds
+      }
+
+      // Safety: ensure boundsForTarget is always positive and finite
+      boundsForTarget = math.max(boundsForTarget, 2000.0);
+      if (!boundsForTarget.isFinite) {
+        AppLogger.warning('⚠️ Invalid boundsForTarget: $boundsForTarget, using default 2000.0');
+        boundsForTarget = 2000.0;
+      }
+
+      if (distance > boundsForTarget && distance > 0 && boundsForTarget > 0) {
+        // Constrain target to valid bounds (guard against division by zero)
+        final factor = boundsForTarget / distance;
+        if (factor.isFinite) {
+          constrainedTargetPosition = targetPosition * factor;
+        } else {
+          AppLogger.warning('⚠️ Invalid factor calculated: $factor, using original position');
+          constrainedTargetPosition = targetPosition;
+        }
+      }
+    }
+
+    if (constrainedTargetPosition != null) {
       _positionAnimation = Tween<Offset>(
         begin: _position,
-        end: targetPosition,
+        end: constrainedTargetPosition,
       ).animate(curvedAnimation);
     }
 
@@ -305,9 +349,14 @@ class CameraController extends ChangeNotifier {
     _animationController!.addListener(() {
       if (_positionAnimation != null) {
         _position = _positionAnimation!.value;
+        _parallaxPosition = _positionAnimation!.value;
       }
       if (_scaleAnimation != null) {
         _scale = _scaleAnimation!.value;
+        // Recalculate bounds when scale changes during animation
+        if (_stars.isNotEmpty && _screenSize != Size.zero) {
+          updateBounds(_stars, _screenSize);
+        }
       }
       notifyListeners();
     });

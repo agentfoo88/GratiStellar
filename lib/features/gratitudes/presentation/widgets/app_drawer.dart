@@ -5,8 +5,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/accessibility/semantic_helper.dart';
+import '../../../../core/config/app_colors.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/config/constants.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../screens/onboarding/enhanced_splash_screen.dart';
@@ -50,11 +52,13 @@ class AppDrawerWidget extends StatefulWidget {
 
 class _AppDrawerWidgetState extends State<AppDrawerWidget> {
   double textScaleFactor = 1.0;
+  PackageInfo? _packageInfo;
 
   @override
   void initState() {
     super.initState();
     _loadFontScale();
+    _loadPackageInfo();
   }
 
   Future<void> _loadFontScale() async {
@@ -63,6 +67,13 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
       setState(() {
         textScaleFactor = scale;
       });
+    }
+  }
+
+  Future<void> _loadPackageInfo() async {
+    _packageInfo = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -83,7 +94,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
     return Drawer(
       width: _getResponsiveDrawerWidth(context),
-      backgroundColor: Color(0xFF1A2238).withValues(alpha: 0.98),
+      backgroundColor: AppColors.primaryDark.withValues(alpha: 0.98),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -116,8 +127,8 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFF4A6FA5).withValues(alpha: 0.3),
-                      Color(0xFF1A2238),
+                      AppColors.gradientTop.withValues(alpha: 0.3),
+                      AppColors.primaryDark,
                     ],
                   ),
                 ),
@@ -128,7 +139,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         'assets/icon_star.svg',
                         width: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
                         height: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
-                        colorFilter: ColorFilter.mode(Color(0xFFFFE135), BlendMode.srcIn),
+                        colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
                       ),
                     ),
                     SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
@@ -137,7 +148,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         l10n.appTitle,
                         style: FontScaling.getHeadingMedium(context).copyWith(
                           fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
-                          color: Color(0xFFFFE135),
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
@@ -153,7 +164,6 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             hint: l10n.manageAccountHint,
             isButton: true,
             child: ListTile(
-              focusNode: FocusNode(),
               leading: Icon(Icons.account_circle, color: Colors.white70),
               title: Text(
                 widget.authService.hasEmailAccount
@@ -175,7 +185,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
           // Heavy divider
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.5),
+            color: AppColors.primary.withValues(alpha: 0.5),
             thickness: 2,
             height: 2,
           ),
@@ -186,10 +196,9 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             hint: l10n.viewGratitudesAsList,
             isButton: true,
             child: ListTile(
-              focusNode: FocusNode(),
               leading: Icon(
                 Icons.list,
-                color: Color(0xFFFFE135),
+                color: AppColors.primary,
                 size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
               ),
               title: Text(
@@ -203,7 +212,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ),
 
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             height: 1,
           ),
 
@@ -213,10 +222,9 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             hint: l10n.manageGalaxiesHint,
             isButton: true,
             child: ListTile(
-              focusNode: FocusNode(),
               leading: Icon(
                 Icons.stars,
-                color: Color(0xFFFFE135),
+                color: AppColors.primary,
                 size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
               ),
               title: Text(
@@ -230,7 +238,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ),
 
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             height: 1,
           ),
 
@@ -264,11 +272,11 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         max: 1.75,
                         divisions: 4,
                         label: '${(textScaleFactor * 100).round()}%',
-                        activeColor: Color(0xFFFFE135),
+                        activeColor: AppColors.primary,
                         inactiveColor: Colors.white24,
-                        thumbColor: Color(0xFFFFE135),
+                        thumbColor: AppColors.primary,
                         overlayColor: WidgetStateProperty.all(
-                          Color(0xFFFFE135).withValues(alpha: 0.1),
+                          AppColors.primary.withValues(alpha: 0.1),
                         ),
                         onChanged: (value) async {
                           // Update local state immediately
@@ -315,7 +323,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     reminderService.isEnabled
                         ? Icons.notifications_active
                         : Icons.notifications_none,
-                    color: const Color(0xFFFFE135),
+                    color: AppColors.primary,
                     size: FontScaling.getResponsiveIconSize(context, 24) *
                         UIConstants.universalUIScale,
                   ),
@@ -339,51 +347,84 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                       : null,
                   trailing: Switch(
                     value: reminderService.isEnabled,
-                    activeTrackColor: const Color(0xFFFFE135),
+                    activeTrackColor: AppColors.primary,
                     onChanged: (value) async {
-                      if (value) {
-                        // Enable flow: show time picker → request permission → schedule
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime: reminderService.reminderTime,
-                          helpText: l10n.reminderTimePickerTitle,
-                        );
+                      try {
+                        if (value) {
+                          // ENABLE FLOW
+                          // Step 1: Request permission FIRST
+                          final granted = await reminderService.requestPermission();
 
-                        if (time != null) {
-                          final granted =
-                              await reminderService.requestPermission();
-                          if (granted) {
-                            await reminderService.scheduleReminder(time);
-                            await reminderService.setEnabled(true);
-
+                          if (!granted) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(l10n.reminderEnabledSuccess, style: FontScaling.getBodyMedium(context)),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            }
-                          } else {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(l10n.reminderPermissionDenied, style: FontScaling.getBodyMedium(context)),
+                                  content: Text(
+                                    l10n.reminderPermissionDenied,
+                                    style: FontScaling.getBodyMedium(context),
+                                  ),
                                   backgroundColor: Colors.red,
                                 ),
                               );
                             }
+                            return;  // Exit early
+                          }
+
+                          // Step 2: Show time picker AFTER permission granted
+                          if (!context.mounted) return;
+                          final time = await showTimePicker(
+                            context: context,
+                            initialTime: reminderService.reminderTime,
+                            helpText: l10n.reminderTimePickerTitle,
+                          );
+
+                          if (time == null) return;  // User cancelled
+                          if (!context.mounted) return;
+
+                          // Step 3: Schedule and enable
+                          await reminderService.scheduleReminder(time);
+                          await reminderService.setEnabled(true);
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  l10n.reminderEnabledSuccess,
+                                  style: FontScaling.getBodyMedium(context),
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } else {
+                          // DISABLE FLOW
+                          await reminderService.cancelReminder();
+                          await reminderService.setEnabled(false);
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  l10n.reminderDisabledSuccess,
+                                  style: FontScaling.getBodyMedium(context),
+                                ),
+                              ),
+                            );
                           }
                         }
-                      } else {
-                        // Disable flow: cancel and disable
-                        await reminderService.cancelReminder();
-                        await reminderService.setEnabled(false);
+                      } catch (e) {
+                        // Catch ANY error during the process
+                        AppLogger.error('❌ Error toggling reminder: $e');
 
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text(l10n.reminderDisabledSuccess, style: FontScaling.getBodyMedium(context))),
+                              content: Text(
+                                l10n.errorReminderToggle,
+                                style: FontScaling.getBodyMedium(context),
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
                           );
                         }
                       }
@@ -391,21 +432,40 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                   ),
                   onTap: reminderService.isEnabled
                       ? () async {
-                          // If already enabled, tapping changes the time
-                          final time = await showTimePicker(
-                            context: context,
-                            initialTime: reminderService.reminderTime,
-                            helpText: l10n.reminderTimePickerTitle,
-                          );
+                          try {
+                            // If already enabled, tapping changes the time
+                            final time = await showTimePicker(
+                              context: context,
+                              initialTime: reminderService.reminderTime,
+                              helpText: l10n.reminderTimePickerTitle,
+                            );
 
-                          if (time != null) {
+                            if (time == null) return;  // User cancelled
+
                             await reminderService.scheduleReminder(time);
 
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(l10n.reminderTimeUpdatedSuccess, style: FontScaling.getBodyMedium(context)),
+                                  content: Text(
+                                    l10n.reminderTimeUpdatedSuccess,
+                                    style: FontScaling.getBodyMedium(context),
+                                  ),
                                   backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            AppLogger.error('❌ Error updating reminder time: $e');
+
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    l10n.errorReminderTimeUpdate,
+                                    style: FontScaling.getBodyMedium(context),
+                                  ),
+                                  backgroundColor: Colors.red,
                                 ),
                               );
                             }
@@ -434,15 +494,18 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 child: ListTile(
                   leading: Icon(
                     Icons.delete_outline,
-                    color: Color(0xFFFFE135),
+                    color: AppColors.primary,
                     size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
                   ),
                   title: Row(
                     children: [
-                      Text(
-                        l10n.trash,
-                        style: FontScaling.getBodyMedium(context).copyWith(
-                          fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                      Expanded(
+                        child: Text(
+                          l10n.trash,
+                          style: FontScaling.getBodyMedium(context).copyWith(
+                            fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (trashCount > 0) ...[
@@ -450,13 +513,13 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.3),
+                            color: AppColors.warning.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             '$trashCount',
                             style: FontScaling.getCaption(context).copyWith(
-                              color: Colors.orange[300],
+                              color: AppColors.warning,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -471,7 +534,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ),
 
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             height: 1,
           ),
 
@@ -479,7 +542,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ListTile(
             leading: Icon(
               Icons.backup,
-              color: Color(0xFFFFE135),
+              color: AppColors.primary,
               size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
             ),
             title: Text(
@@ -513,7 +576,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ),
 
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             height: 1,
           ),
 
@@ -521,7 +584,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ListTile(
             leading: Icon(
               Icons.restore,
-              color: Color(0xFFFFE135),
+              color: AppColors.primary,
               size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
             ),
             title: Text(
@@ -555,7 +618,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ),
 
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             height: 1,
           ),
 
@@ -567,7 +630,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             child: ListTile(
               leading: Icon(
                 Icons.feedback_outlined,
-                color: Color(0xFFFFE135),
+                color: AppColors.primary,
                 size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
               ),
               title: Text(
@@ -581,7 +644,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ),
 
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             height: 1,
           ),
 
@@ -593,7 +656,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             child: ListTile(
               leading: Icon(
                 Icons.privacy_tip_outlined,
-                color: Color(0xFFFFE135),
+                color: AppColors.primary,
                 size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
               ),
               title: Text(
@@ -606,10 +669,11 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 try {
                   await UrlLaunchService.launchUrlSafely(AppConfig.privacyPolicyUrl);
                 } catch (e) {
+                  AppLogger.error('Failed to open privacy policy: $e');
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Could not open Privacy Policy: $e', style: FontScaling.getBodyMedium(context)),
+                        content: Text(l10n.errorOpenUrl(l10n.privacyPolicyMenuItem), style: FontScaling.getBodyMedium(context)),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -620,7 +684,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ),
 
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             height: 1,
           ),
 
@@ -632,7 +696,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             child: ListTile(
               leading: Icon(
                 Icons.description_outlined,
-                color: Color(0xFFFFE135),
+                color: AppColors.primary,
                 size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
               ),
               title: Text(
@@ -645,10 +709,11 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 try {
                   await UrlLaunchService.launchUrlSafely(AppConfig.termsOfServiceUrl);
                 } catch (e) {
+                  AppLogger.error('Failed to open terms of service: $e');
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Could not open Terms of Service: $e', style: FontScaling.getBodyMedium(context)),
+                        content: Text(l10n.errorOpenUrl(l10n.termsOfServiceMenuItem), style: FontScaling.getBodyMedium(context)),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -659,7 +724,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ),
 
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             height: 1,
           ),
 
@@ -671,7 +736,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             child: ListTile(
               leading: Icon(
                 Icons.close,
-                color: Color(0xFFFFE135),
+                color: AppColors.primary,
                 size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
               ),
               title: Text(
@@ -685,7 +750,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ),
 
           Divider(
-            color: Color(0xFFFFE135).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             height: 1,
           ),
 
@@ -715,7 +780,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    backgroundColor: Color(0xFF1A2238),
+                    backgroundColor: AppColors.primaryDark,
                     title: Text(
                       l10n.clearCacheTitle,
                       style: FontScaling.getModalTitle(context),
@@ -741,7 +806,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         child: Text(
                           l10n.clearCache,
                           style: FontScaling.getButtonText(context).copyWith(
-                            color: Color(0xFFFFE135),
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -796,29 +861,18 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ], // End DEBUG ONLY section
 
           // Version number at bottom
-          FutureBuilder<PackageInfo>(
-            future: PackageInfo.fromPlatform(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const SizedBox.shrink();
-              }
-              final info = snapshot.data!;
-              final version = info.version;
-              final buildNumber = info.buildNumber;
-
-              return Padding(
-                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 16)),
-                child: Center(
-                  child: Text(
-                    l10n.version(version, buildNumber),
-                    style: FontScaling.getCaption(context).copyWith(
-                      color: Colors.white.withValues(alpha: 0.4),
-                    ),
+          if (_packageInfo != null)
+            Padding(
+              padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 16)),
+              child: Center(
+                child: Text(
+                  l10n.version(_packageInfo!.version, _packageInfo!.buildNumber),
+                  style: FontScaling.getCaption(context).copyWith(
+                    color: Colors.white.withValues(alpha: 0.4),
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            ),
         ],
       ),
     );
@@ -829,6 +883,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
       final provider = Provider.of<GratitudeProvider>(context, listen: false);
       return await provider.getDeletedGratitudesCount();
     } catch (e) {
+      AppLogger.error('Failed to get trash count: $e');
       return 0;
     }
   }

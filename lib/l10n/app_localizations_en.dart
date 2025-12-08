@@ -354,6 +354,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorGeneric => 'An unexpected error occurred.';
 
   @override
+  String get errorReminderToggle =>
+      'Unable to change reminder setting. Please try again.';
+
+  @override
+  String get errorReminderTimeUpdate =>
+      'Unable to update reminder time. Please try again.';
+
+  @override
+  String errorOpenUrl(String name) {
+    return 'Unable to open $name. Please check your connection.';
+  }
+
+  @override
   String get signOutButton => 'Sign Out';
 
   @override

@@ -102,7 +102,7 @@ class TrashScreen extends StatelessWidget {
                 color: Color(0xFF1A2238).withValues(alpha: 0.7),
                 margin: EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  contentPadding: EdgeInsets.all(16),
+                  contentPadding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 16)),
                   title: Text(
                     star.text,
                     style: FontScaling.getBodyMedium(context).copyWith(
@@ -121,13 +121,16 @@ class TrashScreen extends StatelessWidget {
                           color: Colors.white54,
                         ),
                         SizedBox(width: 4),
-                        Text(
-                          l10n.deletedOn(DateFormat.yMMMd().format(deletedAt)),
-                          style: FontScaling.getCaption(context).copyWith(
-                            color: Colors.white54,
+                        Expanded(
+                          child: Text(
+                            l10n.deletedOn(DateFormat.yMMMd().format(deletedAt)),
+                            style: FontScaling.getCaption(context).copyWith(
+                              color: Colors.white54,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Spacer(),
+                        SizedBox(width: 8),
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -154,6 +157,10 @@ class TrashScreen extends StatelessWidget {
                       IconButton(
                         icon: Icon(Icons.restore, color: Color(0xFFFFE135)),
                         tooltip: AppLocalizations.of(context)!.restoreTooltip,
+                        constraints: BoxConstraints(
+                          minWidth: FontScaling.getResponsiveSpacing(context, 48),
+                          minHeight: FontScaling.getResponsiveSpacing(context, 48),
+                        ),
                         onPressed: () async {
                           await _showRestoreDialog(context, star, gratitudeProvider);
                         },
@@ -162,6 +169,10 @@ class TrashScreen extends StatelessWidget {
                       IconButton(
                         icon: Icon(Icons.delete_forever, color: Colors.red[300]),
                         tooltip: AppLocalizations.of(context)!.deletePermanentlyTooltip,
+                        constraints: BoxConstraints(
+                          minWidth: FontScaling.getResponsiveSpacing(context, 48),
+                          minHeight: FontScaling.getResponsiveSpacing(context, 48),
+                        ),
                         onPressed: () async {
                           await _showPermanentDeleteDialog(context, star, gratitudeProvider);
                         },

@@ -252,6 +252,23 @@
   "@errorGeneric": {
     "description": "Generic error message"
   },
+  "errorReminderToggle": "Unable to change reminder setting. Please try again.",
+  "@errorReminderToggle": {
+    "description": "Error when toggling daily reminder on/off"
+  },
+  "errorReminderTimeUpdate": "Unable to update reminder time. Please try again.",
+  "@errorReminderTimeUpdate": {
+    "description": "Error when changing reminder time"
+  },
+  "errorOpenUrl": "Unable to open {name}. Please check your connection.",
+  "@errorOpenUrl": {
+    "description": "Error when URL fails to open",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "signOutButton": "Sign Out",
   "@signOutButton": {
     "description": "Button to sign out"

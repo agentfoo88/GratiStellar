@@ -255,6 +255,76 @@ class GratiStellarApp extends StatelessWidget {
               }),
             ),
           ),
+          // Time picker theme to match app design
+          timePickerTheme: TimePickerThemeData(
+            backgroundColor: const Color(0xFF1A2238),
+            dialBackgroundColor: const Color(0xFF0A0E27),
+            dialHandColor: const Color(0xFFFFE135),
+            dialTextColor: Colors.white.withValues(alpha: 0.9),
+            hourMinuteTextColor: const Color(0xFFFFE135),
+            hourMinuteColor: const Color(0xFF1A2238),
+            dayPeriodTextColor: Colors.white.withValues(alpha: 0.9),
+            dayPeriodColor: const Color(0xFF1A2238),
+            dayPeriodBorderSide: const BorderSide(
+              color: Color(0xFFFFE135),
+              width: 1,
+            ),
+            hourMinuteTextStyle: const TextStyle(
+              fontSize: 60,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFFFE135),
+            ),
+            dayPeriodTextStyle: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+            helpTextStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFFFE135),
+            ),
+            entryModeIconColor: const Color(0xFFFFE135),
+            padding: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: const BorderSide(
+                color: Color(0xFFFFE135),
+                width: 2,
+              ),
+            ),
+          ),
+          // Dialog theme for consistency
+          dialogTheme: DialogThemeData(
+            backgroundColor: const Color(0xFF1A2238),
+            titleTextStyle: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFFFE135),
+            ),
+            contentTextStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: const BorderSide(
+                color: Color(0xFFFFE135),
+                width: 2,
+              ),
+            ),
+          ),
+          // Text button theme for dialog actions
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFFFE135),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ),
 
         // Always show splash first, then route based on state

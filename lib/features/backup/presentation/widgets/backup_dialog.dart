@@ -172,6 +172,7 @@ class _BackupDialogState extends State<BackupDialog> {
               style: FontScaling.getHeadingMedium(context).copyWith(
                 color: Color(0xFFFFE135),
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

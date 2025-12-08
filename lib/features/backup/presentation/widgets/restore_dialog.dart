@@ -219,6 +219,7 @@ class _RestoreDialogState extends State<RestoreDialog> {
               style: FontScaling.getHeadingMedium(context).copyWith(
                 color: Color(0xFFFFE135),
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

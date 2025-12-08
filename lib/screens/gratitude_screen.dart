@@ -99,8 +99,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   void _checkAndShowReminderPrompt() async {
     final reminderService = context.read<DailyReminderService>();
 
-    // Check if already shown (only gating mechanism)
-    if (reminderService.hasShownPrompt) return;
+    // Don't show if already shown OR if reminder is already enabled
+    if (reminderService.hasShownPrompt || reminderService.isEnabled) return;
 
     // Wait 2 seconds after birth animation completes
     await Future.delayed(const Duration(seconds: 2));

@@ -64,7 +64,13 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(l10n.reminderEnabledSuccess, style: FontScaling.getBodyMedium(context))),
+            Expanded(
+              child: Text(
+                l10n.reminderEnabledSuccess,
+                style: FontScaling.getBodyMedium(context),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         backgroundColor: const Color(0xFF4CAF50),
@@ -82,10 +88,12 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
     }
   }
 
-  void _handleMaybeLater() {
+  Future<void> _handleMaybeLater() async {
     final reminderService = context.read<DailyReminderService>();
-    reminderService.markPromptShown();
-    Navigator.pop(context);
+    await reminderService.markPromptShown();
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   @override

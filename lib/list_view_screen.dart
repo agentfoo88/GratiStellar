@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'storage.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'features/gratitudes/presentation/state/gratitude_provider.dart';
 
 class ListViewScreen extends StatefulWidget {
-  final List<GratitudeStar> stars;
-  final Function(GratitudeStar, VoidCallback) onStarTap;
+  final Function(GratitudeStar) onStarTap;
   final Function(GratitudeStar) onJumpToStar;
 
   const ListViewScreen({
     super.key,
-    required this.stars,
     required this.onStarTap,
     required this.onJumpToStar,
   });
@@ -22,49 +22,26 @@ class ListViewScreen extends StatefulWidget {
 }
 
 class _ListViewScreenState extends State<ListViewScreen> {
-  late List<GratitudeStar> _currentStars;
   String _sortMethod = 'newest';
 
-  @override
-  void initState() {
-    super.initState();
-    _currentStars = List<GratitudeStar>.from(widget.stars);
-  }
-
-  @override
-  void didUpdateWidget(ListViewScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.stars != oldWidget.stars) {
-      setState(() {
-        _currentStars = List<GratitudeStar>.from(widget.stars);
-      });
-    }
-  }
-
-  void _refreshList() {
-    setState(() {
-      _currentStars = List<GratitudeStar>.from(widget.stars);
-    });
-  }
-
-  List<GratitudeStar> _getSortedStars() {
-    final stars = List<GratitudeStar>.from(_currentStars);
+  List<GratitudeStar> _getSortedStars(List<GratitudeStar> stars) {
+    final sortedStars = List<GratitudeStar>.from(stars);
 
     switch (_sortMethod) {
       case 'newest':
-        stars.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        sortedStars.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         break;
       case 'oldest':
-        stars.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        sortedStars.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         break;
       case 'alpha_az':
-        stars.sort((a, b) => a.text.toLowerCase().compareTo(b.text.toLowerCase()));
+        sortedStars.sort((a, b) => a.text.toLowerCase().compareTo(b.text.toLowerCase()));
         break;
       case 'alpha_za':
-        stars.sort((a, b) => b.text.toLowerCase().compareTo(a.text.toLowerCase()));
+        sortedStars.sort((a, b) => b.text.toLowerCase().compareTo(a.text.toLowerCase()));
         break;
       case 'color':
-        stars.sort((a, b) {
+        sortedStars.sort((a, b) {
           // Sort by color index, then by creation date within same color
           final colorCompare = a.colorPresetIndex.compareTo(b.colorPresetIndex);
           if (colorCompare != 0) return colorCompare;
@@ -73,11 +50,11 @@ class _ListViewScreenState extends State<ListViewScreen> {
         break;
       case 'by_month':
       case 'by_year':
-        stars.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
+        sortedStars.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
         break;
     }
 
-    return stars;
+    return sortedStars;
   }
 
   String _formatDate(BuildContext context, DateTime date) {
@@ -102,9 +79,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sortedStars = _getSortedStars();
+    return Consumer<GratitudeProvider>(
+      builder: (context, provider, child) {
+        final stars = provider.gratitudeStars;
+        final sortedStars = _getSortedStars(stars);
 
-    return Scaffold(
+        return Scaffold(
       backgroundColor: Color(0xFF1A2238),
       appBar: AppBar(
         backgroundColor: Color(0xFF1A2238),
@@ -156,10 +136,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                         size: FontScaling.getResponsiveIconSize(context, 20),
                       ),
                       SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)!.sortNewestFirst,
-                        style: FontScaling.getBodySmall(context).copyWith(
-                          color: _sortMethod == 'newest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context)!.sortNewestFirst,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: _sortMethod == 'newest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ],
@@ -175,10 +159,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                         size: FontScaling.getResponsiveIconSize(context, 20),
                       ),
                       SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)!.sortOldestFirst,
-                        style: FontScaling.getBodySmall(context).copyWith(
-                          color: _sortMethod == 'oldest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context)!.sortOldestFirst,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: _sortMethod == 'oldest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ],
@@ -194,10 +182,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                         size: FontScaling.getResponsiveIconSize(context, 20),
                       ),
                       SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)!.sortByMonth,
-                        style: FontScaling.getBodySmall(context).copyWith(
-                          color: _sortMethod == 'by_month' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context)!.sortByMonth,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: _sortMethod == 'by_month' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ],
@@ -213,10 +205,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                         size: FontScaling.getResponsiveIconSize(context, 20),
                       ),
                       SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)!.sortByYear,
-                        style: FontScaling.getBodySmall(context).copyWith(
-                          color: _sortMethod == 'by_year' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context)!.sortByYear,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: _sortMethod == 'by_year' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ],  // ← ADD THIS ] bracket
@@ -232,10 +228,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                         size: FontScaling.getResponsiveIconSize(context, 20),
                       ),
                       SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)!.sortAlphabeticalAZ,
-                        style: FontScaling.getBodySmall(context).copyWith(
-                          color: _sortMethod == 'alpha_az' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context)!.sortAlphabeticalAZ,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: _sortMethod == 'alpha_az' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ],
@@ -251,10 +251,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                         size: FontScaling.getResponsiveIconSize(context, 20),
                       ),
                       SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)!.sortAlphabeticalZA,
-                        style: FontScaling.getBodySmall(context).copyWith(
-                          color: _sortMethod == 'alpha_za' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context)!.sortAlphabeticalZA,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: _sortMethod == 'alpha_za' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ],
@@ -270,10 +274,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                         size: FontScaling.getResponsiveIconSize(context, 20),
                       ),
                       SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)!.sortByColor,
-                        style: FontScaling.getBodySmall(context).copyWith(
-                          color: _sortMethod == 'color' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context)!.sortByColor,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: _sortMethod == 'color' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ],
@@ -306,6 +314,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
           return _buildListItem(context, star);
         },
       ),
+        );
+      },
     );
   }
 
@@ -395,7 +405,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
           color: Colors.white.withValues(alpha: 0.5),
           size: FontScaling.getResponsiveIconSize(context, 24),
         ),
-        onTap: () => widget.onStarTap(star, _refreshList),
+        onTap: () => widget.onStarTap(star),
       ),
     );
   }

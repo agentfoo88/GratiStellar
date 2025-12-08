@@ -35,7 +35,9 @@ class FloatingGratitudeLabel extends StatelessWidget {
         : screenSize.width * 0.4; // 40% width for normal
 
     // Enhanced edge padding that accounts for zoom level
-    final dynamicEdgePadding = 8.0 + (40.0 / cameraScale.clamp(0.5, 2.0));
+    // Safety: ensure cameraScale is never zero or negative
+    final clampedScale = cameraScale.clamp(0.5, 2.0);
+    final dynamicEdgePadding = 8.0 + (40.0 / clampedScale);
 
 // Convert star world position to screen position
     final starScreenX = (starX * cameraScale) + cameraPosition.dx;

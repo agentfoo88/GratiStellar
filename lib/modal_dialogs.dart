@@ -140,12 +140,13 @@ class GratitudeDialogs {
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.red,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.red,
                   size: FontScaling.getResponsiveIconSize(context, 48),
                 ),
                 SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
@@ -227,6 +228,7 @@ class GratitudeDialogs {
               ],
             ),
           ),
+        ),
         );
       },
     );

@@ -736,6 +736,24 @@ abstract class AppLocalizations {
   /// **'An unexpected error occurred.'**
   String get errorGeneric;
 
+  /// Error when toggling daily reminder on/off
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to change reminder setting. Please try again.'**
+  String get errorReminderToggle;
+
+  /// Error when changing reminder time
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update reminder time. Please try again.'**
+  String get errorReminderTimeUpdate;
+
+  /// Error when URL fails to open
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open {name}. Please check your connection.'**
+  String errorOpenUrl(String name);
+
   /// Button to sign out
   ///
   /// In en, this message translates to:

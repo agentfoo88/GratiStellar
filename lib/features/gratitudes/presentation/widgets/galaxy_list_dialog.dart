@@ -405,53 +405,55 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
           color: Color(0xFFFFE135),
         ),
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.nameYourGalaxy,
-            style: FontScaling.getBodyMedium(context).copyWith(
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-          SemanticHelper.label(
-            label: l10n.galaxyNameField,
-            hint: l10n.enterGalaxyName,
-            child: TextField(
-              controller: _controller,
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.nameYourGalaxy,
               style: FontScaling.getBodyMedium(context).copyWith(
                 color: Colors.white,
               ),
-              decoration: InputDecoration(
-                hintText: l10n.galaxyNameHint,
-                hintStyle: FontScaling.getBodyMedium(context).copyWith(
-                  color: Colors.white60,
+            ),
+            SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+            SemanticHelper.label(
+              label: l10n.galaxyNameField,
+              hint: l10n.enterGalaxyName,
+              child: TextField(
+                controller: _controller,
+                style: FontScaling.getBodyMedium(context).copyWith(
+                  color: Colors.white,
                 ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFFE135)),
+                decoration: InputDecoration(
+                  hintText: l10n.galaxyNameHint,
+                  hintStyle: FontScaling.getBodyMedium(context).copyWith(
+                    color: Colors.white60,
+                  ),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFFFE135)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFFFE135).withValues(alpha: 0.5)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFFFE135)),
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFFE135).withValues(alpha: 0.5)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFFE135)),
-                ),
+                autofocus: true,
+                maxLength: 50,
+                enabled: !_isCreating,
               ),
-              autofocus: true,
-              maxLength: 50,
-              enabled: !_isCreating,
             ),
-          ),
-          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-          Text(
-            l10n.createGalaxyDescription,
-            style: FontScaling.getCaption(context).copyWith(
-              color: Colors.white70,
+            SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+            Text(
+              l10n.createGalaxyDescription,
+              style: FontScaling.getCaption(context).copyWith(
+                color: Colors.white70,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       actions: [
         TextButton(

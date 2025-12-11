@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/utils/app_logger.dart';
 import '../core/error/error_context.dart';
 import '../core/error/error_handler.dart';
+import '../widgets/password_reset_dialog.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -259,6 +260,13 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
+  void _showPasswordResetDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => PasswordResetDialog(authService: _authService),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -394,6 +402,24 @@ class _SignInScreenState extends State<SignInScreen> {
                             onSubmitted: (_) => _handleSubmit(),
                           ),
 
+                          // Forgot Password link
+                          if (!_isSignUp) ...[
+                            SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: _isLoading ? null : () => _showPasswordResetDialog(context),
+                                child: Text(
+                                  l10n.forgotPassword,
+                                  style: FontScaling.getBodySmall(context).copyWith(
+                                    color: Color(0xFFFFE135),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+
                           if (_errorMessage != null) ...[
                             SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
                             Container(
@@ -477,14 +503,16 @@ class _SignInScreenState extends State<SignInScreen> {
                                     text: _isSignUp
                                         ? '${l10n.alreadyHaveAccount}\n'
                                         : '${l10n.needToLinkAccount}\n',
-                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                                    style: FontScaling.getBodySmall(context).copyWith(
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                    ),
                                   ),
                                   TextSpan(
                                     text: _isSignUp ? l10n.signInToggle : l10n.signUpToggle,
-                                    style: TextStyle(
+                                    style: FontScaling.getBodySmall(context).copyWith(
                                       color: Color(0xFFFFE135),
                                       decoration: TextDecoration.underline,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w900,
                                     ),
                                   ),
                                 ],

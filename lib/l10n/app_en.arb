@@ -28,7 +28,7 @@
   "statsTotal": "Total",
   "statsThisWeek": "This Week",
   "statsToday": "Today",
-  "emptyStateTitle": "Your constellation awaits",
+  "emptyStateTitle": "Your galaxy awaits",
   "emptyStateSubtitle": "Tap the star button to create your first star",
   "editButton": "Edit",
   "shareButton": "Share",
@@ -248,6 +248,77 @@
   "@errorAlreadyLinked": {
     "description": "Error when account already linked"
   },
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Link text for password reset"
+  },
+  "passwordResetTitle": "Reset Password",
+  "@passwordResetTitle": {
+    "description": "Title for password reset dialog"
+  },
+  "passwordResetMessage": "Enter your email address and we'll send you a link to reset your password.",
+  "@passwordResetMessage": {
+    "description": "Message explaining password reset process"
+  },
+  "passwordResetEmailSent": "Password reset email sent! Check your inbox.",
+  "@passwordResetEmailSent": {
+    "description": "Success message when password reset email is sent"
+  },
+  "passwordResetError": "Failed to send reset email. Please try again.",
+  "@passwordResetError": {
+    "description": "Error message when password reset fails"
+  },
+  "sendResetEmail": "Send Reset Email",
+  "@sendResetEmail": {
+    "description": "Button text to send password reset email"
+  },
+  "backupRestoreTitle": "Backup & Restore",
+  "@backupRestoreTitle": {
+    "description": "Title for backup and restore dialog"
+  },
+  "settingsSection": "Settings",
+  "@settingsSection": {
+    "description": "Section header for settings"
+  },
+  "navigationSection": "Navigation",
+  "@navigationSection": {
+    "description": "Section header for navigation items"
+  },
+  "dataManagementSection": "Data Management",
+  "@dataManagementSection": {
+    "description": "Section header for data management items"
+  },
+  "helpLegalSection": "Help & Legal",
+  "@helpLegalSection": {
+    "description": "Section header for help and legal items"
+  },
+  "activeGalaxyLabel": "Active: {name}",
+  "@activeGalaxyLabel": {
+    "description": "Label showing active galaxy name",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "drawerStatsToday": "Today: {count}",
+  "@drawerStatsToday": {
+    "description": "Today's stat in drawer header",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drawerStatsThisWeek": "This Week: {count}",
+  "@drawerStatsThisWeek": {
+    "description": "This week stat in drawer header",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "errorGeneric": "An error occurred. Please try again.",
   "@errorGeneric": {
     "description": "Generic error message"
@@ -420,7 +491,7 @@
   "addNewGratitudeStar": "Add new gratitude star",
   "addStarHint": "Opens dialog to write your gratitude",
   "mindfulnessIntervalSlider": "Mindfulness delay slider",
-  "mindfulnessIntervalHint": "Adjust time between gratitudes from 3 to 30 seconds",
+  "mindfulnessIntervalHint": "Adjust time to wait before moving to the next gratitude",
   "hideOtherGratitudes": "Hide other gratitudes",
   "showAllGratitudes": "Show all gratitudes",
   "switchToSingleStarView": "Switch to single star view",
@@ -471,7 +542,7 @@
     },
     "openMenu": "Open menu",
       "openNavigationMenu": "Open navigation menu",
-      "shareTemplate": "{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your universe of gratitude",
+      "shareTemplate": "{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your personal universe of gratitude",
         "@shareTemplate": {
           "description": "Template for sharing gratitude",
           "placeholders": {
@@ -531,6 +602,14 @@
         "enterNewGalaxyName": "Enter new name for this galaxy",
         "@enterNewGalaxyName": {
           "description": "Hint for rename galaxy field"
+        },
+        "editGalaxy": "Edit Galaxy",
+        "@editGalaxy": {
+          "description": "Label for edit galaxy button"
+        },
+        "renameGalaxyHint": "Tap to rename this galaxy",
+        "@renameGalaxyHint": {
+          "description": "Accessibility hint for rename galaxy button"
         },
         "noGalaxiesYet": "No galaxies yet",
         "@noGalaxiesYet": {
@@ -1108,7 +1187,7 @@
         "@nameCollectionButtonHint": {
           "description": "Accessibility hint for continue button"
         },
-        "appTagline": "Build your universe of thankfulness",
+        "appTagline": "We are all made of stardust",
         "@appTagline": {
           "description": "App tagline shown on splash/about screen"
         },

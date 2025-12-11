@@ -11,7 +11,8 @@ import 'core/utils/app_logger.dart';
 class CameraController extends ChangeNotifier {
   // Camera state
   Offset _position = Offset.zero;
-  Offset _parallaxPosition = Offset.zero;  // Clean position for parallax layers
+  Offset _parallaxPosition =
+      Offset.zero; // Clean position for parallax layersl,..5r4t4
   double _scale = 1.0;
   double _maxPanDistance = 3000.0;
 
@@ -24,9 +25,9 @@ class CameraController extends ChangeNotifier {
   static const double maxScale = 5.0;
   static const double focusZoomLevel = 2.0;
 
-// ========================================
-// LAYER TRANSFORM CONFIGURATION
-// ========================================
+  // ========================================
+  // LAYER TRANSFORM CONFIGURATION
+  // ========================================
   static const double backgroundParallax = 0.00;
   static const double backgroundZoom = 0.0;
 
@@ -52,41 +53,57 @@ class CameraController extends ChangeNotifier {
       ..translateByVector3(Vector3(_position.dx, _position.dy, 0.0))
       ..setDiagonal(Vector4(_scale, _scale, 1.0, 1.0));
   }
-// Layer-specific transforms with configurable parallax
+
+  // Layer-specific transforms with configurable parallax
   Matrix4 getBackgroundTransform() {
-    return Matrix4.identity()
-      ..translateByVector3(Vector3(
-          _parallaxPosition.dx * backgroundParallax,  // Use _parallaxPosition instead
-          _parallaxPosition.dy * backgroundParallax,  // Use _parallaxPosition instead
-          0.0
-      ));
+    return Matrix4.identity()..translateByVector3(
+      Vector3(
+        _parallaxPosition.dx *
+            backgroundParallax, // Use _parallaxPosition instead
+        _parallaxPosition.dy *
+            backgroundParallax, // Use _parallaxPosition instead
+        0.0,
+      ),
+    );
   }
 
   Matrix4 getNebulaTransform(Size screenSize) {
     final minimalZoom = 1.0 + ((_scale - 1.0) * nebulaZoom);
     final transform = Matrix4.identity();
-    transform.translateByVector3(Vector3(screenSize.width / 2, screenSize.height / 2, 0.0));
+    transform.translateByVector3(
+      Vector3(screenSize.width / 2, screenSize.height / 2, 0.0),
+    );
     transform.setDiagonal(Vector4(minimalZoom, minimalZoom, 1.0, 1.0));
-    transform.translateByVector3(Vector3(-screenSize.width / 2, -screenSize.height / 2, 0.0));
-    transform.translateByVector3(Vector3(
+    transform.translateByVector3(
+      Vector3(-screenSize.width / 2, -screenSize.height / 2, 0.0),
+    );
+    transform.translateByVector3(
+      Vector3(
         _parallaxPosition.dx * nebulaParallax,
         _parallaxPosition.dy * nebulaParallax,
-        0.0
-    ));
+        0.0,
+      ),
+    );
     return transform;
   }
 
   Matrix4 getVanGoghTransform(Size screenSize) {
     final minimalZoom = 1.0 + ((_scale - 1.0) * vanGoghZoom);
     final transform = Matrix4.identity();
-    transform.translateByVector3(Vector3(screenSize.width / 2, screenSize.height / 2, 0.0));
+    transform.translateByVector3(
+      Vector3(screenSize.width / 2, screenSize.height / 2, 0.0),
+    );
     transform.setDiagonal(Vector4(minimalZoom, minimalZoom, 1.0, 1.0));
-    transform.translateByVector3(Vector3(-screenSize.width / 2, -screenSize.height / 2, 0.0));
-    transform.translateByVector3(Vector3(
+    transform.translateByVector3(
+      Vector3(-screenSize.width / 2, -screenSize.height / 2, 0.0),
+    );
+    transform.translateByVector3(
+      Vector3(
         _parallaxPosition.dx * vanGoghParallax,
         _parallaxPosition.dy * vanGoghParallax,
-        0.0
-    ));
+        0.0,
+      ),
+    );
     return transform;
   }
 
@@ -95,7 +112,9 @@ class CameraController extends ChangeNotifier {
     final adjustedPoint = screenPoint - _position;
     // Safety: ensure scale is never zero (should be clamped to minScale, but be defensive)
     if (_scale.abs() < 0.001) {
-      AppLogger.warning('⚠️ Very small scale detected in screenToWorld: $_scale, using minScale');
+      AppLogger.warning(
+        '⚠️ Very small scale detected in screenToWorld: $_scale, using minScale',
+      );
       return adjustedPoint / minScale;
     }
     return adjustedPoint / _scale;
@@ -122,18 +141,20 @@ class CameraController extends ChangeNotifier {
     for (final star in stars) {
       final starWorldX = star.worldX * screenSize.width;
       final starWorldY = star.worldY * screenSize.height;
-      final distance = math.sqrt(starWorldX * starWorldX + starWorldY * starWorldY);
+      final distance = math.sqrt(
+        starWorldX * starWorldX + starWorldY * starWorldY,
+      );
       maxDistance = math.max(maxDistance, distance);
     }
 
     // CRITICAL FIX: Padding must INCREASE with zoom level
     final double paddingFactor;
     if (_scale < 0.5) {
-      paddingFactor = 0.6;  // Zoomed way out: 60% padding
+      paddingFactor = 0.6; // Zoomed way out: 60% padding
     } else if (_scale < 1.0) {
-      paddingFactor = 1.0;  // Medium zoom: 100% padding
+      paddingFactor = 1.0; // Medium zoom: 100% padding
     } else if (_scale < 2.0) {
-      paddingFactor = 1.5;  // Moderate zoom: 150% padding
+      paddingFactor = 1.5; // Moderate zoom: 150% padding
     } else {
       // High zoom: Scale factor itself as padding
       // At 500% zoom, this gives 500% padding
@@ -145,7 +166,9 @@ class CameraController extends ChangeNotifier {
     // Ensure minimum bounds
     _maxPanDistance = math.max(_maxPanDistance, 2000.0);
 
-    AppLogger.info('🎯 Pan distance at ${_scale.toStringAsFixed(1)}x zoom: ${_maxPanDistance.toStringAsFixed(0)}px (padding: ${(paddingFactor * 100).toStringAsFixed(0)}%)');
+    AppLogger.info(
+      '🎯 Pan distance at ${_scale.toStringAsFixed(1)}x zoom: ${_maxPanDistance.toStringAsFixed(0)}px (padding: ${(paddingFactor * 100).toStringAsFixed(0)}%)',
+    );
   }
 
   // Update camera position during drag
@@ -155,8 +178,7 @@ class CameraController extends ChangeNotifier {
 
     // Simple radial constraint
     final distance = math.sqrt(
-        newPosition.dx * newPosition.dx +
-            newPosition.dy * newPosition.dy
+      newPosition.dx * newPosition.dx + newPosition.dy * newPosition.dy,
     );
 
     final Offset constrainedPosition;
@@ -184,10 +206,14 @@ class CameraController extends ChangeNotifier {
     final constrainedScale = math.max(minScale, math.min(maxScale, newScale));
 
     // Prevent changes that are too small
-    if ((constrainedScale - _scale).abs() < 0.001) return;
+    if ((constrainedScale - _scale).abs() < 0.001) {
+      return;
+    }
 
     // Add extra stability check for very low zoom levels
-    if (constrainedScale < 0.4 && (constrainedScale - _scale).abs() < 0.01) return;
+    if (constrainedScale < 0.4 && (constrainedScale - _scale).abs() < 0.01) {
+      return;
+    }
 
     if (constrainedScale != _scale) {
       // Cancel any existing animations first
@@ -219,8 +245,8 @@ class CameraController extends ChangeNotifier {
 
           // Apply radial constraint instead of asymmetric bounds
           final distance = math.sqrt(
-              idealNewPosition.dx * idealNewPosition.dx +
-                  idealNewPosition.dy * idealNewPosition.dy
+            idealNewPosition.dx * idealNewPosition.dx +
+                idealNewPosition.dy * idealNewPosition.dy,
           );
 
           if (distance > _maxPanDistance && distance > 0) {
@@ -268,12 +294,13 @@ class CameraController extends ChangeNotifier {
     Duration duration = const Duration(milliseconds: 800),
     Curve curve = Curves.easeOutCubic,
     TickerProvider? vsync,
-    BuildContext? context,  // Added parameter
+    BuildContext? context, // Added parameter
   }) {
     if (vsync == null) return;
 
     // Check for reduced motion
-    final reduceMotion = context != null && MotionHelper.shouldReduceMotion(context);
+    final reduceMotion =
+        context != null && MotionHelper.shouldReduceMotion(context);
 
     if (reduceMotion) {
       // Instant jump - no animation
@@ -289,21 +316,29 @@ class CameraController extends ChangeNotifier {
 
     // Normal animation code continues below
     _animationController?.dispose();
-    _animationController = AnimationController(duration: duration, vsync: vsync);
+    _animationController = AnimationController(
+      duration: duration,
+      vsync: vsync,
+    );
 
-    final curvedAnimation = CurvedAnimation(parent: _animationController!, curve: curve);
+    final curvedAnimation = CurvedAnimation(
+      parent: _animationController!,
+      curve: curve,
+    );
 
     // Constrain target position to valid bounds if provided
     Offset? constrainedTargetPosition = targetPosition;
     if (targetPosition != null) {
       final distance = math.sqrt(
         targetPosition.dx * targetPosition.dx +
-        targetPosition.dy * targetPosition.dy
+            targetPosition.dy * targetPosition.dy,
       );
 
       // Use bounds for target scale if animating scale, otherwise current bounds
       double boundsForTarget = _maxPanDistance;
-      if (targetScale != null && _stars.isNotEmpty && _screenSize != Size.zero) {
+      if (targetScale != null &&
+          _stars.isNotEmpty &&
+          _screenSize != Size.zero) {
         // Temporarily calculate what bounds would be at target scale
         final tempScale = _scale;
         _scale = math.max(minScale, math.min(maxScale, targetScale));
@@ -316,7 +351,9 @@ class CameraController extends ChangeNotifier {
       // Safety: ensure boundsForTarget is always positive and finite
       boundsForTarget = math.max(boundsForTarget, 2000.0);
       if (!boundsForTarget.isFinite) {
-        AppLogger.warning('⚠️ Invalid boundsForTarget: $boundsForTarget, using default 2000.0');
+        AppLogger.warning(
+          '⚠️ Invalid boundsForTarget: $boundsForTarget, using default 2000.0',
+        );
         boundsForTarget = 2000.0;
       }
 
@@ -326,7 +363,9 @@ class CameraController extends ChangeNotifier {
         if (factor.isFinite) {
           constrainedTargetPosition = targetPosition * factor;
         } else {
-          AppLogger.warning('⚠️ Invalid factor calculated: $factor, using original position');
+          AppLogger.warning(
+            '⚠️ Invalid factor calculated: $factor, using original position',
+          );
           constrainedTargetPosition = targetPosition;
         }
       }
@@ -375,7 +414,11 @@ class CameraController extends ChangeNotifier {
   }
 
   // Fit all stars in view - Updated for normalized coordinates
-  void fitAllStars(List<GratitudeStar> stars, Size screenSize, TickerProvider vsync) {
+  void fitAllStars(
+    List<GratitudeStar> stars,
+    Size screenSize,
+    TickerProvider vsync,
+  ) {
     if (stars.isEmpty) return;
 
     // Find bounds of all stars in world coordinates
@@ -413,7 +456,9 @@ class CameraController extends ChangeNotifier {
       screenSize.height / 2 - centerY * targetScale,
     );
 
-    AppLogger.info('📐 Fit all: bounds ($minX, $minY) to ($maxX, $maxY), scale: $targetScale');
+    AppLogger.info(
+      '📐 Fit all: bounds ($minX, $minY) to ($maxX, $maxY), scale: $targetScale',
+    );
 
     animateTo(
       targetPosition: targetPosition,
@@ -427,7 +472,10 @@ class CameraController extends ChangeNotifier {
   // Center camera on a specific world point (normalized coordinates)
   void centerOnPoint(Offset worldPoint, Size screenSize, TickerProvider vsync) {
     final targetScreenPos = Offset(screenSize.width / 2, screenSize.height / 2);
-    final worldPosPixels = Offset(worldPoint.dx * screenSize.width, worldPoint.dy * screenSize.height);
+    final worldPosPixels = Offset(
+      worldPoint.dx * screenSize.width,
+      worldPoint.dy * screenSize.height,
+    );
 
     // Use different calculation based on zoom level
     final Offset targetCameraPosition;
@@ -482,12 +530,15 @@ class CameraControlsOverlay extends StatelessWidget {
     final fontSize = isMobile ? 12.0 : 14.0;
     final padding = isMobile ? 8.0 : 12.0;
 
-    final rightMargin = isMobile ? math.min(8.0, screenSize.width * 0.02) : 16.0;
+    final rightMargin = isMobile
+        ? math.min(8.0, screenSize.width * 0.02)
+        : 16.0;
     final bottomMargin = (isMobile ? 80.0 : 120.0) + safeAreaPadding.bottom;
 
     final maxControlWidth = controlSize + padding * 2;
     final safeRightMargin = math.max(rightMargin, 4.0);
-    final adjustedRightMargin = (rightMargin + maxControlWidth > screenSize.width * 0.25)
+    final adjustedRightMargin =
+        (rightMargin + maxControlWidth > screenSize.width * 0.25)
         ? screenSize.width * 0.02
         : safeRightMargin;
 
@@ -495,137 +546,156 @@ class CameraControlsOverlay extends StatelessWidget {
       bottom: bottomMargin,
       right: adjustedRightMargin,
       // child: RepaintBoundary(
-        child: AnimatedBuilder(
-          animation: cameraController,
-          builder: (context, child) {
-            return IgnorePointer(
-              ignoring: false,
-              child: IntrinsicWidth(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Zoom percentage indicator
-                    Material(
-                      color: Colors.transparent,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.7),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                            width: 1,
-                          ),
+      child: AnimatedBuilder(
+        animation: cameraController,
+        builder: (context, child) {
+          return IgnorePointer(
+            ignoring: false,
+            child: IntrinsicWidth(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Zoom percentage indicator
+                  Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: padding,
+                        vertical: padding * 0.7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          width: 1,
                         ),
-                        child: Text(
-                          '${cameraController.zoomPercentage}%',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.w600,
-                            // letterSpacing: 0.5, // Add letter spacing
-                          ),
+                      ),
+                      child: Text(
+                        '${cameraController.zoomPercentage}%',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w600,
+                          // letterSpacing: 0.5, // Add letter spacing
                         ),
                       ),
                     ),
+                  ),
 
-                    SizedBox(height: padding),
+                  SizedBox(height: padding),
 
-                    // Zoom controls
-                    Material(
-                      color: Colors.transparent,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(controlSize / 2),
-                          border: Border.all(
-                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: IntrinsicHeight(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Zoom In
-                              SizedBox(
-                                width: controlSize,
-                                height: controlSize,
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(controlSize / 2),
-                                    onTap: () {
-                                      final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
-                                      cameraController.zoomIn(1.5, screenCenter);
-                                    },
-                                    child: Icon(Icons.zoom_in,
-                                      color: Colors.white,
-                                      size: controlSize * 0.5,
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // Zoom Out
-                              SizedBox(
-                                width: controlSize,
-                                height: controlSize,
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(controlSize / 2),
-                                    onTap: () {
-                                      final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
-                                      cameraController.zoomOut(1.5, screenCenter);
-                                    },
-                                    child: Icon(Icons.zoom_out,
-                                      color: Colors.white,
-                                      size: controlSize * 0.5,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                  // Zoom controls
+                  Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(controlSize / 2),
+                        border: Border.all(
+                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          width: 1,
                         ),
                       ),
-                    ),
-
-                    SizedBox(height: padding),
-
-                    // 100% Zoom button
-                    Material(
-                      color: Colors.transparent,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(controlSize / 2),
-                          border: Border.all(
-                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: SizedBox(
-                          width: controlSize,
-                          height: controlSize,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(controlSize / 2),
-                              onTap: () {
-                                final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
-                                cameraController.zoomTo100Percent(screenCenter);
-                              },
-                              child: Center(
-                                child: Text(
-                                  '100%',
-                                  style: TextStyle(
+                      child: IntrinsicHeight(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Zoom In
+                            SizedBox(
+                              width: controlSize,
+                              height: controlSize,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(
+                                    controlSize / 2,
+                                  ),
+                                  onTap: () {
+                                    final screenCenter = Offset(
+                                      screenSize.width / 2,
+                                      screenSize.height / 2,
+                                    );
+                                    cameraController.zoomIn(1.5, screenCenter);
+                                  },
+                                  child: Icon(
+                                    Icons.zoom_in,
                                     color: Colors.white,
-                                    fontSize: fontSize * 0.75,
-                                    fontWeight: FontWeight.w600,
+                                    size: controlSize * 0.5,
                                   ),
+                                ),
+                              ),
+                            ),
+
+                            // Zoom Out
+                            SizedBox(
+                              width: controlSize,
+                              height: controlSize,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(
+                                    controlSize / 2,
+                                  ),
+                                  onTap: () {
+                                    final screenCenter = Offset(
+                                      screenSize.width / 2,
+                                      screenSize.height / 2,
+                                    );
+                                    cameraController.zoomOut(1.5, screenCenter);
+                                  },
+                                  child: Icon(
+                                    Icons.zoom_out,
+                                    color: Colors.white,
+                                    size: controlSize * 0.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: padding),
+
+                  // 100% Zoom button
+                  Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(controlSize / 2),
+                        border: Border.all(
+                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: SizedBox(
+                        width: controlSize,
+                        height: controlSize,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(
+                              controlSize / 2,
+                            ),
+                            onTap: () {
+                              final screenCenter = Offset(
+                                screenSize.width / 2,
+                                screenSize.height / 2,
+                              );
+                              cameraController.zoomTo100Percent(screenCenter);
+                            },
+                            child: Center(
+                              child: Text(
+                                '100%',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: fontSize * 0.75,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -633,46 +703,54 @@ class CameraControlsOverlay extends StatelessWidget {
                         ),
                       ),
                     ),
+                  ),
 
-                    SizedBox(height: padding),
+                  SizedBox(height: padding),
 
-                    // Fit All button
-                    Material(
-                      color: Colors.transparent,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(controlSize / 2),
-                          border: Border.all(
-                            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                            width: 1,
-                          ),
+                  // Fit All button
+                  Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(controlSize / 2),
+                        border: Border.all(
+                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          width: 1,
                         ),
-                        child: SizedBox(
-                          width: controlSize,
-                          height: controlSize,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(controlSize / 2),
-                              onTap: () {
-                                cameraController.fitAllStars(stars, screenSize, vsync);
-                              },
-                              child: Icon(Icons.fit_screen,
-                                color: Colors.white,
-                                size: controlSize * 0.5,
-                              ),
+                      ),
+                      child: SizedBox(
+                        width: controlSize,
+                        height: controlSize,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(
+                              controlSize / 2,
+                            ),
+                            onTap: () {
+                              cameraController.fitAllStars(
+                                stars,
+                                screenSize,
+                                vsync,
+                              );
+                            },
+                            child: Icon(
+                              Icons.fit_screen,
+                              color: Colors.white,
+                              size: controlSize * 0.5,
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            );
-          },
-      //  ),
+            ),
+          );
+        },
+        //  ),
       ),
     );
   }

@@ -278,4 +278,15 @@ class AuthService {
       rethrow;
     }
   }
+
+  // Send password reset email
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      AppLogger.auth('✅ Password reset email sent to: $email');
+    } catch (e) {
+      AppLogger.auth('❌ Error sending password reset email: $e');
+      rethrow;
+    }
+  }
 }

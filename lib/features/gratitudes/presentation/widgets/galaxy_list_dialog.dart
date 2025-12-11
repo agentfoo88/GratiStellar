@@ -241,9 +241,26 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                 ),
               ),
 
+              // Edit button (visible for all galaxies)
+              SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+              SemanticHelper.label(
+                label: l10n.editGalaxy,
+                hint: l10n.renameGalaxyHint,
+                isButton: true,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.edit_outlined,
+                    color: isActive ? Color(0xFFFFE135) : Colors.white60,
+                    size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
+                  ),
+                  onPressed: () => _showRenameDialog(context, galaxy, galaxyProvider),
+                  tooltip: l10n.renameGalaxy,
+                ),
+              ),
+
               // Arrow for non-active galaxies
               if (!isActive) ...[
-                SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                SizedBox(width: FontScaling.getResponsiveSpacing(context, 4)),
                 Icon(
                   Icons.arrow_forward_ios,
                   color: Colors.white60,
@@ -460,7 +477,9 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
           onPressed: _isCreating ? null : () => Navigator.of(context).pop(),
           child: Text(
             l10n.cancel,
-            style: TextStyle(color: Colors.white70),
+            style: FontScaling.getButtonText(context).copyWith(
+              color: Colors.white70,
+            ),
           ),
         ),
         ElevatedButton(
@@ -616,7 +635,9 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
           onPressed: _isRenaming ? null : () => Navigator.of(context).pop(),
           child: Text(
             l10n.cancel,
-            style: TextStyle(color: Colors.white70),
+            style: FontScaling.getButtonText(context).copyWith(
+              color: Colors.white70,
+            ),
           ),
         ),
         ElevatedButton(

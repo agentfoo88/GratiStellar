@@ -233,7 +233,7 @@ class GratitudeStarService {
     double worldX, worldY;
     int attempts = 0;
     const maxAttempts = 30;
-    const minDistance = 0.05; // Minimum distance in world space
+    const minDistance = 0.075; // Minimum distance in world space (50% larger than 0.05)
 
     do {
       // Use Gaussian distribution to cluster around center
@@ -284,7 +284,7 @@ class GratitudeStarService {
       worldY: worldY,
       colorPresetIndex: colorPresetIndex ?? random.nextInt(StarColors.palette.length),
       customColor: customColor,
-      size: 12.0 + random.nextDouble() * 6.0,  // Base size now 12.0
+      size: 18.0 + random.nextDouble() * 9.0,  // Base size 18.0 (50% larger than 12.0)
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       createdAt: DateTime.now(),
       galaxyId: galaxyId,

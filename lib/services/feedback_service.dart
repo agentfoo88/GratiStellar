@@ -27,7 +27,14 @@ class FeedbackService {
       final appVersion = '${packageInfo.version} (${packageInfo.buildNumber})';
 
       // Detect platform
-      final platform = defaultTargetPlatform == TargetPlatform.iOS ? 'iOS' : 'Android';
+      final platform = switch (defaultTargetPlatform) {
+        TargetPlatform.iOS => 'iOS',
+        TargetPlatform.android => 'Android',
+        TargetPlatform.windows => 'Windows',
+        TargetPlatform.macOS => 'macOS',
+        TargetPlatform.linux => 'Linux',
+        TargetPlatform.fuchsia => 'Fuchsia',
+      };
 
       final feedback = FeedbackItem(
         userId: user.uid,

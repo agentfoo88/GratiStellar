@@ -106,15 +106,10 @@ class DailyReminderService extends ChangeNotifier {
       _reminderTime = TimeOfDay(hour: savedHour, minute: savedMinute);
       _hasShownPrompt = _prefs!.getBool(_keyPromptShown) ?? false;
 
-      // MIGRATION: Auto-mark as shown for existing users with stars
-      if (!_hasShownPrompt) {
-        final stars = await StorageService.loadGratitudeStars();
-        if (stars.isNotEmpty) {
-          // User has stars (even if deleted) - they're an existing user
-          AppLogger.info('🔔 Migration: User has ${stars.length} stars, marking prompt as shown');
-          await _prefs!.setBool(_keyPromptShown, true);
-          _hasShownPrompt = true;
-        }
+      // Reschedule notification if enabled (since we removed recurring)
+      if (_isEnabled) {
+        await scheduleReminder(_reminderTime);
+        AppLogger.info('🔔 Rescheduled daily reminder at startup');
       }
 
       AppLogger.success(
@@ -229,7 +224,6 @@ class DailyReminderService extends ChangeNotifier {
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time, // Daily recurrence
       );
 
       // Save the new time

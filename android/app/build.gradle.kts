@@ -32,7 +32,18 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            // Your signing config
+            // signingConfig = signingConfigs.getByName("release")
+
+            // Enable minification (Kotlin DSL uses 'is' prefix)
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            // ProGuard files
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

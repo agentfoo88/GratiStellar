@@ -25,6 +25,22 @@
   "@customColorButton": {
     "description": "Button to open advanced color picker"
   },
+  "setAsDefaultColor": "Set as default color for new stars",
+  "@setAsDefaultColor": {
+    "description": "Checkbox label to set color as default for new stars"
+  },
+  "clearDefaultColor": "Clear Default",
+  "@clearDefaultColor": {
+    "description": "Button to clear the default color preference"
+  },
+  "defaultStarColor": "Default Star Color",
+  "@defaultStarColor": {
+    "description": "Label for default star color setting"
+  },
+  "usingDefaultColor": "Currently using default color",
+  "@usingDefaultColor": {
+    "description": "Message shown when using default color"
+  },
   "statsTotal": "Total",
   "statsThisWeek": "This Week",
   "statsToday": "Today",

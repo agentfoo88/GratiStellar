@@ -42,6 +42,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customColorButton => 'Custom Color';
 
   @override
+  String get setAsDefaultColor => 'Set as default color for new stars';
+
+  @override
+  String get clearDefaultColor => 'Clear Default';
+
+  @override
+  String get defaultStarColor => 'Default Star Color';
+
+  @override
+  String get usingDefaultColor => 'Currently using default color';
+
+  @override
   String get statsTotal => 'Total';
 
   @override
@@ -51,7 +63,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsToday => 'Today';
 
   @override
-  String get emptyStateTitle => 'Your constellation awaits';
+  String get emptyStateTitle => 'Your galaxy awaits';
 
   @override
   String get emptyStateSubtitle =>
@@ -351,6 +363,57 @@ class AppLocalizationsEn extends AppLocalizations {
       'This account is already linked to another user.';
 
   @override
+  String get forgotPassword => 'Forgot Password?';
+
+  @override
+  String get passwordResetTitle => 'Reset Password';
+
+  @override
+  String get passwordResetMessage =>
+      'Enter your email address and we\'ll send you a link to reset your password.';
+
+  @override
+  String get passwordResetEmailSent =>
+      'Password reset email sent! Check your inbox.';
+
+  @override
+  String get passwordResetError =>
+      'Failed to send reset email. Please try again.';
+
+  @override
+  String get sendResetEmail => 'Send Reset Email';
+
+  @override
+  String get backupRestoreTitle => 'Backup & Restore';
+
+  @override
+  String get settingsSection => 'Settings';
+
+  @override
+  String get navigationSection => 'Navigation';
+
+  @override
+  String get dataManagementSection => 'Data Management';
+
+  @override
+  String get helpLegalSection => 'Help & Legal';
+
+  @override
+  String activeGalaxyLabel(String name) {
+    return 'Active: $name';
+  }
+
+  @override
+  String drawerStatsToday(int count) {
+    return 'Today: $count';
+  }
+
+  @override
+  String drawerStatsThisWeek(int count) {
+    return 'This Week: $count';
+  }
+
+  @override
   String get errorGeneric => 'An unexpected error occurred.';
 
   @override
@@ -494,7 +557,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mindfulnessIntervalHint =>
-      'Adjust time between gratitudes from 3 to 30 seconds';
+      'Adjust time to wait before moving to the next gratitude';
 
   @override
   String get hideOtherGratitudes => 'Hide other gratitudes';
@@ -602,7 +665,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shareTemplate(String userName, String gratitudeText) {
-    return '$userName shared their gratitude with you:\n$gratitudeText\n\n- GratiStellar - your universe of gratitude';
+    return '$userName shared their gratitude with you:\n$gratitudeText\n\n- GratiStellar - your personal universe of gratitude';
   }
 
   @override
@@ -643,6 +706,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enterNewGalaxyName => 'Enter new name for this galaxy';
+
+  @override
+  String get editGalaxy => 'Edit Galaxy';
+
+  @override
+  String get renameGalaxyHint => 'Tap to rename this galaxy';
 
   @override
   String get noGalaxiesYet => 'No galaxies yet';
@@ -1029,7 +1098,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create your account and start using GratiStellar';
 
   @override
-  String get appTagline => 'Build your universe of thankfulness';
+  String get appTagline => 'We are all made of stardust';
 
   @override
   String get tapToContinue => 'Tap anywhere to continue';

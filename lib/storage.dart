@@ -399,6 +399,10 @@ class StorageService {
       await prefs.remove('reminder_minute');
       await prefs.remove('reminder_prompt_shown');
 
+      // Clear default color preferences on sign-out
+      await prefs.remove(_defaultColorPresetKey);
+      await prefs.remove(_defaultColorCustomKey);
+
       AppLogger.data('🗑️ Cleared all local storage');
     } catch (e) {
       debugPrint('⚠️ Error clearing storage: $e');
@@ -462,6 +466,75 @@ class StorageService {
     } catch (e) {
       debugPrint('⚠️ Error getting font scale: $e');
       return 1.0;
+    }
+  }
+
+  // Default color preference
+  static const String _defaultColorPresetKey = 'default_color_preset_index';
+  static const String _defaultColorCustomKey = 'default_color_custom_argb';
+
+  /// Get default color preference
+  /// Returns tuple: (presetIndex, customColor)
+  /// - (int, null) = preset color selected
+  /// - (null, Color) = custom color selected
+  /// - null = no default set
+  static Future<(int?, Color?)?> getDefaultColor() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final presetIndex = prefs.getInt(_defaultColorPresetKey);
+      final customArgb = prefs.getInt(_defaultColorCustomKey);
+
+      if (presetIndex != null) {
+        // Validate preset index is within bounds
+        if (presetIndex >= 0 && presetIndex < StarColors.palette.length) {
+          return (presetIndex, null);
+        }
+        // Invalid index, clear it
+        await prefs.remove(_defaultColorPresetKey);
+        return null;
+      } else if (customArgb != null) {
+        return (null, Color(customArgb));
+      }
+      return null; // No default set
+    } catch (e) {
+      debugPrint('⚠️ Error getting default color: $e');
+      return null;
+    }
+  }
+
+  /// Save default preset color by index
+  static Future<void> saveDefaultPresetColor(int presetIndex) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_defaultColorPresetKey, presetIndex);
+      await prefs.remove(_defaultColorCustomKey); // Clear custom
+      AppLogger.data('💾 Saved default preset color: $presetIndex');
+    } catch (e) {
+      debugPrint('⚠️ Error saving default preset color: $e');
+    }
+  }
+
+  /// Save default custom color
+  static Future<void> saveDefaultCustomColor(Color color) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_defaultColorCustomKey, color.toARGB32());
+      await prefs.remove(_defaultColorPresetKey); // Clear preset
+      AppLogger.data('💾 Saved default custom color: ${color.toARGB32()}');
+    } catch (e) {
+      debugPrint('⚠️ Error saving default custom color: $e');
+    }
+  }
+
+  /// Clear default color preference
+  static Future<void> clearDefaultColor() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_defaultColorPresetKey);
+      await prefs.remove(_defaultColorCustomKey);
+      AppLogger.data('🗑️ Cleared default color');
+    } catch (e) {
+      debugPrint('⚠️ Error clearing default color: $e');
     }
   }
 

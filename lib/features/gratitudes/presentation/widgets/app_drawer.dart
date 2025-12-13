@@ -17,6 +17,7 @@ import '../../../../services/daily_reminder_service.dart';
 import '../../../../services/layer_cache_service.dart';
 import '../../../../services/url_launch_service.dart';
 import '../../../../storage.dart';
+import '../../../../gratitude_stars.dart';
 import '../../../../widgets/backup_restore_dialog.dart';
 import '../state/gratitude_provider.dart';
 import '../state/galaxy_provider.dart';
@@ -390,6 +391,68 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     },
                   ),
                 ),
+              ),
+
+              // Default Star Color Setting
+              FutureBuilder<(int?, Color?)?>(
+                future: StorageService.getDefaultColor(),
+                builder: (context, snapshot) {
+                  final defaultColor = snapshot.data;
+                  if (defaultColor == null) {
+                    return const SizedBox.shrink(); // No default set
+                  }
+
+                  // Determine display color
+                  final Color displayColor;
+                  if (defaultColor.$1 != null) {
+                    displayColor = StarColors.getColor(defaultColor.$1!);
+                  } else {
+                    displayColor = defaultColor.$2!;
+                  }
+
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                      vertical: FontScaling.getResponsiveSpacing(context, 8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.palette, color: Colors.white70, size: FontScaling.getResponsiveIconSize(context, 24)),
+                        SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
+                        Flexible(
+                          child: Text(
+                            l10n.defaultStarColor,
+                            style: FontScaling.getBodyMedium(context).copyWith(
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: displayColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white54, width: 2),
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () async {
+                            await StorageService.clearDefaultColor();
+                            setState(() {}); // Refresh to hide
+                          },
+                          icon: Icon(Icons.clear, size: 20, color: Colors.white54),
+                          tooltip: l10n.clearDefaultColor,
+                          padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 8)),
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
 
               // Daily Reminder Setting

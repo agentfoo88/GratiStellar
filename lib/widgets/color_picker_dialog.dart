@@ -26,6 +26,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
   // Color picker owns its state
   late Color _previewColor;
   int? _selectedColorIndex;
+  (int?, Color?)? _defaultColor; // Store default color preference
 
   // Color picker owns its controllers
   late final TextEditingController _hexController;
@@ -47,6 +48,16 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
     _blueController = TextEditingController();
 
     _updateColorControllers(_previewColor);
+    _loadDefaultColor();
+  }
+
+  Future<void> _loadDefaultColor() async {
+    final defaultColor = await StorageService.getDefaultColor();
+    if (mounted) {
+      setState(() {
+        _defaultColor = defaultColor;
+      });
+    }
   }
 
   @override
@@ -303,6 +314,24 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  if (_defaultColor != null)
+                    TextButton.icon(
+                      onPressed: () async {
+                        await StorageService.clearDefaultColor();
+                        if (mounted) {
+                          setState(() {
+                            _defaultColor = null;
+                          });
+                        }
+                      },
+                      icon: Icon(Icons.clear, size: 18, color: Colors.white.withValues(alpha: 0.6)),
+                      label: Text(
+                        AppLocalizations.of(context)!.clearDefaultColor,
+                        style: FontScaling.getButtonText(context).copyWith(
+                          color: Colors.white.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(

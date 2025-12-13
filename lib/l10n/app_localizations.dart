@@ -160,6 +160,30 @@ abstract class AppLocalizations {
   /// **'Custom Color'**
   String get customColorButton;
 
+  /// Checkbox label to set color as default for new stars
+  ///
+  /// In en, this message translates to:
+  /// **'Set as default color for new stars'**
+  String get setAsDefaultColor;
+
+  /// Button to clear the default color preference
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Default'**
+  String get clearDefaultColor;
+
+  /// Label for default star color setting
+  ///
+  /// In en, this message translates to:
+  /// **'Default Star Color'**
+  String get defaultStarColor;
+
+  /// Message shown when using default color
+  ///
+  /// In en, this message translates to:
+  /// **'Currently using default color'**
+  String get usingDefaultColor;
+
   /// No description provided for @statsTotal.
   ///
   /// In en, this message translates to:
@@ -181,7 +205,7 @@ abstract class AppLocalizations {
   /// No description provided for @emptyStateTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your constellation awaits'**
+  /// **'Your galaxy awaits'**
   String get emptyStateTitle;
 
   /// No description provided for @emptyStateSubtitle.
@@ -730,6 +754,90 @@ abstract class AppLocalizations {
   /// **'This account is already linked to another user.'**
   String get errorAlreadyLinked;
 
+  /// Link text for password reset
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password?'**
+  String get forgotPassword;
+
+  /// Title for password reset dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get passwordResetTitle;
+
+  /// Message explaining password reset process
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address and we\'ll send you a link to reset your password.'**
+  String get passwordResetMessage;
+
+  /// Success message when password reset email is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset email sent! Check your inbox.'**
+  String get passwordResetEmailSent;
+
+  /// Error message when password reset fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send reset email. Please try again.'**
+  String get passwordResetError;
+
+  /// Button text to send password reset email
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Email'**
+  String get sendResetEmail;
+
+  /// Title for backup and restore dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Restore'**
+  String get backupRestoreTitle;
+
+  /// Section header for settings
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsSection;
+
+  /// Section header for navigation items
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation'**
+  String get navigationSection;
+
+  /// Section header for data management items
+  ///
+  /// In en, this message translates to:
+  /// **'Data Management'**
+  String get dataManagementSection;
+
+  /// Section header for help and legal items
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Legal'**
+  String get helpLegalSection;
+
+  /// Label showing active galaxy name
+  ///
+  /// In en, this message translates to:
+  /// **'Active: {name}'**
+  String activeGalaxyLabel(String name);
+
+  /// Today's stat in drawer header
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {count}'**
+  String drawerStatsToday(int count);
+
+  /// This week stat in drawer header
+  ///
+  /// In en, this message translates to:
+  /// **'This Week: {count}'**
+  String drawerStatsThisWeek(int count);
+
   /// Generic fallback error message
   ///
   /// In en, this message translates to:
@@ -1003,7 +1111,7 @@ abstract class AppLocalizations {
   /// No description provided for @mindfulnessIntervalHint.
   ///
   /// In en, this message translates to:
-  /// **'Adjust time between gratitudes from 3 to 30 seconds'**
+  /// **'Adjust time to wait before moving to the next gratitude'**
   String get mindfulnessIntervalHint;
 
   /// No description provided for @hideOtherGratitudes.
@@ -1207,7 +1315,7 @@ abstract class AppLocalizations {
   /// Template for sharing gratitude
   ///
   /// In en, this message translates to:
-  /// **'{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your universe of gratitude'**
+  /// **'{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your personal universe of gratitude'**
   String shareTemplate(String userName, String gratitudeText);
 
   /// Menu item for galaxy management
@@ -1281,6 +1389,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter new name for this galaxy'**
   String get enterNewGalaxyName;
+
+  /// Label for edit galaxy button
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Galaxy'**
+  String get editGalaxy;
+
+  /// Accessibility hint for rename galaxy button
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to rename this galaxy'**
+  String get renameGalaxyHint;
 
   /// Empty state title when no galaxies exist
   ///
@@ -1951,7 +2071,7 @@ abstract class AppLocalizations {
   /// App tagline shown on splash/about screen
   ///
   /// In en, this message translates to:
-  /// **'Build your universe of thankfulness'**
+  /// **'We are all made of stardust'**
   String get appTagline;
 
   /// Hint text for onboarding splash screen

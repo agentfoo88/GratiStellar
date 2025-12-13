@@ -31,7 +31,8 @@ class FloatingGratitudeLabel extends StatelessWidget {
 
     // Adaptive width: longer text gets wider boxes
     final maxLabelWidth = star.text.length > 150
-        ? screenSize.width * 0.5  // 50% width for long gratitudes
+        ? screenSize.width *
+              0.5 // 50% width for long gratitudes
         : screenSize.width * 0.4; // 40% width for normal
 
     // Enhanced edge padding that accounts for zoom level
@@ -39,15 +40,15 @@ class FloatingGratitudeLabel extends StatelessWidget {
     final clampedScale = cameraScale.clamp(0.5, 2.0);
     final dynamicEdgePadding = 8.0 + (40.0 / clampedScale);
 
-// Convert star world position to screen position
+    // Convert star world position to screen position
     final starScreenX = (starX * cameraScale) + cameraPosition.dx;
     final starScreenY = (starY * cameraScale) + cameraPosition.dy;
 
-// Apply fixed screen-space offset
+    // Apply fixed screen-space offset
     const fixedScreenOffset = 30.0;
     final labelScreenY = starScreenY + fixedScreenOffset;
 
-// Hide label if star is off-screen
+    // Hide label if star is off-screen
     if (starScreenX < -maxLabelWidth ||
         starScreenX > screenSize.width + maxLabelWidth ||
         starScreenY < -100 ||
@@ -55,24 +56,24 @@ class FloatingGratitudeLabel extends StatelessWidget {
       return SizedBox.shrink();
     }
 
-// Calculate desired centered position
+    // Calculate desired centered position
     double horizontalTranslation = -0.5;
 
-// Check if label would overflow left edge
+    // Check if label would overflow left edge
     final labelLeftEdge = starScreenX - (maxLabelWidth / 2);
     if (labelLeftEdge < dynamicEdgePadding) {
       final shiftRight = dynamicEdgePadding - labelLeftEdge;
       horizontalTranslation = -0.5 + (shiftRight / maxLabelWidth);
     }
 
-// Check if label would overflow right edge
+    // Check if label would overflow right edge
     final labelRightEdge = starScreenX + (maxLabelWidth / 2);
     if (labelRightEdge > screenSize.width - dynamicEdgePadding) {
       final overhang = labelRightEdge - (screenSize.width - dynamicEdgePadding);
       horizontalTranslation = -0.5 - (overhang / maxLabelWidth);
     }
 
-// Clamp translation to prevent over-shifting
+    // Clamp translation to prevent over-shifting
     horizontalTranslation = horizontalTranslation.clamp(-0.9, -0.1);
 
     return Positioned(
@@ -92,7 +93,9 @@ class FloatingGratitudeLabel extends StatelessWidget {
               vertical: FontScaling.getResponsiveSpacing(context, 8),
             ),
             decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: UIConstants.labelBackgroundAlpha),
+              color: Color(
+                0xFF1A2238,
+              ).withValues(alpha: UIConstants.labelBackgroundAlpha),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: star.color.withValues(alpha: 0.5),
@@ -111,11 +114,14 @@ class FloatingGratitudeLabel extends StatelessWidget {
               alignment: Alignment.center,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: maxLabelWidth - FontScaling.getResponsiveSpacing(context, 24),
+                  maxWidth:
+                      maxLabelWidth -
+                      FontScaling.getResponsiveSpacing(context, 24),
                 ),
                 child: Text(
                   star.text,
-                  style: _getAdaptiveTextStyle(context, star.text).copyWith(  // ← This name
+                  style: _getAdaptiveTextStyle(context, star.text).copyWith(
+                    // ← This name
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
                   maxLines: null,
@@ -129,6 +135,7 @@ class FloatingGratitudeLabel extends StatelessWidget {
       ),
     );
   }
+
   TextStyle _getAdaptiveTextStyle(BuildContext context, String text) {
     final charCount = text.length;
 

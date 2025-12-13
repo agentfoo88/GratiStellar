@@ -9,7 +9,9 @@
       "Bash(./gradlew clean:*)",
       "Bash(adb logcat:*)",
       "Bash(adb shell:*)",
-      "Bash(flutter clean:*)"
+      "Bash(flutter clean:*)",
+      "Bash(git add:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

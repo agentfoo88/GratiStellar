@@ -312,7 +312,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
           _buildShimmerText(
             l10n.appTitle,
             FontScaling.getAppTitle(context).copyWith(
-              fontSize: FontScaling.getAppTitle(context).fontSize! * 1.3,
+              fontSize: FontScaling.getAppTitle(context).fontSize! * 2,
               fontWeight: FontScaling.boldWeight,
             ),
           ),
@@ -376,7 +376,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
           // Mode-specific content
           if (widget.displayMode == SplashDisplayMode.about) ...[
             Text(
-              l10n.createdBy('AgentFoo88'),
+              l10n.createdBy('AgentFoo'),
               style: FontScaling.getCaption(context).copyWith(
                 color: Colors.white.withValues(alpha: 0.7),
               ),

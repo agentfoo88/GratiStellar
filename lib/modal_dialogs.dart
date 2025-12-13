@@ -255,23 +255,28 @@ class GratitudeDialogs {
   // HELPER WIDGETS
   // ========================================
 
-  static void showAddGratitude({
+  static Future<void> showAddGratitude({
     required BuildContext context,
     required TextEditingController controller,
     required Function([int? colorIndex, Color? customColor]) onAdd,
     required bool isAnimating,
-  }) {
+  }) async {
     if (isAnimating) return;
 
     const int maxCharacters = 300; // Set character limit
+
+    // Load default color preference
+    final defaultColor = await StorageService.getDefaultColor();
 
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha:0.7),
       builder: (BuildContext context) {
-        bool showColorPicker = false; // Collapsed by default
-        int? selectedColorIndex; // null = use random
-        Color? customColorPreview;
+        // Initialize based on default color preference
+        bool showColorPicker = defaultColor != null; // Auto-expand if default set
+        int? selectedColorIndex = defaultColor?.$1; // Preset index or null
+        Color? customColorPreview = defaultColor?.$2; // Custom color or null
+        bool setAsDefault = false; // Checkbox state
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -463,6 +468,29 @@ class GratitudeDialogs {
                               ),
                             ),
                           ),
+
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+
+                          // Set as default checkbox
+                          CheckboxListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            value: setAsDefault,
+                            onChanged: (value) {
+                              setState(() {
+                                setAsDefault = value ?? false;
+                              });
+                            },
+                            title: Text(
+                              AppLocalizations.of(context)!.setAsDefaultColor,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            activeColor: const Color(0xFFFFE135),
+                            checkColor: const Color(0xFF1A2238),
+                          ),
                         ],
                       ],
                     ),
@@ -485,7 +513,17 @@ class GratitudeDialogs {
                         ),
                         SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
                         ElevatedButton(
-                          onPressed: isOverLimit ? null : () {
+                          onPressed: isOverLimit ? null : () async {
+                            // Save default if checkbox is checked
+                            if (setAsDefault) {
+                              if (customColorPreview != null) {
+                                await StorageService.saveDefaultCustomColor(customColorPreview!);
+                              } else if (selectedColorIndex != null) {
+                                await StorageService.saveDefaultPresetColor(selectedColorIndex!);
+                              }
+                            }
+
+                            // Create the star
                             if (showColorPicker && selectedColorIndex != null) {
                               onAdd(selectedColorIndex, customColorPreview);
                             } else {

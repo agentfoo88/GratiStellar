@@ -1,14 +1,20 @@
-gradle-wrapper.jar
+# Build artifacts
 /.gradle
+/.cxx/
 /captures/
-/gradlew
-/gradlew.bat
-/local.properties
-GeneratedPluginRegistrant.java
-.cxx/
 
-# Remember to never publicly share your keystore.
-# See https://flutter.dev/to/reference-keystore
+# Local machine config
+/local.properties
+
+# Windows device file (DO NOT REMOVE)
+NUL
+CON
+PRN
+AUX
+COM*
+LPT*
+
+# Keystore files (never commit)
 key.properties
 **/*.keystore
 **/*.jks

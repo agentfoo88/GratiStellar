@@ -50,6 +50,7 @@ class FontScaling {
         : desktopHeadline;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: lightWeight,
       color: color ?? Colors.white,
@@ -69,6 +70,7 @@ class FontScaling {
         : desktopTitle;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
       color: color ?? Colors.white,
@@ -87,6 +89,7 @@ class FontScaling {
         : desktopTitle;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
       color: color ?? Colors.white,
@@ -105,6 +108,7 @@ class FontScaling {
         : desktopBody;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
       color: color ?? Colors.white,
@@ -123,6 +127,7 @@ class FontScaling {
         : desktopBody;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
       color: color ?? Colors.white,
@@ -141,6 +146,7 @@ class FontScaling {
         : desktopBody;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
       color: color ?? Colors.white,
@@ -159,6 +165,7 @@ class FontScaling {
         : desktopCaption;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
       color: color ?? Colors.white.withValues(alpha: 0.7),
@@ -177,6 +184,7 @@ class FontScaling {
         : desktopButton;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
       color: color ?? Colors.white,
@@ -195,6 +203,7 @@ class FontScaling {
         : desktopCaption;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
       color: color ?? Colors.white,
@@ -214,6 +223,7 @@ class FontScaling {
         : desktopHeadline;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: lightWeight,
       color: Color(0xFFFFE135),
@@ -233,6 +243,7 @@ class FontScaling {
         : desktopBody;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white.withValues(alpha: 0.8),
@@ -252,6 +263,7 @@ class FontScaling {
         : desktopTitle;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
       color: Colors.white.withValues(alpha: 0.9),
@@ -270,6 +282,7 @@ class FontScaling {
         : desktopCaption;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white.withValues(alpha: 0.6),
@@ -288,6 +301,7 @@ class FontScaling {
         : desktopTitle;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: lightWeight,
       color: Color(0xFFFFE135),
@@ -306,6 +320,7 @@ class FontScaling {
         : desktopBody;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white.withValues(alpha: 0.4),
@@ -324,6 +339,7 @@ class FontScaling {
         : desktopBody;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white,
@@ -342,6 +358,7 @@ class FontScaling {
         : desktopTitle;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: lightWeight,
       color: Colors.white.withValues(alpha: 0.6),
@@ -360,6 +377,7 @@ class FontScaling {
         : desktopBody;
 
     return TextStyle(
+      fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
       color: Colors.white.withValues(alpha: 0.4),

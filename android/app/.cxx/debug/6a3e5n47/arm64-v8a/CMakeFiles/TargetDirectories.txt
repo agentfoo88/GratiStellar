@@ -1,0 +1,2 @@
+C:/Users/evilm/StudioProjects/GratiStellar/android/app/.cxx/debug/6a3e5n47/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/evilm/StudioProjects/GratiStellar/android/app/.cxx/debug/6a3e5n47/arm64-v8a/CMakeFiles/rebuild_cache.dir

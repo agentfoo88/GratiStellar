@@ -37,6 +37,37 @@ service cloud.firestore {
              (!('lastViewedAt' in data) || data.lastViewedAt == null || data.lastViewedAt is int);
     }
 
+    function isValidFeedback() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'userId', 'type', 'message', 'appVersion', 'platform', 'createdAt']) &&
+             // ID validation: numeric string, 13-19 chars (timestamp + random)
+             data.id is string &&
+             data.id.size() >= 13 &&
+             data.id.size() <= 19 &&
+             data.id.matches('^[0-9]+$') &&
+             // userId must match authenticated user
+             data.userId == request.auth.uid &&
+             // Type validation
+             data.type is string &&
+             data.type in ['bug', 'feature', 'general'] &&
+             // Message validation
+             data.message is string &&
+             data.message.size() > 0 &&
+             data.message.size() <= 1000 &&
+             // Optional email fields (null or string)
+             (!('userEmail' in data) || data.userEmail == null || data.userEmail is string) &&
+             (!('displayName' in data) || data.displayName == null || data.displayName is string) &&
+             (!('contactEmail' in data) || data.contactEmail == null || (data.contactEmail is string && data.contactEmail.size() <= 100)) &&
+             // App version and platform
+             data.appVersion is string &&
+             data.appVersion.size() > 0 &&
+             data.platform is string &&
+             data.platform in ['iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Fuchsia'] &&
+             // Timestamp validation
+             data.createdAt is int &&
+             data.createdAt > 0;
+    }
+
     // User document (stores activeGalaxyId)
     match /users/{userId} {
       allow read: if isOwner(userId);
@@ -85,6 +116,22 @@ service cloud.firestore {
                          (resource.data.deleted == true &&
                           resource.data.deletedAt < request.time.toMillis() - (30 * 24 * 60 * 60 * 1000));
       }
+    }
+
+    // Feedback collection - write-only for authenticated users
+    match /feedback/{feedbackId} {
+      // No read access - feedback is for admin review only via Firebase Console
+      allow read: if false;
+
+      // Allow authenticated users to create feedback
+      allow create: if isAuthenticated() &&
+                       isValidFeedback() &&
+                       request.resource.data.id == feedbackId &&
+                       request.resource.data.userId == request.auth.uid;
+
+      // No updates or deletes allowed
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }

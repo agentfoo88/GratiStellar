@@ -48,7 +48,6 @@ class GratitudeScreen extends StatefulWidget {
 
 class _GratitudeScreenState extends State<GratitudeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _gratitudeController = TextEditingController();
   final AuthService _authService = AuthService();
@@ -86,7 +85,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       if (!mounted) return;
 
       // Update camera bounds for new star
-      _cameraController.updateBounds(provider.gratitudeStars, MediaQuery.of(context).size);
+      _cameraController.updateBounds(
+        provider.gratitudeStars,
+        MediaQuery.of(context).size,
+      );
 
       _animationManager.resetBirthAnimation();
 
@@ -146,10 +148,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           .toList();
 
       AppLogger.success('✅ Layers regenerated successfully');
-
     } catch (e) {
       AppLogger.error('⚠️ Layer regeneration failed: $e');
-
     } finally {
       if (mounted) {
         setState(() {
@@ -170,11 +170,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // Initialize AnimationManager synchronously to avoid race condition
     // where build() tries to access _starController before initialization completes
     _animationManager = AnimationManager();
-    _animationManager.initialize(this, _completeBirthAnimation, reduceMotion: false);
+    _animationManager.initialize(
+      this,
+      _completeBirthAnimation,
+      reduceMotion: false,
+    );
 
     // Generate static universe based on full screen size
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
     final screenSize = view.physicalSize / view.devicePixelRatio;
+
+    // Lock to portrait mode on small screens (tablets and desktops can rotate)
+    _setOrientationForScreenSize(screenSize);
 
     // Log screen size for crash reports
     final crashlytics = CrashlyticsService();
@@ -190,12 +197,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // Generate all Van Gogh stars - needed for camera bounds calculation
     _allVanGoghStars = VanGoghStarService.generateVanGoghStars(screenSize);
     final staticCount = (_allVanGoghStars.length * 0.9).round(); // 90% static
-    _animatedVanGoghStars = _allVanGoghStars.skip(staticCount).toList(); // Last 10% animate
+    _animatedVanGoghStars = _allVanGoghStars
+        .skip(staticCount)
+        .toList(); // Last 10% animate
 
-    AppLogger.info('📐 Screen: ${screenSize.width.round()}x${screenSize.height.round()}');
-    AppLogger.info('   🎨 Using cached layers (background, $staticCount Van Gogh stars)');
-    AppLogger.info('   ✨ Animating: ${_animatedVanGoghStars.length} Van Gogh stars');
-    AppLogger.info('   📍 Camera bounds: ${_allVanGoghStars.length} Van Gogh stars (for reference only)');
+    AppLogger.info(
+      '📐 Screen: ${screenSize.width.round()}x${screenSize.height.round()}',
+    );
+    AppLogger.info(
+      '   🎨 Using cached layers (background, $staticCount Van Gogh stars)',
+    );
+    AppLogger.info(
+      '   ✨ Animating: ${_animatedVanGoghStars.length} Van Gogh stars',
+    );
+    AppLogger.info(
+      '   📍 Camera bounds: ${_allVanGoghStars.length} Van Gogh stars (for reference only)',
+    );
 
     try {
       _initializePrecomputedElements();
@@ -216,6 +233,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
     final currentSize = view.physicalSize / view.devicePixelRatio;
 
+    // Update orientation lock based on new screen size
+    _setOrientationForScreenSize(currentSize);
+
     // First time seeing the size - just store it, don't regenerate
     if (_lastKnownSize == null) {
       _lastKnownSize = currentSize;
@@ -233,7 +253,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     // Don't regenerate if not allowed yet (still initializing)
     if (!_allowRegeneration) {
-      AppLogger.start('📐 Size changed but regeneration blocked (still initializing)');
+      AppLogger.start(
+        '📐 Size changed but regeneration blocked (still initializing)',
+      );
       _lastKnownSize = currentSize;
       return;
     }
@@ -249,7 +271,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     // Don't regenerate if cache isn't ready yet
     if (!_layerCacheInitialized) {
-      AppLogger.warning('📐 Size changed but cache not ready, skipping regeneration');
+      AppLogger.warning(
+        '📐 Size changed but cache not ready, skipping regeneration',
+      );
       _lastKnownSize = currentSize;
       return;
     }
@@ -277,9 +301,41 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
+  void _setOrientationForScreenSize(Size screenSize) {
+    // Lock to portrait on phones (width < 600), allow rotation on tablets/desktop
+    // Using the shorter dimension to handle both portrait and landscape
+    final minDimension = screenSize.width < screenSize.height
+        ? screenSize.width
+        : screenSize.height;
+
+    if (minDimension < 600) {
+      // Phone - lock to portrait
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+      AppLogger.info(
+        '🔒 Locked to portrait mode (screen width: ${screenSize.width})',
+      );
+    } else {
+      // Tablet/Desktop - allow all orientations
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      AppLogger.info(
+        '🔓 All orientations allowed (screen width: ${screenSize.width})',
+      );
+    }
+  }
+
   Future<void> _loadNebulaAsset() async {
     try {
-      final ByteData data = await rootBundle.load('assets/textures/background-01.png');
+      final ByteData data = await rootBundle.load(
+        'assets/textures/background-01.png',
+      );
       final Uint8List bytes = data.buffer.asUint8List();
       final ui.Codec codec = await ui.instantiateImageCodec(bytes);
       final ui.FrameInfo frameInfo = await codec.getNextFrame();
@@ -302,7 +358,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     AppLogger.info('✨ Generated ${_glowPatterns.length} glow patterns');
 
     _backgroundGradients = BackgroundService.generateBackgroundGradients();
-    AppLogger.info('🎨 Generated ${_backgroundGradients.length} background gradients');
+    AppLogger.info(
+      '🎨 Generated ${_backgroundGradients.length} background gradients',
+    );
   }
 
   Future<void> _initializeLayerCache(Size screenSize) async {
@@ -321,7 +379,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       crashlytics.log('Layer cache ready');
       AppLogger.success('✅ Layer cache initialized');
     } catch (e, stack) {
-      crashlytics.recordError(e, stack, reason: 'Layer cache initialization failed');
+      crashlytics.recordError(
+        e,
+        stack,
+        reason: 'Layer cache initialization failed',
+      );
       AppLogger.error('⚠️ Layer cache failed: $e');
       // App continues without cache (will be slower but still works)
     }
@@ -357,6 +419,15 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _resizeDebounceTimer?.cancel();
     _cameraController.dispose();
     _animationManager.dispose();
+
+    // Reset orientation to allow all when leaving this screen
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+
     super.dispose();
   }
 
@@ -368,11 +439,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
       case AppLifecycleState.detached:
-      // App going to background
+        // App going to background
         if (!_isAppInBackground) {
           _isAppInBackground = true;
           _animationManager.pauseAll();
-          
+
           // CRITICAL: Force immediate sync when app goes to background
           // This prevents data loss if app is killed by system
           final provider = context.read<GratitudeProvider>();
@@ -386,7 +457,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         break;
 
       case AppLifecycleState.resumed:
-      // App coming back to foreground
+        // App coming back to foreground
         if (_isAppInBackground) {
           _isAppInBackground = false;
           _animationManager.resumeAll();
@@ -399,7 +470,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         break;
 
       case AppLifecycleState.hidden:
-      // Do nothing for now
+        // Do nothing for now
         break;
     }
   }
@@ -410,9 +481,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // Cancel modes via provider
     provider.cancelModes();
 
-    final trimmedText = _gratitudeController.text
-        .trim()
-        .replaceAll(RegExp(r'\s+'), ' ');
+    final trimmedText = _gratitudeController.text.trim().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
+    );
 
     if (trimmedText.isEmpty) return;
 
@@ -440,7 +512,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     final targetPosition = Offset(
       screenSize.width / 2 - starWorldX * _cameraController.scale,
-      screenSize.height * 0.4 - starWorldY * _cameraController.scale, // 40% from top
+      screenSize.height * 0.4 -
+          starWorldY * _cameraController.scale, // 40% from top
     );
 
     _cameraController.animateTo(
@@ -454,13 +527,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     await Future.delayed(Duration(milliseconds: 400));
 
     final startScreen = Offset(screenSize.width / 2, screenSize.height);
-    final endWorld = Offset(newStar.worldX * screenSize.width, newStar.worldY * screenSize.height);
+    final endWorld = Offset(
+      newStar.worldX * screenSize.width,
+      newStar.worldY * screenSize.height,
+    );
     final endScreen = _cameraController.worldToScreen(endWorld);
 
     final distance = (endScreen - startScreen).distance;
     final duration = (distance / StarBirthConfig.travelBaseSpeed * 1000)
-        .clamp(StarBirthConfig.travelDurationMin.toDouble(),
-        StarBirthConfig.travelDurationMax.toDouble())
+        .clamp(
+          StarBirthConfig.travelDurationMin.toDouble(),
+          StarBirthConfig.travelDurationMax.toDouble(),
+        )
         .toInt();
 
     _animationManager.startBirthAnimation(Duration(milliseconds: duration));
@@ -468,11 +546,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   /// Shows the edit dialog for a star (delegates to modal_dialogs.dart)
   void _showStarDetails(
-      GratitudeStar star, {
-        VoidCallback? onJumpToStar,
-        VoidCallback? onAfterSave,
-        VoidCallback? onAfterDelete,
-      }) {
+    GratitudeStar star, {
+    VoidCallback? onJumpToStar,
+    VoidCallback? onAfterSave,
+    VoidCallback? onAfterDelete,
+  }) {
     final provider = context.read<GratitudeProvider>();
 
     GratitudeDialogs.showEditStar(
@@ -492,9 +570,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     HapticFeedback.mediumImpact();
     final l10n = AppLocalizations.of(context)!;
     final shareText = l10n.shareTemplate(_userName, star.text);
-    SharePlus.instance.share(
-        ShareParams(text: shareText)
-    );
+    SharePlus.instance.share(ShareParams(text: shareText));
   }
 
   void _saveStarEdits(GratitudeStar updatedStar) async {
@@ -528,7 +604,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   Future<void> _navigateToMindfulnessStar(GratitudeStar star) async {
-    const double mindfulnessZoom = 2.0;  // Define target zoom as constant
+    const double mindfulnessZoom = 2.0; // Define target zoom as constant
 
     final screenSize = MediaQuery.of(context).size;
 
@@ -537,7 +613,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final starWorldY = star.worldY * screenSize.height;
     final starWorldPos = Offset(starWorldX, starWorldY);
 
-    AppLogger.info('🧘 Navigating to mindfulness star at world: ($starWorldX, $starWorldY)');
+    AppLogger.info(
+      '🧘 Navigating to mindfulness star at world: ($starWorldX, $starWorldY)',
+    );
 
     // Calculate where we want the star to appear on screen (40% from top, centered horizontally)
     final desiredScreenPos = Offset(
@@ -575,7 +653,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
     _cameraController.animateTo(
       targetPosition: targetPosition,
-      targetScale: mindfulnessZoom,  // Use same constant for consistency
+      targetScale: mindfulnessZoom, // Use same constant for consistency
       duration: Duration(milliseconds: 2000), // 2 seconds - slow and graceful
       curve: Curves.easeInOutCubic,
       vsync: this,
@@ -596,7 +674,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.mindfulnessNoStarsMessage, style: FontScaling.getBodyMedium(context)),
+          content: Text(
+            l10n.mindfulnessNoStarsMessage,
+            style: FontScaling.getBodyMedium(context),
+          ),
           backgroundColor: Color(0xFF1A2238),
           duration: Duration(seconds: 3),
         ),
@@ -711,26 +792,26 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha:0.3),
+          color: Colors.black.withValues(alpha: 0.3),
           shape: BoxShape.circle,
         ),
         child: IconButton(
           icon: syncStatus.status == SyncStatus.syncing
               ? SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-            ),
-          )
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                  ),
+                )
               : Icon(icon, color: color, size: 20),
           tooltip: tooltip,
           onPressed: syncStatus.status == SyncStatus.error
               ? () {
-            final provider = context.read<GratitudeProvider>();
-            provider.forceSync();
-          }
+                  final provider = context.read<GratitudeProvider>();
+                  provider.forceSync();
+                }
               : null,
         ),
       ),
@@ -780,7 +861,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             children: [
               // Account Name and Icon
               Container(
-                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 16)),
+                padding: EdgeInsets.all(
+                  FontScaling.getResponsiveSpacing(context, 16),
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
@@ -797,7 +880,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         color: Color(0xFFFFE135),
                       ),
                     ),
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+                    SizedBox(
+                      height: FontScaling.getResponsiveSpacing(context, 12),
+                    ),
 
                     // Display name field
                     TextField(
@@ -832,7 +917,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       ),
                     ),
 
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+                    SizedBox(
+                      height: FontScaling.getResponsiveSpacing(context, 12),
+                    ),
 
                     // Update button
                     SizedBox(
@@ -840,7 +927,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       child: ElevatedButton(
                         onPressed: () async {
                           final newName = displayNameController.text.trim();
-                          if (newName.isNotEmpty && newName != _authService.currentUser?.displayName) {
+                          if (newName.isNotEmpty &&
+                              newName !=
+                                  _authService.currentUser?.displayName) {
                             await _authService.updateDisplayName(newName);
 
                             if (context.mounted) {
@@ -848,14 +937,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                                 SnackBar(
                                   content: Row(
                                     children: [
-                                      Icon(Icons.check_circle, color: Colors.white),
+                                      Icon(
+                                        Icons.check_circle,
+                                        color: Colors.white,
+                                      ),
                                       SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
                                           l10n.displayNameUpdated,
-                                          style: FontScaling.getBodySmall(context).copyWith(
-                                            color: Colors.white,
-                                          ),
+                                          style: FontScaling.getBodySmall(
+                                            context,
+                                          ).copyWith(color: Colors.white),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
@@ -878,7 +971,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFFFFE135),
                           padding: EdgeInsets.symmetric(
-                            vertical: FontScaling.getResponsiveSpacing(context, 12),
+                            vertical: FontScaling.getResponsiveSpacing(
+                              context,
+                              12,
+                            ),
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
@@ -886,9 +982,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         ),
                         child: Text(
                           l10n.updateButton,
-                          style: FontScaling.getButtonText(context).copyWith(
-                            color: Color(0xFF1A2238),
-                          ),
+                          style: FontScaling.getButtonText(
+                            context,
+                          ).copyWith(color: Color(0xFF1A2238)),
                         ),
                       ),
                     ),
@@ -900,7 +996,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
               // Email (read-only)
               Container(
-                padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 12)),
+                padding: EdgeInsets.all(
+                  FontScaling.getResponsiveSpacing(context, 12),
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
@@ -916,9 +1014,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     Expanded(
                       child: Text(
                         _authService.currentUser?.email ?? '',
-                        style: FontScaling.getBodySmall(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
+                        style: FontScaling.getBodySmall(
+                          context,
+                        ).copyWith(color: Colors.white.withValues(alpha: 0.7)),
                       ),
                     ),
                   ],
@@ -937,9 +1035,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               Navigator.pop(context); // Close account dialog
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => SignInScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => SignInScreen()),
               );
             },
           ),
@@ -982,8 +1078,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         builder: (context, setState) => Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
-            constraints: BoxConstraints(maxWidth: 500, minWidth: 400),
-            padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
+            constraints: BoxConstraints(maxWidth: 500),
+            padding: EdgeInsets.all(
+              FontScaling.getResponsiveSpacing(context, 24),
+            ),
             decoration: BoxDecoration(
               color: Color(0xFF1A2238).withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(24),
@@ -1009,21 +1107,25 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     // Title
                     Text(
                       l10n.feedbackDialogTitle,
-                      style: FontScaling.getModalTitle(context).copyWith(
-                        color: Color(0xFFFFE135),
-                      ),
+                      style: FontScaling.getModalTitle(
+                        context,
+                      ).copyWith(color: Color(0xFFFFE135)),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 20)),
+                    SizedBox(
+                      height: FontScaling.getResponsiveSpacing(context, 20),
+                    ),
 
                     // Type dropdown
                     Text(
                       l10n.feedbackTypeLabel,
-                      style: FontScaling.getBodyMedium(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
+                      style: FontScaling.getBodyMedium(
+                        context,
+                      ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
                     ),
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+                    SizedBox(
+                      height: FontScaling.getResponsiveSpacing(context, 8),
+                    ),
                     DropdownButtonFormField<String>(
                       initialValue: selectedType,
                       dropdownColor: Color(0xFF1A2238),
@@ -1056,21 +1158,21 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           value: 'bug',
                           child: Text(
                             l10n.feedbackTypeBug,
-                            style: FontScaling.getBodyMedium(context),
+                            style: FontScaling.getInputText(context),
                           ),
                         ),
                         DropdownMenuItem(
                           value: 'feature',
                           child: Text(
                             l10n.feedbackTypeFeature,
-                            style: FontScaling.getBodyMedium(context),
+                            style: FontScaling.getInputText(context),
                           ),
                         ),
                         DropdownMenuItem(
                           value: 'general',
                           child: Text(
                             l10n.feedbackTypeGeneral,
-                            style: FontScaling.getBodyMedium(context),
+                            style: FontScaling.getInputText(context),
                           ),
                         ),
                       ],
@@ -1078,24 +1180,28 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         setState(() => selectedType = value!);
                       },
                     ),
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                    SizedBox(
+                      height: FontScaling.getResponsiveSpacing(context, 16),
+                    ),
 
                     // Message field
                     Text(
                       l10n.feedbackMessageLabel,
-                      style: FontScaling.getBodyMedium(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
+                      style: FontScaling.getBodyMedium(
+                        context,
+                      ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
                     ),
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+                    SizedBox(
+                      height: FontScaling.getResponsiveSpacing(context, 8),
+                    ),
                     TextFormField(
                       textCapitalization: TextCapitalization.sentences,
                       style: FontScaling.getInputText(context),
                       decoration: InputDecoration(
                         hintText: l10n.feedbackMessageHint,
-                        hintStyle: FontScaling.getInputText(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
+                        hintStyle: FontScaling.getInputText(
+                          context,
+                        ).copyWith(color: Colors.white.withValues(alpha: 0.3)),
                         filled: true,
                         fillColor: Colors.white.withValues(alpha: 0.05),
                         border: OutlineInputBorder(
@@ -1125,14 +1231,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         ),
                         focusedErrorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.red,
-                            width: 2,
-                          ),
+                          borderSide: BorderSide(color: Colors.red, width: 2),
                         ),
-                        counterStyle: FontScaling.getCaption(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.5),
-                        ),
+                        counterStyle: FontScaling.getCaption(
+                          context,
+                        ).copyWith(color: Colors.white.withValues(alpha: 0.5)),
                       ),
                       maxLines: 5,
                       maxLength: 1000,
@@ -1144,26 +1247,35 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       },
                       onChanged: (value) => message = value,
                     ),
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                    SizedBox(
+                      height: FontScaling.getResponsiveSpacing(context, 16),
+                    ),
 
                     // Optional email (only show if anonymous)
                     if (_authService.currentUser?.isAnonymous ?? false) ...[
                       Text(
                         l10n.feedbackEmailLabel,
-                        style: FontScaling.getBodyMedium(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+                        style: FontScaling.getBodyMedium(
+                          context,
+                        ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
                       ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+                      SizedBox(
+                        height: FontScaling.getResponsiveSpacing(context, 8),
+                      ),
                       TextFormField(
-                        textCapitalization: TextCapitalization.sentences,
+                        textCapitalization: TextCapitalization.none,
                         style: FontScaling.getInputText(context),
                         keyboardType: TextInputType.emailAddress,
+                        maxLength: 100,
                         decoration: InputDecoration(
                           hintText: l10n.feedbackEmailHint,
                           hintStyle: FontScaling.getInputText(context).copyWith(
                             color: Colors.white.withValues(alpha: 0.3),
                           ),
+                          counterStyle: FontScaling.getCaption(context)
+                              .copyWith(
+                                color: Colors.white.withValues(alpha: 0.5),
+                              ),
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.05),
                           border: OutlineInputBorder(
@@ -1193,15 +1305,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           ),
                           focusedErrorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Colors.red,
-                              width: 2,
-                            ),
+                            borderSide: BorderSide(color: Colors.red, width: 2),
                           ),
                         ),
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
-                            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                            final emailRegex = RegExp(
+                              r'^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$',
+                            );
                             if (!emailRegex.hasMatch(value)) {
                               return l10n.feedbackEmailInvalid;
                             }
@@ -1210,7 +1321,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         },
                         onChanged: (value) => contactEmail = value,
                       ),
-                      SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                      SizedBox(
+                        height: FontScaling.getResponsiveSpacing(context, 16),
+                      ),
                     ],
 
                     // Buttons
@@ -1221,7 +1334,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           onPressed: () => Navigator.pop(context),
                           child: Text(
                             l10n.cancelButton,
-                            style: FontScaling.getButtonText(context).copyWith(
+                            style: FontScaling.getInputText(context).copyWith(
                               color: Colors.white.withValues(alpha: 0.6),
                             ),
                           ),
@@ -1232,23 +1345,36 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                               Navigator.pop(context);
 
                               final feedbackService = FeedbackService();
-                              final scaffoldMessenger = ScaffoldMessenger.of(context);
-                              final textStyle = FontScaling.getBodyMedium(context);
-
-                              final success = await feedbackService.submitFeedback(
-                                type: selectedType,
-                                message: message,
-                                contactEmail: contactEmail.isNotEmpty ? contactEmail : null,
+                              final scaffoldMessenger = ScaffoldMessenger.of(
+                                context,
+                              );
+                              final textStyle = FontScaling.getBodyMedium(
+                                context,
                               );
 
+                              final success = await feedbackService
+                                  .submitFeedback(
+                                    type: selectedType,
+                                    message: message,
+                                    contactEmail: contactEmail.isNotEmpty
+                                        ? contactEmail
+                                        : null,
+                                  );
+
                               if (mounted) {
-                                scaffoldMessenger.showSnackBar(  // ← Use captured reference
+                                scaffoldMessenger.showSnackBar(
+                                  // ← Use captured reference
                                   SnackBar(
                                     content: Text(
-                                        success ? l10n.feedbackSuccess : l10n.feedbackError,
-                                        style: textStyle,
+                                      success
+                                          ? l10n.feedbackSuccess
+                                          : l10n.feedbackError,
+                                      style: textStyle,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    backgroundColor: success ? Colors.green : Colors.red,
+                                    backgroundColor: success
+                                        ? Colors.green
+                                        : Colors.red,
                                   ),
                                 );
                               }
@@ -1258,8 +1384,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                             backgroundColor: Color(0xFFFFE135),
                             foregroundColor: Color(0xFF1A2238),
                             padding: EdgeInsets.symmetric(
-                              horizontal: FontScaling.getResponsiveSpacing(context, 24),
-                              vertical: FontScaling.getResponsiveSpacing(context, 12),
+                              horizontal: FontScaling.getResponsiveSpacing(
+                                context,
+                                24,
+                              ),
+                              vertical: FontScaling.getResponsiveSpacing(
+                                context,
+                                12,
+                              ),
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
@@ -1267,9 +1399,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           ),
                           child: Text(
                             l10n.feedbackSubmit,
-                            style: FontScaling.getButtonText(context).copyWith(
-                              color: Color(0xFF1A2238),
-                            ),
+                            style: FontScaling.getButtonText(
+                              context,
+                            ).copyWith(color: Color(0xFF1A2238)),
                           ),
                         ),
                       ],
@@ -1299,7 +1431,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final activeMindfulnessStar = provider.activeMindfulnessStar;
     final mindfulnessInterval = provider.mindfulnessInterval;
 
-    AppLogger.data('🏗️ Building GratitudeScreen, isLoading: $isLoading, stars: ${gratitudeStars.length}');
+    AppLogger.data(
+      '🏗️ Building GratitudeScreen, isLoading: $isLoading, stars: ${gratitudeStars.length}',
+    );
 
     // Navigate to mindfulness star when it changes (with deduplication)
     if (mindfulnessMode && activeMindfulnessStar != null) {
@@ -1318,7 +1452,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     if (!isLoading && gratitudeStars.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _cameraController.updateBounds(gratitudeStars, MediaQuery.of(context).size);
+          _cameraController.updateBounds(
+            gratitudeStars,
+            MediaQuery.of(context).size,
+          );
         }
       });
     }
@@ -1330,9 +1467,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
 
     return MediaQuery(
-      data: MediaQuery.of(context).copyWith(
-        textScaler: TextScaler.linear(_fontScale),
-      ),
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(_fontScale)),
       child: Scaffold(
         key: _scaffoldKey,
         drawer: AppDrawerWidget(
@@ -1396,7 +1533,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       }
 
                       final now = DateTime.now();
-                      if (_lastScrollTime != null && now.difference(_lastScrollTime!).inMilliseconds < 16) {
+                      if (_lastScrollTime != null &&
+                          now.difference(_lastScrollTime!).inMilliseconds <
+                              16) {
                         return;
                       }
                       _lastScrollTime = now;
@@ -1404,7 +1543,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       final scrollEvent = pointerSignal;
                       final delta = scrollEvent.scrollDelta.dy;
                       final screenSize = MediaQuery.of(context).size;
-                      final screenCenter = Offset(screenSize.width / 2, screenSize.height / 2);
+                      final screenCenter = Offset(
+                        screenSize.width / 2,
+                        screenSize.height / 2,
+                      );
 
                       if (delta > 0) {
                         _cameraController.zoomOut(1.1, screenCenter);
@@ -1415,49 +1557,64 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   },
                   child: GestureDetector(
                     behavior: HitTestBehavior.translucent,
-                    onScaleStart: isAnimating ? null : (details) {
-                      final provider = context.read<GratitudeProvider>();
-                      if (provider.mindfulnessMode) {
-                        provider.stopMindfulness();
-                      }
-                      _isMultiFingerGesture = details.pointerCount > 1;
-                    },
-                    onScaleUpdate: isAnimating ? null : (details) {
-                      final provider = context.read<GratitudeProvider>();
-                      if (provider.mindfulnessMode) {
-                        provider.stopMindfulness();
-                      }
+                    onScaleStart: isAnimating
+                        ? null
+                        : (details) {
+                            final provider = context.read<GratitudeProvider>();
+                            if (provider.mindfulnessMode) {
+                              provider.stopMindfulness();
+                            }
+                            _isMultiFingerGesture = details.pointerCount > 1;
+                          },
+                    onScaleUpdate: isAnimating
+                        ? null
+                        : (details) {
+                            final provider = context.read<GratitudeProvider>();
+                            if (provider.mindfulnessMode) {
+                              provider.stopMindfulness();
+                            }
 
-                      if (details.scale != 1.0) {
-                        final scaleChange = (details.scale - 1.0).abs();
-                        if (scaleChange > 0.01) {
-                          final dampingFactor = 0.025;
-                          final dampenedScale = 1.0 + ((details.scale - 1.0) * dampingFactor);
-                          final newScale = _cameraController.scale * dampenedScale;
-                          _cameraController.updateScale(newScale, details.focalPoint);
-                        }
-                      }
+                            if (details.scale != 1.0) {
+                              final scaleChange = (details.scale - 1.0).abs();
+                              if (scaleChange > 0.01) {
+                                final dampingFactor = 0.025;
+                                final dampenedScale =
+                                    1.0 +
+                                    ((details.scale - 1.0) * dampingFactor);
+                                final newScale =
+                                    _cameraController.scale * dampenedScale;
+                                _cameraController.updateScale(
+                                  newScale,
+                                  details.focalPoint,
+                                );
+                              }
+                            }
 
-                      if (details.scale == 1.0) {
-                        _cameraController.updatePosition(details.focalPointDelta);
-                      }
-                    },
-                    onScaleEnd: isAnimating ? null : (details) {
-                      _isMultiFingerGesture = false;
-                    },
-                    onTapDown: isAnimating ? null : (details) {
-                      if (!_isMultiFingerGesture) {
-                        _handleStarTap(details);
-                      }
-                    },
+                            if (details.scale == 1.0) {
+                              _cameraController.updatePosition(
+                                details.focalPointDelta,
+                              );
+                            }
+                          },
+                    onScaleEnd: isAnimating
+                        ? null
+                        : (details) {
+                            _isMultiFingerGesture = false;
+                          },
+                    onTapDown: isAnimating
+                        ? null
+                        : (details) {
+                            if (!_isMultiFingerGesture) {
+                              _handleStarTap(details);
+                            }
+                          },
                     child: Container(color: Colors.transparent),
                   ),
                 ),
               ),
 
               // Branding overlay
-              if (_showBranding)
-                BrandingOverlayWidget(onSkip: _skipSplash),
+              if (_showBranding) BrandingOverlayWidget(onSkip: _skipSplash),
 
               // Stats card
               if (!_showBranding)
@@ -1465,9 +1622,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   top: MediaQuery.of(context).padding.top + 16,
                   left: 0,
                   right: 0,
-                  child: Center(
-                    child: StatsCardWidget(stars: gratitudeStars),
-                  ),
+                  child: Center(child: StatsCardWidget(stars: gratitudeStars)),
                 ),
 
               // Hamburger menu button (top-left)
@@ -1507,14 +1662,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       onToggleShowAll: _toggleShowAll,
                       onToggleMindfulness: _toggleMindfulness,
                       onAddStar: _showAddGratitudeModal,
-                      onMindfulnessIntervalChanged: _onMindfulnessIntervalChanged,
+                      onMindfulnessIntervalChanged:
+                          _onMindfulnessIntervalChanged,
                     ),
                   ),
                 ),
 
               // Empty state message
-              if (!_showBranding && gratitudeStars.isEmpty)
-                EmptyStateWidget(),
+              if (!_showBranding && gratitudeStars.isEmpty) EmptyStateWidget(),
 
               // Camera controls overlay1
               if (!_showBranding)
@@ -1535,14 +1690,16 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFFFFE135),
+                            ),
                           ),
                           SizedBox(height: 16),
                           Text(
                             l10n.adjustingStarFieldMessage,
-                            style: FontScaling.getBodyMedium(context).copyWith(
-                              color: Colors.white,
-                            ),
+                            style: FontScaling.getBodyMedium(
+                              context,
+                            ).copyWith(color: Colors.white),
                           ),
                         ],
                       ),
@@ -1556,3 +1713,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 }
+
+
+
+

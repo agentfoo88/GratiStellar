@@ -65,7 +65,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   bool _isAppInBackground = false;
   bool _isMultiFingerGesture = false;
   DateTime? _lastScrollTime;
-  final String _userName = "A friend";
   Color? _previewColor;
   GratitudeStar? _lastMindfulnessStar;
   Timer? _resizeDebounceTimer;
@@ -569,7 +568,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   void _shareStar(GratitudeStar star) {
     HapticFeedback.mediumImpact();
     final l10n = AppLocalizations.of(context)!;
-    final shareText = l10n.shareTemplate(_userName, star.text);
+    // Use user's display name if available, otherwise fallback to localized default
+    final userName = _authService.currentUser?.displayName ?? l10n.defaultUserNameFallback;
+    final shareText = l10n.shareTemplate(userName, star.text);
     SharePlus.instance.share(ShareParams(text: shareText));
   }
 

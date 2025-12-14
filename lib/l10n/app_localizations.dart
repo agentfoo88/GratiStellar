@@ -1858,6 +1858,12 @@ abstract class AppLocalizations {
   /// **'Remind me at {time}'**
   String reminderTimeDisplay(String time);
 
+  /// Fallback name used when sharing gratitude if user name is not available
+  ///
+  /// In en, this message translates to:
+  /// **'A friend'**
+  String get defaultUserNameFallback;
+
   /// Age verification question for COPPA compliance
   ///
   /// In en, this message translates to:

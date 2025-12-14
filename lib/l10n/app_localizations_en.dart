@@ -984,6 +984,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get defaultUserNameFallback => 'A friend';
+
+  @override
   String get ageGateQuestion => 'Are you 13 years or older?';
 
   @override

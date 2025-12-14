@@ -20,7 +20,9 @@ class ErrorMapper {
   /// [exception] - The caught exception
   /// [stackTrace] - Optional stack trace
   /// [context] - Error context for categorization
-  /// [l10n] - Localization object for user messages (optional, uses fallback if null)
+  /// [l10n] - Localization object for user messages
+  ///         **IMPORTANT:** Always pass l10n when available (from context).
+  ///         Fallback English strings are emergency-only and should rarely be used.
   static AppError mapException(
     dynamic exception,
     StackTrace? stackTrace,
@@ -189,7 +191,9 @@ class ErrorMapper {
         break;
 
       case 'not-found':
-        userMessage = 'Requested data not found.';
+        // Note: This error code doesn't have a localized string yet
+        // Consider adding errorDataNotFound to app_en.arb
+        userMessage = l10n?.errorGeneric ?? 'Requested data not found.';
         severity = ErrorSeverity.error;
         isRetriable = false;
         break;
@@ -344,7 +348,8 @@ class ErrorMapper {
 
     // Try to provide more context for common error strings
     if (technicalMessage.contains('No user signed in')) {
-      userMessage = 'Session expired. Please restart the app.';
+      userMessage = l10n?.errorNoUserSignedIn ?? 
+          'Session expired. Please restart the app.';
       finalContext = ErrorContext.auth;
     } else if (technicalMessage.toLowerCase().contains('network')) {
       userMessage = l10n?.errorNetworkFailed ??

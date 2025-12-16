@@ -11,14 +11,18 @@ import 'core/utils/app_logger.dart';
 class CameraController extends ChangeNotifier {
   // Camera state
   Offset _position = Offset.zero;
-  Offset _parallaxPosition =
-      Offset.zero; // Clean position for parallax layersl,..5r4t4
+  Offset _parallaxPosition = Offset.zero; // Clean position for parallax layers
   double _scale = 1.0;
   double _maxPanDistance = 3000.0;
 
   // Stored for automatic bounds updates
   List<GratitudeStar> _stars = [];
   Size _screenSize = Size.zero;
+
+  // Throttling for bounds updates during zoom (prevent crashes on low-end devices)
+  DateTime? _lastBoundsUpdateTime;
+  static const _boundsUpdateThrottleMs =
+      500; // Only update bounds every 500ms during zoom
 
   // Constraints
   static const double minScale = 0.4;
@@ -41,11 +45,18 @@ class CameraController extends ChangeNotifier {
   AnimationController? _animationController;
   Animation<Offset>? _positionAnimation;
   Animation<double>? _scaleAnimation;
+  TickerProvider? _vsync; // Store vsync for button-based zoom animations
 
   // Getters
   Offset get position => _position;
   double get scale => _scale;
   int get zoomPercentage => (_scale * 100).round();
+
+  /// Set vsync provider for button-based zoom animations
+  /// Should be called when controller is initialized with a TickerProvider
+  void setVsync(TickerProvider vsync) {
+    _vsync = vsync;
+  }
 
   // Camera transform matrix
   Matrix4 get transform {
@@ -53,6 +64,13 @@ class CameraController extends ChangeNotifier {
       ..translateByVector3(Vector3(_position.dx, _position.dy, 0.0))
       ..setDiagonal(Vector4(_scale, _scale, 1.0, 1.0));
   }
+
+  // Transform caching to avoid redundant calculations
+  Matrix4? _cachedNebulaTransform;
+  Matrix4? _cachedVanGoghTransform;
+  double _cachedTransformScale = -1.0;
+  Offset _cachedTransformPosition = Offset.zero;
+  Size? _cachedScreenSize;
 
   // Layer-specific transforms with configurable parallax
   Matrix4 getBackgroundTransform() {
@@ -68,6 +86,14 @@ class CameraController extends ChangeNotifier {
   }
 
   Matrix4 getNebulaTransform(Size screenSize) {
+    // Cache check: only recalculate if scale, position, or screen size changed
+    if (_cachedNebulaTransform != null &&
+        _cachedTransformScale == _scale &&
+        _cachedTransformPosition == _parallaxPosition &&
+        _cachedScreenSize == screenSize) {
+      return _cachedNebulaTransform!;
+    }
+
     final minimalZoom = 1.0 + ((_scale - 1.0) * nebulaZoom);
     final transform = Matrix4.identity();
     transform.translateByVector3(
@@ -84,10 +110,25 @@ class CameraController extends ChangeNotifier {
         0.0,
       ),
     );
+
+    // Update cache
+    _cachedNebulaTransform = transform;
+    _cachedTransformScale = _scale;
+    _cachedTransformPosition = _parallaxPosition;
+    _cachedScreenSize = screenSize;
+
     return transform;
   }
 
   Matrix4 getVanGoghTransform(Size screenSize) {
+    // Cache check: only recalculate if scale, position, or screen size changed
+    if (_cachedVanGoghTransform != null &&
+        _cachedTransformScale == _scale &&
+        _cachedTransformPosition == _parallaxPosition &&
+        _cachedScreenSize == screenSize) {
+      return _cachedVanGoghTransform!;
+    }
+
     final minimalZoom = 1.0 + ((_scale - 1.0) * vanGoghZoom);
     final transform = Matrix4.identity();
     transform.translateByVector3(
@@ -104,6 +145,13 @@ class CameraController extends ChangeNotifier {
         0.0,
       ),
     );
+
+    // Update cache
+    _cachedVanGoghTransform = transform;
+    _cachedTransformScale = _scale;
+    _cachedTransformPosition = _parallaxPosition;
+    _cachedScreenSize = screenSize;
+
     return transform;
   }
 
@@ -137,15 +185,15 @@ class CameraController extends ChangeNotifier {
     }
 
     // Find furthest star from origin in screen pixels
-    double maxDistance = 0.0;
+    // Optimized: use squared distance, only sqrt once at the end
+    double maxDistanceSquared = 0.0;
     for (final star in stars) {
       final starWorldX = star.worldX * screenSize.width;
       final starWorldY = star.worldY * screenSize.height;
-      final distance = math.sqrt(
-        starWorldX * starWorldX + starWorldY * starWorldY,
-      );
-      maxDistance = math.max(maxDistance, distance);
+      final distanceSquared = starWorldX * starWorldX + starWorldY * starWorldY;
+      maxDistanceSquared = math.max(maxDistanceSquared, distanceSquared);
     }
+    final maxDistance = math.sqrt(maxDistanceSquared);
 
     // CRITICAL FIX: Padding must INCREASE with zoom level
     final double paddingFactor;
@@ -158,17 +206,53 @@ class CameraController extends ChangeNotifier {
     } else {
       // High zoom: Scale factor itself as padding
       // At 500% zoom, this gives 500% padding
-      paddingFactor = _scale;
+      // Clamp to reasonable maximum to prevent overflow
+      paddingFactor = math.min(_scale, 10.0);
     }
 
     _maxPanDistance = maxDistance + (maxDistance * paddingFactor);
 
-    // Ensure minimum bounds
+    // Ensure minimum bounds and validate
     _maxPanDistance = math.max(_maxPanDistance, 2000.0);
+
+    // Safety check: prevent extremely large values
+    if (!_maxPanDistance.isFinite || _maxPanDistance > 100000.0) {
+      _maxPanDistance = 100000.0;
+    }
 
     AppLogger.info(
       '🎯 Pan distance at ${_scale.toStringAsFixed(1)}x zoom: ${_maxPanDistance.toStringAsFixed(0)}px (padding: ${(paddingFactor * 100).toStringAsFixed(0)}%)',
     );
+  }
+
+  /// Throttled bounds update - only recalculates if enough time has passed
+  /// Prevents excessive calculations during continuous zoom gestures
+  /// Uses adaptive throttling: longer delays at higher zoom levels
+  void _updateBoundsThrottled() {
+    if (_stars.isEmpty || _screenSize == Size.zero) return;
+
+    final now = DateTime.now();
+    if (_lastBoundsUpdateTime != null) {
+      // Adaptive throttling: longer delays at higher zoom
+      int throttleMs = _boundsUpdateThrottleMs;
+      if (_scale > 3.0) {
+        throttleMs = 800; // High zoom: 800ms
+      } else if (_scale > 2.0) {
+        throttleMs = 600; // Moderate zoom: 600ms
+      }
+
+      final timeSinceLastUpdate = now
+          .difference(_lastBoundsUpdateTime!)
+          .inMilliseconds;
+      if (timeSinceLastUpdate < throttleMs) {
+        // Too soon - skip this update
+        return;
+      }
+    }
+
+    // Enough time has passed - update bounds
+    _lastBoundsUpdateTime = now;
+    updateBounds(_stars, _screenSize);
   }
 
   // Update camera position during drag
@@ -197,12 +281,21 @@ class CameraController extends ChangeNotifier {
     if (constrainedPosition != _position) {
       _position = constrainedPosition;
       _parallaxPosition = constrainedParallaxPosition;
+      // Invalidate transform cache when position changes
+      _cachedNebulaTransform = null;
+      _cachedVanGoghTransform = null;
       notifyListeners();
     }
   }
 
   // Update camera scale with proper focal point handling
   void updateScale(double newScale, [Offset? focalPoint]) {
+    // Safety check: ensure input is valid
+    if (!newScale.isFinite || newScale <= 0) {
+      AppLogger.warning('⚠️ Invalid scale value in updateScale: $newScale');
+      return;
+    }
+
     final constrainedScale = math.max(minScale, math.min(maxScale, newScale));
 
     // Prevent changes that are too small
@@ -219,24 +312,24 @@ class CameraController extends ChangeNotifier {
       // Cancel any existing animations first
       _animationController?.stop();
 
+      // Invalidate transform cache when scale changes
+      _cachedNebulaTransform = null;
+      _cachedVanGoghTransform = null;
+
       if (focalPoint != null) {
         // For very small scales, use simpler calculation to avoid precision errors
         if (constrainedScale < 0.4) {
           _scale = constrainedScale;
-          // Recalculate bounds even for low zoom
-          if (_stars.isNotEmpty && _screenSize != Size.zero) {
-            updateBounds(_stars, _screenSize);
-          }
+          // Recalculate bounds (throttled to prevent crashes)
+          _updateBoundsThrottled();
           notifyListeners();
         } else {
           // Normal focal point handling for higher zoom levels
           final worldFocus = screenToWorld(focalPoint);
           _scale = constrainedScale;
 
-          // Recalculate bounds for new scale
-          if (_stars.isNotEmpty && _screenSize != Size.zero) {
-            updateBounds(_stars, _screenSize);
-          }
+          // Recalculate bounds for new scale (throttled to prevent crashes)
+          _updateBoundsThrottled();
 
           // Calculate the ideal new position based on focal point
           final newScreenFocus = worldToScreen(worldFocus);
@@ -263,28 +356,162 @@ class CameraController extends ChangeNotifier {
         }
       } else {
         _scale = constrainedScale;
-        // Recalculate bounds when scale changes
-        if (_stars.isNotEmpty && _screenSize != Size.zero) {
-          updateBounds(_stars, _screenSize);
-        }
+        // Recalculate bounds when scale changes (throttled to prevent crashes)
+        _updateBoundsThrottled();
         notifyListeners();
       }
     }
   }
 
   // Zoom in by factor with optional focal point
+  // Uses animation for smooth, crash-proof zoom on low-end devices
   void zoomIn([double factor = 1.5, Offset? focalPoint]) {
-    updateScale(_scale * factor, focalPoint);
+    if (_vsync == null) {
+      // Fallback to direct update if vsync not available
+      updateScale(_scale * factor, focalPoint);
+      return;
+    }
+
+    final targetScale = (_scale * factor).clamp(minScale, maxScale);
+
+    // Calculate target position based on focal point (screen center by default)
+    // This ensures zoom happens around the focal point
+    Offset? targetPosition;
+    final focal =
+        focalPoint ?? Offset(_screenSize.width / 2, _screenSize.height / 2);
+
+    if (targetScale != _scale) {
+      // Calculate world position of focal point at current scale
+      final adjustedPoint = focal - _position;
+      final worldFocus = adjustedPoint / _scale;
+
+      // Calculate where that world point would be at target scale
+      final newScreenFocus = (worldFocus * targetScale) + _position;
+
+      // Adjust position to keep focal point in same screen location
+      final adjustment = focal - newScreenFocus;
+      final idealNewPosition = _position + adjustment;
+
+      // Apply radial constraint
+      final distance = math.sqrt(
+        idealNewPosition.dx * idealNewPosition.dx +
+            idealNewPosition.dy * idealNewPosition.dy,
+      );
+
+      if (distance > _maxPanDistance && distance > 0) {
+        final constraintFactor = _maxPanDistance / distance;
+        targetPosition = idealNewPosition * constraintFactor;
+      } else {
+        targetPosition = idealNewPosition;
+      }
+    }
+
+    animateTo(
+      targetPosition: targetPosition,
+      targetScale: targetScale,
+      duration: const Duration(milliseconds: 250), // Quick but smooth
+      vsync: _vsync!,
+    );
   }
 
   // Zoom out by factor with optional focal point
+  // Uses animation for smooth, crash-proof zoom on low-end devices
   void zoomOut([double factor = 1.5, Offset? focalPoint]) {
-    updateScale(_scale / factor, focalPoint);
+    if (_vsync == null) {
+      // Fallback to direct update if vsync not available
+      updateScale(_scale / factor, focalPoint);
+      return;
+    }
+
+    final targetScale = (_scale / factor).clamp(minScale, maxScale);
+
+    // Calculate target position based on focal point (screen center by default)
+    // This ensures zoom happens around the focal point
+    Offset? targetPosition;
+    final focal =
+        focalPoint ?? Offset(_screenSize.width / 2, _screenSize.height / 2);
+
+    if (targetScale != _scale) {
+      // Calculate world position of focal point at current scale
+      final adjustedPoint = focal - _position;
+      final worldFocus = adjustedPoint / _scale;
+
+      // Calculate where that world point would be at target scale
+      final newScreenFocus = (worldFocus * targetScale) + _position;
+
+      // Adjust position to keep focal point in same screen location
+      final adjustment = focal - newScreenFocus;
+      final idealNewPosition = _position + adjustment;
+
+      // Apply radial constraint
+      final distance = math.sqrt(
+        idealNewPosition.dx * idealNewPosition.dx +
+            idealNewPosition.dy * idealNewPosition.dy,
+      );
+
+      if (distance > _maxPanDistance && distance > 0) {
+        final constraintFactor = _maxPanDistance / distance;
+        targetPosition = idealNewPosition * constraintFactor;
+      } else {
+        targetPosition = idealNewPosition;
+      }
+    }
+
+    animateTo(
+      targetPosition: targetPosition,
+      targetScale: targetScale,
+      duration: const Duration(milliseconds: 250), // Quick but smooth
+      vsync: _vsync!,
+    );
   }
 
   // Zoom to exactly 100% (scale = 1.0)
+  // Uses animation for smooth, crash-proof zoom on low-end devices
   void zoomTo100Percent([Offset? focalPoint]) {
-    updateScale(1.0, focalPoint);
+    if (_vsync == null) {
+      // Fallback to direct update if vsync not available
+      updateScale(1.0, focalPoint);
+      return;
+    }
+
+    // Calculate target position based on focal point (screen center by default)
+    // This ensures zoom happens around the focal point
+    Offset? targetPosition;
+    final focal =
+        focalPoint ?? Offset(_screenSize.width / 2, _screenSize.height / 2);
+
+    if (_scale != 1.0) {
+      // Calculate world position of focal point at current scale
+      final adjustedPoint = focal - _position;
+      final worldFocus = adjustedPoint / _scale;
+
+      // Calculate where that world point would be at scale 1.0
+      final newScreenFocus = (worldFocus * 1.0) + _position;
+
+      // Adjust position to keep focal point in same screen location
+      final adjustment = focal - newScreenFocus;
+      final idealNewPosition = _position + adjustment;
+
+      // Apply radial constraint
+      final distance = math.sqrt(
+        idealNewPosition.dx * idealNewPosition.dx +
+            idealNewPosition.dy * idealNewPosition.dy,
+      );
+
+      if (distance > _maxPanDistance && distance > 0) {
+        final constraintFactor = _maxPanDistance / distance;
+        targetPosition = idealNewPosition * constraintFactor;
+      } else {
+        targetPosition = idealNewPosition;
+      }
+    }
+
+    animateTo(
+      targetPosition: targetPosition,
+      targetScale: 1.0,
+      duration: const Duration(milliseconds: 250), // Quick but smooth
+      vsync: _vsync!,
+    );
   }
 
   // Animate to specific position and scale
@@ -392,10 +619,8 @@ class CameraController extends ChangeNotifier {
       }
       if (_scaleAnimation != null) {
         _scale = _scaleAnimation!.value;
-        // Recalculate bounds when scale changes during animation
-        if (_stars.isNotEmpty && _screenSize != Size.zero) {
-          updateBounds(_stars, _screenSize);
-        }
+        // Recalculate bounds when scale changes during animation (throttled to prevent crashes)
+        _updateBoundsThrottled();
       }
       notifyListeners();
     });
@@ -500,258 +725,5 @@ class CameraController extends ChangeNotifier {
   void dispose() {
     _animationController?.dispose();
     super.dispose();
-  }
-}
-
-// Helper widget for camera control UI with proper tap isolation
-class CameraControlsOverlay extends StatelessWidget {
-  final CameraController cameraController;
-  final List<GratitudeStar> stars;
-  final Size screenSize;
-  final TickerProvider vsync;
-  final EdgeInsets safeAreaPadding;
-
-  const CameraControlsOverlay({
-    super.key,
-    required this.cameraController,
-    required this.stars,
-    required this.screenSize,
-    required this.vsync,
-    required this.safeAreaPadding,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = screenSize.width < 500;
-    final isTablet = screenSize.width > 600;
-
-    // Responsive sizing
-    final controlSize = isMobile ? 48.0 : (isTablet ? 50.0 : 48.0);
-    final fontSize = isMobile ? 12.0 : 14.0;
-    final padding = isMobile ? 8.0 : 12.0;
-
-    final rightMargin = isMobile
-        ? math.min(8.0, screenSize.width * 0.02)
-        : 16.0;
-    final bottomMargin = (isMobile ? 80.0 : 120.0) + safeAreaPadding.bottom;
-
-    final maxControlWidth = controlSize + padding * 2;
-    final safeRightMargin = math.max(rightMargin, 4.0);
-    final adjustedRightMargin =
-        (rightMargin + maxControlWidth > screenSize.width * 0.25)
-        ? screenSize.width * 0.02
-        : safeRightMargin;
-
-    return Positioned(
-      bottom: bottomMargin,
-      right: adjustedRightMargin,
-      // child: RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: cameraController,
-        builder: (context, child) {
-          return IgnorePointer(
-            ignoring: false,
-            child: IntrinsicWidth(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Zoom percentage indicator
-                  Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: padding,
-                        vertical: padding * 0.7,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        '${cameraController.zoomPercentage}%',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.w600,
-                          // letterSpacing: 0.5, // Add letter spacing
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: padding),
-
-                  // Zoom controls
-                  Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(controlSize / 2),
-                        border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: IntrinsicHeight(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Zoom In
-                            SizedBox(
-                              width: controlSize,
-                              height: controlSize,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(
-                                    controlSize / 2,
-                                  ),
-                                  onTap: () {
-                                    final screenCenter = Offset(
-                                      screenSize.width / 2,
-                                      screenSize.height / 2,
-                                    );
-                                    cameraController.zoomIn(1.5, screenCenter);
-                                  },
-                                  child: Icon(
-                                    Icons.zoom_in,
-                                    color: Colors.white,
-                                    size: controlSize * 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            // Zoom Out
-                            SizedBox(
-                              width: controlSize,
-                              height: controlSize,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(
-                                    controlSize / 2,
-                                  ),
-                                  onTap: () {
-                                    final screenCenter = Offset(
-                                      screenSize.width / 2,
-                                      screenSize.height / 2,
-                                    );
-                                    cameraController.zoomOut(1.5, screenCenter);
-                                  },
-                                  child: Icon(
-                                    Icons.zoom_out,
-                                    color: Colors.white,
-                                    size: controlSize * 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: padding),
-
-                  // 100% Zoom button
-                  Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(controlSize / 2),
-                        border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: SizedBox(
-                        width: controlSize,
-                        height: controlSize,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(
-                              controlSize / 2,
-                            ),
-                            onTap: () {
-                              final screenCenter = Offset(
-                                screenSize.width / 2,
-                                screenSize.height / 2,
-                              );
-                              cameraController.zoomTo100Percent(screenCenter);
-                            },
-                            child: Center(
-                              child: Text(
-                                '100%',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: fontSize * 0.75,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: padding),
-
-                  // Fit All button
-                  Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(controlSize / 2),
-                        border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: SizedBox(
-                        width: controlSize,
-                        height: controlSize,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(
-                              controlSize / 2,
-                            ),
-                            onTap: () {
-                              cameraController.fitAllStars(
-                                stars,
-                                screenSize,
-                                vsync,
-                              );
-                            },
-                            child: Icon(
-                              Icons.fit_screen,
-                              color: Colors.white,
-                              size: controlSize * 0.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-        //  ),
-      ),
-    );
   }
 }

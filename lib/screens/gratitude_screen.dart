@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../background.dart';
 import '../camera_controller.dart';
 import '../core/animation/animation_manager.dart';
+import '../features/gratitudes/presentation/widgets/camera_controls_overlay.dart';
 import '../core/config/constants.dart';
 import '../features/gratitudes/presentation/state/gratitude_provider.dart';
 import '../features/gratitudes/presentation/widgets/app_drawer.dart';
@@ -165,6 +166,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _cameraController = CameraController();
+    _cameraController.setVsync(this); // Enable animation-based zoom
 
     // Initialize AnimationManager synchronously to avoid race condition
     // where build() tries to access _starController before initialization completes
@@ -569,7 +571,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     HapticFeedback.mediumImpact();
     final l10n = AppLocalizations.of(context)!;
     // Use user's display name if available, otherwise fallback to localized default
-    final userName = _authService.currentUser?.displayName ?? l10n.defaultUserNameFallback;
+    final userName =
+        _authService.currentUser?.displayName ?? l10n.defaultUserNameFallback;
     final shareText = l10n.shareTemplate(userName, star.text);
     SharePlus.instance.share(ShareParams(text: shareText));
   }
@@ -1714,7 +1717,3 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 }
-
-
-
-

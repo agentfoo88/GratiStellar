@@ -33,13 +33,10 @@ class CameraController extends ChangeNotifier {
   // LAYER TRANSFORM CONFIGURATION
   // ========================================
   static const double backgroundParallax = 0.00;
-  static const double backgroundZoom = 0.0;
 
   static const double nebulaParallax = 0.08;
-  static const double nebulaZoom = 0.05;
 
   static const double vanGoghParallax = 0.1;
-  static const double vanGoghZoom = 0.05;
 
   // Animation
   AnimationController? _animationController;
@@ -68,9 +65,7 @@ class CameraController extends ChangeNotifier {
   // Transform caching to avoid redundant calculations
   Matrix4? _cachedNebulaTransform;
   Matrix4? _cachedVanGoghTransform;
-  double _cachedTransformScale = -1.0;
   Offset _cachedTransformPosition = Offset.zero;
-  Size? _cachedScreenSize;
 
   // Layer-specific transforms with configurable parallax
   Matrix4 getBackgroundTransform() {
@@ -88,21 +83,12 @@ class CameraController extends ChangeNotifier {
   Matrix4 getNebulaTransform(Size screenSize) {
     // Cache check: only recalculate if scale, position, or screen size changed
     if (_cachedNebulaTransform != null &&
-        _cachedTransformScale == _scale &&
-        _cachedTransformPosition == _parallaxPosition &&
-        _cachedScreenSize == screenSize) {
+        _cachedTransformPosition == _parallaxPosition) {
       return _cachedNebulaTransform!;
     }
 
-    final minimalZoom = 1.0 + ((_scale - 1.0) * nebulaZoom);
+    // Fixed scale 1.0 - no zoom for background layers
     final transform = Matrix4.identity();
-    transform.translateByVector3(
-      Vector3(screenSize.width / 2, screenSize.height / 2, 0.0),
-    );
-    transform.setDiagonal(Vector4(minimalZoom, minimalZoom, 1.0, 1.0));
-    transform.translateByVector3(
-      Vector3(-screenSize.width / 2, -screenSize.height / 2, 0.0),
-    );
     transform.translateByVector3(
       Vector3(
         _parallaxPosition.dx * nebulaParallax,
@@ -113,9 +99,7 @@ class CameraController extends ChangeNotifier {
 
     // Update cache
     _cachedNebulaTransform = transform;
-    _cachedTransformScale = _scale;
     _cachedTransformPosition = _parallaxPosition;
-    _cachedScreenSize = screenSize;
 
     return transform;
   }
@@ -123,21 +107,12 @@ class CameraController extends ChangeNotifier {
   Matrix4 getVanGoghTransform(Size screenSize) {
     // Cache check: only recalculate if scale, position, or screen size changed
     if (_cachedVanGoghTransform != null &&
-        _cachedTransformScale == _scale &&
-        _cachedTransformPosition == _parallaxPosition &&
-        _cachedScreenSize == screenSize) {
+        _cachedTransformPosition == _parallaxPosition) {
       return _cachedVanGoghTransform!;
     }
 
-    final minimalZoom = 1.0 + ((_scale - 1.0) * vanGoghZoom);
+    // Fixed scale 1.0 - no zoom for background layers
     final transform = Matrix4.identity();
-    transform.translateByVector3(
-      Vector3(screenSize.width / 2, screenSize.height / 2, 0.0),
-    );
-    transform.setDiagonal(Vector4(minimalZoom, minimalZoom, 1.0, 1.0));
-    transform.translateByVector3(
-      Vector3(-screenSize.width / 2, -screenSize.height / 2, 0.0),
-    );
     transform.translateByVector3(
       Vector3(
         _parallaxPosition.dx * vanGoghParallax,
@@ -148,9 +123,7 @@ class CameraController extends ChangeNotifier {
 
     // Update cache
     _cachedVanGoghTransform = transform;
-    _cachedTransformScale = _scale;
     _cachedTransformPosition = _parallaxPosition;
-    _cachedScreenSize = screenSize;
 
     return transform;
   }
@@ -312,10 +285,6 @@ class CameraController extends ChangeNotifier {
       // Cancel any existing animations first
       _animationController?.stop();
 
-      // Invalidate transform cache when scale changes
-      _cachedNebulaTransform = null;
-      _cachedVanGoghTransform = null;
-
       if (focalPoint != null) {
         // For very small scales, use simpler calculation to avoid precision errors
         if (constrainedScale < 0.4) {
@@ -335,6 +304,7 @@ class CameraController extends ChangeNotifier {
           final newScreenFocus = worldToScreen(worldFocus);
           final adjustment = focalPoint - newScreenFocus;
           final idealNewPosition = _position + adjustment;
+          // _parallaxPosition is NOT updated during zoom - stays locked
 
           // Apply radial constraint instead of asymmetric bounds
           final distance = math.sqrt(
@@ -346,10 +316,10 @@ class CameraController extends ChangeNotifier {
             // Constrain to circle boundary (guard against division by zero)
             final factor = _maxPanDistance / distance;
             _position = idealNewPosition * factor;
-            _parallaxPosition = idealNewPosition * factor;
+            // _parallaxPosition stays unchanged during zoom
           } else {
             _position = idealNewPosition;
-            _parallaxPosition = idealNewPosition;
+            // _parallaxPosition stays unchanged during zoom
           }
 
           notifyListeners();
@@ -509,7 +479,8 @@ class CameraController extends ChangeNotifier {
     animateTo(
       targetPosition: targetPosition,
       targetScale: 1.0,
-      duration: const Duration(milliseconds: 250), // Quick but smooth
+      duration: const Duration(milliseconds: 800), // Match Fit All animation
+      curve: Curves.easeInOutCubic, // Match Fit All animation
       vsync: _vsync!,
     );
   }
@@ -533,6 +504,7 @@ class CameraController extends ChangeNotifier {
       // Instant jump - no animation
       if (targetPosition != null) {
         _position = targetPosition;
+        // _parallaxPosition stays unchanged
       }
       if (targetScale != null) {
         _scale = math.max(minScale, math.min(maxScale, targetScale));
@@ -598,6 +570,8 @@ class CameraController extends ChangeNotifier {
       }
     }
 
+    // No need to store delta - parallax position doesn't move during animations
+
     if (constrainedTargetPosition != null) {
       _positionAnimation = Tween<Offset>(
         begin: _position,
@@ -615,7 +589,7 @@ class CameraController extends ChangeNotifier {
     _animationController!.addListener(() {
       if (_positionAnimation != null) {
         _position = _positionAnimation!.value;
-        _parallaxPosition = _positionAnimation!.value;
+        // _parallaxPosition stays unchanged during animations
       }
       if (_scaleAnimation != null) {
         _scale = _scaleAnimation!.value;

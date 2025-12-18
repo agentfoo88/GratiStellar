@@ -44,6 +44,27 @@ class GratitudeDialogs {
     });
   }
 
+  static Future<bool?> showSignOutConfirmation({
+    required BuildContext context,
+    required VoidCallback onConfirm,
+  }) {
+    return AppDialog.showConfirmation(
+      context: context,
+      title: AppLocalizations.of(context)!.signOutTitle,
+      message: AppLocalizations.of(context)!.signOutMessage,
+      icon: Icons.logout,
+      iconColor: Colors.red.withValues(alpha: 0.8),
+      confirmText: AppLocalizations.of(context)!.signOutButton,
+      cancelText: AppLocalizations.of(context)!.cancelButton,
+      isDestructive: true,
+    ).then((confirmed) {
+      if (confirmed == true) {
+        onConfirm();
+      }
+      return confirmed;
+    });
+  }
+
   static void showMindfulnessNoStars(BuildContext context) {
     showDialog(
       context: context,

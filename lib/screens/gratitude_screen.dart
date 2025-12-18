@@ -7,17 +7,21 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../background.dart';
 import '../camera_controller.dart';
 import '../core/animation/animation_manager.dart';
 import '../features/gratitudes/presentation/widgets/camera_controls_overlay.dart';
-import '../core/config/constants.dart';
 import '../features/gratitudes/presentation/state/gratitude_provider.dart';
+import '../features/gratitudes/presentation/widgets/account_dialog.dart';
 import '../features/gratitudes/presentation/widgets/app_drawer.dart';
 import '../features/gratitudes/presentation/widgets/bottom_controls.dart';
 import '../features/gratitudes/presentation/widgets/branding_overlay.dart';
 import '../features/gratitudes/presentation/widgets/empty_state.dart';
+import '../features/gratitudes/presentation/widgets/feedback_dialog.dart';
 import '../features/gratitudes/presentation/widgets/galaxy_list_dialog.dart';
+import '../features/gratitudes/presentation/controllers/camera_navigation_controller.dart';
+import '../features/gratitudes/presentation/controllers/gratitude_screen_initializer.dart';
+import '../features/gratitudes/presentation/controllers/reminder_controller.dart';
+import '../features/gratitudes/presentation/widgets/gratitude_gesture_handler.dart';
 import '../features/gratitudes/presentation/widgets/loading_state.dart';
 import '../features/gratitudes/presentation/widgets/stats_card.dart';
 import '../features/gratitudes/presentation/widgets/visual_layers_stack.dart';
@@ -27,16 +31,10 @@ import '../l10n/app_localizations.dart';
 import '../list_view_screen.dart';
 import '../modal_dialogs.dart';
 import '../services/auth_service.dart';
-import '../services/crashlytics_service.dart';
-import '../services/daily_reminder_service.dart';
-import '../services/feedback_service.dart';
 import '../services/layer_cache_service.dart';
 import '../services/sync_status_service.dart';
 import '../starfield.dart';
 import '../storage.dart';
-import '../widgets/app_dialog.dart';
-import '../widgets/reminder_prompt_bottom_sheet.dart';
-import 'sign_in_screen.dart';
 import 'trash_screen.dart';
 import '../core/utils/app_logger.dart';
 
@@ -54,7 +52,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   final AuthService _authService = AuthService();
   double _fontScale = 1.0; // User's preferred font scale
   List<Paint> _glowPatterns = [];
-  List<Paint> _backgroundGradients = [];
   bool _layerCacheInitialized = false;
   ui.Image? _nebulaAssetImage;
   List<VanGoghStar> _animatedVanGoghStars = []; // The 12 twinkling stars
@@ -64,8 +61,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   late CameraController _cameraController;
   bool _showBranding = false; // Disabled - using enhanced splash screen instead
   bool _isAppInBackground = false;
-  bool _isMultiFingerGesture = false;
-  DateTime? _lastScrollTime;
   Color? _previewColor;
   GratitudeStar? _lastMindfulnessStar;
   Timer? _resizeDebounceTimer;
@@ -99,76 +94,11 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   // Check if we should show the reminder prompt
   void _checkAndShowReminderPrompt() async {
-    // Wait for service initialization if needed (with timeout to prevent infinite waiting)
-    final reminderService = context.read<DailyReminderService>();
-    
-    if (!reminderService.isInitialized) {
-      AppLogger.info('🔔 Reminder service not initialized, waiting...');
-      // Poll for initialization with timeout (max 1 second)
-      for (int i = 0; i < 10; i++) {
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (!mounted) return;
-        final service = context.read<DailyReminderService>();
-        if (service.isInitialized) {
-          AppLogger.info('🔔 Reminder service initialized after ${(i + 1) * 100}ms');
-          break;
-        }
-      }
-    }
-
-    if (!mounted) return;
-
-    // Read fresh state after potential initialization wait
-    final freshService = context.read<DailyReminderService>();
-    
-    // Defensive check: Don't show if already shown OR if reminder is already enabled
-    if (freshService.hasShownPrompt) {
-      AppLogger.info('🔔 Reminder prompt already shown, skipping');
-      return;
-    }
-    
-    if (freshService.isEnabled) {
-      AppLogger.info('🔔 Reminders already enabled, skipping prompt');
-      return;
-    }
-
-    AppLogger.info('🔔 Reminder prompt conditions met (not shown: ${!freshService.hasShownPrompt}, not enabled: ${!freshService.isEnabled}), waiting 2s...');
-
-    // Wait 2 seconds after birth animation completes
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-
-    // Check again after delay with fresh state (user might have enabled during wait)
-    final finalService = context.read<DailyReminderService>();
-    
-    if (finalService.hasShownPrompt) {
-      AppLogger.info('🔔 Reminder prompt was shown during wait, skipping');
-      return;
-    }
-    
-    if (finalService.isEnabled) {
-      AppLogger.info('🔔 Reminders were enabled during wait, skipping prompt');
-      return;
-    }
-
-    // Final defensive check before showing
-    if (!finalService.isInitialized) {
-      AppLogger.warning('⚠️ Reminder service still not initialized, skipping prompt to avoid race condition');
-      return;
-    }
-
-    AppLogger.info('🔔 Showing reminder prompt bottom sheet');
-    
-    // Show bottom sheet
-    showModalBottomSheet(
+    final reminderController = ReminderController(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      isDismissible: true,
-      enableDrag: true,
-      builder: (context) => const ReminderPromptBottomSheet(),
+      mounted: () => mounted,
     );
+    await reminderController.checkAndShowReminderPrompt();
   }
 
   Future<void> _regenerateLayersForNewSize(Size newSize) async {
@@ -229,45 +159,43 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
 
     // Generate static universe based on full screen size
-    final view = WidgetsBinding.instance.platformDispatcher.views.first;
-    final screenSize = view.physicalSize / view.devicePixelRatio;
+    final screenSize = GratitudeScreenInitializer.getInitialScreenSize();
 
     // Lock to portrait mode on small screens (tablets and desktops can rotate)
-    _setOrientationForScreenSize(screenSize);
+    GratitudeScreenInitializer.setOrientationForScreenSize(screenSize);
 
     // Log screen size for crash reports
-    final crashlytics = CrashlyticsService();
-    crashlytics.setCustomKey('screen_width', screenSize.width.round());
-    crashlytics.setCustomKey('screen_height', screenSize.height.round());
+    GratitudeScreenInitializer.setCrashlyticsScreenKeys(screenSize);
 
     // Initialize layer cache (async - happens in background)
-    _initializeLayerCache(screenSize);
+    GratitudeScreenInitializer.initializeLayerCache(screenSize).then((success) {
+      if (mounted) {
+        setState(() {
+          _layerCacheInitialized = success;
+        });
+      }
+    });
 
     // Load nebula asset image
-    _loadNebulaAsset();
+    GratitudeScreenInitializer.loadNebulaAsset().then((image) {
+      if (mounted && image != null) {
+        setState(() {
+          _nebulaAssetImage = image;
+        });
+      }
+    });
 
     // Generate all Van Gogh stars - needed for camera bounds calculation
-    _allVanGoghStars = VanGoghStarService.generateVanGoghStars(screenSize);
-    final staticCount = (_allVanGoghStars.length * 0.9).round(); // 90% static
-    _animatedVanGoghStars = _allVanGoghStars
-        .skip(staticCount)
-        .toList(); // Last 10% animate
-
-    AppLogger.info(
-      '📐 Screen: ${screenSize.width.round()}x${screenSize.height.round()}',
-    );
-    AppLogger.info(
-      '   🎨 Using cached layers (background, $staticCount Van Gogh stars)',
-    );
-    AppLogger.info(
-      '   ✨ Animating: ${_animatedVanGoghStars.length} Van Gogh stars',
-    );
-    AppLogger.info(
-      '   📍 Camera bounds: ${_allVanGoghStars.length} Van Gogh stars (for reference only)',
-    );
+    final vanGoghStars =
+        GratitudeScreenInitializer.generateVanGoghStars(screenSize);
+    _allVanGoghStars = vanGoghStars['all']!;
+    _animatedVanGoghStars = vanGoghStars['animated']!;
 
     try {
-      _initializePrecomputedElements();
+      final precomputed =
+          GratitudeScreenInitializer.initializePrecomputedElements();
+      _glowPatterns = precomputed['glowPatterns'];
+      // Background gradients are generated but not currently used
       AppLogger.success('✅ Precomputed elements initialized');
     } catch (e) {
       AppLogger.error('❌ Error in initialization: $e');
@@ -286,7 +214,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     final currentSize = view.physicalSize / view.devicePixelRatio;
 
     // Update orientation lock based on new screen size
-    _setOrientationForScreenSize(currentSize);
+    GratitudeScreenInitializer.setOrientationForScreenSize(currentSize);
 
     // First time seeing the size - just store it, don't regenerate
     if (_lastKnownSize == null) {
@@ -353,93 +281,6 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
-  void _setOrientationForScreenSize(Size screenSize) {
-    // Lock to portrait on phones (width < 600), allow rotation on tablets/desktop
-    // Using the shorter dimension to handle both portrait and landscape
-    final minDimension = screenSize.width < screenSize.height
-        ? screenSize.width
-        : screenSize.height;
-
-    if (minDimension < 600) {
-      // Phone - lock to portrait
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
-      AppLogger.info(
-        '🔒 Locked to portrait mode (screen width: ${screenSize.width})',
-      );
-    } else {
-      // Tablet/Desktop - allow all orientations
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-      AppLogger.info(
-        '🔓 All orientations allowed (screen width: ${screenSize.width})',
-      );
-    }
-  }
-
-  Future<void> _loadNebulaAsset() async {
-    try {
-      final ByteData data = await rootBundle.load(
-        'assets/textures/background-01.png',
-      );
-      final Uint8List bytes = data.buffer.asUint8List();
-      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
-      final ui.FrameInfo frameInfo = await codec.getNextFrame();
-
-      if (mounted) {
-        setState(() {
-          _nebulaAssetImage = frameInfo.image;
-        });
-      }
-      AppLogger.success('✅ Nebula asset loaded');
-    } catch (e) {
-      AppLogger.error('⚠️ Failed to load nebula asset: $e');
-    }
-  }
-
-  void _initializePrecomputedElements() {
-    AppLogger.start('🌟 Starting initialization...');
-
-    _glowPatterns = GratitudeStarService.generateGlowPatterns();
-    AppLogger.info('✨ Generated ${_glowPatterns.length} glow patterns');
-
-    _backgroundGradients = BackgroundService.generateBackgroundGradients();
-    AppLogger.info(
-      '🎨 Generated ${_backgroundGradients.length} background gradients',
-    );
-  }
-
-  Future<void> _initializeLayerCache(Size screenSize) async {
-    final crashlytics = CrashlyticsService();
-
-    try {
-      crashlytics.log('Initializing layer cache');
-      await LayerCacheService().initialize(screenSize);
-
-      if (mounted) {
-        setState(() {
-          _layerCacheInitialized = true;
-        });
-      }
-
-      crashlytics.log('Layer cache ready');
-      AppLogger.success('✅ Layer cache initialized');
-    } catch (e, stack) {
-      crashlytics.recordError(
-        e,
-        stack,
-        reason: 'Layer cache initialization failed',
-      );
-      AppLogger.error('⚠️ Layer cache failed: $e');
-      // App continues without cache (will be slower but still works)
-    }
-  }
 
   void _startSplashTimer() {
     Future.delayed(Duration(seconds: 3), () {
@@ -659,61 +500,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   Future<void> _navigateToMindfulnessStar(GratitudeStar star) async {
-    const double mindfulnessZoom = 2.0; // Define target zoom as constant
-
-    final screenSize = MediaQuery.of(context).size;
-
-    // Calculate world position in pixels
-    final starWorldX = star.worldX * screenSize.width;
-    final starWorldY = star.worldY * screenSize.height;
-    final starWorldPos = Offset(starWorldX, starWorldY);
-
-    AppLogger.info(
-      '🧘 Navigating to mindfulness star at world: ($starWorldX, $starWorldY)',
-    );
-
-    // Calculate where we want the star to appear on screen (40% from top, centered horizontally)
-    final desiredScreenPos = Offset(
-      screenSize.width / 2,
-      screenSize.height * 0.4, // 40% from top
-    );
-
-    // Calculate the camera position needed to place the star at desiredScreenPos
-    // At target zoom level (mindfulnessZoom), the camera position should be:
-    // cameraPos = desiredScreenPos - (starWorldPos * targetZoom)
-    final targetPosition = Offset(
-      desiredScreenPos.dx - starWorldPos.dx * mindfulnessZoom,
-      desiredScreenPos.dy - starWorldPos.dy * mindfulnessZoom,
-    );
-
-    // Safety check: ensure target position is reasonable (not NaN or infinite)
-    if (!targetPosition.dx.isFinite || !targetPosition.dy.isFinite) {
-      AppLogger.error('⚠️ Invalid target position calculated: $targetPosition');
-      // Fallback: use simpler calculation
-      final fallbackPosition = Offset(
-        screenSize.width / 2 - starWorldX * mindfulnessZoom,
-        screenSize.height * 0.4 - starWorldY * mindfulnessZoom,
-      );
-      if (fallbackPosition.dx.isFinite && fallbackPosition.dy.isFinite) {
-        _cameraController.animateTo(
-          targetPosition: fallbackPosition,
-          targetScale: mindfulnessZoom,
-          duration: Duration(milliseconds: 2000),
-          curve: Curves.easeInOutCubic,
-          vsync: this,
-          context: context,
-        );
-      }
-      return;
-    }
-    _cameraController.animateTo(
-      targetPosition: targetPosition,
-      targetScale: mindfulnessZoom, // Use same constant for consistency
-      duration: Duration(milliseconds: 2000), // 2 seconds - slow and graceful
-      curve: Curves.easeInOutCubic,
+    final navigationController = CameraNavigationController(
+      cameraController: _cameraController,
       vsync: this,
       context: context,
     );
+    await navigationController.navigateToMindfulnessStar(star);
   }
 
   // Toggle methods
@@ -748,26 +540,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _jumpToStar(GratitudeStar star) {
-    final screenSize = MediaQuery.of(context).size;
-
-    // Convert star's normalized world coordinates to pixels
-    final starWorldX = star.worldX * screenSize.width;
-    final starWorldY = star.worldY * screenSize.height;
-
-    // Calculate camera position to center the star at the new scale
-    final targetPosition = Offset(
-      screenSize.width / 2 - starWorldX * CameraConstants.jumpToStarZoom,
-      screenSize.height / 2 - starWorldY * CameraConstants.jumpToStarZoom,
-    );
-
-    _cameraController.animateTo(
-      targetPosition: targetPosition,
-      targetScale: CameraConstants.jumpToStarZoom,
-      duration: Duration(milliseconds: 1500),
-      curve: Curves.easeInOutCubic,
+    final navigationController = CameraNavigationController(
+      cameraController: _cameraController,
       vsync: this,
       context: context,
     );
+    navigationController.jumpToStar(star);
   }
 
   void _showStarDetailsFromList(GratitudeStar star) {
@@ -880,236 +658,18 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     );
   }
 
-  void _showSignOutConfirmation() {
-    final l10n = AppLocalizations.of(context)!;
-
-    AppDialog.showConfirmation(
-      context: context,
-      title: l10n.signOutTitle,
-      message: l10n.signOutMessage,
-      icon: Icons.logout,
-      iconColor: Colors.red.withValues(alpha: 0.8),
-      confirmText: l10n.signOutButton,
-      cancelText: l10n.cancelButton,
-      isDestructive: true,
-    ).then((confirmed) async {
-      if (confirmed == true) {
-        await _authService.signOut();
-      }
-    });
-  }
-
   void _showAccountDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final displayNameController = TextEditingController(
-      text: _authService.currentUser?.displayName ?? l10n.defaultUserName,
-    );
-
-    AppDialog.show(
+    AccountDialog.show(
       context: context,
-      title: l10n.accountTitle,
-      icon: Icons.account_circle,
-      content: StatefulBuilder(
-        builder: (context, setDialogState) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Account Name and Icon
-              Container(
-                padding: EdgeInsets.all(
-                  FontScaling.getResponsiveSpacing(context, 16),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    // Avatar placeholder (for future)
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.2),
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Color(0xFFFFE135),
-                      ),
-                    ),
-                    SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 12),
-                    ),
-
-                    // Display name field
-                    TextField(
-                      controller: displayNameController,
-                      textCapitalization: TextCapitalization.sentences,
-                      style: FontScaling.getInputText(context),
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                        labelText: l10n.displayNameLabel,
-                        labelStyle: FontScaling.getBodySmall(context),
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFFFE135),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 12),
-                    ),
-
-                    // Update button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          final newName = displayNameController.text.trim();
-                          if (newName.isNotEmpty &&
-                              newName !=
-                                  _authService.currentUser?.displayName) {
-                            await _authService.updateDisplayName(newName);
-
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.check_circle,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          l10n.displayNameUpdated,
-                                          style: FontScaling.getBodySmall(
-                                            context,
-                                          ).copyWith(color: Colors.white),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  backgroundColor: Color(0xFF4CAF50),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  margin: EdgeInsets.all(16),
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-
-                              // Refresh the UI
-                              setState(() {});
-                            }
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFFFE135),
-                          padding: EdgeInsets.symmetric(
-                            vertical: FontScaling.getResponsiveSpacing(
-                              context,
-                              12,
-                            ),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        child: Text(
-                          l10n.updateButton,
-                          style: FontScaling.getButtonText(
-                            context,
-                          ).copyWith(color: Color(0xFF1A2238)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-
-              // Email (read-only)
-              Container(
-                padding: EdgeInsets.all(
-                  FontScaling.getResponsiveSpacing(context, 12),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.email,
-                      color: Color(0xFFFFE135),
-                      size: FontScaling.getResponsiveIconSize(context, 20),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _authService.currentUser?.email ?? '',
-                        style: FontScaling.getBodySmall(
-                          context,
-                        ).copyWith(color: Colors.white.withValues(alpha: 0.7)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-      actions: [
-        // Show "Sign in with Email" for anonymous users
-        if (!_authService.hasEmailAccount)
-          AppDialogAction(
-            text: l10n.signInWithEmailMenuItem,
-            onPressed: () {
-              Navigator.pop(context); // Close account dialog
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SignInScreen()),
-              );
-            },
-          ),
-        // Show "Sign Out" for email users
-        if (_authService.hasEmailAccount)
-          AppDialogAction(
-            text: l10n.signOutButton,
-            isDestructive: true,
-            onPressed: () {
-              Navigator.pop(context); // Close account dialog
-              _showSignOutConfirmation();
-            },
-          ),
-        AppDialogAction(
-          text: l10n.closeButton,
-          isPrimary: true,
-          onPressed: () => Navigator.pop(context),
-        ),
-      ],
+      authService: _authService,
+      onSignOut: () async {
+        await GratitudeDialogs.showSignOutConfirmation(
+          context: context,
+          onConfirm: () async {
+            await _authService.signOut();
+          },
+        );
+      },
     );
   }
 
@@ -1120,354 +680,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _showFeedbackDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    String selectedType = 'bug';
-    String message = '';
-    String contactEmail = '';
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
+    FeedbackDialog.show(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 500),
-            padding: EdgeInsets.all(
-              FontScaling.getResponsiveSpacing(context, 24),
-            ),
-            decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Color(0xFFFFE135).withValues(alpha: 0.5),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Text(
-                      l10n.feedbackDialogTitle,
-                      style: FontScaling.getModalTitle(
-                        context,
-                      ).copyWith(color: Color(0xFFFFE135)),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 20),
-                    ),
-
-                    // Type dropdown
-                    Text(
-                      l10n.feedbackTypeLabel,
-                      style: FontScaling.getBodyMedium(
-                        context,
-                      ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
-                    ),
-                    SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 8),
-                    ),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedType,
-                      dropdownColor: Color(0xFF1A2238),
-                      style: FontScaling.getInputText(context),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFFFE135),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: 'bug',
-                          child: Text(
-                            l10n.feedbackTypeBug,
-                            style: FontScaling.getInputText(context),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 'feature',
-                          child: Text(
-                            l10n.feedbackTypeFeature,
-                            style: FontScaling.getInputText(context),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 'general',
-                          child: Text(
-                            l10n.feedbackTypeGeneral,
-                            style: FontScaling.getInputText(context),
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() => selectedType = value!);
-                      },
-                    ),
-                    SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 16),
-                    ),
-
-                    // Message field
-                    Text(
-                      l10n.feedbackMessageLabel,
-                      style: FontScaling.getBodyMedium(
-                        context,
-                      ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
-                    ),
-                    SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 8),
-                    ),
-                    TextFormField(
-                      textCapitalization: TextCapitalization.sentences,
-                      style: FontScaling.getInputText(context),
-                      decoration: InputDecoration(
-                        hintText: l10n.feedbackMessageHint,
-                        hintStyle: FontScaling.getInputText(
-                          context,
-                        ).copyWith(color: Colors.white.withValues(alpha: 0.3)),
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFFFE135),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.red.withValues(alpha: 0.5),
-                          ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.red, width: 2),
-                        ),
-                        counterStyle: FontScaling.getCaption(
-                          context,
-                        ).copyWith(color: Colors.white.withValues(alpha: 0.5)),
-                      ),
-                      maxLines: 5,
-                      maxLength: 1000,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return l10n.feedbackMessageRequired;
-                        }
-                        return null;
-                      },
-                      onChanged: (value) => message = value,
-                    ),
-                    SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 16),
-                    ),
-
-                    // Optional email (only show if anonymous)
-                    if (_authService.currentUser?.isAnonymous ?? false) ...[
-                      Text(
-                        l10n.feedbackEmailLabel,
-                        style: FontScaling.getBodyMedium(
-                          context,
-                        ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
-                      ),
-                      SizedBox(
-                        height: FontScaling.getResponsiveSpacing(context, 8),
-                      ),
-                      TextFormField(
-                        textCapitalization: TextCapitalization.none,
-                        style: FontScaling.getInputText(context),
-                        keyboardType: TextInputType.emailAddress,
-                        maxLength: 100,
-                        decoration: InputDecoration(
-                          hintText: l10n.feedbackEmailHint,
-                          hintStyle: FontScaling.getInputText(context).copyWith(
-                            color: Colors.white.withValues(alpha: 0.3),
-                          ),
-                          counterStyle: FontScaling.getCaption(context)
-                              .copyWith(
-                                color: Colors.white.withValues(alpha: 0.5),
-                              ),
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.05),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Color(0xFFFFE135),
-                              width: 2,
-                            ),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Colors.red.withValues(alpha: 0.5),
-                            ),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.red, width: 2),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value != null && value.isNotEmpty) {
-                            final emailRegex = RegExp(
-                              r'^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$',
-                            );
-                            if (!emailRegex.hasMatch(value)) {
-                              return l10n.feedbackEmailInvalid;
-                            }
-                          }
-                          return null;
-                        },
-                        onChanged: (value) => contactEmail = value,
-                      ),
-                      SizedBox(
-                        height: FontScaling.getResponsiveSpacing(context, 16),
-                      ),
-                    ],
-
-                    // Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            l10n.cancelButton,
-                            style: FontScaling.getInputText(context).copyWith(
-                              color: Colors.white.withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            if (formKey.currentState!.validate()) {
-                              Navigator.pop(context);
-
-                              final feedbackService = FeedbackService();
-                              final scaffoldMessenger = ScaffoldMessenger.of(
-                                context,
-                              );
-                              final textStyle = FontScaling.getBodyMedium(
-                                context,
-                              );
-
-                              final success = await feedbackService
-                                  .submitFeedback(
-                                    type: selectedType,
-                                    message: message,
-                                    contactEmail: contactEmail.isNotEmpty
-                                        ? contactEmail
-                                        : null,
-                                  );
-
-                              if (mounted) {
-                                scaffoldMessenger.showSnackBar(
-                                  // ← Use captured reference
-                                  SnackBar(
-                                    content: Text(
-                                      success
-                                          ? l10n.feedbackSuccess
-                                          : l10n.feedbackError,
-                                      style: textStyle,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    backgroundColor: success
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFFFFE135),
-                            foregroundColor: Color(0xFF1A2238),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: FontScaling.getResponsiveSpacing(
-                                context,
-                                24,
-                              ),
-                              vertical: FontScaling.getResponsiveSpacing(
-                                context,
-                                12,
-                              ),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: Text(
-                            l10n.feedbackSubmit,
-                            style: FontScaling.getButtonText(
-                              context,
-                            ).copyWith(color: Color(0xFF1A2238)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+      authService: _authService,
     );
   }
 
@@ -1578,94 +793,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               ),
 
               // Gesture detection for pan/zoom/tap
-              Positioned.fill(
-                child: Listener(
-                  onPointerSignal: (pointerSignal) {
-                    if (pointerSignal is PointerScrollEvent) {
-                      final provider = context.read<GratitudeProvider>();
-                      if (provider.mindfulnessMode) {
-                        provider.stopMindfulness();
-                      }
-
-                      final now = DateTime.now();
-                      if (_lastScrollTime != null &&
-                          now.difference(_lastScrollTime!).inMilliseconds <
-                              16) {
-                        return;
-                      }
-                      _lastScrollTime = now;
-
-                      final scrollEvent = pointerSignal;
-                      final delta = scrollEvent.scrollDelta.dy;
-                      final screenSize = MediaQuery.of(context).size;
-                      final screenCenter = Offset(
-                        screenSize.width / 2,
-                        screenSize.height / 2,
-                      );
-
-                      if (delta > 0) {
-                        _cameraController.zoomOut(1.1, screenCenter);
-                      } else {
-                        _cameraController.zoomIn(1.1, screenCenter);
-                      }
-                    }
-                  },
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onScaleStart: isAnimating
-                        ? null
-                        : (details) {
-                            final provider = context.read<GratitudeProvider>();
-                            if (provider.mindfulnessMode) {
-                              provider.stopMindfulness();
-                            }
-                            _isMultiFingerGesture = details.pointerCount > 1;
-                          },
-                    onScaleUpdate: isAnimating
-                        ? null
-                        : (details) {
-                            final provider = context.read<GratitudeProvider>();
-                            if (provider.mindfulnessMode) {
-                              provider.stopMindfulness();
-                            }
-
-                            if (details.scale != 1.0) {
-                              final scaleChange = (details.scale - 1.0).abs();
-                              if (scaleChange > 0.01) {
-                                final dampingFactor = 0.025;
-                                final dampenedScale =
-                                    1.0 +
-                                    ((details.scale - 1.0) * dampingFactor);
-                                final newScale =
-                                    _cameraController.scale * dampenedScale;
-                                _cameraController.updateScale(
-                                  newScale,
-                                  details.focalPoint,
-                                );
-                              }
-                            }
-
-                            if (details.scale == 1.0) {
-                              _cameraController.updatePosition(
-                                details.focalPointDelta,
-                              );
-                            }
-                          },
-                    onScaleEnd: isAnimating
-                        ? null
-                        : (details) {
-                            _isMultiFingerGesture = false;
-                          },
-                    onTapDown: isAnimating
-                        ? null
-                        : (details) {
-                            if (!_isMultiFingerGesture) {
-                              _handleStarTap(details);
-                            }
-                          },
-                    child: Container(color: Colors.transparent),
-                  ),
-                ),
+              GratitudeGestureHandler(
+                cameraController: _cameraController,
+                isAnimating: isAnimating,
+                onStarTap: _handleStarTap,
               ),
 
               // Branding overlay

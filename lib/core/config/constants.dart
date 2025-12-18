@@ -14,11 +14,17 @@ class UIConstants {
 class AnimationConstants {
   AnimationConstants._();
 
-  // Mindfulness mode transition duration in milliseconds
+  // Mindfulness mode transition duration
+  static const Duration mindfulnessTransition = Duration(milliseconds: 2000);
+
+  // Mindfulness mode transition duration in milliseconds (deprecated - use mindfulnessTransition)
   static const int mindfulnessTransitionMs = 2000;
 
   // Mindfulness mode vertical position (40% from top to avoid slider overlap)
   static const double mindfulnessVerticalPosition = 0.40;
+
+  // Jump to star animation duration
+  static const Duration jumpToStarAnimation = Duration(milliseconds: 1500);
 
   // Background animation duration
   static const Duration backgroundDuration = Duration(seconds: 30);
@@ -38,6 +44,7 @@ class CameraConstants {
   static const double maxScale = 5.0;
   static const double focusZoomLevel = 2.0;
   static const double jumpToStarZoom = 2.5;
+  static const double mindfulnessZoom = 2.0;
 }
 
 /// Timeout and delay duration constants

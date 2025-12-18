@@ -269,7 +269,7 @@ class GratitudeDialogs {
     final defaultColor = await StorageService.getDefaultColor();
 
     showDialog(
-      context: context,
+    context: context,
       barrierColor: Colors.black.withValues(alpha:0.7),
       builder: (BuildContext context) {
         // Initialize based on default color preference
@@ -305,9 +305,10 @@ class GratitudeDialogs {
                     ),
                   ],
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                     Text(
                       AppLocalizations.of(context)!.createStarModalTitle,
                       style: FontScaling.getModalTitle(context),
@@ -487,6 +488,8 @@ class GratitudeDialogs {
                               style: FontScaling.getBodySmall(context).copyWith(
                                 color: Colors.white.withValues(alpha: 0.7),
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             activeColor: const Color(0xFFFFE135),
                             checkColor: const Color(0xFF1A2238),
@@ -553,6 +556,7 @@ class GratitudeDialogs {
                       ],
                     ),
                   ],
+                ),
                 ),
               ),
             );

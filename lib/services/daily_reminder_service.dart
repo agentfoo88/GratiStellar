@@ -18,6 +18,7 @@ class DailyReminderService extends ChangeNotifier {
   bool _isEnabled = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 21, minute: 0); // Default 9 PM
   bool _hasShownPrompt = false;
+  bool _isInitialized = false;
 
   // SharedPreferences keys
   static const String _keyEnabled = 'reminder_enabled';
@@ -33,6 +34,7 @@ class DailyReminderService extends ChangeNotifier {
   bool get isEnabled => _isEnabled;
   TimeOfDay get reminderTime => _reminderTime;
   bool get hasShownPrompt => _hasShownPrompt;
+  bool get isInitialized => _isInitialized;
 
   /// Initialize the service - call this once on app startup
   Future<void> initialize() async {
@@ -114,8 +116,15 @@ class DailyReminderService extends ChangeNotifier {
 
       AppLogger.success(
           '✅ DailyReminderService initialized (enabled: $_isEnabled, time: ${_reminderTime.format24()})');
+      
+      // Mark initialization as complete
+      _isInitialized = true;
+      notifyListeners();
     } catch (e) {
       AppLogger.error('❌ Error initializing DailyReminderService: $e');
+      // Even on error, mark as initialized to prevent infinite waiting
+      _isInitialized = true;
+      notifyListeners();
     }
   }
 

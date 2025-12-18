@@ -311,8 +311,10 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
 
               // Action buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   if (_defaultColor != null)
                     TextButton.icon(

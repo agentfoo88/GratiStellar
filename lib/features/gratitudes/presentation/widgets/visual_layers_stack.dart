@@ -78,9 +78,9 @@ class VisualLayersStack extends StatelessWidget {
               animation: Listenable.merge(
                   [animationManager.background, cameraController]),
               builder: (context, child) {
-                return Transform(
-                  transform: cameraController.getNebulaTransform(currentSize),
-                  child: CustomPaint(
+              return Transform(
+                transform: cameraController.getNebulaTransform(),
+                child: CustomPaint(
                     painter: AssetNebulaPainter(
                       nebulaAssetImage,
                       animationManager.background.value,
@@ -98,7 +98,7 @@ class VisualLayersStack extends StatelessWidget {
             animation: cameraController,
             builder: (context, child) {
               return Transform(
-                transform: cameraController.getVanGoghTransform(currentSize),
+                transform: cameraController.getVanGoghTransform(),
                 child: CustomPaint(
                   painter: CachedVanGoghPainter(
                     layerCacheInitialized

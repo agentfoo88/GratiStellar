@@ -31,11 +31,12 @@ class CameraController extends ChangeNotifier {
 
   // ========================================
   // LAYER TRANSFORM CONFIGURATION
+  // Parallax multipliers create depth-of-field effect:
+  // - Lower values = further away (move less)
+  // - Higher values = closer (move more)
   // ========================================
   static const double backgroundParallax = 0.00;
-
   static const double nebulaParallax = 0.08;
-
   static const double vanGoghParallax = 0.1;
 
   // Animation
@@ -62,71 +63,42 @@ class CameraController extends ChangeNotifier {
       ..setDiagonal(Vector4(_scale, _scale, 1.0, 1.0));
   }
 
-  // Transform caching to avoid redundant calculations
-  Matrix4? _cachedNebulaTransform;
-  Matrix4? _cachedVanGoghTransform;
-  Offset _cachedTransformPosition = Offset.zero;
+  // Unified parallax transform cache
+  final Map<double, Matrix4> _parallaxTransformCache = {};
+  Offset _cachedParallaxPosition = Offset.zero;
 
-  // Layer-specific transforms with configurable parallax
-  Matrix4 getBackgroundTransform() {
-    return Matrix4.identity()..translateByVector3(
-      Vector3(
-        _parallaxPosition.dx *
-            backgroundParallax, // Use _parallaxPosition instead
-        _parallaxPosition.dy *
-            backgroundParallax, // Use _parallaxPosition instead
-        0.0,
-      ),
-    );
-  }
-
-  Matrix4 getNebulaTransform(Size screenSize) {
-    // Cache check: only recalculate if scale, position, or screen size changed
-    if (_cachedNebulaTransform != null &&
-        _cachedTransformPosition == _parallaxPosition) {
-      return _cachedNebulaTransform!;
+  /// Unified parallax transform generator
+  /// Creates a transform matrix for a layer with the specified parallax multiplier.
+  /// Background layers use parallax multipliers < 1.0 to create depth-of-field effect.
+  Matrix4 _getParallaxTransform(double parallaxMultiplier) {
+    // Invalidate cache if parallax position changed
+    if (_cachedParallaxPosition != _parallaxPosition) {
+      _parallaxTransformCache.clear();
+      _cachedParallaxPosition = _parallaxPosition;
     }
 
-    // Fixed scale 1.0 - no zoom for background layers
-    final transform = Matrix4.identity();
-    transform.translateByVector3(
-      Vector3(
-        _parallaxPosition.dx * nebulaParallax,
-        _parallaxPosition.dy * nebulaParallax,
-        0.0,
-      ),
+    // Return cached transform if available
+    return _parallaxTransformCache.putIfAbsent(
+      parallaxMultiplier,
+      () => Matrix4.identity()
+        ..translateByVector3(
+          Vector3(
+            _parallaxPosition.dx * parallaxMultiplier,
+            _parallaxPosition.dy * parallaxMultiplier,
+            0.0,
+          ),
+        ),
     );
-
-    // Update cache
-    _cachedNebulaTransform = transform;
-    _cachedTransformPosition = _parallaxPosition;
-
-    return transform;
   }
 
-  Matrix4 getVanGoghTransform(Size screenSize) {
-    // Cache check: only recalculate if scale, position, or screen size changed
-    if (_cachedVanGoghTransform != null &&
-        _cachedTransformPosition == _parallaxPosition) {
-      return _cachedVanGoghTransform!;
-    }
+  // Layer-specific transform getters (convenience methods)
+  Matrix4 getBackgroundTransform() => _getParallaxTransform(backgroundParallax);
 
-    // Fixed scale 1.0 - no zoom for background layers
-    final transform = Matrix4.identity();
-    transform.translateByVector3(
-      Vector3(
-        _parallaxPosition.dx * vanGoghParallax,
-        _parallaxPosition.dy * vanGoghParallax,
-        0.0,
-      ),
-    );
+  Matrix4 getNebulaTransform([Size? screenSize]) =>
+      _getParallaxTransform(nebulaParallax);
 
-    // Update cache
-    _cachedVanGoghTransform = transform;
-    _cachedTransformPosition = _parallaxPosition;
-
-    return transform;
-  }
+  Matrix4 getVanGoghTransform([Size? screenSize]) =>
+      _getParallaxTransform(vanGoghParallax);
 
   // Inverse transform for converting screen to world coordinates
   Offset screenToWorld(Offset screenPoint) {
@@ -254,9 +226,7 @@ class CameraController extends ChangeNotifier {
     if (constrainedPosition != _position) {
       _position = constrainedPosition;
       _parallaxPosition = constrainedParallaxPosition;
-      // Invalidate transform cache when position changes
-      _cachedNebulaTransform = null;
-      _cachedVanGoghTransform = null;
+      // Cache will be invalidated automatically on next transform request
       notifyListeners();
     }
   }
@@ -333,53 +303,58 @@ class CameraController extends ChangeNotifier {
     }
   }
 
+  /// Calculates target camera position to keep a focal point fixed on screen
+  /// during zoom operations. Returns null if no position change is needed.
+  Offset? _calculateFocalPointPosition(double targetScale, Offset focalPoint) {
+    if (targetScale == _scale) return null;
+
+    // Calculate world position of focal point at current scale
+    final worldFocus = screenToWorld(focalPoint);
+
+    // Calculate where that world point would be at target scale
+    // Note: worldToScreen uses current _scale, so we calculate manually
+    final newScreenFocus = (worldFocus * targetScale) + _position;
+
+    // Adjust position to keep focal point in same screen location
+    final adjustment = focalPoint - newScreenFocus;
+    final idealNewPosition = _position + adjustment;
+
+    // Apply radial constraint
+    final distance = math.sqrt(
+      idealNewPosition.dx * idealNewPosition.dx +
+          idealNewPosition.dy * idealNewPosition.dy,
+    );
+
+    if (distance > _maxPanDistance && distance > 0) {
+      final constraintFactor = _maxPanDistance / distance;
+      return idealNewPosition * constraintFactor;
+    }
+    return idealNewPosition;
+  }
+
+  /// Gets default focal point (screen center) or uses provided one
+  Offset _getFocalPoint(Offset? focalPoint) {
+    return focalPoint ?? Offset(_screenSize.width / 2, _screenSize.height / 2);
+  }
+
   // Zoom in by factor with optional focal point
   // Uses animation for smooth, crash-proof zoom on low-end devices
   void zoomIn([double factor = 1.5, Offset? focalPoint]) {
     if (_vsync == null) {
-      // Fallback to direct update if vsync not available
       updateScale(_scale * factor, focalPoint);
       return;
     }
 
     final targetScale = (_scale * factor).clamp(minScale, maxScale);
-
-    // Calculate target position based on focal point (screen center by default)
-    // This ensures zoom happens around the focal point
-    Offset? targetPosition;
-    final focal =
-        focalPoint ?? Offset(_screenSize.width / 2, _screenSize.height / 2);
-
-    if (targetScale != _scale) {
-      // Calculate world position of focal point at current scale
-      final adjustedPoint = focal - _position;
-      final worldFocus = adjustedPoint / _scale;
-
-      // Calculate where that world point would be at target scale
-      final newScreenFocus = (worldFocus * targetScale) + _position;
-
-      // Adjust position to keep focal point in same screen location
-      final adjustment = focal - newScreenFocus;
-      final idealNewPosition = _position + adjustment;
-
-      // Apply radial constraint
-      final distance = math.sqrt(
-        idealNewPosition.dx * idealNewPosition.dx +
-            idealNewPosition.dy * idealNewPosition.dy,
-      );
-
-      if (distance > _maxPanDistance && distance > 0) {
-        final constraintFactor = _maxPanDistance / distance;
-        targetPosition = idealNewPosition * constraintFactor;
-      } else {
-        targetPosition = idealNewPosition;
-      }
-    }
+    final targetPosition = _calculateFocalPointPosition(
+      targetScale,
+      _getFocalPoint(focalPoint),
+    );
 
     animateTo(
       targetPosition: targetPosition,
       targetScale: targetScale,
-      duration: const Duration(milliseconds: 250), // Quick but smooth
+      duration: const Duration(milliseconds: 250),
       vsync: _vsync!,
     );
   }
@@ -388,49 +363,20 @@ class CameraController extends ChangeNotifier {
   // Uses animation for smooth, crash-proof zoom on low-end devices
   void zoomOut([double factor = 1.5, Offset? focalPoint]) {
     if (_vsync == null) {
-      // Fallback to direct update if vsync not available
       updateScale(_scale / factor, focalPoint);
       return;
     }
 
     final targetScale = (_scale / factor).clamp(minScale, maxScale);
-
-    // Calculate target position based on focal point (screen center by default)
-    // This ensures zoom happens around the focal point
-    Offset? targetPosition;
-    final focal =
-        focalPoint ?? Offset(_screenSize.width / 2, _screenSize.height / 2);
-
-    if (targetScale != _scale) {
-      // Calculate world position of focal point at current scale
-      final adjustedPoint = focal - _position;
-      final worldFocus = adjustedPoint / _scale;
-
-      // Calculate where that world point would be at target scale
-      final newScreenFocus = (worldFocus * targetScale) + _position;
-
-      // Adjust position to keep focal point in same screen location
-      final adjustment = focal - newScreenFocus;
-      final idealNewPosition = _position + adjustment;
-
-      // Apply radial constraint
-      final distance = math.sqrt(
-        idealNewPosition.dx * idealNewPosition.dx +
-            idealNewPosition.dy * idealNewPosition.dy,
-      );
-
-      if (distance > _maxPanDistance && distance > 0) {
-        final constraintFactor = _maxPanDistance / distance;
-        targetPosition = idealNewPosition * constraintFactor;
-      } else {
-        targetPosition = idealNewPosition;
-      }
-    }
+    final targetPosition = _calculateFocalPointPosition(
+      targetScale,
+      _getFocalPoint(focalPoint),
+    );
 
     animateTo(
       targetPosition: targetPosition,
       targetScale: targetScale,
-      duration: const Duration(milliseconds: 250), // Quick but smooth
+      duration: const Duration(milliseconds: 250),
       vsync: _vsync!,
     );
   }
@@ -439,48 +385,20 @@ class CameraController extends ChangeNotifier {
   // Uses animation for smooth, crash-proof zoom on low-end devices
   void zoomTo100Percent([Offset? focalPoint]) {
     if (_vsync == null) {
-      // Fallback to direct update if vsync not available
       updateScale(1.0, focalPoint);
       return;
     }
 
-    // Calculate target position based on focal point (screen center by default)
-    // This ensures zoom happens around the focal point
-    Offset? targetPosition;
-    final focal =
-        focalPoint ?? Offset(_screenSize.width / 2, _screenSize.height / 2);
-
-    if (_scale != 1.0) {
-      // Calculate world position of focal point at current scale
-      final adjustedPoint = focal - _position;
-      final worldFocus = adjustedPoint / _scale;
-
-      // Calculate where that world point would be at scale 1.0
-      final newScreenFocus = (worldFocus * 1.0) + _position;
-
-      // Adjust position to keep focal point in same screen location
-      final adjustment = focal - newScreenFocus;
-      final idealNewPosition = _position + adjustment;
-
-      // Apply radial constraint
-      final distance = math.sqrt(
-        idealNewPosition.dx * idealNewPosition.dx +
-            idealNewPosition.dy * idealNewPosition.dy,
-      );
-
-      if (distance > _maxPanDistance && distance > 0) {
-        final constraintFactor = _maxPanDistance / distance;
-        targetPosition = idealNewPosition * constraintFactor;
-      } else {
-        targetPosition = idealNewPosition;
-      }
-    }
+    final targetPosition = _calculateFocalPointPosition(
+      1.0,
+      _getFocalPoint(focalPoint),
+    );
 
     animateTo(
       targetPosition: targetPosition,
       targetScale: 1.0,
-      duration: const Duration(milliseconds: 800), // Match Fit All animation
-      curve: Curves.easeInOutCubic, // Match Fit All animation
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInOutCubic,
       vsync: _vsync!,
     );
   }

@@ -3,6 +3,7 @@ import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../screens/sign_in_screen.dart';
+import '../../../../widgets/scrollable_dialog_content.dart';
 
 /// Account dialog widget for displaying and editing user account information
 class AccountDialog extends StatelessWidget {
@@ -74,7 +75,7 @@ class AccountDialog extends StatelessWidget {
             ),
           ],
         ),
-        child: SingleChildScrollView(
+        child: ScrollableDialogContent(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

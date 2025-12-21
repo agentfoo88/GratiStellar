@@ -11,11 +11,11 @@ class AppConfig {
 
   /// Privacy Policy URL
   static const String privacyPolicyUrl =
-      'https://agentfoo88.github.io/GratiStellar-legal/PRIVACY_POLICY.md';
+      'https://agentfoo88.github.io/GratiStellar-legal/PRIVACY_POLICY.html';
 
   /// Terms of Service URL
   static const String termsOfServiceUrl =
-      'https://agentfoo88.github.io/GratiStellar-legal/TERMS_OF_SERVICE.md';
+      'https://agentfoo88.github.io/GratiStellar-legal/TERMS_OF_SERVICE.html';
 
   // ============================================================================
   // CONSENT TRACKING

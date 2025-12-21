@@ -18,9 +18,14 @@ class AuthService {
   bool get isSignedIn => _auth.currentUser != null;
 
   // Check if user has email (upgraded from anonymous)
-  bool get hasEmailAccount =>
-      _auth.currentUser != null &&
-          !_auth.currentUser!.isAnonymous;
+  bool get hasEmailAccount {
+    final user = _auth.currentUser;
+    final result = user != null && !user.isAnonymous;
+    // #region agent log
+    AppLogger.auth('🔐 DEBUG: hasEmailAccount check - user=${user?.uid}, isAnonymous=${user?.isAnonymous}, result=$result');
+    // #endregion
+    return result;
+  }
 
   // Sign in anonymously with display name
   Future<User?> signInAnonymously(String displayName) async {
@@ -152,20 +157,32 @@ class AuthService {
   // Sign in with email/password (for returning users)
   Future<User?> signInWithEmail(String email, String password) async {
     try {
+      // #region agent log
+      AppLogger.auth('🔐 DEBUG: signInWithEmail called - email=$email');
+      // #endregion
+      
       final userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
+      // #region agent log
+      final user = userCredential.user;
+      AppLogger.auth('🔐 DEBUG: signInWithEmail completed - user=${user?.uid}, isAnonymous=${user?.isAnonymous}, email=${user?.email}');
+      // #endregion
+
       // Update last seen
-      if (userCredential.user != null) {
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      if (user != null) {
+        await _firestore.collection('users').doc(user.uid).set({
           'lastSeen': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       }
 
-      return userCredential.user;
+      return user;
     } catch (e) {
+      // #region agent log
+      AppLogger.error('🔐 DEBUG: signInWithEmail failed - error=$e');
+      // #endregion
       AppLogger.auth('Error signing in with email: $e');
       rethrow;
     }

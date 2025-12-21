@@ -6,6 +6,7 @@ import '../storage.dart';
 import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
 import '../features/gratitudes/presentation/state/galaxy_provider.dart';
+import '../features/gratitudes/presentation/state/gratitude_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,6 +38,12 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _triggerCloudSync() async {
+    // #region agent log
+    final authService = AuthService();
+    final currentUser = authService.currentUser;
+    AppLogger.sync('🔄 DEBUG: _triggerCloudSync started - user=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${authService.hasEmailAccount}');
+    // #endregion
+    
     final firestoreService = FirestoreService();
 
     try {
@@ -60,6 +67,15 @@ class _SignInScreenState extends State<SignInScreen> {
           AppLogger.sync('📥 Cloud has data, syncing...');
           // Don't just upload - sync to merge
           final mergedStars = await firestoreService.syncStars(localStars);
+          
+          // #region agent log
+          final galaxyIdCounts = <String, int>{};
+          for (final star in mergedStars) {
+            galaxyIdCounts[star.galaxyId] = (galaxyIdCounts[star.galaxyId] ?? 0) + 1;
+          }
+          AppLogger.sync('💾 DEBUG: Saving merged stars after sync - total=${mergedStars.length}, by galaxy=${galaxyIdCounts.toString()}');
+          // #endregion
+          
           await StorageService.saveGratitudeStars(mergedStars);
           AppLogger.sync('✅ Synced ${mergedStars.length} stars');
         } else {
@@ -93,6 +109,22 @@ class _SignInScreenState extends State<SignInScreen> {
       }
 
       AppLogger.sync('✅ Cloud sync complete (stars + galaxies)');
+      
+      // STEP 3: Reload gratitudes to refresh UI with synced stars
+      if (mounted) {
+        try {
+          final gratitudeProvider = context.read<GratitudeProvider>();
+          // #region agent log
+          AppLogger.sync('🔄 DEBUG: Reloading gratitudes after sync - activeGalaxyId=${context.read<GalaxyProvider>().activeGalaxyId}');
+          // #endregion
+          await gratitudeProvider.loadGratitudes(waitForSync: false);
+          AppLogger.sync('✅ Gratitudes reloaded after sync');
+        } catch (e, stack) {
+          AppLogger.sync('⚠️ Failed to reload gratitudes after sync: $e');
+          AppLogger.info('Stack trace: $stack');
+          // Continue anyway - stars are saved, will load on next app launch
+        }
+      }
     } catch (e) {
       AppLogger.sync('⚠️ Cloud sync failed: $e');
       // Don't show error to user - local data is still safe
@@ -192,7 +224,16 @@ class _SignInScreenState extends State<SignInScreen> {
           await _triggerCloudSync();
         }
       } else {
+        // #region agent log
+        AppLogger.auth('🔐 DEBUG: Starting signInWithEmail - email=$email');
+        // #endregion
+        
         await _authService.signInWithEmail(email, password);
+
+        // #region agent log
+        final userAfterSignIn = _authService.currentUser;
+        AppLogger.auth('🔐 DEBUG: After signInWithEmail - user=${userAfterSignIn?.uid}, isAnonymous=${userAfterSignIn?.isAnonymous}, email=${userAfterSignIn?.email}, hasEmailAccount=${_authService.hasEmailAccount}');
+        // #endregion
 
         if (mounted) {
           Navigator.of(context).pop();
@@ -300,11 +341,13 @@ class _SignInScreenState extends State<SignInScreen> {
 
               Expanded(
                 child: Center(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.all(
-                      FontScaling.getResponsiveSpacing(context, 24),
-                    ),
-                    child: Container(
+                  child: Scrollbar(
+                    thumbVisibility: false,
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(
+                        FontScaling.getResponsiveSpacing(context, 24),
+                      ),
+                      child: Container(
                       constraints: BoxConstraints(maxWidth: 400),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -521,6 +564,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ],
                       ),
+                    ),
                     ),
                   ),
                 ),

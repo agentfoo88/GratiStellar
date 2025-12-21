@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import '../../../../galaxy_metadata.dart';
 import '../../../../storage.dart';
 import '../../data/repositories/backup_repository.dart';

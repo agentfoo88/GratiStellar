@@ -167,10 +167,18 @@ class FirestoreService {
 
       final snapshot = await query.get();
 
+      // #region agent log
+      AppLogger.sync('📥 DEBUG: downloadDeltaStars query executed - lastSyncTime=${lastSyncTime?.toIso8601String()}, queryType=${lastSyncTime != null ? 'delta' : 'first'}, totalDocs=${snapshot.docs.length}');
+      // #endregion
+
       final stars = snapshot.docs
           .map((doc) {
         try {
-          return GratitudeStar.fromJson(doc.data() as Map<String, dynamic>);
+          final star = GratitudeStar.fromJson(doc.data() as Map<String, dynamic>);
+          // #region agent log
+          AppLogger.sync('📥 DEBUG: Downloaded star ${star.id} - galaxyId=${star.galaxyId}, deleted=${star.deleted}, updatedAt=${star.updatedAt.toIso8601String()}');
+          // #endregion
+          return star;
         } catch (e) {
           AppLogger.error('⚠️ Error parsing star ${doc.id}: $e');
           return null;
@@ -178,6 +186,14 @@ class FirestoreService {
       })
           .whereType<GratitudeStar>()
           .toList();
+
+      // #region agent log
+      final galaxyIdCounts = <String, int>{};
+      for (final star in stars) {
+        galaxyIdCounts[star.galaxyId] = (galaxyIdCounts[star.galaxyId] ?? 0) + 1;
+      }
+      AppLogger.sync('✅ DEBUG: Delta download complete: ${stars.length} stars by galaxy - ${galaxyIdCounts.toString()}');
+      // #endregion
 
       AppLogger.sync('✅ Delta download complete: ${stars.length} stars');
       return stars;
@@ -321,15 +337,29 @@ class FirestoreService {
         if (localStar == null) {
           // New star from cloud - add it
           localStarsMap[cloudStar.id] = cloudStar;
+          // #region agent log
+          AppLogger.sync('🔄 DEBUG: Adding new cloud star ${cloudStar.id} - galaxyId=${cloudStar.galaxyId}');
+          // #endregion
         } else {
           // Star exists locally - keep newer version
           if (cloudStar.updatedAt.isAfter(localStar.updatedAt)) {
             localStarsMap[cloudStar.id] = cloudStar;
+            // #region agent log
+            AppLogger.sync('🔄 DEBUG: Replacing local star ${cloudStar.id} with cloud version - galaxyId=${cloudStar.galaxyId}, cloudUpdatedAt=${cloudStar.updatedAt.toIso8601String()}, localUpdatedAt=${localStar.updatedAt.toIso8601String()}');
+            // #endregion
           }
         }
       }
 
       final mergedStars = localStarsMap.values.toList();
+      
+      // #region agent log
+      final mergedGalaxyIdCounts = <String, int>{};
+      for (final star in mergedStars) {
+        mergedGalaxyIdCounts[star.galaxyId] = (mergedGalaxyIdCounts[star.galaxyId] ?? 0) + 1;
+      }
+      AppLogger.sync('🔄 DEBUG: Merged stars summary - total=${mergedStars.length}, by galaxy=${mergedGalaxyIdCounts.toString()}');
+      // #endregion
 
       // Upload local stars modified since last sync
       await uploadDeltaStars(mergedStars);

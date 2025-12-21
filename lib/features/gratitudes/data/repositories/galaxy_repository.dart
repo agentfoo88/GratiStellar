@@ -248,6 +248,11 @@ class GalaxyRepository {
 
   /// Sync galaxies from cloud to local
   Future<void> syncFromCloud() async {
+    // #region agent log
+    final currentUser = _authService.currentUser;
+    AppLogger.auth('🔐 DEBUG: syncFromCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+    // #endregion
+    
     if (!_authService.hasEmailAccount) {
       AppLogger.auth('⚠️ Not authenticated, skipping galaxy sync');
       return;
@@ -272,6 +277,11 @@ class GalaxyRepository {
 
   /// Sync galaxies from local to cloud
   Future<void> syncToCloud() async {
+    // #region agent log
+    final currentUser = _authService.currentUser;
+    AppLogger.auth('🔐 DEBUG: syncToCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+    // #endregion
+    
     if (!_authService.hasEmailAccount) {
       AppLogger.auth('⚠️ Not authenticated, skipping galaxy sync');
       return;

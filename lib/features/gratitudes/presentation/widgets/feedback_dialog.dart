@@ -3,6 +3,8 @@ import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/feedback_service.dart';
+import '../../../../widgets/scrollable_dialog_content.dart';
+import '../../../../core/utils/app_logger.dart';
 
 /// Feedback dialog widget for submitting user feedback
 class FeedbackDialog extends StatefulWidget {
@@ -33,6 +35,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
   String _message = '';
   String _contactEmail = '';
   final _formKey = GlobalKey<FormState>();
+  bool _isSubmitting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +65,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
         ),
         child: Form(
           key: _formKey,
-          child: SingleChildScrollView(
+          child: ScrollableDialogContent(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +93,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                   height: FontScaling.getResponsiveSpacing(context, 8),
                 ),
                 DropdownButtonFormField<String>(
-                  value: _selectedType,
+                  initialValue: _selectedType,
                   dropdownColor: Color(0xFF1A2238),
                   style: FontScaling.getInputText(context),
                   decoration: InputDecoration(
@@ -303,39 +306,80 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () async {
+                      onPressed: _isSubmitting ? null : () async {
                         if (_formKey.currentState!.validate()) {
-                          Navigator.pop(context);
+                          setState(() {
+                            _isSubmitting = true;
+                          });
+
+                          // #region agent log
+                          AppLogger.info('📤 DEBUG: Submitting feedback - type=$_selectedType, messageLength=${_message.length}');
+                          // #endregion
 
                           final feedbackService = FeedbackService();
-                          final scaffoldMessenger = ScaffoldMessenger.of(
-                            context,
-                          );
-                          final textStyle = FontScaling.getBodyMedium(
-                            context,
-                          );
+                          
+                          // Capture context and l10n before async operations
+                          final navigator = Navigator.of(context);
+                          final scaffoldMessenger = ScaffoldMessenger.of(context);
+                          final successMessage = l10n.feedbackSuccess;
+                          final errorMessage = l10n.feedbackError;
+                          final textStyle = FontScaling.getBodyMedium(context);
 
-                          final success = await feedbackService.submitFeedback(
-                            type: _selectedType,
-                            message: _message,
-                            contactEmail:
-                                _contactEmail.isNotEmpty ? _contactEmail : null,
-                          );
-
-                          if (mounted) {
-                            scaffoldMessenger.showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  success
-                                      ? l10n.feedbackSuccess
-                                      : l10n.feedbackError,
-                                  style: textStyle,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                backgroundColor:
-                                    success ? Colors.green : Colors.red,
-                              ),
+                          try {
+                            final success = await feedbackService.submitFeedback(
+                              type: _selectedType,
+                              message: _message,
+                              contactEmail:
+                                  _contactEmail.isNotEmpty ? _contactEmail : null,
                             );
+
+                            // #region agent log
+                            AppLogger.info('📤 DEBUG: Feedback submission result - success=$success');
+                            // #endregion
+
+                            // Close dialog only after submission completes
+                            if (mounted) {
+                              navigator.pop();
+                              
+                              // Show success/error message
+                              scaffoldMessenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    success ? successMessage : errorMessage,
+                                    style: textStyle,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  backgroundColor:
+                                      success ? Colors.green : Colors.red,
+                                ),
+                              );
+                            }
+                          } catch (e, stack) {
+                            // #region agent log
+                            AppLogger.error('📤 DEBUG: Feedback submission exception - $e');
+                            AppLogger.info('Stack trace: $stack');
+                            // #endregion
+                            
+                            // Close dialog and show error
+                            if (mounted) {
+                              navigator.pop();
+                              scaffoldMessenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    errorMessage,
+                                    style: textStyle,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _isSubmitting = false;
+                              });
+                            }
                           }
                         }
                       },
@@ -356,12 +400,23 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      child: Text(
-                        l10n.feedbackSubmit,
-                        style: FontScaling.getButtonText(
-                          context,
-                        ).copyWith(color: Color(0xFF1A2238)),
-                      ),
+                      child: _isSubmitting
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFF1A2238),
+                                ),
+                              ),
+                            )
+                          : Text(
+                              l10n.feedbackSubmit,
+                              style: FontScaling.getButtonText(
+                                context,
+                              ).copyWith(color: Color(0xFF1A2238)),
+                            ),
                     ),
                   ],
                 ),

@@ -78,6 +78,9 @@ class GalaxyProvider extends ChangeNotifier {
 
       // Load the saved active galaxy ID from storage
       _activeGalaxyId = await _galaxyRepository.getActiveGalaxyId();
+      // #region agent log
+      AppLogger.data('📝 DEBUG: Loaded active galaxy from storage - activeGalaxyId=$_activeGalaxyId, totalGalaxies=${_galaxies.length}, galaxyIds=${_galaxies.map((g) => g.id).toList()}');
+      // #endregion
       AppLogger.data('📝 Loaded active galaxy from storage: $_activeGalaxyId');
 
       // If no active galaxy, create a default one
@@ -489,16 +492,42 @@ class GalaxyProvider extends ChangeNotifier {
   }
 
   /// Restore galaxies from backup
-  Future<void> restoreFromBackup(List<GalaxyMetadata> backupGalaxies) async {
+  /// 
+  /// [backupActiveGalaxyId] - Optional active galaxy ID from backup metadata.
+  /// If provided and the galaxy exists in backup, will switch to it.
+  Future<void> restoreFromBackup(
+    List<GalaxyMetadata> backupGalaxies, {
+    String? backupActiveGalaxyId,
+  }) async {
     _galaxies = backupGalaxies;
 
     // Save to local storage
     await _galaxyRepository.saveGalaxies(_galaxies);
 
-    // If we don't have an active galaxy, set to first one
-    if (_activeGalaxyId == null && _galaxies.isNotEmpty) {
-      _activeGalaxyId = _galaxies.first.id;
+    // Determine which galaxy should be active
+    String? targetActiveGalaxyId;
+    
+    if (backupActiveGalaxyId != null && 
+        _galaxies.any((g) => g.id == backupActiveGalaxyId)) {
+      // Use active galaxy from backup if it exists
+      targetActiveGalaxyId = backupActiveGalaxyId;
+      AppLogger.info('🔄 Restoring active galaxy from backup: $targetActiveGalaxyId');
+    } else if (_galaxies.isNotEmpty) {
+      // Fallback to first galaxy if backup active galaxy doesn't exist or wasn't provided
+      targetActiveGalaxyId = _galaxies.first.id;
+      AppLogger.info('🔄 Using first galaxy as active: $targetActiveGalaxyId');
+    }
+
+    // Set active galaxy if we have one
+    if (targetActiveGalaxyId != null) {
+      final wasDifferent = _activeGalaxyId != targetActiveGalaxyId;
+      _activeGalaxyId = targetActiveGalaxyId;
       await _galaxyRepository.setActiveGalaxy(_activeGalaxyId!);
+      
+      // If galaxy changed, we need to sync and reload stars
+      if (wasDifferent) {
+        AppLogger.info('🔄 Active galaxy changed during restore, will sync and reload stars');
+      }
     }
 
     // Update gratitude repository filter to match active galaxy

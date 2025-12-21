@@ -566,6 +566,7 @@ class BackupData {
   final List<Map<String, dynamic>> galaxies;
   final Map<String, dynamic> preferences;
   final Map<String, dynamic>? metadata;
+  final String? activeGalaxyId;
 
   BackupData({
     required this.version,
@@ -575,6 +576,7 @@ class BackupData {
     required this.galaxies,
     required this.preferences,
     this.metadata,
+    this.activeGalaxyId,
   });
 
   Map<String, dynamic> toJson() {
@@ -586,6 +588,7 @@ class BackupData {
       'galaxies': galaxies,
       'preferences': preferences,
       'metadata': metadata,
+      'activeGalaxyId': activeGalaxyId,
     };
   }
 
@@ -602,6 +605,7 @@ class BackupData {
       metadata: json['metadata'] != null
           ? Map<String, dynamic>.from(json['metadata'])
           : null,
+      activeGalaxyId: json['activeGalaxyId'] as String?,
     );
   }
 

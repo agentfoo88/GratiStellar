@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../modal_dialogs.dart'; // For showDeleteConfirmation and _showColorPickerDialog
 import '../storage.dart'; // For GratitudeStar
 import 'color_picker_dialog.dart';
+import 'scrollable_dialog_content.dart';
 
 // TODO: Refactor _showColorPickerDialog into its own widget as well
 // This widget will replace the contents of the showEditStar method
@@ -96,9 +97,10 @@ class _EditStarDialogState extends State<EditStarDialog> {
             width: 2,
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: ScrollableDialogContent(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // Star icon preview
             SvgPicture.asset(
               'assets/icon_star.svg',
@@ -377,7 +379,8 @@ class _EditStarDialogState extends State<EditStarDialog> {
                   ),
                 ],
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:crypto/crypto.dart';
@@ -34,18 +33,16 @@ class ValidationException implements Exception {
 /// Repository for managing backup and restore operations
 class BackupRepository {
   static const String _backupVersion = '1.0';
-  static const String _encryptionKeyName = 'backup_encryption_key';
-  static const _secureStorage = FlutterSecureStorage(
-    iOptions: IOSOptions(
-      accessibility: KeychainAccessibility.first_unlock,
-    ),
-  );
+  // Fixed encryption key for portability - backups can be restored on any device
+  // This provides basic obfuscation. For stronger security, consider password-based encryption.
+  static const String _fixedEncryptionKey = 'GratiStellar_Backup_Key_v1.0_2024';
 
   /// Create a backup of current data
   Future<BackupData> createBackup({
     required List<GratitudeStar> stars,
     required List<GalaxyMetadata> galaxies,
     required Map<String, dynamic> preferences,
+    String? activeGalaxyId,
   }) async {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
@@ -57,6 +54,7 @@ class BackupRepository {
         stars: stars,
         galaxies: galaxies.map((g) => g.toJson()).toList(),
         preferences: preferences,
+        activeGalaxyId: activeGalaxyId,
         metadata: {
           'platform': Platform.operatingSystem,
           'deviceModel': await _getDeviceModel(),
@@ -110,23 +108,48 @@ class BackupRepository {
       final jsonString = await _decryptData(encryptedData);
 
       // Parse JSON
-      final decoded = json.decode(jsonString);
-      if (decoded is! Map<String, dynamic>) {
-        throw FormatException('Invalid backup format: expected Map, got ${decoded.runtimeType}');
+      Map<String, dynamic> decoded;
+      try {
+        decoded = json.decode(jsonString) as Map<String, dynamic>;
+      } on FormatException catch (e) {
+        throw ValidationException(
+          'Invalid backup file format: JSON parsing failed. '
+          'The file may be corrupted or not a valid GratiStellar backup file. '
+          'Error: ${e.message}'
+        );
+      } catch (e) {
+        throw ValidationException(
+          'Invalid backup file format: unexpected error during JSON parsing. '
+          'Error: ${e.toString()}'
+        );
       }
 
       // Create BackupData object
-      final backup = BackupData.fromJson(decoded);
+      BackupData backup;
+      try {
+        backup = BackupData.fromJson(decoded);
+      } catch (e) {
+        throw ValidationException(
+          'Invalid backup file format: failed to parse backup data structure. '
+          'The file may be corrupted or from an incompatible version. '
+          'Error: ${e.toString()}'
+        );
+      }
       
       // Validate backup
       if (!backup.validate()) {
-        throw ValidationException('Backup file is corrupted or invalid');
+        throw ValidationException(
+          'Backup file failed integrity check. '
+          'The file may be corrupted or incomplete. '
+          'Please verify the backup file was created correctly.'
+        );
       }
       
       // Check version compatibility
       if (!_isVersionCompatible(backup.version)) {
         throw ValidationException(
-          'Backup version ${backup.version} is not compatible with current version $_backupVersion'
+          'Backup version ${backup.version} is not compatible with current version $_backupVersion. '
+          'Please create a new backup with the current app version.'
         );
       }
       
@@ -212,16 +235,15 @@ class BackupRepository {
   // PRIVATE METHODS - Encryption & Utilities
   // ============================================================================
 
-  /// Encrypt data using AES encryption
+  /// Encrypt data using XOR encryption with fixed key for portability
+  /// 
+  /// Uses a fixed key so backups can be restored on any device.
+  /// This provides basic obfuscation. For stronger security, consider password-based encryption.
   Future<List<int>> _encryptData(String data) async {
     try {
-      // Get or create encryption key
-      final key = await _getOrCreateEncryptionKey();
-      
-      // Simple encryption: XOR with key hash (for production, use proper AES)
-      // Note: This is a simplified implementation. For production, use encrypt package
+      // Use fixed encryption key for portability across devices
       final dataBytes = utf8.encode(data);
-      final keyHash = sha256.convert(utf8.encode(key)).bytes;
+      final keyHash = sha256.convert(utf8.encode(_fixedEncryptionKey)).bytes;
       
       final encrypted = <int>[];
       for (var i = 0; i < dataBytes.length; i++) {
@@ -236,28 +258,34 @@ class BackupRepository {
     }
   }
 
-  /// Decrypt data
+  /// Decrypt data using fixed key for portability
   Future<String> _decryptData(List<int> encryptedData) async {
     try {
       // Check version marker
       final versionMarker = utf8.encode('GRATISTELLAR_BACKUP_V1:');
       if (encryptedData.length < versionMarker.length) {
-        throw ValidationException('Invalid backup file format');
+        throw ValidationException('Invalid backup file format: file too short');
       }
       
       // Verify marker
       for (var i = 0; i < versionMarker.length; i++) {
         if (encryptedData[i] != versionMarker[i]) {
-          throw ValidationException('Invalid backup file format');
+          throw ValidationException(
+            'Invalid backup file format: missing or incorrect version marker. '
+            'This may be an old backup format or corrupted file.'
+          );
         }
       }
       
       // Remove marker
       final dataToDecrypt = encryptedData.sublist(versionMarker.length);
       
-      // Get encryption key
-      final key = await _getOrCreateEncryptionKey();
-      final keyHash = sha256.convert(utf8.encode(key)).bytes;
+      if (dataToDecrypt.isEmpty) {
+        throw ValidationException('Invalid backup file format: empty data');
+      }
+      
+      // Use fixed encryption key for portability
+      final keyHash = sha256.convert(utf8.encode(_fixedEncryptionKey)).bytes;
       
       // Decrypt (XOR with same key)
       final decrypted = <int>[];
@@ -265,38 +293,20 @@ class BackupRepository {
         decrypted.add(dataToDecrypt[i] ^ keyHash[i % keyHash.length]);
       }
       
-      return utf8.decode(decrypted);
+      try {
+        return utf8.decode(decrypted);
+      } catch (e) {
+        throw ValidationException(
+          'Decryption failed: invalid UTF-8 data. '
+          'The backup file may be corrupted or was created with a different encryption key.'
+        );
+      }
     } catch (e) {
       if (e is ValidationException) rethrow;
-      throw BackupException('Decryption failed', e);
+      throw BackupException('Decryption failed: ${e.toString()}', e);
     }
   }
 
-  /// Get or create encryption key for backups
-  Future<String> _getOrCreateEncryptionKey() async {
-    try {
-      // Try to get existing key
-      var key = await _secureStorage.read(key: _encryptionKeyName);
-      
-      if (key == null) {
-        // Generate new key
-        key = _generateSecureKey();
-        await _secureStorage.write(key: _encryptionKeyName, value: key);
-        debugPrint('🔑 Generated new backup encryption key');
-      }
-      
-      return key;
-    } catch (e) {
-      throw BackupException('Failed to get encryption key', e);
-    }
-  }
-
-  /// Generate a secure random key
-  String _generateSecureKey() {
-    final random = DateTime.now().millisecondsSinceEpoch.toString() +
-        DateTime.now().microsecondsSinceEpoch.toString();
-    return sha256.convert(utf8.encode(random)).toString();
-  }
 
   /// Check if backup version is compatible
   bool _isVersionCompatible(String backupVersion) {

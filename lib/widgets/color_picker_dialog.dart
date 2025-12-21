@@ -6,7 +6,8 @@ import '../font_scaling.dart';
 import '../gratitude_stars.dart'; // For StarColors
 import '../l10n/app_localizations.dart';
 import '../storage.dart'; // For GratitudeStar
-import 'color_grid.dart'; // <--- ADD THIS LINE
+import 'color_grid.dart';
+import 'scrollable_dialog_content.dart';
 
 class ColorPickerDialog extends StatefulWidget {
   final GratitudeStar currentStar;
@@ -127,7 +128,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
             ),
           ],
         ),
-        child: SingleChildScrollView(
+        child: ScrollableDialogContent(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

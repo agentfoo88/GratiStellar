@@ -9,7 +9,8 @@ import 'storage.dart';
 import 'widgets/app_dialog.dart';
 import 'widgets/edit_star_dialog.dart';
 import 'widgets/color_picker_dialog.dart';
-import 'widgets/color_grid.dart'; // <--- ADD THIS LINE
+import 'widgets/color_grid.dart';
+import 'widgets/scrollable_dialog_content.dart';
 
 /// Centralized dialogs for GratiStellar app
 /// All modal dialogs are static methods that accept callbacks for actions
@@ -276,6 +277,13 @@ class GratitudeDialogs {
   // HELPER WIDGETS
   // ========================================
 
+  /// Helper widget to manage ScrollController for dialog scrollbar
+  static Widget _buildScrollableDialogContent({
+    required Widget child,
+  }) {
+    return ScrollableDialogContent(child: child);
+  }
+
   static Future<void> showAddGratitude({
     required BuildContext context,
     required TextEditingController controller,
@@ -326,7 +334,7 @@ class GratitudeDialogs {
                     ),
                   ],
                 ),
-                child: SingleChildScrollView(
+                child: _buildScrollableDialogContent(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -667,5 +675,6 @@ class GratitudeDialogs {
       ),
     );
   }
-
 }
+
+/// Helper StatefulWidget to manage ScrollController for dialog scrollbar

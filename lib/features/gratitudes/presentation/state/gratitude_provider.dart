@@ -168,11 +168,29 @@ class GratitudeProvider extends ChangeNotifier {
 
     // Filter for display: only non-deleted stars from the current galaxy
     // CRITICAL: Must filter by galaxy ID to match syncWithCloud() behavior!
+    final activeGalaxyId = _galaxyProvider.activeGalaxyId;
+    
+    // #region agent log
+    final allStarsCount = purgedStars.length;
+    final galaxyIdCounts = <String, int>{};
+    for (final star in purgedStars) {
+      if (!star.deleted) {
+        galaxyIdCounts[star.galaxyId] = (galaxyIdCounts[star.galaxyId] ?? 0) + 1;
+      }
+    }
+    AppLogger.sync('📋 DEBUG: loadGratitudes filtering - totalStarsInStorage=$allStarsCount, activeGalaxyId=$activeGalaxyId, starsByGalaxyId=${galaxyIdCounts.toString()}');
+    // #endregion
+    
     _gratitudeStars = purgedStars
         .where((star) =>
             !star.deleted &&
-            star.galaxyId == _galaxyProvider.activeGalaxyId)
+            star.galaxyId == activeGalaxyId)
         .toList();
+    
+    // #region agent log
+    AppLogger.sync('📋 DEBUG: loadGratitudes filtered result - filteredStarsCount=${_gratitudeStars.length}, activeGalaxyId=$activeGalaxyId');
+    // #endregion
+    
     _isLoading = false;
     notifyListeners();
 
@@ -663,19 +681,23 @@ class GratitudeProvider extends ChangeNotifier {
   }
 
   /// Restore data from backup
+  /// 
+  /// After restoring stars, forces a full reload to ensure UI is refreshed
+  /// and stars are properly displayed for the active galaxy.
   Future<void> restoreFromBackup(List<GratitudeStar> backupStars) async {
     // Save ALL backup stars to local storage (unfiltered)
     await StorageService.saveGratitudeStars(backupStars);
 
-    // Filter stars for current active galaxy for display
-    _gratitudeStars = backupStars
-        .where((star) =>
-            !star.deleted &&
-            star.galaxyId == _galaxyProvider.activeGalaxyId)
-        .toList();
+    AppLogger.data('💾 Saved ${backupStars.length} stars to local storage');
+
+    // CRITICAL: Force a full reload of gratitudes to ensure UI is refreshed
+    // This ensures stars are properly filtered for the active galaxy and displayed
+    AppLogger.data('🔄 Forcing full reload of gratitudes after restore...');
+    await loadGratitudes(waitForSync: false); // Don't wait for sync, just reload from storage
 
     // Update galaxy star count to match restored data
-    await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
+    final activeGalaxyStarCount = _gratitudeStars.length;
+    await _galaxyProvider.updateActiveGalaxyStarCount(activeGalaxyStarCount);
 
     // If signed in, sync to cloud immediately
     if (_authService.hasEmailAccount) {
@@ -688,7 +710,7 @@ class GratitudeProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-    AppLogger.success('✅ Restored ${backupStars.length} total stars from backup (${_gratitudeStars.length} in active galaxy)');
+    AppLogger.success('✅ Restored ${backupStars.length} total stars from backup (${activeGalaxyStarCount} in active galaxy)');
   }
 
   @override

@@ -54,6 +54,7 @@ class ExportBackupUseCase {
     required List<GratitudeStar> stars,
     required List<GalaxyMetadata> galaxies,
     required double fontScale,
+    String? activeGalaxyId,
   }) async {
     try {
       // Prepare preferences
@@ -66,6 +67,7 @@ class ExportBackupUseCase {
         stars: stars,
         galaxies: galaxies,
         preferences: preferences,
+        activeGalaxyId: activeGalaxyId,
       );
 
       // Export to encrypted file

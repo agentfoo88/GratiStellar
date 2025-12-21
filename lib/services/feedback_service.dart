@@ -17,10 +17,21 @@ class FeedbackService {
     String? contactEmail,
   }) async {
     try {
+      // #region agent log
+      AppLogger.info('📤 DEBUG: submitFeedback called - type=$type, messageLength=${message.length}, hasContactEmail=${contactEmail != null}');
+      // #endregion
+
       final user = _auth.currentUser;
       if (user == null) {
+        // #region agent log
+        AppLogger.error('📤 DEBUG: No user signed in for feedback submission');
+        // #endregion
         throw Exception('No user signed in');
       }
+
+      // #region agent log
+      AppLogger.info('📤 DEBUG: User authenticated - uid=${user.uid}, email=${user.email}');
+      // #endregion
 
       // Get app version
       final packageInfo = await PackageInfo.fromPlatform();
@@ -47,11 +58,23 @@ class FeedbackService {
         platform: platform,
       );
 
+      // #region agent log
+      AppLogger.info('📤 DEBUG: Attempting to write feedback to Firestore - feedbackId=${feedback.id}');
+      // #endregion
+
       await _firestore.collection('feedback').doc(feedback.id).set(feedback.toJson());
+
+      // #region agent log
+      AppLogger.success('📤 DEBUG: Feedback successfully written to Firestore - feedbackId=${feedback.id}');
+      // #endregion
 
       AppLogger.success('✅ Feedback submitted: ${feedback.id}');
       return true;
-    } catch (e) {
+    } catch (e, stack) {
+      // #region agent log
+      AppLogger.error('📤 DEBUG: Feedback submission failed - error=$e');
+      AppLogger.info('Stack trace: $stack');
+      // #endregion
       AppLogger.error('❌ Error submitting feedback: $e');
       return false;
     }

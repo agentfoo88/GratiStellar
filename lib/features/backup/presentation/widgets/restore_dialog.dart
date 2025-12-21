@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/error/error_context.dart';
 import '../../../../core/error/error_handler.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../storage.dart';
+import '../../../../widgets/scrollable_dialog_content.dart';
 import '../../../gratitudes/presentation/state/galaxy_provider.dart';
 import '../../../gratitudes/presentation/state/gratitude_provider.dart';
 import '../../data/repositories/backup_repository.dart';
@@ -44,13 +46,12 @@ class _RestoreDialogState extends State<RestoreDialog> {
       if (result != null && result.files.single.path != null) {
         final filePath = result.files.single.path!;
 
-        // Validate file extension - CRITICAL since we're allowing any file type
-        if (!filePath.toLowerCase().endsWith('.gratistellar')) {
-          setState(() {
-            _errorMessage = 'Please select a valid .gratistellar backup file.\n'
-                'Selected file: ${filePath.split('/').last}';
-          });
-          return;
+        // Warn if extension is wrong, but still try to validate file content
+        // This allows users to rename files without breaking import
+        final hasCorrectExtension = filePath.toLowerCase().endsWith('.gratistellar');
+        if (!hasCorrectExtension) {
+          AppLogger.warning('⚠️ Selected file does not have .gratistellar extension: $filePath');
+          // Continue anyway - we'll validate the file content
         }
         
         setState(() {
@@ -149,9 +150,16 @@ class _RestoreDialogState extends State<RestoreDialog> {
       );
 
       if (result.success) {
-        // Apply imported data
+        // CRITICAL: Restore galaxies FIRST, then stars
+        // This ensures the active galaxy is set before stars are filtered
+        AppLogger.data('🔄 Step 1: Restoring galaxies...');
+        await galaxyProvider.restoreFromBackup(
+          result.mergedGalaxies!,
+          backupActiveGalaxyId: result.backup?.activeGalaxyId,
+        );
+        
+        AppLogger.data('🔄 Step 2: Restoring stars...');
         await gratitudeProvider.restoreFromBackup(result.mergedStars!);
-        await galaxyProvider.restoreFromBackup(result.mergedGalaxies!);
         
         // Apply preferences
         if (result.mergedPreferences!.containsKey('fontScale')) {
@@ -159,6 +167,9 @@ class _RestoreDialogState extends State<RestoreDialog> {
             result.mergedPreferences!['fontScale'] as double,
           );
         }
+
+        // Note: Both providers already call notifyListeners() in their restoreFromBackup methods
+        // No need to call it again here
 
         setState(() {
           _successMessage = 'Backup restored successfully!\n${result.backup?.getSummary()}';
@@ -224,7 +235,7 @@ class _RestoreDialogState extends State<RestoreDialog> {
           ),
         ],
       ),
-      content: SingleChildScrollView(
+      content: ScrollableDialogContent(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

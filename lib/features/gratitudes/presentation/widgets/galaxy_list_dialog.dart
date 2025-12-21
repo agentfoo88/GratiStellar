@@ -20,6 +20,19 @@ class GalaxyListDialog extends StatefulWidget {
 
 class _GalaxyListDialogState extends State<GalaxyListDialog> {
   bool _isLoading = false;
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,12 +79,16 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               Expanded(
                 child: activeGalaxies.isEmpty
                     ? _buildEmptyState(context, l10n)
-                    : ListView.separated(
-                  padding: EdgeInsets.all(
-                    FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
-                  ),
-                  itemCount: activeGalaxies.length,
-                  separatorBuilder: (context, index) => Divider(
+                    : Scrollbar(
+                        controller: _scrollController,
+                        thumbVisibility: false,
+                        child: ListView.separated(
+                          controller: _scrollController,
+                          padding: EdgeInsets.all(
+                            FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
+                          ),
+                          itemCount: activeGalaxies.length,
+                          separatorBuilder: (context, index) => Divider(
                     color: Color(0xFFFFE135).withValues(alpha: 0.2),
                     height: FontScaling.getResponsiveSpacing(context, 1),
                   ),
@@ -79,7 +96,8 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                     final galaxy = activeGalaxies[index];
                     return _buildGalaxyItem(context, galaxy, galaxyProvider, l10n);
                   },
-                ),
+                        ),
+                      ),
               ),
 
               // Create new galaxy button at bottom
@@ -129,7 +147,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                       ),
                     ),
                   ),
-                ),
+                      ),
               ),
             ],
           );

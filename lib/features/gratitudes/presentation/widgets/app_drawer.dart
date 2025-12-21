@@ -54,12 +54,20 @@ class AppDrawerWidget extends StatefulWidget {
 class _AppDrawerWidgetState extends State<AppDrawerWidget> {
   double textScaleFactor = 1.0;
   PackageInfo? _packageInfo;
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
     _loadFontScale();
     _loadPackageInfo();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFontScale() async {
@@ -96,9 +104,13 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
     return Drawer(
       width: _getResponsiveDrawerWidth(context),
       backgroundColor: AppColors.primaryDark.withValues(alpha: 0.98),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
+      child: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: false,
+        child: ListView(
+          controller: _scrollController,
+          padding: EdgeInsets.zero,
+          children: [
           // Enhanced Header with Icon, Title, Galaxy Stats (TAPPABLE)
           Consumer2<GalaxyProvider, GratitudeProvider>(
             builder: (context, galaxyProvider, gratitudeProvider, _) {
@@ -968,6 +980,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
               ),
             ),
         ],
+        ),
       ),
     );
   }

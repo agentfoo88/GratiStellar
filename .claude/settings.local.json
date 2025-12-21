@@ -10,12 +10,9 @@
       "Bash(adb logcat:*)",
       "Bash(adb shell:*)",
       "Bash(flutter clean:*)",
-<<<<<<< Updated upstream
       "Bash(git add:*)",
-      "Bash(cat:*)"
-=======
+      "Bash(cat:*)",
       "Bash(git show-ref:*)"
->>>>>>> Stashed changes
     ],
     "deny": [],
     "ask": []

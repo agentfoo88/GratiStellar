@@ -67,6 +67,7 @@ class _BackupDialogState extends State<BackupDialog> {
         stars: stars,
         galaxies: galaxies,
         fontScale: fontScale,
+        activeGalaxyId: galaxyProvider.activeGalaxyId,
       );
 
       if (result.success && result.filePath != null) {

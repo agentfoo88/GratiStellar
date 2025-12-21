@@ -4,6 +4,7 @@ import '../services/daily_reminder_service.dart';
 import '../font_scaling.dart';
 import '../core/accessibility/semantic_helper.dart';
 import '../l10n/app_localizations.dart';
+import 'scrollable_dialog_content.dart';
 
 class ReminderPromptBottomSheet extends StatefulWidget {
   const ReminderPromptBottomSheet({super.key});
@@ -115,9 +116,10 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
           ),
         ),
         padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: ScrollableDialogContent(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
           // Decorative icon
           SemanticHelper.decorative(
             child: Icon(
@@ -162,8 +164,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
             ),
             textAlign: TextAlign.center,
           ),
-
-          const Spacer(),
+          SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
 
           // Buttons
           Row(
@@ -232,8 +233,9 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
               ),
             ],
           ),
-        ],
-      ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -39,11 +39,10 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _triggerCloudSync() async {
     // #region agent log
-    final authService = AuthService();
-    final currentUser = authService.currentUser;
-    AppLogger.sync('🔄 DEBUG: _triggerCloudSync started - user=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${authService.hasEmailAccount}');
+    final currentUser = _authService.currentUser;
+    AppLogger.sync('🔄 DEBUG: _triggerCloudSync started - user=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
     // #endregion
-    
+
     final firestoreService = FirestoreService();
 
     try {
@@ -85,18 +84,28 @@ class _SignInScreenState extends State<SignInScreen> {
         }
       }
 
-      // STEP 2: Sync ALL galaxies to cloud (CRITICAL!)
+      // STEP 2: Sync galaxies bidirectionally (CRITICAL!)
       if (mounted) {
-        AppLogger.sync('☁️ Syncing galaxies to cloud...');
+        AppLogger.sync('☁️ Syncing galaxies bidirectionally...');
         try {
           final galaxyProvider = context.read<GalaxyProvider>();
-          
-          // Ensure galaxies are loaded before syncing
-          if (galaxyProvider.galaxies.isEmpty) {
-            AppLogger.sync('📋 Loading galaxies before sync...');
-            await galaxyProvider.loadGalaxies();
+
+          // First, try to sync FROM cloud (download existing galaxies)
+          try {
+            AppLogger.sync('📥 Syncing galaxies FROM cloud...');
+            await galaxyProvider.syncFromCloud();
+            AppLogger.sync('✅ Galaxies synced from cloud');
+          } catch (e) {
+            AppLogger.sync('⚠️ Failed to sync galaxies from cloud: $e');
+            // If cloud sync fails (e.g., no cloud data), load local galaxies
+            if (galaxyProvider.galaxies.isEmpty) {
+              AppLogger.sync('📋 Loading local galaxies...');
+              await galaxyProvider.loadGalaxies();
+            }
           }
-          
+
+          // Then, sync TO cloud (upload any local-only galaxies)
+          AppLogger.sync('📤 Syncing galaxies TO cloud...');
           await galaxyProvider.syncToCloud();
           AppLogger.sync('✅ All galaxies synced to cloud');
         } catch (e, stack) {
@@ -213,21 +222,21 @@ class _SignInScreenState extends State<SignInScreen> {
         // Authenticate first, load stars inside sync to avoid race condition
         await _authService.linkEmailPassword(email, password);
 
+        // Mark current user as local data owner
+        await _setLocalDataOwner();
+
+        // Trigger sync BEFORE navigation - stars AND galaxies loaded fresh inside sync function
+        await _triggerCloudSync();
+
         if (mounted) {
           Navigator.of(context).pop();
           _showSuccessSnackBar(l10n.accountCreatedSuccess);
-
-          // Mark current user as local data owner
-          await _setLocalDataOwner();
-
-          // Trigger sync - stars AND galaxies loaded fresh inside sync function
-          await _triggerCloudSync();
         }
       } else {
         // #region agent log
         AppLogger.auth('🔐 DEBUG: Starting signInWithEmail - email=$email');
         // #endregion
-        
+
         await _authService.signInWithEmail(email, password);
 
         // #region agent log
@@ -235,15 +244,15 @@ class _SignInScreenState extends State<SignInScreen> {
         AppLogger.auth('🔐 DEBUG: After signInWithEmail - user=${userAfterSignIn?.uid}, isAnonymous=${userAfterSignIn?.isAnonymous}, email=${userAfterSignIn?.email}, hasEmailAccount=${_authService.hasEmailAccount}');
         // #endregion
 
+        // Mark current user as local data owner
+        await _setLocalDataOwner();
+
+        // Trigger sync BEFORE navigation - stars AND galaxies loaded fresh inside sync function
+        await _triggerCloudSync();
+
         if (mounted) {
           Navigator.of(context).pop();
           _showSuccessSnackBar(l10n.signInSuccess);
-
-          // Mark current user as local data owner
-          await _setLocalDataOwner();
-
-          // Trigger sync - stars AND galaxies loaded fresh inside sync function
-          await _triggerCloudSync();
         }
       }
     } catch (e, stack) {

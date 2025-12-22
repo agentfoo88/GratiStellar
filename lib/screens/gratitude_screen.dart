@@ -678,11 +678,32 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     _showAccountDialog();
   }
 
-  void _showFeedbackDialog() {
-    FeedbackDialog.show(
+  void _showFeedbackDialog() async {
+    final result = await FeedbackDialog.show(
       context: context,
       authService: _authService,
     );
+
+    // Show SnackBar if dialog returned a result
+    if (result != null && mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result ? l10n.feedbackSuccess : l10n.feedbackError,
+            style: FontScaling.getBodyMedium(context),
+            overflow: TextOverflow.ellipsis,
+          ),
+          backgroundColor: result ? Colors.green : Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override

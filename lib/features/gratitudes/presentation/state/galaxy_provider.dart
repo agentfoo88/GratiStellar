@@ -449,10 +449,14 @@ class GalaxyProvider extends ChangeNotifier {
       _activeGalaxyId = await _galaxyRepository.getActiveGalaxyId();
       _gratitudeRepository.setActiveGalaxyId(_activeGalaxyId);
 
+      // Recalculate star counts for all galaxies to ensure accuracy
+      await _galaxyRepository.recalculateAllStarCounts();
+      await loadGalaxies(); // Reload to get updated counts
+
       notifyListeners();
     } catch (e) {
       AppLogger.sync('⚠️ Error syncing galaxies from cloud: $e');
-      
+
       // If cloud sync fails but we have local galaxies, try to upload them
       // This handles the case where Firebase has no galaxy data yet
       if (_galaxies.isNotEmpty) {
@@ -463,7 +467,7 @@ class GalaxyProvider extends ChangeNotifier {
           AppLogger.sync('⚠️ Fallback upload also failed: $uploadError');
         }
       }
-      
+
       // Don't rethrow - app continues with local data
     }
   }

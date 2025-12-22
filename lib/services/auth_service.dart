@@ -86,10 +86,14 @@ class AuthService {
         // Try to link the credential
         final userCredential = await user.linkWithCredential(credential);
 
+        // Reload user to ensure auth state is fresh
+        await userCredential.user!.reload();
+        final refreshedUser = _auth.currentUser;
+
         // Update Firestore profile
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        await _firestore.collection('users').doc(refreshedUser!.uid).set({
           'email': email,
-          'displayName': userCredential.user!.displayName,
+          'displayName': refreshedUser.displayName,
           'isAnonymous': false,
           'linkedAt': FieldValue.serverTimestamp(),
           'createdAt': FieldValue.serverTimestamp(),
@@ -99,7 +103,7 @@ class AuthService {
         await _clearAnonymousUid();
 
         AppLogger.auth('✅ Successfully linked anonymous account to email');
-        return userCredential.user;
+        return refreshedUser;
 
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use' || e.code == 'credential-already-in-use') {
@@ -160,22 +164,29 @@ class AuthService {
       // #region agent log
       AppLogger.auth('🔐 DEBUG: signInWithEmail called - email=$email');
       // #endregion
-      
+
       final userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // #region agent log
       final user = userCredential.user;
-      AppLogger.auth('🔐 DEBUG: signInWithEmail completed - user=${user?.uid}, isAnonymous=${user?.isAnonymous}, email=${user?.email}');
-      // #endregion
 
-      // Update last seen
+      // Reload user to ensure auth state is fresh
       if (user != null) {
-        await _firestore.collection('users').doc(user.uid).set({
+        await user.reload();
+        final refreshedUser = _auth.currentUser;
+
+        // #region agent log
+        AppLogger.auth('🔐 DEBUG: signInWithEmail completed - user=${refreshedUser?.uid}, isAnonymous=${refreshedUser?.isAnonymous}, email=${refreshedUser?.email}');
+        // #endregion
+
+        // Update last seen
+        await _firestore.collection('users').doc(refreshedUser!.uid).set({
           'lastSeen': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
+
+        return refreshedUser;
       }
 
       return user;

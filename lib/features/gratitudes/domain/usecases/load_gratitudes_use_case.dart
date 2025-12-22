@@ -95,9 +95,20 @@ class LoadGratitudesUseCase extends UseCase<LoadGratitudesResult, NoParams> {
       final localDataOwner = prefs.getString('local_data_owner_uid');
 
       if (localDataOwner != null && localDataOwner != currentUid) {
-        AppLogger.warning('⚠️ Local data belongs to different user. Clearing...');
-        await repository.clearAllData();
-        await prefs.setString('local_data_owner_uid', currentUid!);
+        // Check if we've already cleared for this UID transition
+        final lastCleared = prefs.getString('last_cleared_transition');
+        final currentTransition = '$localDataOwner->$currentUid';
+
+        if (lastCleared != currentTransition) {
+          AppLogger.warning('⚠️ Local data belongs to different user ($localDataOwner → $currentUid). Clearing once...');
+          await repository.clearAllData();
+          await prefs.setString('local_data_owner_uid', currentUid!);
+          await prefs.setString('last_cleared_transition', currentTransition);
+        } else {
+          AppLogger.info('ℹ️ Already cleared for this UID transition, skipping...');
+          // Just update the owner without clearing again
+          await prefs.setString('local_data_owner_uid', currentUid!);
+        }
       }
 
       if (localDataOwner == null && currentUid != null) {

@@ -649,6 +649,17 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
         ],
       ),
       actions: [
+        // Delete button on the left
+        TextButton(
+          onPressed: _isRenaming ? null : () => _confirmDelete(context),
+          child: Text(
+            l10n.deleteButton,
+            style: FontScaling.getButtonText(context).copyWith(
+              color: Colors.red.withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+        Spacer(),
         TextButton(
           onPressed: _isRenaming ? null : () => Navigator.of(context).pop(),
           child: Text(
@@ -677,6 +688,99 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
         ),
       ],
     );
+  }
+
+  void _confirmDelete(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Color(0xFF1A2238),
+        title: Text(
+          l10n.deleteGalaxy,
+          style: FontScaling.getHeadingMedium(context).copyWith(
+            color: Colors.red,
+          ),
+        ),
+        content: Text(
+          l10n.deleteGalaxyConfirmation(widget.galaxy.name, widget.galaxy.starCount),
+          style: FontScaling.getBodyMedium(context).copyWith(
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              l10n.cancel,
+              style: FontScaling.getButtonText(context).copyWith(
+                color: Colors.white70,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              _deleteGalaxy();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.deleteButton),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteGalaxy() async {
+    setState(() => _isRenaming = true); // Reuse loading state
+
+    final l10n = AppLocalizations.of(context)!;
+    final textStyle = FontScaling.getBodyMedium(context);
+
+    try {
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+
+      await galaxyProvider.deleteGalaxy(widget.galaxy.id);
+
+      if (navigator.mounted) {
+        navigator.pop(); // Close rename dialog
+        navigator.pop(); // Close galaxy list dialog
+
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n.galaxyDeletedSuccess(widget.galaxy.name), style: textStyle),
+            backgroundColor: const Color(0xFF1A2238),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e, stack) {
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.galaxy,
+        l10n: l10n,
+      );
+
+      final messenger = mounted ? ScaffoldMessenger.of(context) : null;
+
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.galaxyDeleteFailed(error.userMessage), style: textStyle),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isRenaming = false);
+      }
+    }
   }
 
   Future<void> _renameGalaxy() async {

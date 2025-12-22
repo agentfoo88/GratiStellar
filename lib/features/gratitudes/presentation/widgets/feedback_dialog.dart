@@ -15,14 +15,14 @@ class FeedbackDialog extends StatefulWidget {
     required this.authService,
   });
 
-  static void show({
+  static Future<bool?> show({
     required BuildContext context,
     required AuthService authService,
   }) {
-    showDialog(
+    return showDialog<bool>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (context) => FeedbackDialog(authService: authService),
+      builder: (dialogContext) => FeedbackDialog(authService: authService),
     );
   }
 
@@ -317,13 +317,9 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                           // #endregion
 
                           final feedbackService = FeedbackService();
-                          
-                          // Capture context and l10n before async operations
+
+                          // Capture navigator before async operations
                           final navigator = Navigator.of(context);
-                          final scaffoldMessenger = ScaffoldMessenger.of(context);
-                          final successMessage = l10n.feedbackSuccess;
-                          final errorMessage = l10n.feedbackError;
-                          final textStyle = FontScaling.getBodyMedium(context);
 
                           try {
                             final success = await feedbackService.submitFeedback(
@@ -337,42 +333,19 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                             AppLogger.info('📤 DEBUG: Feedback submission result - success=$success');
                             // #endregion
 
-                            // Close dialog only after submission completes
+                            // Close dialog and return result
                             if (mounted) {
-                              navigator.pop();
-                              
-                              // Show success/error message
-                              scaffoldMessenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    success ? successMessage : errorMessage,
-                                    style: textStyle,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  backgroundColor:
-                                      success ? Colors.green : Colors.red,
-                                ),
-                              );
+                              navigator.pop(success);
                             }
                           } catch (e, stack) {
                             // #region agent log
                             AppLogger.error('📤 DEBUG: Feedback submission exception - $e');
                             AppLogger.info('Stack trace: $stack');
                             // #endregion
-                            
-                            // Close dialog and show error
+
+                            // Close dialog and return failure
                             if (mounted) {
-                              navigator.pop();
-                              scaffoldMessenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    errorMessage,
-                                    style: textStyle,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              navigator.pop(false);
                             }
                           } finally {
                             if (mounted) {

@@ -765,6 +765,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get deleteGalaxy => 'Delete Galaxy';
+
+  @override
+  String deleteGalaxyConfirmation(String name, int starCount) {
+    return 'Delete \"$name\" and all $starCount stars?';
+  }
+
+  @override
+  String galaxyDeletedSuccess(String name) {
+    return 'Deleted galaxy: $name';
+  }
+
+  @override
+  String galaxyDeleteFailed(String error) {
+    return 'Failed to delete galaxy: $error';
+  }
+
+  @override
   String get galaxyActiveBadge => 'ACTIVE';
 
   @override

@@ -1474,6 +1474,30 @@ abstract class AppLocalizations {
   /// **'Failed to rename galaxy: {error}'**
   String galaxyRenameFailed(String error);
 
+  /// Title for delete galaxy dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Galaxy'**
+  String get deleteGalaxy;
+
+  /// Confirmation message for deleting a galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\" and all {starCount} stars?'**
+  String deleteGalaxyConfirmation(String name, int starCount);
+
+  /// Success message when galaxy is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted galaxy: {name}'**
+  String galaxyDeletedSuccess(String name);
+
+  /// Error message when galaxy deletion fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete galaxy: {error}'**
+  String galaxyDeleteFailed(String error);
+
   /// Badge text shown on the currently active galaxy
   ///
   /// In en, this message translates to:

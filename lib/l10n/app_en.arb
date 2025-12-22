@@ -713,6 +713,40 @@
               }
             }
           },
+          "deleteGalaxy": "Delete Galaxy",
+          "@deleteGalaxy": {
+            "description": "Title for delete galaxy dialog"
+          },
+          "deleteGalaxyConfirmation": "Delete \"{name}\" and all {starCount} stars?",
+          "@deleteGalaxyConfirmation": {
+            "description": "Confirmation message for deleting a galaxy",
+            "placeholders": {
+              "name": {
+                "type": "String"
+              },
+              "starCount": {
+                "type": "int"
+              }
+            }
+          },
+          "galaxyDeletedSuccess": "Deleted galaxy: {name}",
+          "@galaxyDeletedSuccess": {
+            "description": "Success message when galaxy is deleted",
+            "placeholders": {
+              "name": {
+                "type": "String"
+              }
+            }
+          },
+          "galaxyDeleteFailed": "Failed to delete galaxy: {error}",
+          "@galaxyDeleteFailed": {
+            "description": "Error message when galaxy deletion fails",
+            "placeholders": {
+              "error": {
+                "type": "String"
+              }
+            }
+          },
           "galaxyActiveBadge": "ACTIVE",
           "@galaxyActiveBadge": {
             "description": "Badge text shown on the currently active galaxy"

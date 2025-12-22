@@ -325,6 +325,41 @@ class GalaxyRepository {
     }
   }
 
+  /// Recalculate star counts for ALL galaxies by counting actual stars
+  /// This should be called after syncing galaxies from cloud to ensure counts are accurate
+  Future<void> recalculateAllStarCounts() async {
+    try {
+      final galaxies = await getGalaxies();
+      final allStars = await _gratitudeRepository.getAllGratitudesUnfiltered();
+
+      // Count stars for each galaxy (excluding deleted stars)
+      final starCounts = <String, int>{};
+      for (final star in allStars) {
+        if (!star.deleted) {
+          starCounts[star.galaxyId] = (starCounts[star.galaxyId] ?? 0) + 1;
+        }
+      }
+
+      // Update each galaxy's star count
+      bool anyUpdated = false;
+      final updatedGalaxies = galaxies.map((galaxy) {
+        final actualCount = starCounts[galaxy.id] ?? 0;
+        if (galaxy.starCount != actualCount) {
+          anyUpdated = true;
+          return galaxy.copyWith(starCount: actualCount);
+        }
+        return galaxy;
+      }).toList();
+
+      if (anyUpdated) {
+        await saveGalaxies(updatedGalaxies);
+        AppLogger.success('✅ Recalculated star counts for all galaxies');
+      }
+    } catch (e) {
+      AppLogger.error('⚠️ Error recalculating star counts: $e');
+    }
+  }
+
   /// Clear all galaxy data (called on sign out)
   Future<void> clearAll() async {
     await _localDataSource.clearAll();

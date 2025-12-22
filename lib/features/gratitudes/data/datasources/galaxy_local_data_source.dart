@@ -28,6 +28,19 @@ class GalaxyLocalDataSource {
           .toList();
     } catch (e) {
       AppLogger.error('⚠️ Error loading galaxies from local storage: $e');
+
+      // If it's a decryption error (e.g., from app reinstall changing encryption keys),
+      // clear the corrupted encrypted data so it can be re-downloaded from cloud
+      if (e.toString().contains('BAD_DECRYPT') || e.toString().contains('BadPaddingException')) {
+        AppLogger.warning('🔧 Detected encryption error - clearing corrupted galaxy data');
+        try {
+          await _secureStorage.delete(key: _galaxiesKey);
+          AppLogger.success('✅ Cleared corrupted galaxy encryption data');
+        } catch (clearError) {
+          AppLogger.error('⚠️ Error clearing corrupted data: $clearError');
+        }
+      }
+
       return [];
     }
   }

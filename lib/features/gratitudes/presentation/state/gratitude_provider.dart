@@ -710,7 +710,7 @@ class GratitudeProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-    AppLogger.success('✅ Restored ${backupStars.length} total stars from backup (${activeGalaxyStarCount} in active galaxy)');
+    AppLogger.success('✅ Restored ${backupStars.length} total stars from backup ($activeGalaxyStarCount in active galaxy)');
   }
 
   @override

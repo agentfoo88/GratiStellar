@@ -3,13 +3,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
-import '../modal_dialogs.dart'; // For showDeleteConfirmation and _showColorPickerDialog
+import '../modal_dialogs.dart'; // For showDeleteConfirmation
 import '../storage.dart'; // For GratitudeStar
 import 'color_picker_dialog.dart';
 import 'scrollable_dialog_content.dart';
-
-// TODO: Refactor _showColorPickerDialog into its own widget as well
-// This widget will replace the contents of the showEditStar method
 
 class EditStarDialog extends StatefulWidget {
   final GratitudeStar star;
@@ -253,7 +250,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
                         context: context,
                         barrierColor: Colors.black.withValues(alpha:0.7),
                         builder: (BuildContext dialogContext) {
-                          return ColorPickerDialog(
+                          return ColorPickerDialog.fromStar(
                             currentStar: currentStar,
                             onColorSelected: (colorIndex, customColor) {
                               setState(() {

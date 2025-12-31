@@ -390,6 +390,11 @@ class GalaxyProvider extends ChangeNotifier {
         await _gratitudeProvider.loadGratitudes();
       }
 
+      // Check if zero galaxies remain and create a default one
+      if (activeGalaxies.isEmpty) {
+        await _ensureDefaultGalaxy();
+      }
+
       notifyListeners();
       AppLogger.success('✅ Deleted galaxy "$galaxyName" ($galaxyId)');
       
@@ -400,6 +405,22 @@ class GalaxyProvider extends ChangeNotifier {
     } catch (e) {
       AppLogger.error('⚠️ Error deleting galaxy: $e');
       rethrow;
+    }
+  }
+
+  /// Ensure a default galaxy exists (creates one if none exist)
+  Future<void> _ensureDefaultGalaxy() async {
+    try {
+      AppLogger.start('📝 No galaxies remaining, creating default galaxy');
+      final newGalaxy = await createGalaxy(name: 'My First Galaxy', switchToNew: true);
+      
+      // Reload gratitudes for the new galaxy
+      await _gratitudeProvider.loadGratitudes();
+      
+      AppLogger.success('✅ Created default galaxy: "${newGalaxy.name}"');
+    } catch (e) {
+      AppLogger.error('⚠️ Error creating default galaxy: $e');
+      // Don't rethrow - app can continue with zero galaxies, will be handled on next initialization
     }
   }
 

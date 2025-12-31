@@ -482,24 +482,6 @@ class GratitudeDialogs {
     );
   }
 
-  /// Internal helper to show color picker dialog (now delegates to ColorPickerDialog widget)
-  static void _showColorPickerDialog({
-    required BuildContext context,
-    required GratitudeStar currentStar,
-    required Function(int?, Color?) onColorSelected,
-  }) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (BuildContext dialogContext) {
-        return ColorPickerDialog(
-          currentStar: currentStar,
-          onColorSelected: onColorSelected,
-        );
-      },
-    );
-  }
-
   // ========================================
   // HELPER WIDGETS
   // ========================================
@@ -791,36 +773,33 @@ class GratitudeDialogs {
                                 // Custom color button
                                 TextButton.icon(
                                   onPressed: () {
-                                    _showColorPickerDialog(
+                                    showDialog(
                                       context: context,
-                                      currentStar: GratitudeStar(
-                                        text: '',
-                                        worldX: 0.5,
-                                        worldY: 0.5,
-                                        colorPresetIndex:
-                                            selectedColorIndex ?? 0,
-                                        customColor: customColorPreview,
-                                        spinDirection: 1.0,
-                                        spinRate: 0.5,
-                                        pulseSpeedH: 2.0,
-                                        pulseSpeedV: 2.0,
-                                        pulsePhaseH: 0.0,
-                                        pulsePhaseV: 0.0,
-                                        pulseMinScaleH: 0.0,
-                                        pulseMinScaleV: 0.0,
+                                      barrierColor: Colors.black.withValues(
+                                        alpha: 0.7,
                                       ),
-                                      onColorSelected:
-                                          (colorIndex, customColor) {
-                                            setState(() {
-                                              if (colorIndex != null) {
-                                                selectedColorIndex = colorIndex;
-                                                customColorPreview = null;
-                                              } else if (customColor != null) {
-                                                customColorPreview =
-                                                    customColor;
-                                              }
-                                            });
-                                          },
+                                      builder: (BuildContext dialogContext) {
+                                        return ColorPickerDialog(
+                                          initialColorIndex: selectedColorIndex,
+                                          initialCustomColor:
+                                              customColorPreview,
+                                          onColorSelected:
+                                              (colorIndex, customColor) {
+                                                setState(() {
+                                                  if (colorIndex != null) {
+                                                    selectedColorIndex =
+                                                        colorIndex;
+                                                    customColorPreview = null;
+                                                  } else if (customColor !=
+                                                      null) {
+                                                    customColorPreview =
+                                                        customColor;
+                                                    selectedColorIndex = null;
+                                                  }
+                                                });
+                                              },
+                                        );
+                                      },
                                     );
                                   },
                                   icon: Icon(

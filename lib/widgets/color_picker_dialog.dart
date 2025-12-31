@@ -10,12 +10,30 @@ import 'color_grid.dart';
 import 'scrollable_dialog_content.dart';
 
 class ColorPickerDialog extends StatefulWidget {
-  final GratitudeStar currentStar;
+  /// Initial color preset index (null if using custom color)
+  final int? initialColorIndex;
+  
+  /// Initial custom color (null if using preset)
+  final Color? initialCustomColor;
+  
+  /// Callback when color is selected
   final Function(int?, Color?) onColorSelected;
 
+  /// Constructor for use with existing star
+  ColorPickerDialog.fromStar({
+    super.key,
+    required GratitudeStar currentStar,
+    required this.onColorSelected,
+  }) : initialColorIndex = currentStar.customColor == null
+          ? currentStar.colorPresetIndex
+          : null,
+       initialCustomColor = currentStar.customColor;
+
+  /// Constructor for use with initial color values
   const ColorPickerDialog({
     super.key,
-    required this.currentStar,
+    this.initialColorIndex,
+    this.initialCustomColor,
     required this.onColorSelected,
   });
 
@@ -38,10 +56,19 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
   @override
   void initState() {
     super.initState();
-    _previewColor = widget.currentStar.color;
-    _selectedColorIndex = widget.currentStar.customColor == null
-        ? widget.currentStar.colorPresetIndex
-        : null;
+    
+    // Determine initial preview color
+    if (widget.initialCustomColor != null) {
+      _previewColor = widget.initialCustomColor!;
+      _selectedColorIndex = null;
+    } else if (widget.initialColorIndex != null) {
+      _previewColor = StarColors.getColor(widget.initialColorIndex!);
+      _selectedColorIndex = widget.initialColorIndex;
+    } else {
+      // Default to first preset color
+      _previewColor = StarColors.getColor(0);
+      _selectedColorIndex = 0;
+    }
 
     _hexController = TextEditingController();
     _redController = TextEditingController();

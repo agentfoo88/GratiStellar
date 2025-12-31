@@ -58,6 +58,7 @@ class SyncStatusService extends ChangeNotifier {
   }
 
   void markSyncing() {
+    // Clear any error state when starting sync
     _updateStatus(SyncStatus.syncing, null);
   }
 

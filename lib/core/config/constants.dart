@@ -17,9 +17,6 @@ class AnimationConstants {
   // Mindfulness mode transition duration
   static const Duration mindfulnessTransition = Duration(milliseconds: 2000);
 
-  // Mindfulness mode transition duration in milliseconds (deprecated - use mindfulnessTransition)
-  static const int mindfulnessTransitionMs = 2000;
-
   // Mindfulness mode vertical position (40% from top to avoid slider overlap)
   static const double mindfulnessVerticalPosition = 0.40;
 

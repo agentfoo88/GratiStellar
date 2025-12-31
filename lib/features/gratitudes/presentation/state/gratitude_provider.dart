@@ -572,7 +572,7 @@ class GratitudeProvider extends ChangeNotifier {
   void _scheduleNextStar() {
     _mindfulnessTimer?.cancel();
     final totalDelay = Duration(
-      milliseconds: AnimationConstants.mindfulnessTransitionMs + (_mindfulnessInterval * 1000),
+      milliseconds: AnimationConstants.mindfulnessTransition.inMilliseconds + (_mindfulnessInterval * 1000),
     );
 
     _mindfulnessTimer = Timer(
@@ -786,9 +786,17 @@ class GratitudeProvider extends ChangeNotifier {
     }
   }
 
-  /// Force immediate sync (called on app lifecycle events)
+  /// Force immediate sync (called on app lifecycle events or manual retry)
+  /// Clears any error state before attempting sync
   Future<void> forceSync() async {
     _syncDebouncer?.cancel(); // Cancel scheduled sync
+    
+    // Clear error state before attempting sync
+    if (_syncStatusService.status == SyncStatus.error) {
+      AppLogger.sync('🔄 Clearing error state before force sync');
+      _syncStatusService.markPending(); // Clear error, mark as pending
+    }
+    
     await _performBackgroundSync();
   }
 

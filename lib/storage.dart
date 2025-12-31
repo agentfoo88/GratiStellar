@@ -716,17 +716,23 @@ class BackupData {
   }
 
   /// Get a summary of backup contents for display
+  /// Excludes deleted galaxies from count
   String getSummary() {
     final starCount = stars.where((s) => !s.deleted).length;
     final deletedCount = stars.where((s) => s.deleted).length;
-    final galaxyCount = galaxies.length;
+    
+    // Filter out deleted galaxies from count
+    final activeGalaxyCount = galaxies.where((g) {
+      final deleted = g['deleted'] as bool? ?? false;
+      return !deleted;
+    }).length;
     
     final parts = <String>[];
     parts.add('$starCount gratitude${starCount == 1 ? '' : 's'}');
     if (deletedCount > 0) {
       parts.add('$deletedCount deleted');
     }
-    parts.add('$galaxyCount ${galaxyCount == 1 ? 'galaxy' : 'galaxies'}');
+    parts.add('$activeGalaxyCount ${activeGalaxyCount == 1 ? 'galaxy' : 'galaxies'}');
     
     return parts.join(', ');
   }

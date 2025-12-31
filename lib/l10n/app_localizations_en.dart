@@ -1246,6 +1246,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get deleteLastGalaxyTitle => 'Delete All Galaxies?';
+
+  @override
+  String get deleteLastGalaxyMessage =>
+      'This will delete all your galaxies and stars. A new empty galaxy will be created. Continue?';
+
+  @override
+  String get deleteLastGalaxyButton => 'Delete All';
+
+  @override
+  String newGalaxyCreated(String name) {
+    return 'New galaxy created: $name';
+  }
+
+  @override
   String galaxiesDeleted(int count) {
     return '$count galaxy/galaxies deleted';
   }

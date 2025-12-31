@@ -212,6 +212,40 @@ class GalaxyRepository {
       }
     }
 
+    // Validate that the active galaxy exists and is not deleted
+    if (activeId != null) {
+      final galaxies = await getGalaxies();
+      final activeGalaxy = galaxies.firstWhere(
+        (g) => g.id == activeId,
+        orElse: () => GalaxyMetadata(
+          id: '',
+          name: '',
+          createdAt: DateTime.now(),
+        ),
+      );
+      
+      // If galaxy doesn't exist or is deleted, find a non-deleted galaxy
+      if (activeGalaxy.id.isEmpty || activeGalaxy.deleted) {
+        final nonDeletedGalaxies = galaxies.where((g) => !g.deleted).toList();
+        if (nonDeletedGalaxies.isNotEmpty) {
+          // Sort by last viewed or created date
+          nonDeletedGalaxies.sort((a, b) {
+            final aDate = a.lastViewedAt ?? a.createdAt;
+            final bDate = b.lastViewedAt ?? b.createdAt;
+            return bDate.compareTo(aDate);
+          });
+          activeId = nonDeletedGalaxies.first.id;
+          // Update stored active galaxy ID
+          await _localDataSource.setActiveGalaxyId(activeId);
+          AppLogger.sync('🔄 Active galaxy was deleted, switched to: $activeId');
+        } else {
+          // No non-deleted galaxies, return null
+          activeId = null;
+          await _localDataSource.setActiveGalaxyId('');
+        }
+      }
+    }
+
     return activeId;
   }
 
@@ -278,14 +312,16 @@ class GalaxyRepository {
       }
 
       // Merge galaxies: combine local and cloud, keeping newer version for conflicts
+      // Filter out deleted galaxies from local list before merging
+      final activeLocalGalaxies = localGalaxies.where((g) => !g.deleted).toList();
       final mergedGalaxies = <String, GalaxyMetadata>{};
       
-      // Add all local galaxies first
-      for (final galaxy in localGalaxies) {
+      // Add all active local galaxies first
+      for (final galaxy in activeLocalGalaxies) {
         mergedGalaxies[galaxy.id] = galaxy;
       }
 
-      // Merge cloud galaxies
+      // Merge cloud galaxies (already filtered to exclude deleted)
       for (final cloudGalaxy in cloudGalaxies) {
         final localGalaxy = mergedGalaxies[cloudGalaxy.id];
         

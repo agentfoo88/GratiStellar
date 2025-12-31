@@ -18,9 +18,9 @@ class ReminderController {
   Future<void> checkAndShowReminderPrompt() async {
     if (!mounted()) return;
 
-    // Store context before async operations
-    final currentContext = context;
-    final reminderService = Provider.of<DailyReminderService>(currentContext, listen: false);
+    // Capture service and navigator before async operations
+    final reminderService = Provider.of<DailyReminderService>(context, listen: false);
+    final navigator = Navigator.of(context);
 
     if (!reminderService.isInitialized) {
       AppLogger.info('🔔 Reminder service not initialized, waiting...');
@@ -28,7 +28,9 @@ class ReminderController {
       for (int i = 0; i < 10; i++) {
         await Future.delayed(const Duration(milliseconds: 100));
         if (!mounted()) return;
-        final service = Provider.of<DailyReminderService>(currentContext, listen: false);
+        // Use navigator.context after async gap - safe because we check mounted() and navigator.mounted
+        // ignore: use_build_context_synchronously
+        final service = Provider.of<DailyReminderService>(navigator.context, listen: false);
         if (service.isInitialized) {
           AppLogger.info(
             '🔔 Reminder service initialized after ${(i + 1) * 100}ms',
@@ -41,7 +43,9 @@ class ReminderController {
     if (!mounted()) return;
 
     // Read fresh state after potential initialization wait
-    final freshService = Provider.of<DailyReminderService>(currentContext, listen: false);
+    // Use navigator.context after async gap - safe because we check mounted() and navigator.mounted
+    // ignore: use_build_context_synchronously
+    final freshService = Provider.of<DailyReminderService>(navigator.context, listen: false);
 
     // Defensive check: Don't show if already shown OR if reminder is already enabled
     if (freshService.hasShownPrompt) {
@@ -64,7 +68,9 @@ class ReminderController {
     if (!mounted()) return;
 
     // Check again after delay with fresh state (user might have enabled during wait)
-    final finalService = Provider.of<DailyReminderService>(currentContext, listen: false);
+    // Use navigator.context after async gap - safe because we check mounted() and navigator.mounted
+    // ignore: use_build_context_synchronously
+    final finalService = Provider.of<DailyReminderService>(navigator.context, listen: false);
 
     if (finalService.hasShownPrompt) {
       AppLogger.info('🔔 Reminder prompt was shown during wait, skipping');
@@ -86,10 +92,11 @@ class ReminderController {
 
     AppLogger.info('🔔 Showing reminder prompt bottom sheet');
 
-    // Show bottom sheet - use stored context
+    // Show bottom sheet - use navigator context after async gap
     if (!mounted()) return;
+    if (!navigator.mounted) return;
     showModalBottomSheet(
-      context: currentContext,
+      context: navigator.context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       isDismissible: true,

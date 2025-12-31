@@ -158,8 +158,27 @@ class _SignInScreenState extends State<SignInScreen> {
           }
           
           // Reload galaxies after deletion
-          // Note: deleteGalaxy() already handles switching active galaxy if needed
           await galaxyProvider.loadGalaxies();
+          
+          // Ensure active galaxy is valid (not deleted)
+          // The getActiveGalaxyId() method now validates this automatically,
+          // but we need to ensure the provider's state is updated
+          final currentActiveId = galaxyProvider.activeGalaxyId;
+          if (currentActiveId != null) {
+            // Check if current active galaxy still exists and is not deleted
+            final activeGalaxies = galaxyProvider.activeGalaxies;
+            final activeGalaxyExists = activeGalaxies.any((g) => g.id == currentActiveId);
+            
+            if (!activeGalaxyExists) {
+              // Active galaxy was deleted, switch to first available galaxy
+              if (activeGalaxies.isNotEmpty) {
+                await galaxyProvider.switchGalaxy(activeGalaxies.first.id);
+                AppLogger.sync('🔄 Active galaxy was deleted, switched to: ${activeGalaxies.first.id}');
+              } else {
+                AppLogger.sync('⚠️ No galaxies remaining after deletion');
+              }
+            }
+          }
           
           if (deletingActiveGalaxy) {
             AppLogger.sync('🔄 Active galaxy was deleted, switched to: ${galaxyProvider.activeGalaxyId}');

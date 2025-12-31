@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/accessibility/semantic_helper.dart';
 import '../../core/config/app_config.dart';
 import '../../core/config/constants.dart';
@@ -11,6 +12,8 @@ import '../../l10n/app_localizations.dart';
 import '../../services/url_launch_service.dart';
 import '../../services/onboarding_service.dart';
 import '../../services/user_profile_manager.dart';
+import '../../services/auth_service.dart';
+import '../../services/user_profile_migration_service.dart';
 import '../../screens/gratitude_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -31,6 +34,101 @@ class _ConsentScreenState extends State<ConsentScreen> {
   String? _errorMessage;
   String? _failedUrl; // Track which URL failed for retry
   bool _isRetriable = false; // Track if error is retriable
+  bool _isChecking = true;
+  bool _shouldShow = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkConsentStatus();
+  }
+
+  /// Check consent status from both local and Firebase
+  Future<void> _checkConsentStatus() async {
+    try {
+      final authService = AuthService();
+      final onboardingService = OnboardingService();
+      
+      // Check local onboarding completion first
+      final localOnboardingComplete = await onboardingService.isOnboardingComplete();
+      
+      // If user is signed in, check Firebase profile
+      if (authService.isSignedIn && authService.hasEmailAccount) {
+        final userId = authService.currentUser?.uid;
+        if (userId != null) {
+          // Sync and migrate profile from Firebase
+          final migrationService = UserProfileMigrationService();
+          final migrationResult = await migrationService.loadAndMigrateProfile(userId);
+          
+          if (migrationResult != null) {
+            // Check Firebase profile for privacyPolicyAccepted and onboardingCompleted
+            try {
+              final firestore = FirebaseFirestore.instance;
+              final doc = await firestore.collection('users').doc(userId).get();
+              final profileData = doc.data();
+              final firebasePrivacyAccepted = profileData?['privacyPolicyAccepted'] as bool? ?? false;
+              final firebaseOnboardingComplete = profileData?['onboardingCompleted'] as bool? ?? false;
+              
+              // If Firebase says consent accepted and onboarding complete, skip this screen
+              if (firebasePrivacyAccepted && firebaseOnboardingComplete) {
+                AppLogger.data('✅ Consent already accepted in Firebase, skipping screen');
+                if (!mounted) return;
+                // Mark locally as well
+                await onboardingService.markOnboardingComplete();
+                if (!mounted) return;
+                // Capture navigator after async gap
+                final navigator = Navigator.of(context);
+                navigator.pushReplacement(
+                  MaterialPageRoute(builder: (context) => GratitudeScreen()),
+                );
+                return;
+              } else if (firebasePrivacyAccepted) {
+                // Privacy accepted but onboarding not complete - pre-check the boxes
+                if (mounted) {
+                  setState(() {
+                    _privacyAccepted = true;
+                    _termsAccepted = true;
+                  });
+                }
+              }
+            } catch (e) {
+              AppLogger.error('⚠️ Error checking Firebase consent status: $e');
+              // Continue with local check if Firebase check fails
+            }
+          }
+        }
+      }
+      
+      // If local onboarding complete, skip this screen
+      if (localOnboardingComplete) {
+        AppLogger.data('✅ Onboarding already complete locally, skipping screen');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => GratitudeScreen()),
+          );
+          return;
+        }
+      }
+      
+      // Show consent screen
+      if (mounted) {
+        setState(() {
+          _isChecking = false;
+          _shouldShow = true;
+        });
+      }
+    } catch (e) {
+      AppLogger.error('❌ Error checking consent status: $e');
+      // On error, show the screen (safer to show than skip)
+      if (mounted) {
+        setState(() {
+          _isChecking = false;
+          _shouldShow = true;
+        });
+      }
+    }
+  }
 
   /// Open URL in external browser with comprehensive error handling
   Future<void> _openUrl(String url) async {
@@ -84,7 +182,12 @@ class _ConsentScreenState extends State<ConsentScreen> {
     // Show success feedback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(l10n.consentUrlCopied, style: FontScaling.getBodyMedium(context)),
+        content: Text(
+          l10n.consentUrlCopied,
+          style: FontScaling.getBodyMedium(context).copyWith(
+            color: Colors.white, // Explicit white for better contrast on blue background
+          ),
+        ),
         duration: const Duration(seconds: 2),
         backgroundColor: const Color(0xFF4A6FA5),
       ),
@@ -105,15 +208,36 @@ class _ConsentScreenState extends State<ConsentScreen> {
     AppLogger.auth('Consent accepted, creating anonymous profile and navigating to main app...');
 
     try {
+      final authService = AuthService();
+      
       // Get UserProfileManager from context
       final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
       
       // Create device-scoped anonymous profile
       await userProfileManager.getOrCreateActiveUserId();
       
-      // Mark onboarding as complete
+      // Mark onboarding as complete locally
       final onboardingService = OnboardingService();
       await onboardingService.markOnboardingComplete();
+      
+      // If user is signed in, save consent to Firebase
+      if (authService.isSignedIn && authService.hasEmailAccount) {
+        final userId = authService.currentUser?.uid;
+        if (userId != null) {
+          try {
+            await FirebaseFirestore.instance.collection('users').doc(userId).set({
+              'privacyPolicyAccepted': true,
+              'privacyPolicyVersion': AppConfig.consentVersion,
+              'onboardingCompleted': true,
+              'onboardingCompletedAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+            AppLogger.success('✅ Consent saved to Firebase');
+          } catch (e) {
+            AppLogger.error('⚠️ Error saving consent to Firebase: $e');
+            // Continue anyway - local state is saved
+          }
+        }
+      }
       
       AppLogger.success('✅ Anonymous profile created, onboarding complete');
       
@@ -127,10 +251,16 @@ class _ConsentScreenState extends State<ConsentScreen> {
     } catch (e) {
       AppLogger.error('❌ Error completing onboarding: $e');
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error completing setup. Please try again.'),
-            backgroundColor: Colors.red,
+            content: Text(
+              l10n.errorGeneric,
+              style: FontScaling.getBodyMedium(context).copyWith(
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: Colors.red.shade700, // Use darker red for better contrast
           ),
         );
       }
@@ -163,6 +293,38 @@ class _ConsentScreenState extends State<ConsentScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    // Show loading while checking status
+    if (_isChecking) {
+      return Scaffold(
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF4A6FA5),
+                Color(0xFF166088),
+                Color(0xFF0B1426),
+                Color(0xFF2C3E50),
+              ],
+            ),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Don't show if we determined we shouldn't
+    if (!_shouldShow) {
+      return const SizedBox.shrink();
+    }
 
     return Scaffold(
       body: Container(

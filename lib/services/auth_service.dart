@@ -2,10 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../storage.dart';
 import '../core/utils/app_logger.dart';
+import 'user_profile_migration_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final UserProfileMigrationService _migrationService = UserProfileMigrationService();
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -49,6 +51,9 @@ class AuthService {
         await _firestore.collection('users').doc(refreshedUser!.uid).set({
           'lastSeen': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
+
+        // Migrate user profile (add missing fields)
+        await _migrationService.loadAndMigrateProfile(refreshedUser.uid);
 
         return refreshedUser;
       }
@@ -120,7 +125,15 @@ class AuthService {
       // Fallback to Firestore
       try {
         final doc = await _firestore.collection('users').doc(user.uid).get();
-        return doc.data()?['displayName'] as String?;
+        final profileData = doc.data();
+        
+        // Migrate profile if needed (ensures fields are up to date)
+        await _migrationService.migrateUserProfile(
+          userId: user.uid,
+          profileData: profileData,
+        );
+        
+        return profileData?['displayName'] as String?;
       } catch (e) {
         AppLogger.error('Error getting display name: $e');
         return defaultName;
@@ -226,6 +239,9 @@ class AuthService {
         'emailVerified': false,
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+
+      // Migrate user profile (add missing fields)
+      await _migrationService.loadAndMigrateProfile(user.uid);
 
       AppLogger.auth('✅ Account created successfully: ${user.uid}');
       return user;

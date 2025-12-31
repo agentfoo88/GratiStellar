@@ -22,6 +22,7 @@ class GalaxyRemoteDataSource {
   }
 
   /// Load all galaxy metadata from Firestore
+  /// Filters out deleted galaxies
   Future<List<GalaxyMetadata>> loadGalaxies() async {
     try {
       final collection = _getGalaxyCollection();
@@ -31,9 +32,19 @@ class GalaxyRemoteDataSource {
       }
 
       final snapshot = await collection.get();
-      return snapshot.docs
+      final allGalaxies = snapshot.docs
           .map((doc) => GalaxyMetadata.fromJson(doc.data() as Map<String, dynamic>))
           .toList();
+      
+      // Filter out deleted galaxies
+      final activeGalaxies = allGalaxies.where((galaxy) => !galaxy.deleted).toList();
+      
+      if (allGalaxies.length != activeGalaxies.length) {
+        final deletedCount = allGalaxies.length - activeGalaxies.length;
+        AppLogger.data('📋 Filtered out $deletedCount deleted galaxy/galaxies from Firebase');
+      }
+      
+      return activeGalaxies;
     } catch (e) {
       AppLogger.error('⚠️ Error loading galaxies from Firestore: $e');
       rethrow;

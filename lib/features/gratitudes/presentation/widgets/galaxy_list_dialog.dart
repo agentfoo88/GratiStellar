@@ -43,7 +43,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     return Consumer<GalaxyProvider>(
       builder: (context, galaxyProvider, child) {
         final activeGalaxies = galaxyProvider.activeGalaxies;
-        
+
         return Scaffold(
           backgroundColor: Color(0xFF1A2238).withValues(alpha: 0.98),
           appBar: AppBar(
@@ -64,7 +64,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   : l10n.myGalaxies,
               style: FontScaling.getHeadingMedium(context).copyWith(
                 color: Color(0xFFFFE135),
-                fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
+                fontSize:
+                    FontScaling.getHeadingMedium(context).fontSize! *
+                    UIConstants.universalUIScale,
               ),
             ),
             centerTitle: true,
@@ -85,18 +87,24 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                               ? Icons.deselect
                               : Icons.select_all,
                           color: Color(0xFFFFE135),
-                          size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+                          size:
+                              FontScaling.getResponsiveIconSize(context, 24) *
+                              UIConstants.universalUIScale,
                         ),
                         onPressed: () {
                           setState(() {
-                            if (_selectedGalaxyIds.length == activeGalaxies.length) {
+                            if (_selectedGalaxyIds.length ==
+                                activeGalaxies.length) {
                               _selectedGalaxyIds.clear();
                             } else {
-                              _selectedGalaxyIds.addAll(activeGalaxies.map((g) => g.id));
+                              _selectedGalaxyIds.addAll(
+                                activeGalaxies.map((g) => g.id),
+                              );
                             }
                           });
                         },
-                        tooltip: _selectedGalaxyIds.length == activeGalaxies.length
+                        tooltip:
+                            _selectedGalaxyIds.length == activeGalaxies.length
                             ? l10n.deselectAll
                             : l10n.selectAll,
                       ),
@@ -110,7 +118,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                         icon: Icon(
                           Icons.close,
                           color: Colors.white,
-                          size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+                          size:
+                              FontScaling.getResponsiveIconSize(context, 24) *
+                              UIConstants.universalUIScale,
                         ),
                         onPressed: () {
                           setState(() {
@@ -132,7 +142,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                         icon: Icon(
                           Icons.check_box_outline_blank,
                           color: Color(0xFFFFE135),
-                          size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+                          size:
+                              FontScaling.getResponsiveIconSize(context, 24) *
+                              UIConstants.universalUIScale,
                         ),
                         onPressed: () {
                           setState(() {
@@ -150,7 +162,11 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     );
   }
 
-  Widget _buildBody(BuildContext context, GalaxyProvider galaxyProvider, AppLocalizations l10n) {
+  Widget _buildBody(
+    BuildContext context,
+    GalaxyProvider galaxyProvider,
+    AppLocalizations l10n,
+  ) {
     if (galaxyProvider.isLoading || _isLoading) {
       return Center(
         child: CircularProgressIndicator(
@@ -162,141 +178,171 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     final activeGalaxies = galaxyProvider.activeGalaxies;
 
     return Column(
-            children: [
-              // Action buttons when items are selected
-              if (_isSelectionMode && _selectedGalaxyIds.isNotEmpty)
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
-                    vertical: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF0A0B1E).withValues(alpha: 0.8),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                        width: 1,
+      children: [
+        // Action buttons when items are selected
+        if (_isSelectionMode && _selectedGalaxyIds.isNotEmpty)
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal:
+                  FontScaling.getResponsiveSpacing(context, 16) *
+                  UIConstants.universalUIScale,
+              vertical:
+                  FontScaling.getResponsiveSpacing(context, 8) *
+                  UIConstants.universalUIScale,
+            ),
+            decoration: BoxDecoration(
+              color: Color(0xFF0A0B1E).withValues(alpha: 0.8),
+              border: Border(
+                bottom: BorderSide(
+                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: SemanticHelper.label(
+                    label: l10n.deleteSelected,
+                    hint:
+                        'Delete ${_selectedGalaxyIds.length} selected galaxy/galaxies',
+                    isButton: true,
+                    child: ElevatedButton.icon(
+                      onPressed: () =>
+                          _deleteSelectedGalaxies(context, galaxyProvider),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: Colors.white,
+                        size:
+                            FontScaling.getResponsiveIconSize(context, 20) *
+                            UIConstants.universalUIScale,
+                      ),
+                      label: Text(
+                        l10n.deleteSelected,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: Colors.white,
+                          fontSize:
+                              FontScaling.getBodySmall(context).fontSize! *
+                              UIConstants.universalUIScale,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.withValues(alpha: 0.8),
+                        padding: EdgeInsets.symmetric(
+                          vertical:
+                              FontScaling.getResponsiveSpacing(context, 12) *
+                              UIConstants.universalUIScale,
+                        ),
                       ),
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        child: SemanticHelper.label(
-                          label: l10n.deleteSelected,
-                          hint: 'Delete ${_selectedGalaxyIds.length} selected galaxy/galaxies',
-                          isButton: true,
-                          child: ElevatedButton.icon(
-                            onPressed: () => _deleteSelectedGalaxies(context, galaxyProvider),
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: Colors.white,
-                              size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
-                            ),
-                            label: Text(
-                              l10n.deleteSelected,
-                              style: FontScaling.getBodySmall(context).copyWith(
-                                color: Colors.white,
-                                fontSize: FontScaling.getBodySmall(context).fontSize! * UIConstants.universalUIScale,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.withValues(alpha: 0.8),
-                              padding: EdgeInsets.symmetric(
-                                vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                ),
+              ],
+            ),
+          ),
+        // Galaxy list
+        Expanded(
+          child: activeGalaxies.isEmpty
+              ? _buildEmptyState(context, l10n)
+              : Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: false,
+                  child: ListView.separated(
+                    controller: _scrollController,
+                    padding: EdgeInsets.all(
+                      FontScaling.getResponsiveSpacing(context, 16) *
+                          UIConstants.universalUIScale,
+                    ),
+                    itemCount: activeGalaxies.length,
+                    separatorBuilder: (context, index) => Divider(
+                      color: Color(0xFFFFE135).withValues(alpha: 0.2),
+                      height: FontScaling.getResponsiveSpacing(context, 1),
+                    ),
+                    itemBuilder: (context, index) {
+                      final galaxy = activeGalaxies[index];
+                      return _buildGalaxyItem(
+                        context,
+                        galaxy,
+                        galaxyProvider,
+                        l10n,
+                      );
+                    },
                   ),
                 ),
-              // Galaxy list
-              Expanded(
-                child: activeGalaxies.isEmpty
-                    ? _buildEmptyState(context, l10n)
-                    : Scrollbar(
-                        controller: _scrollController,
-                        thumbVisibility: false,
-                        child: ListView.separated(
-                          controller: _scrollController,
-                          padding: EdgeInsets.all(
-                            FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
-                          ),
-                          itemCount: activeGalaxies.length,
-                          separatorBuilder: (context, index) => Divider(
-                    color: Color(0xFFFFE135).withValues(alpha: 0.2),
-                    height: FontScaling.getResponsiveSpacing(context, 1),
-                  ),
-                  itemBuilder: (context, index) {
-                    final galaxy = activeGalaxies[index];
-                    return _buildGalaxyItem(context, galaxy, galaxyProvider, l10n);
-                  },
-                        ),
-                      ),
-              ),
+        ),
 
-              // Create new galaxy button at bottom
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(
-                  FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
+        // Create new galaxy button at bottom
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(
+            FontScaling.getResponsiveSpacing(context, 16) *
+                UIConstants.universalUIScale,
+          ),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+          ),
+          child: SemanticHelper.label(
+            label: l10n.createNewGalaxy,
+            hint: l10n.startNewGalaxyWithFreshStars,
+            isButton: true,
+            child: ElevatedButton.icon(
+              onPressed: _isLoading
+                  ? null
+                  : () => _showCreateGalaxyDialog(context),
+              icon: Icon(
+                Icons.add,
+                color: Color(0xFF1A2238),
+                size:
+                    FontScaling.getResponsiveIconSize(context, 20) *
+                    UIConstants.universalUIScale,
+              ),
+              label: Text(
+                l10n.createNewGalaxy,
+                style: FontScaling.getBodyMedium(context).copyWith(
+                  color: Color(0xFF1A2238),
+                  fontWeight: FontWeight.w600,
+                  fontSize:
+                      FontScaling.getBodyMedium(context).fontSize! *
+                      UIConstants.universalUIScale,
                 ),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFFFE135),
+                foregroundColor: Color(0xFF1A2238),
+                padding: EdgeInsets.symmetric(
+                  horizontal:
+                      FontScaling.getResponsiveSpacing(context, 24) *
+                      UIConstants.universalUIScale,
+                  vertical:
+                      FontScaling.getResponsiveSpacing(context, 16) *
+                      UIConstants.universalUIScale,
                 ),
-                child: SemanticHelper.label(
-                  label: l10n.createNewGalaxy,
-                  hint: l10n.startNewGalaxyWithFreshStars,
-                  isButton: true,
-                  child: ElevatedButton.icon(
-                    onPressed: _isLoading ? null : () => _showCreateGalaxyDialog(context),
-                    icon: Icon(
-                      Icons.add,
-                      color: Color(0xFF1A2238),
-                      size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
-                    ),
-                    label: Text(
-                      l10n.createNewGalaxy,
-                      style: FontScaling.getBodyMedium(context).copyWith(
-                        color: Color(0xFF1A2238),
-                        fontWeight: FontWeight.w600,
-                        fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFFFE135),
-                      foregroundColor: Color(0xFF1A2238),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: FontScaling.getResponsiveSpacing(context, 24) * UIConstants.universalUIScale,
-                        vertical: FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
-                        ),
-                      ),
-                    ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    FontScaling.getResponsiveSpacing(context, 12) *
+                        UIConstants.universalUIScale,
                   ),
                 ),
               ),
-            ],
-          );
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildGalaxyItem(
-      BuildContext context,
-      GalaxyMetadata galaxy,
-      GalaxyProvider galaxyProvider,
-      AppLocalizations l10n,
-      ) {
+    BuildContext context,
+    GalaxyMetadata galaxy,
+    GalaxyProvider galaxyProvider,
+    AppLocalizations l10n,
+  ) {
     final isActive = galaxyProvider.activeGalaxyId == galaxy.id;
     final isSelected = _selectedGalaxyIds.contains(galaxy.id);
     final formattedDate = _formatDate(galaxy.createdAt);
@@ -304,16 +350,16 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     return SemanticHelper.label(
       label: _isSelectionMode
           ? (isSelected
-              ? 'Selected: ${galaxy.name}'
-              : 'Not selected: ${galaxy.name}')
+                ? 'Selected: ${galaxy.name}'
+                : 'Not selected: ${galaxy.name}')
           : (isActive
-              ? l10n.activeGalaxyItem(galaxy.name, galaxy.starCount)
-              : l10n.galaxyItem(galaxy.name, galaxy.starCount)),
+                ? l10n.activeGalaxyItem(galaxy.name, galaxy.starCount)
+                : l10n.galaxyItem(galaxy.name, galaxy.starCount)),
       hint: _isSelectionMode
-          ? (isSelected ? 'Tap to deselect this galaxy' : 'Tap to select this galaxy')
-          : (isActive
-              ? l10n.currentlyActiveGalaxy
-              : l10n.tapToSwitchToGalaxy),
+          ? (isSelected
+                ? 'Tap to deselect this galaxy'
+                : 'Tap to select this galaxy')
+          : (isActive ? l10n.currentlyActiveGalaxy : l10n.tapToSwitchToGalaxy),
       isButton: true,
       isToggle: _isSelectionMode,
       toggleValue: _isSelectionMode ? isSelected : null,
@@ -331,28 +377,34 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   }
                 });
               }
-            : (isActive ? null : () => _switchToGalaxy(context, galaxy.id, galaxyProvider)),
+            : (isActive
+                  ? null
+                  : () => _switchToGalaxy(context, galaxy.id, galaxyProvider)),
         onLongPress: _isSelectionMode
             ? null
             : () => _showRenameDialog(context, galaxy, galaxyProvider),
         child: Container(
           padding: EdgeInsets.all(
-            FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
+            FontScaling.getResponsiveSpacing(context, 16) *
+                UIConstants.universalUIScale,
           ),
           decoration: BoxDecoration(
             color: isSelected
                 ? Color(0xFFFFE135).withValues(alpha: 0.1)
                 : (isActive
-                    ? Color(0xFFFFE135).withValues(alpha: 0.1)
-                    : Colors.transparent),
+                      ? Color(0xFFFFE135).withValues(alpha: 0.1)
+                      : Colors.transparent),
             borderRadius: BorderRadius.circular(
-              FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale,
+              FontScaling.getResponsiveSpacing(context, 8) *
+                  UIConstants.universalUIScale,
             ),
             border: (isSelected || isActive)
                 ? Border.all(
-              color: Color(0xFFFFE135).withValues(alpha: isSelected ? 1.0 : 0.5),
-              width: isSelected ? 2 : 1,
-            )
+                    color: Color(
+                      0xFFFFE135,
+                    ).withValues(alpha: isSelected ? 1.0 : 0.5),
+                    width: isSelected ? 2 : 1,
+                  )
                 : null,
           ),
           child: Row(
@@ -387,10 +439,16 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   : Icon(
                       Icons.stars,
                       color: isActive ? Color(0xFFFFE135) : Colors.white70,
-                      size: FontScaling.getResponsiveIconSize(context, 32) * UIConstants.universalUIScale,
+                      size:
+                          FontScaling.getResponsiveIconSize(context, 32) *
+                          UIConstants.universalUIScale,
                     ),
 
-              SizedBox(width: FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale),
+              SizedBox(
+                width:
+                    FontScaling.getResponsiveSpacing(context, 16) *
+                    UIConstants.universalUIScale,
+              ),
 
               // Galaxy info
               Expanded(
@@ -403,23 +461,36 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                           child: Text(
                             galaxy.name,
                             style: FontScaling.getBodyLarge(context).copyWith(
-                              color: isActive ? Color(0xFFFFE135) : Colors.white,
-                              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                              fontSize: FontScaling.getBodyLarge(context).fontSize! * UIConstants.universalUIScale,
+                              color: isActive
+                                  ? Color(0xFFFFE135)
+                                  : Colors.white,
+                              fontWeight: isActive
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              fontSize:
+                                  FontScaling.getBodyLarge(context).fontSize! *
+                                  UIConstants.universalUIScale,
                             ),
                           ),
                         ),
                         if (isActive) ...[
-                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                          SizedBox(
+                            width: FontScaling.getResponsiveSpacing(context, 8),
+                          ),
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale,
-                              vertical: FontScaling.getResponsiveSpacing(context, 4) * UIConstants.universalUIScale,
+                              horizontal:
+                                  FontScaling.getResponsiveSpacing(context, 8) *
+                                  UIConstants.universalUIScale,
+                              vertical:
+                                  FontScaling.getResponsiveSpacing(context, 4) *
+                                  UIConstants.universalUIScale,
                             ),
                             decoration: BoxDecoration(
                               color: Color(0xFFFFE135).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(
-                                FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
+                                FontScaling.getResponsiveSpacing(context, 12) *
+                                    UIConstants.universalUIScale,
                               ),
                             ),
                             child: Text(
@@ -427,19 +498,25 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                               style: FontScaling.getCaption(context).copyWith(
                                 color: Color(0xFFFFE135),
                                 fontWeight: FontWeight.bold,
-                                fontSize: FontScaling.getCaption(context).fontSize! * UIConstants.universalUIScale,
+                                fontSize:
+                                    FontScaling.getCaption(context).fontSize! *
+                                    UIConstants.universalUIScale,
                               ),
                             ),
                           ),
                         ],
                       ],
                     ),
-                    SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),
+                    SizedBox(
+                      height: FontScaling.getResponsiveSpacing(context, 4),
+                    ),
                     Text(
                       l10n.galaxyStats(galaxy.starCount, formattedDate),
                       style: FontScaling.getCaption(context).copyWith(
                         color: isActive ? Colors.white70 : Colors.white60,
-                        fontSize: FontScaling.getCaption(context).fontSize! * UIConstants.universalUIScale,
+                        fontSize:
+                            FontScaling.getCaption(context).fontSize! *
+                            UIConstants.universalUIScale,
                       ),
                     ),
                   ],
@@ -457,9 +534,12 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                     icon: Icon(
                       Icons.edit_outlined,
                       color: isActive ? Color(0xFFFFE135) : Colors.white60,
-                      size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
+                      size:
+                          FontScaling.getResponsiveIconSize(context, 20) *
+                          UIConstants.universalUIScale,
                     ),
-                    onPressed: () => _showRenameDialog(context, galaxy, galaxyProvider),
+                    onPressed: () =>
+                        _showRenameDialog(context, galaxy, galaxyProvider),
                     tooltip: l10n.renameGalaxy,
                   ),
                 ),
@@ -470,7 +550,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   Icon(
                     Icons.arrow_forward_ios,
                     color: Colors.white60,
-                    size: FontScaling.getResponsiveIconSize(context, 16) * UIConstants.universalUIScale,
+                    size:
+                        FontScaling.getResponsiveIconSize(context, 16) *
+                        UIConstants.universalUIScale,
                   ),
                 ],
               ],
@@ -485,14 +567,17 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     return Center(
       child: Padding(
         padding: EdgeInsets.all(
-          FontScaling.getResponsiveSpacing(context, 32) * UIConstants.universalUIScale,
+          FontScaling.getResponsiveSpacing(context, 32) *
+              UIConstants.universalUIScale,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.stars,
-              size: FontScaling.getResponsiveIconSize(context, 64) * UIConstants.universalUIScale,
+              size:
+                  FontScaling.getResponsiveIconSize(context, 64) *
+                  UIConstants.universalUIScale,
               color: Color(0xFFFFE135).withValues(alpha: 0.6),
             ),
             SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
@@ -500,7 +585,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               l10n.noGalaxiesYet,
               style: FontScaling.getHeadingMedium(context).copyWith(
                 color: Colors.white,
-                fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
+                fontSize:
+                    FontScaling.getHeadingMedium(context).fontSize! *
+                    UIConstants.universalUIScale,
               ),
               textAlign: TextAlign.center,
             ),
@@ -509,7 +596,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               l10n.createYourFirstGalaxy,
               style: FontScaling.getBodyMedium(context).copyWith(
                 color: Colors.white70,
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                fontSize:
+                    FontScaling.getBodyMedium(context).fontSize! *
+                    UIConstants.universalUIScale,
               ),
               textAlign: TextAlign.center,
             ),
@@ -519,7 +608,11 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     );
   }
 
-  Future<void> _switchToGalaxy(BuildContext context, String galaxyId, GalaxyProvider galaxyProvider) async {
+  Future<void> _switchToGalaxy(
+    BuildContext context,
+    String galaxyId,
+    GalaxyProvider galaxyProvider,
+  ) async {
     setState(() => _isLoading = true);
 
     // Capture l10n before async gap to avoid BuildContext warning
@@ -531,7 +624,8 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
 
       if (context.mounted) {
         // Store galaxy name for toast before popping
-        final galaxyName = galaxyProvider.activeGalaxy?.name ?? 'Unknown Galaxy';
+        final galaxyName =
+            galaxyProvider.activeGalaxy?.name ?? 'Unknown Galaxy';
 
         // Close dialog FIRST
         Navigator.of(context).popUntil((route) => route.isFirst);
@@ -539,7 +633,10 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
         // Show confirmation on main screen context
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.galaxySwitchedSuccess(galaxyName), style: FontScaling.getBodyMedium(context)),
+            content: Text(
+              AppLocalizations.of(context)!.galaxySwitchedSuccess(galaxyName),
+              style: FontScaling.getBodyMedium(context),
+            ),
             duration: Duration(seconds: 2),
             backgroundColor: Color(0xFF1A2238),
           ),
@@ -551,14 +648,19 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
         e,
         stack,
         context: ErrorContext.galaxy,
-        l10n: l10n,  // Use captured value
+        l10n: l10n, // Use captured value
       );
 
       // Only show error if dialog is still mounted
       if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.galaxySwitchFailed(error.userMessage), style: FontScaling.getBodyMedium(context)),
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.galaxySwitchFailed(error.userMessage),
+              style: FontScaling.getBodyMedium(context),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -572,13 +674,14 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
   }
 
   void _showCreateGalaxyDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => CreateGalaxyDialog(),
-    );
+    showDialog(context: context, builder: (context) => CreateGalaxyDialog());
   }
 
-  void _showRenameDialog(BuildContext context, GalaxyMetadata galaxy, GalaxyProvider galaxyProvider) {
+  void _showRenameDialog(
+    BuildContext context,
+    GalaxyMetadata galaxy,
+    GalaxyProvider galaxyProvider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => RenameGalaxyDialog(galaxy: galaxy),
@@ -589,7 +692,10 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  Future<void> _deleteSelectedGalaxies(BuildContext context, GalaxyProvider galaxyProvider) async {
+  Future<void> _deleteSelectedGalaxies(
+    BuildContext context,
+    GalaxyProvider galaxyProvider,
+  ) async {
     if (_selectedGalaxyIds.isEmpty) return;
 
     // Capture context-dependent objects before async gap
@@ -598,31 +704,43 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     final messenger = ScaffoldMessenger.of(context);
     final textStyle = FontScaling.getBodyMedium(context);
 
-    // Show confirmation dialog
+    // Check if deleting all galaxies
+    final activeGalaxies = galaxyProvider.activeGalaxies;
+    final galaxiesToDelete = activeGalaxies
+        .where((galaxy) => _selectedGalaxyIds.contains(galaxy.id))
+        .toList();
+    final isDeletingAllGalaxies =
+        galaxiesToDelete.length == activeGalaxies.length;
+
+    // Show appropriate confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Color(0xFF1A2238),
         title: Text(
-          l10n.deleteSelected,
-          style: FontScaling.getHeadingMedium(dialogContext).copyWith(
-            color: Colors.red,
-          ),
+          isDeletingAllGalaxies
+              ? l10n.deleteLastGalaxyTitle
+              : l10n.deleteSelected,
+          style: FontScaling.getHeadingMedium(
+            dialogContext,
+          ).copyWith(color: Colors.red),
         ),
         content: Text(
-          l10n.deleteSelectedGalaxies(count),
-          style: FontScaling.getBodyMedium(dialogContext).copyWith(
-            color: Colors.white,
-          ),
+          isDeletingAllGalaxies
+              ? l10n.deleteLastGalaxyMessage
+              : l10n.deleteSelectedGalaxies(count),
+          style: FontScaling.getBodyMedium(
+            dialogContext,
+          ).copyWith(color: Colors.white),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
               l10n.cancelButton,
-              style: FontScaling.getButtonText(dialogContext).copyWith(
-                color: Colors.white70,
-              ),
+              style: FontScaling.getButtonText(
+                dialogContext,
+              ).copyWith(color: Colors.white70),
             ),
           ),
           ElevatedButton(
@@ -632,10 +750,12 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               foregroundColor: Colors.white,
             ),
             child: Text(
-              l10n.deleteButton,
-              style: FontScaling.getButtonText(dialogContext).copyWith(
-                color: Colors.white,
-              ),
+              isDeletingAllGalaxies
+                  ? l10n.deleteLastGalaxyButton
+                  : l10n.deleteButton,
+              style: FontScaling.getButtonText(
+                dialogContext,
+              ).copyWith(color: Colors.white),
             ),
           ),
         ],
@@ -646,37 +766,20 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
 
     // Delete selected galaxies
     try {
-      final galaxiesToDelete = galaxyProvider.activeGalaxies
-          .where((galaxy) => _selectedGalaxyIds.contains(galaxy.id))
-          .toList();
-
-      // Prevent deleting the active galaxy
-      final activeGalaxyId = galaxyProvider.activeGalaxyId;
-      final deletingActiveGalaxy = galaxiesToDelete.any((g) => g.id == activeGalaxyId);
-
-      if (deletingActiveGalaxy && galaxiesToDelete.length == 1) {
-        // Can't delete the only active galaxy
-        if (mounted && messenger.mounted) {
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(
-                'Cannot delete the active galaxy',
-                style: textStyle.copyWith(color: Colors.white),
-              ),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-        return;
+      for (final galaxy in galaxiesToDelete) {
+        await galaxyProvider.deleteGalaxy(galaxy.id);
       }
 
-      for (final galaxy in galaxiesToDelete) {
-        // Skip if it's the active galaxy and there are other galaxies
-        if (galaxy.id == activeGalaxyId && galaxiesToDelete.length > 1) {
-          continue;
-        }
-        await galaxyProvider.deleteGalaxy(galaxy.id);
+      // Check if a new galaxy was auto-created
+      final remainingGalaxies = galaxyProvider.activeGalaxies;
+      final String successMessage;
+      if (isDeletingAllGalaxies && remainingGalaxies.isNotEmpty) {
+        // A new galaxy was auto-created
+        final newGalaxyName = remainingGalaxies.first.name;
+        successMessage = l10n.newGalaxyCreated(newGalaxyName);
+      } else {
+        // Normal deletion
+        successMessage = l10n.galaxiesDeleted(count);
       }
 
       if (mounted) {
@@ -689,7 +792,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
           messenger.showSnackBar(
             SnackBar(
               content: Text(
-                l10n.galaxiesDeleted(count),
+                successMessage,
                 style: textStyle.copyWith(color: Colors.white),
               ),
               backgroundColor: Color(0xFF1A2238),
@@ -733,7 +836,10 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
     // Auto-suggest current year
     _controller.text = DateTime.now().year.toString();
     // Pre-select the text for easy editing
-    _controller.selection = TextSelection(baseOffset: 0, extentOffset: _controller.text.length);
+    _controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _controller.text.length,
+    );
   }
 
   @override
@@ -750,9 +856,9 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
       backgroundColor: Color(0xFF1A2238),
       title: Text(
         l10n.createNewGalaxy,
-        style: FontScaling.getHeadingMedium(context).copyWith(
-          color: Color(0xFFFFE135),
-        ),
+        style: FontScaling.getHeadingMedium(
+          context,
+        ).copyWith(color: Color(0xFFFFE135)),
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -761,9 +867,9 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
           children: [
             Text(
               l10n.nameYourGalaxy,
-              style: FontScaling.getBodyMedium(context).copyWith(
-                color: Colors.white,
-              ),
+              style: FontScaling.getBodyMedium(
+                context,
+              ).copyWith(color: Colors.white),
             ),
             SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
             SemanticHelper.label(
@@ -771,19 +877,21 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
               hint: l10n.enterGalaxyName,
               child: TextField(
                 controller: _controller,
-                style: FontScaling.getBodyMedium(context).copyWith(
-                  color: Colors.white,
-                ),
+                style: FontScaling.getBodyMedium(
+                  context,
+                ).copyWith(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: l10n.galaxyNameHint,
-                  hintStyle: FontScaling.getBodyMedium(context).copyWith(
-                    color: Colors.white60,
-                  ),
+                  hintStyle: FontScaling.getBodyMedium(
+                    context,
+                  ).copyWith(color: Colors.white60),
                   border: OutlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFFFE135)),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFFFE135).withValues(alpha: 0.5)),
+                    borderSide: BorderSide(
+                      color: Color(0xFFFFE135).withValues(alpha: 0.5),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFFFFE135)),
@@ -797,9 +905,9 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
             SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
             Text(
               l10n.createGalaxyDescription,
-              style: FontScaling.getCaption(context).copyWith(
-                color: Colors.white70,
-              ),
+              style: FontScaling.getCaption(
+                context,
+              ).copyWith(color: Colors.white70),
             ),
           ],
         ),
@@ -809,9 +917,9 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
           onPressed: _isCreating ? null : () => Navigator.of(context).pop(),
           child: Text(
             l10n.cancel,
-            style: FontScaling.getButtonText(context).copyWith(
-              color: Colors.white70,
-            ),
+            style: FontScaling.getButtonText(
+              context,
+            ).copyWith(color: Colors.white70),
           ),
         ),
         ElevatedButton(
@@ -822,13 +930,15 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
           ),
           child: _isCreating
               ? SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1A2238)),
-            ),
-          )
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF1A2238),
+                    ),
+                  ),
+                )
               : Text(l10n.createGalaxy),
         ),
       ],
@@ -848,7 +958,10 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
     try {
       final navigator = Navigator.of(context);
       final messenger = ScaffoldMessenger.of(context);
-      final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+      final galaxyProvider = Provider.of<GalaxyProvider>(
+        context,
+        listen: false,
+      );
       await galaxyProvider.createGalaxy(name: name, switchToNew: true);
 
       if (navigator.mounted) {
@@ -869,7 +982,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
         e,
         stack,
         context: ErrorContext.galaxy,
-        l10n: l10n,  // Use captured value
+        l10n: l10n, // Use captured value
       );
 
       ScaffoldMessengerState? messenger;
@@ -879,7 +992,10 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(l10n.galaxyCreateFailed(error.userMessage), style: textStyle),
+          content: Text(
+            l10n.galaxyCreateFailed(error.userMessage),
+            style: textStyle,
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -895,10 +1011,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
 class RenameGalaxyDialog extends StatefulWidget {
   final GalaxyMetadata galaxy;
 
-  const RenameGalaxyDialog({
-    super.key,
-    required this.galaxy,
-  });
+  const RenameGalaxyDialog({super.key, required this.galaxy});
 
   @override
   State<RenameGalaxyDialog> createState() => _RenameGalaxyDialogState();
@@ -912,7 +1025,10 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
   void initState() {
     super.initState();
     _controller.text = widget.galaxy.name;
-    _controller.selection = TextSelection(baseOffset: 0, extentOffset: _controller.text.length);
+    _controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _controller.text.length,
+    );
   }
 
   @override
@@ -929,9 +1045,9 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
       backgroundColor: Color(0xFF1A2238),
       title: Text(
         l10n.renameGalaxy,
-        style: FontScaling.getHeadingMedium(context).copyWith(
-          color: Color(0xFFFFE135),
-        ),
+        style: FontScaling.getHeadingMedium(
+          context,
+        ).copyWith(color: Color(0xFFFFE135)),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -941,15 +1057,17 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
             hint: l10n.enterNewGalaxyName,
             child: TextField(
               controller: _controller,
-              style: FontScaling.getBodyMedium(context).copyWith(
-                color: Colors.white,
-              ),
+              style: FontScaling.getBodyMedium(
+                context,
+              ).copyWith(color: Colors.white),
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderSide: BorderSide(color: Color(0xFFFFE135)),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFFE135).withValues(alpha: 0.5)),
+                  borderSide: BorderSide(
+                    color: Color(0xFFFFE135).withValues(alpha: 0.5),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Color(0xFFFFE135)),
@@ -968,9 +1086,9 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
           onPressed: _isRenaming ? null : () => _confirmDelete(context),
           child: Text(
             l10n.deleteButton,
-            style: FontScaling.getButtonText(context).copyWith(
-              color: Colors.red.withValues(alpha: 0.8),
-            ),
+            style: FontScaling.getButtonText(
+              context,
+            ).copyWith(color: Colors.red.withValues(alpha: 0.8)),
           ),
         ),
         Spacer(),
@@ -978,9 +1096,9 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
           onPressed: _isRenaming ? null : () => Navigator.of(context).pop(),
           child: Text(
             l10n.cancel,
-            style: FontScaling.getButtonText(context).copyWith(
-              color: Colors.white70,
-            ),
+            style: FontScaling.getButtonText(
+              context,
+            ).copyWith(color: Colors.white70),
           ),
         ),
         ElevatedButton(
@@ -991,13 +1109,15 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
           ),
           child: _isRenaming
               ? SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1A2238)),
-            ),
-          )
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF1A2238),
+                    ),
+                  ),
+                )
               : Text(l10n.save),
         ),
       ],
@@ -1006,31 +1126,41 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
   void _confirmDelete(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+
+    // Check if this is the last galaxy
+    final activeGalaxies = galaxyProvider.activeGalaxies;
+    final isLastGalaxy = activeGalaxies.length == 1;
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Color(0xFF1A2238),
         title: Text(
-          l10n.deleteGalaxy,
-          style: FontScaling.getHeadingMedium(context).copyWith(
-            color: Colors.red,
-          ),
+          isLastGalaxy ? l10n.deleteLastGalaxyTitle : l10n.deleteGalaxy,
+          style: FontScaling.getHeadingMedium(
+            context,
+          ).copyWith(color: Colors.red),
         ),
         content: Text(
-          l10n.deleteGalaxyConfirmation(widget.galaxy.name, widget.galaxy.starCount),
-          style: FontScaling.getBodyMedium(context).copyWith(
-            color: Colors.white,
-          ),
+          isLastGalaxy
+              ? l10n.deleteLastGalaxyMessage
+              : l10n.deleteGalaxyConfirmation(
+                  widget.galaxy.name,
+                  widget.galaxy.starCount,
+                ),
+          style: FontScaling.getBodyMedium(
+            context,
+          ).copyWith(color: Colors.white),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
               l10n.cancel,
-              style: FontScaling.getButtonText(context).copyWith(
-                color: Colors.white70,
-              ),
+              style: FontScaling.getButtonText(
+                context,
+              ).copyWith(color: Colors.white70),
             ),
           ),
           ElevatedButton(
@@ -1042,7 +1172,9 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(l10n.deleteButton),
+            child: Text(
+              isLastGalaxy ? l10n.deleteLastGalaxyButton : l10n.deleteButton,
+            ),
           ),
         ],
       ),
@@ -1054,13 +1186,29 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
     final l10n = AppLocalizations.of(context)!;
     final textStyle = FontScaling.getBodyMedium(context);
+    final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+
+    // Check if this is the last galaxy (before deletion)
+    final activeGalaxiesBefore = galaxyProvider.activeGalaxies;
+    final isLastGalaxy = activeGalaxiesBefore.length == 1;
 
     try {
       final navigator = Navigator.of(context);
       final messenger = ScaffoldMessenger.of(context);
-      final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
 
       await galaxyProvider.deleteGalaxy(widget.galaxy.id);
+
+      // Check if a new galaxy was auto-created
+      final remainingGalaxies = galaxyProvider.activeGalaxies;
+      final String successMessage;
+      if (isLastGalaxy && remainingGalaxies.isNotEmpty) {
+        // A new galaxy was auto-created
+        final newGalaxyName = remainingGalaxies.first.name;
+        successMessage = l10n.newGalaxyCreated(newGalaxyName);
+      } else {
+        // Normal deletion
+        successMessage = l10n.galaxyDeletedSuccess(widget.galaxy.name);
+      }
 
       if (navigator.mounted) {
         navigator.pop(); // Close rename dialog
@@ -1068,7 +1216,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
         messenger.showSnackBar(
           SnackBar(
-            content: Text(l10n.galaxyDeletedSuccess(widget.galaxy.name), style: textStyle),
+            content: Text(successMessage, style: textStyle),
             backgroundColor: const Color(0xFF1A2238),
             duration: Duration(seconds: 2),
           ),
@@ -1086,7 +1234,10 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(l10n.galaxyDeleteFailed(error.userMessage), style: textStyle),
+          content: Text(
+            l10n.galaxyDeleteFailed(error.userMessage),
+            style: textStyle,
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -1113,7 +1264,10 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
       // Capture context-dependent objects BEFORE the async gap
       final navigator = Navigator.of(context);
       final messenger = ScaffoldMessenger.of(context);
-      final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+      final galaxyProvider = Provider.of<GalaxyProvider>(
+        context,
+        listen: false,
+      );
 
       await galaxyProvider.renameGalaxy(widget.galaxy.id, name);
 
@@ -1135,7 +1289,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
         e,
         stack,
         context: ErrorContext.galaxy,
-        l10n: l10n,  // Use captured value
+        l10n: l10n, // Use captured value
       );
 
       // Safe fallback — do NOT use Navigator.of(context) here
@@ -1143,7 +1297,10 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
 
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(l10n.galaxyRenameFailed(error.userMessage), style: textStyle),
+          content: Text(
+            l10n.galaxyRenameFailed(error.userMessage),
+            style: textStyle,
+          ),
           backgroundColor: Colors.red,
         ),
       );

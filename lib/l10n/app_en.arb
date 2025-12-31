@@ -1411,6 +1411,27 @@
             }
           }
         },
+        "deleteLastGalaxyTitle": "Delete All Galaxies?",
+        "@deleteLastGalaxyTitle": {
+          "description": "Title for dialog when user tries to delete all galaxies"
+        },
+        "deleteLastGalaxyMessage": "This will delete all your galaxies and stars. A new empty galaxy will be created. Continue?",
+        "@deleteLastGalaxyMessage": {
+          "description": "Message warning user that deleting all galaxies will delete all stars and a new galaxy will be created"
+        },
+        "deleteLastGalaxyButton": "Delete All",
+        "@deleteLastGalaxyButton": {
+          "description": "Button to confirm deletion of all galaxies"
+        },
+        "newGalaxyCreated": "New galaxy created: {name}",
+        "@newGalaxyCreated": {
+          "description": "Success message after auto-creating a new galaxy",
+          "placeholders": {
+            "name": {
+              "type": "String"
+            }
+          }
+        },
         "galaxiesDeleted": "{count} galaxy/galaxies deleted",
         "@galaxiesDeleted": {
           "description": "Success message after deleting galaxies",

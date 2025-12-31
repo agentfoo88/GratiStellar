@@ -1,18 +1,116 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/accessibility/semantic_helper.dart';
 import '../../core/config/constants.dart';
 import '../../font_scaling.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/onboarding_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/user_profile_migration_service.dart';
+import '../../core/utils/app_logger.dart';
 import 'consent_screen.dart';
 
 /// Age gate screen for COPPA compliance
 ///
 /// Verifies that users are 13+ years old before allowing them to proceed.
 /// Users under 13 are shown an exit dialog and the app closes.
-class AgeGateScreen extends StatelessWidget {
+/// 
+/// Checks both local state and Firebase profile for age gate status.
+class AgeGateScreen extends StatefulWidget {
   const AgeGateScreen({super.key});
+
+  @override
+  State<AgeGateScreen> createState() => _AgeGateScreenState();
+}
+
+class _AgeGateScreenState extends State<AgeGateScreen> {
+  bool _isChecking = true;
+  bool _shouldShow = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAgeGateStatus();
+  }
+
+  /// Check age gate status from both local and Firebase
+  Future<void> _checkAgeGateStatus() async {
+    try {
+      final authService = AuthService();
+      final onboardingService = OnboardingService();
+      
+      // Check local state first
+      final localAgeGatePassed = await onboardingService.hasPassedAgeGate();
+      
+      // If user is signed in, check Firebase profile
+      if (authService.isSignedIn && authService.hasEmailAccount) {
+        final userId = authService.currentUser?.uid;
+        if (userId != null) {
+          // Sync and migrate profile from Firebase
+          final migrationService = UserProfileMigrationService();
+          final migrationResult = await migrationService.loadAndMigrateProfile(userId);
+          
+          if (migrationResult != null) {
+            // Check Firebase profile for ageGatePassed
+            try {
+              final firestore = FirebaseFirestore.instance;
+              final doc = await firestore.collection('users').doc(userId).get();
+              final profileData = doc.data();
+              final firebaseAgeGatePassed = profileData?['ageGatePassed'] as bool? ?? false;
+              
+              // If Firebase says age gate passed, skip this screen
+              if (firebaseAgeGatePassed) {
+                AppLogger.data('✅ Age gate already passed in Firebase, skipping screen');
+                if (!mounted) return;
+                // Mark locally as well
+                await onboardingService.markAgeGatePassed();
+                if (!mounted) return;
+                // Capture navigator after async gap
+                final navigator = Navigator.of(context);
+                navigator.pushReplacement(
+                  MaterialPageRoute(builder: (context) => const ConsentScreen()),
+                );
+                return;
+              }
+            } catch (e) {
+              AppLogger.error('⚠️ Error checking Firebase age gate status: $e');
+              // Continue with local check if Firebase check fails
+            }
+          }
+        }
+      }
+      
+      // If local age gate passed, skip this screen
+      if (localAgeGatePassed) {
+        AppLogger.data('✅ Age gate already passed locally, skipping screen');
+        if (!mounted) return;
+        // Capture navigator after async gap
+        final navigator = Navigator.of(context);
+        navigator.pushReplacement(
+          MaterialPageRoute(builder: (context) => const ConsentScreen()),
+        );
+        return;
+      }
+      
+      // Show age gate screen
+      if (mounted) {
+        setState(() {
+          _isChecking = false;
+          _shouldShow = true;
+        });
+      }
+    } catch (e) {
+      AppLogger.error('❌ Error checking age gate status: $e');
+      // On error, show the screen (safer to show than skip)
+      if (mounted) {
+        setState(() {
+          _isChecking = false;
+          _shouldShow = true;
+        });
+      }
+    }
+  }
 
   /// Handle age confirmation
   void _handleAgeConfirmation(BuildContext context, bool is13OrOlder) async {
@@ -22,6 +120,23 @@ class AgeGateScreen extends StatelessWidget {
       // User is 13+, save and proceed to consent screen
       final onboardingService = OnboardingService();
       await onboardingService.markAgeGatePassed();
+      
+      // If user is signed in, save to Firebase
+      final authService = AuthService();
+      if (authService.isSignedIn && authService.hasEmailAccount) {
+        final userId = authService.currentUser?.uid;
+        if (userId != null) {
+          try {
+            await FirebaseFirestore.instance.collection('users').doc(userId).set({
+              'ageGatePassed': true,
+            }, SetOptions(merge: true));
+            AppLogger.success('✅ Age gate passed saved to Firebase');
+          } catch (e) {
+            AppLogger.error('⚠️ Error saving age gate to Firebase: $e');
+            // Continue anyway - local state is saved
+          }
+        }
+      }
 
       if (!context.mounted) return;
 
@@ -46,17 +161,24 @@ class AgeGateScreen extends StatelessWidget {
           ),
           content: Text(
             l10n.ageGateUnder13Message,
-            style: FontScaling.getBodyMedium(context),
+            style: FontScaling.getBodyMedium(context).copyWith(
+              color: Colors.white, // Explicit white for better contrast on dark background
+            ),
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                SystemNavigator.pop(); // Exit the app
-              },
-              child: Text(
-                l10n.exitButton,
-                style: FontScaling.getButtonText(context).copyWith(
-                  color: const Color(0xFFFFE135),
+            SemanticHelper.label(
+              label: l10n.exitButton,
+              hint: l10n.exitButton,
+              isButton: true,
+              child: TextButton(
+                onPressed: () {
+                  SystemNavigator.pop(); // Exit the app
+                },
+                child: Text(
+                  l10n.exitButton,
+                  style: FontScaling.getButtonText(context).copyWith(
+                    color: const Color(0xFFFFE135),
+                  ),
                 ),
               ),
             ),
@@ -69,6 +191,38 @@ class AgeGateScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    // Show loading while checking status
+    if (_isChecking) {
+      return Scaffold(
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF4A6FA5),
+                Color(0xFF166088),
+                Color(0xFF0B1426),
+                Color(0xFF2C3E50),
+              ],
+            ),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Don't show if we determined we shouldn't
+    if (!_shouldShow) {
+      return const SizedBox.shrink();
+    }
 
     return Scaffold(
       body: Container(

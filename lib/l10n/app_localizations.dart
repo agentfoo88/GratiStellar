@@ -2320,6 +2320,30 @@ abstract class AppLocalizations {
   /// **'{count} star(s) deleted'**
   String starsDeleted(int count);
 
+  /// Title for dialog when user tries to delete all galaxies
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All Galaxies?'**
+  String get deleteLastGalaxyTitle;
+
+  /// Message warning user that deleting all galaxies will delete all stars and a new galaxy will be created
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete all your galaxies and stars. A new empty galaxy will be created. Continue?'**
+  String get deleteLastGalaxyMessage;
+
+  /// Button to confirm deletion of all galaxies
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All'**
+  String get deleteLastGalaxyButton;
+
+  /// Success message after auto-creating a new galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'New galaxy created: {name}'**
+  String newGalaxyCreated(String name);
+
   /// Success message after deleting galaxies
   ///
   /// In en, this message translates to:

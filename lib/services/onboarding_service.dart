@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../core/utils/app_logger.dart';
 import '../screens/gratitude_screen.dart';
 import '../screens/onboarding/enhanced_splash_screen.dart';
+import 'auth_service.dart';
+import 'user_profile_migration_service.dart';
 
 /// Service to manage onboarding state and flow
 ///
@@ -66,14 +69,56 @@ class OnboardingService {
 
   /// Determine the initial screen based on onboarding status
   ///
+  /// Checks both local state and Firebase profile (if user is signed in).
   /// Returns:
-  /// - GratitudeScreen if onboarding is complete
+  /// - GratitudeScreen if onboarding is complete (locally or in Firebase)
   /// - EnhancedSplashScreen if onboarding is not complete (starts onboarding flow)
   Future<Widget> getInitialScreen() async {
-    final onboardingComplete = await isOnboardingComplete();
+    // Check local state first
+    final localOnboardingComplete = await isOnboardingComplete();
+    final localAgeGatePassed = await hasPassedAgeGate();
 
-    if (onboardingComplete) {
-      AppLogger.info('🎯 Onboarding complete, returning GratitudeScreen');
+    // If user is signed in, check Firebase profile
+    final authService = AuthService();
+    if (authService.isSignedIn && authService.hasEmailAccount) {
+      final userId = authService.currentUser?.uid;
+      if (userId != null) {
+        try {
+          // Sync and migrate profile from Firebase
+          final migrationService = UserProfileMigrationService();
+          final migrationResult = await migrationService.loadAndMigrateProfile(userId);
+          
+          if (migrationResult != null) {
+            // Check Firebase profile for onboarding status
+            final firestore = FirebaseFirestore.instance;
+            final doc = await firestore.collection('users').doc(userId).get();
+            final profileData = doc.data();
+            final firebaseOnboardingComplete = profileData?['onboardingCompleted'] as bool? ?? false;
+            final firebaseAgeGatePassed = profileData?['ageGatePassed'] as bool? ?? false;
+            
+            // If Firebase says onboarding complete, return main screen
+            if (firebaseOnboardingComplete) {
+              AppLogger.info('🎯 Onboarding complete in Firebase, returning GratitudeScreen');
+              // Sync local state if needed
+              if (!localOnboardingComplete) {
+                await markOnboardingComplete();
+              }
+              if (!localAgeGatePassed && firebaseAgeGatePassed) {
+                await markAgeGatePassed();
+              }
+              return GratitudeScreen();
+            }
+          }
+        } catch (e) {
+          AppLogger.error('⚠️ Error checking Firebase onboarding status: $e');
+          // Continue with local check if Firebase check fails
+        }
+      }
+    }
+
+    // Use local state
+    if (localOnboardingComplete) {
+      AppLogger.info('🎯 Onboarding complete locally, returning GratitudeScreen');
       return GratitudeScreen();
     }
 

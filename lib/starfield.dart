@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:math';  // ADD THIS if not present
-import 'dart:math' as math;  // OR if using 'as math'
+import 'dart:math' as math;
+import 'dart:math' show Random, pi, sin, cos;
 import 'background.dart';
 
 // Simple noise implementation to replace FastNoise

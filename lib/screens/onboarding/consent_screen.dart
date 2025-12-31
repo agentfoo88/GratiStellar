@@ -9,7 +9,10 @@ import '../../core/utils/app_logger.dart';
 import '../../font_scaling.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/url_launch_service.dart';
-import 'name_collection_screen.dart';
+import '../../services/onboarding_service.dart';
+import '../../services/user_profile_manager.dart';
+import '../../screens/gratitude_screen.dart';
+import 'package:provider/provider.dart';
 
 /// Privacy and Terms of Service consent screen
 ///
@@ -95,16 +98,43 @@ class _ConsentScreenState extends State<ConsentScreen> {
     });
   }
 
-  /// Handle acceptance - navigate to name collection screen
-  void _handleAccept() {
+  /// Handle acceptance - create anonymous profile and navigate to main app
+  Future<void> _handleAccept() async {
     if (!_canContinue) return;
 
-    AppLogger.auth('Consent accepted, navigating to name collection...');
+    AppLogger.auth('Consent accepted, creating anonymous profile and navigating to main app...');
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const NameCollectionScreen()),
-    );
+    try {
+      // Get UserProfileManager from context
+      final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+      
+      // Create device-scoped anonymous profile
+      await userProfileManager.getOrCreateActiveUserId();
+      
+      // Mark onboarding as complete
+      final onboardingService = OnboardingService();
+      await onboardingService.markOnboardingComplete();
+      
+      AppLogger.success('✅ Anonymous profile created, onboarding complete');
+      
+      if (!mounted) return;
+      
+      // Navigate directly to main app
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => GratitudeScreen()),
+      );
+    } catch (e) {
+      AppLogger.error('❌ Error completing onboarding: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error completing setup. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   /// Build a bullet point for privacy practices

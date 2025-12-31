@@ -8,6 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'gratitude_stars.dart';
 import 'utils/compression_utils.dart';
 import 'core/utils/app_logger.dart';
+import 'services/user_scoped_storage.dart';
+import 'services/user_profile_manager.dart';
+import 'galaxy_metadata.dart';
 
 // Extension to add Gaussian distribution to Random
 extension RandomGaussian on math.Random {
@@ -288,29 +291,37 @@ class StorageService {
   );
 
   // Load gratitude stars from encrypted storage
-  static Future<List<GratitudeStar>> loadGratitudeStars() async {
+  // Now uses user-scoped storage - migrates global data if found
+  static Future<List<GratitudeStar>> loadGratitudeStars({UserProfileManager? userProfileManager}) async {
     try {
-      // Try secure storage first (encrypted)
-      final encryptedData = await _secureStorage.read(key: _starsKey);
+      // First, check if we need to migrate global storage to user-scoped storage
+      await _migrateGlobalToUserScoped(userProfileManager);
 
-      if (encryptedData != null) {
-        // Decrypt and parse
-        final decoded = json.decode(encryptedData);
-        if (decoded is! List) {
-          AppLogger.error('Invalid backup format: expected List, got ${decoded.runtimeType}');
-          throw FormatException('Invalid backup data format');
-        }
-        return decoded.map((starJson) {
-          return GratitudeStar.fromJson(starJson);
-        }).toList();
+      // Get current user ID
+      String? userId;
+      if (userProfileManager != null) {
+        userId = await userProfileManager.getOrCreateActiveUserId();
+      } else {
+        // Fallback: try to get from auth service directly
+        // This is for backward compatibility during transition
+        final prefs = await SharedPreferences.getInstance();
+        userId = prefs.getString('active_user_id');
       }
 
-      // Fallback: Check old unencrypted storage for migration
+      // Load from user-scoped storage
+      final stars = await UserScopedStorage.loadStars(userId);
+      
+      if (stars.isNotEmpty) {
+        AppLogger.data('📥 Loaded ${stars.length} stars from user-scoped storage');
+        return stars;
+      }
+
+      // Fallback: Check old unencrypted storage for migration (legacy support)
       final prefs = await SharedPreferences.getInstance();
       final oldStarsJson = prefs.getStringList(_starsKey);
 
       if (oldStarsJson != null && oldStarsJson.isNotEmpty) {
-        AppLogger.data('📦 Migrating ${oldStarsJson.length} stars from unencrypted to encrypted storage');
+        AppLogger.data('📦 Migrating ${oldStarsJson.length} stars from unencrypted to user-scoped storage');
 
         // Parse old data
         final stars = oldStarsJson.map((starString) {
@@ -318,40 +329,18 @@ class StorageService {
           return GratitudeStar.fromJson(starData);
         }).toList();
 
-        // SAFETY CHECK 1: Verify save succeeded
-        final saveSucceeded = await saveGratitudeStars(stars);
-
-        if (!saveSucceeded) {
-          AppLogger.error('⚠️ Migration failed - keeping old data as backup');
-          return stars;
+        // Migrate to user-scoped storage
+        if (userId != null) {
+          await UserScopedStorage.saveStars(userId, stars);
+          await UserScopedStorage.trackUserHasData(userId);
+        } else {
+          // No user ID - save to global storage temporarily
+          await saveGratitudeStars(stars);
         }
 
-        // SAFETY CHECK 2: Verify we can read back encrypted data
-        try {
-          final encryptedData = await _secureStorage.read(key: _starsKey);
-          if (encryptedData == null || encryptedData.isEmpty) {
-            AppLogger.warning('⚠️ Could not verify encrypted data - keeping old data as backup');
-            return stars;
-          }
-
-          // Verify it parses correctly
-          final verification = json.decode(encryptedData);
-          if (verification is! List) {
-            AppLogger.error('Invalid backup format: expected List, got ${verification.runtimeType}');
-            throw FormatException('Invalid backup data format');
-          }
-          if (verification.length != stars.length) {
-            AppLogger.warning('⚠️ Encrypted data mismatch - keeping old data as backup');
-            return stars;
-          }
-        } catch (e) {
-          AppLogger.error('⚠️ Verification failed: $e - keeping old data as backup');
-          return stars;
-        }
-
-        // ONLY NOW delete old unencrypted data
+        // Delete old unencrypted data
         await prefs.remove(_starsKey);
-        AppLogger.success('✅ Migration complete - old data removed');
+        AppLogger.success('✅ Migration complete - old data migrated to user-scoped storage');
 
         return stars;
       }
@@ -364,17 +353,116 @@ class StorageService {
     }
   }
 
-  // Save gratitude stars to encrypted storage
-  static Future<bool> saveGratitudeStars(List<GratitudeStar> stars) async {
+  /// Migrate global storage to user-scoped storage
+  /// 
+  /// Checks if global storage exists and migrates it to current user's scoped storage
+  static Future<void> _migrateGlobalToUserScoped(UserProfileManager? userProfileManager) async {
     try {
-      // Convert to JSON
-      final starsJsonList = stars.map((star) => star.toJson()).toList();
-      final jsonString = json.encode(starsJsonList);
+      final prefs = await SharedPreferences.getInstance();
+      final migrationDone = prefs.getBool('global_to_user_scoped_migration_done') ?? false;
+      
+      if (migrationDone) {
+        // Migration already completed
+        return;
+      }
 
-      // Save encrypted
-      await _secureStorage.write(key: _starsKey, value: jsonString);
+      // Check if global storage exists
+      final encryptedData = await _secureStorage.read(key: _starsKey);
+      
+      if (encryptedData != null && encryptedData.isNotEmpty) {
+        AppLogger.data('📦 Migrating global storage to user-scoped storage...');
 
-      return true;
+        // Parse global data
+        final decoded = json.decode(encryptedData);
+        if (decoded is List) {
+          final stars = decoded.map<GratitudeStar>((starJson) {
+            return GratitudeStar.fromJson(starJson as Map<String, dynamic>);
+          }).toList();
+
+          // Get current user ID
+          String? userId;
+          if (userProfileManager != null) {
+            userId = await userProfileManager.getOrCreateActiveUserId();
+          } else {
+            // Try to get from saved preferences
+            final prefs = await SharedPreferences.getInstance();
+            userId = prefs.getString('active_user_id');
+            if (userId == null) {
+              // Create anonymous profile for migration
+              final deviceId = prefs.getString('device_id') ?? 'device_${DateTime.now().millisecondsSinceEpoch}';
+              userId = 'anonymous_$deviceId';
+              await prefs.setString('active_user_id', userId);
+            }
+          }
+
+          if (stars.isNotEmpty) {
+            // Save to user-scoped storage
+            await UserScopedStorage.saveStars(userId, stars);
+            await UserScopedStorage.trackUserHasData(userId);
+            
+            // Also migrate galaxies if they exist (check global galaxy storage)
+            try {
+              final galaxyKey = 'galaxies_metadata';
+              final galaxyData = await _secureStorage.read(key: galaxyKey);
+              if (galaxyData != null && galaxyData.isNotEmpty) {
+                final decoded = json.decode(galaxyData);
+                if (decoded is List) {
+                  final galaxies = decoded.map((g) => GalaxyMetadata.fromJson(g as Map<String, dynamic>)).toList();
+                  if (galaxies.isNotEmpty) {
+                    await UserScopedStorage.saveGalaxies(userId, galaxies);
+                    AppLogger.data('📦 Migrated ${galaxies.length} galaxies to user-scoped storage');
+                  }
+                }
+              }
+            } catch (e) {
+              AppLogger.warning('⚠️ Could not migrate galaxies: $e');
+            }
+
+            // Mark migration as done
+            await prefs.setBool('global_to_user_scoped_migration_done', true);
+            
+            // Keep global storage as backup for now (can be cleared later)
+            AppLogger.success('✅ Migrated ${stars.length} stars to user-scoped storage for user: $userId');
+          }
+        }
+      } else {
+        // No global data - mark migration as done
+        await prefs.setBool('global_to_user_scoped_migration_done', true);
+      }
+    } catch (e) {
+      AppLogger.error('⚠️ Error migrating global to user-scoped storage: $e');
+      // Don't throw - allow app to continue
+    }
+  }
+
+  // Save gratitude stars to encrypted storage
+  // Now uses user-scoped storage when userId is provided
+  static Future<bool> saveGratitudeStars(
+    List<GratitudeStar> stars, {
+    UserProfileManager? userProfileManager,
+    String? userId,
+  }) async {
+    try {
+      // Determine user ID
+      String? finalUserId = userId;
+      if (finalUserId == null && userProfileManager != null) {
+        finalUserId = await userProfileManager.getOrCreateActiveUserId();
+      }
+
+      if (finalUserId != null) {
+        // Use user-scoped storage
+        final success = await UserScopedStorage.saveStars(finalUserId, stars);
+        if (success) {
+          await UserScopedStorage.trackUserHasData(finalUserId);
+        }
+        return success;
+      } else {
+        // Fallback to global storage (backward compatibility)
+        final starsJsonList = stars.map((star) => star.toJson()).toList();
+        final jsonString = json.encode(starsJsonList);
+        await _secureStorage.write(key: _starsKey, value: jsonString);
+        return true;
+      }
     } catch (e) {
       debugPrint('❌ Error saving gratitude stars: $e');
       return false;
@@ -384,14 +472,32 @@ class StorageService {
   // Clear all encrypted data (called on sign out)
   static Future<void> clearAllData() async {
     try {
+      // Get current user ID from SharedPreferences (fallback method)
+      final prefs = await SharedPreferences.getInstance();
+      String? userId = prefs.getString('active_user_id');
+      
+      // If no active user ID, try to get device ID for anonymous users
+      if (userId == null) {
+        userId = prefs.getString('device_id');
+        if (userId != null) {
+          userId = 'anonymous_$userId';
+        }
+      }
+      
+      // Clear user-scoped storage for current user if we have a userId
+      if (userId != null) {
+        await UserScopedStorage.clearUserData(userId);
+      }
+      
+      // Also clear old global storage keys
       await _secureStorage.delete(key: _starsKey);
 
       // Also clear SharedPreferences as backup
-      final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_starsKey);
       await prefs.remove('last_synced_at');
       await prefs.remove('anonymous_uid');
       await prefs.remove('local_data_owner_uid');
+      await prefs.remove('active_user_id');
 
       // Clear reminder preferences on sign-out
       await prefs.remove('reminder_enabled');

@@ -29,7 +29,6 @@ class LoadGratitudesUseCase extends UseCase<LoadGratitudesResult, NoParams> {
     AppLogger.data('💾 Loading gratitudes...');
 
     await _checkFirstRun();
-    await _restoreAnonymousSessionIfNeeded();
     await _verifyDataOwnership();
 
     final stars = await repository.getGratitudes();
@@ -59,32 +58,6 @@ class LoadGratitudesUseCase extends UseCase<LoadGratitudesResult, NoParams> {
       }
     } catch (e) {
       AppLogger.error('⚠️ Error checking first run: $e');
-    }
-  }
-
-  Future<void> _restoreAnonymousSessionIfNeeded() async {
-    try {
-      if (authService.isSignedIn) {
-        AppLogger.auth('✓ User already signed in, skipping session restoration');
-        return;
-      }
-
-      final savedUid = await authService.getSavedAnonymousUid();
-
-      if (savedUid != null) {
-        AppLogger.data('🔄 Found saved anonymous UID: $savedUid');
-        await Future.delayed(Duration(milliseconds: 500));
-
-        if (authService.isSignedIn && authService.currentUser?.uid == savedUid) {
-          AppLogger.success('✅ Anonymous session restored successfully');
-        } else {
-          AppLogger.warning('⚠️ Saved session expired or invalid');
-        }
-      } else {
-        AppLogger.data('ℹ️ No saved anonymous UID found');
-      }
-    } catch (e) {
-      AppLogger.error('⚠️ Error restoring anonymous session: $e');
     }
   }
 

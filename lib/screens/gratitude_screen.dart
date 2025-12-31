@@ -23,6 +23,8 @@ import '../features/gratitudes/presentation/controllers/reminder_controller.dart
 import '../features/gratitudes/presentation/widgets/gratitude_gesture_handler.dart';
 import '../features/gratitudes/presentation/widgets/loading_state.dart';
 import '../features/gratitudes/presentation/widgets/stats_card.dart';
+import '../features/gratitudes/presentation/widgets/sync_status_banner.dart';
+import '../features/gratitudes/presentation/widgets/sign_in_prompt_banner.dart';
 import '../features/gratitudes/presentation/widgets/visual_layers_stack.dart';
 import '../font_scaling.dart';
 import '../gratitude_stars.dart';
@@ -515,19 +517,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   void _toggleMindfulness() {
     final provider = context.read<GratitudeProvider>();
 
-    // Check if there are stars before toggling
-    if (provider.gratitudeStars.isEmpty && !provider.mindfulnessMode) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.mindfulnessNoStarsMessage,
-            style: FontScaling.getBodyMedium(context),
-          ),
-          backgroundColor: Color(0xFF1A2238),
-          duration: Duration(seconds: 3),
-        ),
-      );
+    // Check if there are fewer than 2 stars before toggling
+    if (provider.gratitudeStars.length < 2 && !provider.mindfulnessMode) {
+      GratitudeDialogs.showMindfulnessNoStars(context);
       return;
     }
 
@@ -662,12 +654,35 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       context: context,
       authService: _authService,
       onSignOut: () async {
-        await GratitudeDialogs.showSignOutConfirmation(
+        // Check if user is anonymous
+        final isAnonymous = !_authService.hasEmailAccount;
+        
+        final result = await GratitudeDialogs.showSignOutConfirmation(
           context: context,
-          onConfirm: () async {
-            await _authService.signOut();
+          isAnonymous: isAnonymous,
+          onConfirm: () {
+            // This callback is called when user selects an option
+            // The actual sign-out happens based on the result
           },
         );
+        
+        if (result != null && mounted) {
+          // result is true for "keep data", false for "clear data", null for cancel
+          if (isAnonymous) {
+            if (result == true) {
+              // Keep data - just sign out from Firebase
+              await _authService.signOutKeepData();
+            } else if (result == false) {
+              // Clear data - full sign out
+              await _authService.signOutClearData();
+            }
+            // If result is null, user cancelled
+          } else {
+            // Email user - always clear local data (cloud data remains)
+            // result is true when user confirms sign-out
+            await _authService.signOutClearData();
+          }
+        }
       },
     );
   }
@@ -822,13 +837,72 @@ class _GratitudeScreenState extends State<GratitudeScreen>
               // Branding overlay
               if (_showBranding) BrandingOverlayWidget(onSkip: _skipSplash),
 
-              // Stats card
+              // Sync status banner (at top, below safe area)
+              // Only shows when user is signed in with email account
               if (!_showBranding)
                 Positioned(
-                  top: MediaQuery.of(context).padding.top + 16,
+                  top: MediaQuery.of(context).padding.top,
                   left: 0,
                   right: 0,
-                  child: Center(child: StatsCardWidget(stars: gratitudeStars)),
+                  child: Consumer<SyncStatusService>(
+                    builder: (context, syncStatusService, child) {
+                      return SyncStatusBanner(
+                        syncStatusService: syncStatusService,
+                        authService: _authService,
+                        onRetry: () {
+                          final gratitudeProvider = context.read<GratitudeProvider>();
+                          gratitudeProvider.forceSync();
+                        },
+                      );
+                    },
+                  ),
+                ),
+
+              // Sign-in prompt banner (for anonymous users)
+              // Shows below sync banner or at top if no sync banner
+              if (!_showBranding)
+                Consumer<GratitudeProvider>(
+                  builder: (context, gratitudeProvider, child) {
+                    return Positioned(
+                      top: MediaQuery.of(context).padding.top + 
+                           (_authService.hasEmailAccount && 
+                            gratitudeProvider.syncStatus.status != SyncStatus.synced ? 60 : 0),
+                      left: 0,
+                      right: 0,
+                      child: SignInPromptBanner(
+                        gratitudeProvider: gratitudeProvider,
+                        authService: _authService,
+                      ),
+                    );
+                  },
+                ),
+
+              // Stats card
+              if (!_showBranding)
+                Consumer<GratitudeProvider>(
+                  builder: (context, gratitudeProvider, child) {
+                    // Calculate top position based on banners
+                    double topOffset = MediaQuery.of(context).padding.top + 16;
+                    if (_authService.hasEmailAccount && 
+                        gratitudeProvider.syncStatus.status != SyncStatus.synced) {
+                      topOffset += 60; // Sync banner height
+                    }
+                    // Check if sign-in prompt is showing
+                    return FutureBuilder<bool>(
+                      future: gratitudeProvider.shouldShowSignInPrompt(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData && snapshot.data! && !_authService.hasEmailAccount) {
+                          topOffset += 60; // Sign-in prompt banner height
+                        }
+                        return Positioned(
+                          top: topOffset,
+                          left: 0,
+                          right: 0,
+                          child: Center(child: StatsCardWidget(stars: gratitudeStars)),
+                        );
+                      },
+                    );
+                  },
                 ),
 
               // Hamburger menu button (top-left)

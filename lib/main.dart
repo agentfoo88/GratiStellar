@@ -29,6 +29,7 @@ import 'services/daily_reminder_service.dart';
 import 'services/firestore_service.dart';
 import 'services/onboarding_service.dart';
 import 'services/sync_status_service.dart';
+import 'services/user_profile_manager.dart';
 
 // UI SCALE and ANIMATION CONFIGURATION found in constants.dart
 
@@ -118,7 +119,11 @@ class GratiStellarApp extends StatelessWidget {
     final authService = AuthService();
     final syncStatusService = SyncStatusService();
     final firestoreService = FirestoreService();
-    final localDataSource = LocalDataSource();
+    
+    // Initialize user profile manager for user-scoped storage
+    final userProfileManager = UserProfileManager(authService: authService);
+    
+    final localDataSource = LocalDataSource(userProfileManager: userProfileManager);
     final remoteDataSource = RemoteDataSource(firestoreService);
     final repository = GratitudeRepository(
       localDataSource: localDataSource,
@@ -127,7 +132,7 @@ class GratiStellarApp extends StatelessWidget {
     );
 
     // Initialize galaxy services
-    final galaxyLocalDataSource = GalaxyLocalDataSource();
+    final galaxyLocalDataSource = GalaxyLocalDataSource(userProfileManager: userProfileManager);
     final galaxyRemoteDataSource = GalaxyRemoteDataSource(authService: authService);
     final galaxyRepository = GalaxyRepository(
       localDataSource: galaxyLocalDataSource,
@@ -139,6 +144,7 @@ class GratiStellarApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: syncStatusService),
+        ChangeNotifierProvider.value(value: userProfileManager),
         ChangeNotifierProvider(
           create: (_) => DailyReminderService()..initialize(),
         ),

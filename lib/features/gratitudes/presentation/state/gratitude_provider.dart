@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/config/constants.dart';
 import '../../../../core/error/error_context.dart';
@@ -67,6 +68,11 @@ class GratitudeProvider extends ChangeNotifier {
   DateTime? _lastSuccessfulSync;
   bool _needsResyncAfterCurrent = false; // Flag to re-sync after current sync completes
 
+  // Sign-in prompt tracking
+  static const String _signInPromptDismissedKey = 'sign_in_prompt_dismissed';
+  static const String _signInPromptStarThresholdKey = 'sign_in_prompt_star_threshold';
+  static const int _defaultStarThreshold = 3; // Show prompt after 3 stars
+
   // Getters
   List<GratitudeStar> get gratitudeStars => _gratitudeStars;
   bool get isLoading => _isLoading;
@@ -78,6 +84,40 @@ class GratitudeProvider extends ChangeNotifier {
   int get mindfulnessInterval => _mindfulnessInterval;
   SyncStatusService get syncStatus => _syncStatusService;
   bool get hasPendingChanges => _hasPendingChanges;
+
+  /// Check if sign-in prompt should be shown
+  /// Returns true if user is anonymous, has created enough stars, and hasn't dismissed the prompt
+  Future<bool> shouldShowSignInPrompt() async {
+    // Don't show if user is already signed in with email
+    if (_authService.hasEmailAccount) {
+      return false;
+    }
+
+    // Check if prompt was dismissed
+    final prefs = await SharedPreferences.getInstance();
+    final dismissed = prefs.getBool(_signInPromptDismissedKey) ?? false;
+    if (dismissed) {
+      return false;
+    }
+
+    // Check star count threshold
+    final threshold = prefs.getInt(_signInPromptStarThresholdKey) ?? _defaultStarThreshold;
+    return _gratitudeStars.length >= threshold;
+  }
+
+  /// Dismiss the sign-in prompt (user tapped "Maybe Later")
+  Future<void> dismissSignInPrompt() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_signInPromptDismissedKey, true);
+    AppLogger.data('📝 Sign-in prompt dismissed');
+  }
+
+  /// Reset sign-in prompt (for testing or if user wants to see it again)
+  Future<void> resetSignInPrompt() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_signInPromptDismissedKey);
+    AppLogger.data('🔄 Sign-in prompt reset');
+  }
 
   GratitudeProvider({
     required GratitudeRepository repository,
@@ -355,22 +395,40 @@ class GratitudeProvider extends ChangeNotifier {
       final allStars = await _repository.getAllGratitudesUnfiltered();
       await _repository.addGratitude(_animatingStar!, allStars);
       
+      // Check if we should show sign-in prompt (for anonymous users)
+      // Notify listeners so UI can check and show prompt if needed
+      notifyListeners();
+      
       // CRITICAL: For single star adds, sync immediately instead of debouncing
       // This prevents data loss if app crashes before 30-second timer fires
+      // BUT: Check connectivity first and add timeout to prevent animation freeze
       if (_authService.hasEmailAccount) {
-        AppLogger.sync('💾 Star added - triggering immediate sync');
-        _markPendingChanges(); // Mark pending but don't schedule timer
-        // Sync in background without blocking UI
-        _performBackgroundSync().catchError((e) {
-          AppLogger.sync('⚠️ Immediate sync failed: $e');
-          // Fallback: schedule debounced sync as backup
-          _scheduleSync();
-        });
+        // Check connectivity BEFORE attempting sync
+        if (_syncStatusService.hasConnectivity) {
+          AppLogger.sync('💾 Star added - triggering immediate sync (online)');
+          _markPendingChanges(); // Mark pending but don't schedule timer
+          // Sync in background with timeout to prevent hanging
+          _performImmediateSyncWithTimeout().catchError((e) {
+            AppLogger.sync('⚠️ Immediate sync failed: $e');
+            // Fallback: schedule debounced sync as backup
+            _scheduleSync();
+          });
+        } else {
+          // Offline - mark as pending, skip sync attempt
+          AppLogger.sync('💾 Star added - offline, marking as pending');
+          _markPendingChanges();
+          // Star is saved locally, user can continue using app
+        }
       }
 
-      // Update galaxy star count
-      await _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length);
+      // Update galaxy star count (non-blocking)
+      _galaxyProvider.updateActiveGalaxyStarCount(_gratitudeStars.length)
+          .catchError((e) {
+        AppLogger.error('⚠️ Error updating galaxy star count: $e');
+        // Don't block animation completion
+      });
 
+      // Complete animation immediately - don't wait for sync
       _isAnimating = false;
       _animatingStar = null;
       notifyListeners();
@@ -456,7 +514,8 @@ class GratitudeProvider extends ChangeNotifier {
 
   /// Start mindfulness mode
   void startMindfulness() {
-    if (_gratitudeStars.isEmpty) return;
+    // Require at least 2 stars for mindfulness mode
+    if (_gratitudeStars.length < 2) return;
 
     // Cancel show all if active
     _showAllGratitudes = false;
@@ -622,7 +681,60 @@ class GratitudeProvider extends ChangeNotifier {
     AppLogger.sync('⏱️ Sync scheduled for 30 seconds from now');
   }
 
-  /// Perform the actual background sync
+  /// Perform immediate sync with timeout (for star creation)
+  /// 
+  /// Uses short timeout to prevent animation freeze, doesn't retry
+  Future<void> _performImmediateSyncWithTimeout() async {
+    if (!_authService.hasEmailAccount) {
+      AppLogger.auth('📵 Not signed in, skipping sync');
+      return;
+    }
+
+    if (!_syncStatusService.canSync) {
+      AppLogger.sync('📵 Cannot sync (offline or already syncing)');
+      return;
+    }
+
+    AppLogger.sync('🔄 Starting immediate sync with timeout...');
+    _syncStatusService.markSyncing();
+
+    try {
+      // Use short timeout (10 seconds) to prevent hanging
+      await syncWithCloud().timeout(
+        Duration(seconds: 10),
+        onTimeout: () {
+          AppLogger.sync('⏱️ Immediate sync timeout - marking as pending');
+          throw TimeoutException('Sync timed out after 10 seconds');
+        },
+      );
+
+      // Sync succeeded
+      _hasPendingChanges = false;
+      _syncStatusService.markSynced();
+      AppLogger.sync('✅ Immediate sync complete');
+    } catch (e) {
+      // Handle timeout or other errors
+      if (e is TimeoutException) {
+        AppLogger.sync('⏱️ Immediate sync timed out - will retry later');
+        _syncStatusService.markPending();
+        // Don't mark as error - just pending
+      } else {
+        final error = ErrorHandler.handle(
+          e,
+          null,
+          context: ErrorContext.sync,
+        );
+        AppLogger.sync('❌ Immediate sync failed: ${error.technicalMessage}');
+        _syncStatusService.markError(error.userMessage);
+      }
+      // Re-throw so caller can handle (schedule retry, etc.)
+      rethrow;
+    }
+  }
+
+  /// Perform the actual background sync (with retry logic)
+  /// 
+  /// Used for scheduled syncs, not immediate syncs
   Future<void> _performBackgroundSync() async {
     if (!_authService.hasEmailAccount) {
       AppLogger.auth('📵 Not signed in, skipping sync');

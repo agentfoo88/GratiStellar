@@ -427,14 +427,20 @@ abstract class AppLocalizations {
   /// No description provided for @mindfulnessNoStarsTitle.
   ///
   /// In en, this message translates to:
-  /// **'No stars yet'**
+  /// **'Not enough stars'**
   String get mindfulnessNoStarsTitle;
 
   /// No description provided for @mindfulnessNoStarsMessage.
   ///
   /// In en, this message translates to:
-  /// **'Add a star first to use mindfulness mode'**
+  /// **'Mindfulness mode gives you time to consider the things you\'re grateful for. Take a moment to reflect once you have multiple stars.'**
   String get mindfulnessNoStarsMessage;
+
+  /// No description provided for @syncingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing your data...'**
+  String get syncingData;
 
   /// No description provided for @listViewTitle.
   ///
@@ -928,6 +934,66 @@ abstract class AppLocalizations {
   /// **'Display name updated successfully!'**
   String get displayNameUpdated;
 
+  /// Error message when name field is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a name'**
+  String get errorNameRequired;
+
+  /// Error message when name update fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating name. Please try again.'**
+  String get errorNameUpdateFailed;
+
+  /// Question asking anonymous user if they want to keep data when signing out
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like to keep your local data?'**
+  String get signOutKeepDataQuestion;
+
+  /// Button to sign out while preserving local data
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out and Keep Data'**
+  String get signOutKeepDataButton;
+
+  /// Button to sign out and clear all local data
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out and Clear Data'**
+  String get signOutClearDataButton;
+
+  /// Warning message for anonymous users when clearing data on sign out
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: This will permanently delete all local data. This action cannot be undone.'**
+  String get signOutClearDataWarning;
+
+  /// Message for email users when signing out, explaining that local data is deleted but cloud data remains
+  ///
+  /// In en, this message translates to:
+  /// **'Local data will be permanently deleted. Your cloud data remains safe.'**
+  String get signOutEmailMessage;
+
+  /// Message shown in sign-in prompt banner for anonymous users
+  ///
+  /// In en, this message translates to:
+  /// **'Save your stars to the cloud? Sign in to sync across devices.'**
+  String get signInPromptMessage;
+
+  /// Button text in sign-in prompt banner
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get signInPromptButton;
+
+  /// Tooltip for dismiss button in sign-in prompt banner
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe Later'**
+  String get signInPromptDismiss;
+
   /// Sort option to display gratitude stars from newest to oldest
   ///
   /// In en, this message translates to:
@@ -1239,6 +1305,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send feedback about the app'**
   String get sendFeedbackHint;
+
+  /// Title for galaxies merge dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Galaxies Merged'**
+  String get galaxiesMergedTitle;
+
+  /// Message explaining that galaxies were merged during sign-in
+  ///
+  /// In en, this message translates to:
+  /// **'We found galaxies on this device and in your cloud account. We\'ve merged them together so you can access all your galaxies. This only happens when signing in for the first time.'**
+  String get galaxiesMergedMessage;
+
+  /// Title for dialog when empty default galaxy is detected during sign-in
+  ///
+  /// In en, this message translates to:
+  /// **'Empty Default Galaxy Detected'**
+  String get emptyGalaxyDetectedTitle;
+
+  /// Message asking if user wants to delete empty default galaxy when cloud has real galaxies
+  ///
+  /// In en, this message translates to:
+  /// **'We found an empty \"My First Galaxy\" on this device, but your cloud account has galaxies with stars. Would you like to delete the empty default galaxy?'**
+  String get emptyGalaxyDetectedMessage;
+
+  /// Button to delete empty default galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Empty Galaxy'**
+  String get deleteEmptyGalaxyButton;
+
+  /// Button to keep empty default galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Keep It'**
+  String get keepEmptyGalaxyButton;
 
   /// No description provided for @closeAppHint.
   ///
@@ -2157,6 +2259,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View privacy policy and terms'**
   String get viewLegalDocuments;
+
+  /// Button to enter selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get selectMode;
+
+  /// Button to exit selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancelSelection;
+
+  /// Button to select all items
+  ///
+  /// In en, this message translates to:
+  /// **'Select All'**
+  String get selectAll;
+
+  /// Button to deselect all items
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect All'**
+  String get deselectAll;
+
+  /// Number of items selected
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// Button to delete selected items
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Selected'**
+  String get deleteSelected;
+
+  /// Button to move selected stars to another galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Move Selected'**
+  String get moveSelected;
+
+  /// Confirmation message for deleting selected stars
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} star(s)?'**
+  String deleteSelectedStars(int count);
+
+  /// Confirmation message for deleting selected galaxies
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} galaxy/galaxies?'**
+  String deleteSelectedGalaxies(int count);
+
+  /// Success message after deleting stars
+  ///
+  /// In en, this message translates to:
+  /// **'{count} star(s) deleted'**
+  String starsDeleted(int count);
+
+  /// Success message after deleting galaxies
+  ///
+  /// In en, this message translates to:
+  /// **'{count} galaxy/galaxies deleted'**
+  String galaxiesDeleted(int count);
+
+  /// Message when trying to perform action with no items selected
+  ///
+  /// In en, this message translates to:
+  /// **'No items selected'**
+  String get noItemsSelected;
 }
 
 class _AppLocalizationsDelegate

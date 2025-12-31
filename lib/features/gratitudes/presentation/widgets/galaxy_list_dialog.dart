@@ -20,6 +20,8 @@ class GalaxyListDialog extends StatefulWidget {
 
 class _GalaxyListDialogState extends State<GalaxyListDialog> {
   bool _isLoading = false;
+  bool _isSelectionMode = false;
+  final Set<String> _selectedGalaxyIds = {};
   late final ScrollController _scrollController;
 
   @override
@@ -38,43 +40,179 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: Color(0xFF1A2238).withValues(alpha: 0.98),
-      appBar: AppBar(
-        backgroundColor: Color(0xFF1A2238),
-        elevation: 0,
-        leading: SemanticHelper.label(
-          label: l10n.closeButton,
-          hint: l10n.closeAppHint,
-          isButton: true,
-          child: IconButton(
-            icon: Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-        title: Text(
-          l10n.myGalaxies,
-          style: FontScaling.getHeadingMedium(context).copyWith(
-            color: Color(0xFFFFE135),
-            fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Consumer<GalaxyProvider>(
-        builder: (context, galaxyProvider, child) {
-          if (galaxyProvider.isLoading || _isLoading) {
-            return Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+    return Consumer<GalaxyProvider>(
+      builder: (context, galaxyProvider, child) {
+        final activeGalaxies = galaxyProvider.activeGalaxies;
+        
+        return Scaffold(
+          backgroundColor: Color(0xFF1A2238).withValues(alpha: 0.98),
+          appBar: AppBar(
+            backgroundColor: Color(0xFF1A2238),
+            elevation: 0,
+            leading: SemanticHelper.label(
+              label: l10n.closeButton,
+              hint: l10n.closeAppHint,
+              isButton: true,
+              child: IconButton(
+                icon: Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
               ),
-            );
-          }
+            ),
+            title: Text(
+              _isSelectionMode && _selectedGalaxyIds.isNotEmpty
+                  ? l10n.selectedCount(_selectedGalaxyIds.length)
+                  : l10n.myGalaxies,
+              style: FontScaling.getHeadingMedium(context).copyWith(
+                color: Color(0xFFFFE135),
+                fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
+              ),
+            ),
+            centerTitle: true,
+            actions: _isSelectionMode
+                ? [
+                    // Select All / Deselect All button
+                    SemanticHelper.label(
+                      label: _selectedGalaxyIds.length == activeGalaxies.length
+                          ? l10n.deselectAll
+                          : l10n.selectAll,
+                      hint: _selectedGalaxyIds.length == activeGalaxies.length
+                          ? 'Deselect all galaxies'
+                          : 'Select all galaxies',
+                      isButton: true,
+                      child: IconButton(
+                        icon: Icon(
+                          _selectedGalaxyIds.length == activeGalaxies.length
+                              ? Icons.deselect
+                              : Icons.select_all,
+                          color: Color(0xFFFFE135),
+                          size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            if (_selectedGalaxyIds.length == activeGalaxies.length) {
+                              _selectedGalaxyIds.clear();
+                            } else {
+                              _selectedGalaxyIds.addAll(activeGalaxies.map((g) => g.id));
+                            }
+                          });
+                        },
+                        tooltip: _selectedGalaxyIds.length == activeGalaxies.length
+                            ? l10n.deselectAll
+                            : l10n.selectAll,
+                      ),
+                    ),
+                    // Cancel selection mode
+                    SemanticHelper.label(
+                      label: l10n.cancelSelection,
+                      hint: 'Exit selection mode',
+                      isButton: true,
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isSelectionMode = false;
+                            _selectedGalaxyIds.clear();
+                          });
+                        },
+                        tooltip: l10n.cancelSelection,
+                      ),
+                    ),
+                  ]
+                : [
+                    // Enter selection mode button
+                    SemanticHelper.label(
+                      label: l10n.selectMode,
+                      hint: 'Enter selection mode to select multiple galaxies',
+                      isButton: true,
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.check_box_outline_blank,
+                          color: Color(0xFFFFE135),
+                          size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isSelectionMode = true;
+                          });
+                        },
+                        tooltip: l10n.selectMode,
+                      ),
+                    ),
+                  ],
+          ),
+          body: _buildBody(context, galaxyProvider, l10n),
+        );
+      },
+    );
+  }
 
-          final activeGalaxies = galaxyProvider.activeGalaxies;
+  Widget _buildBody(BuildContext context, GalaxyProvider galaxyProvider, AppLocalizations l10n) {
+    if (galaxyProvider.isLoading || _isLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+        ),
+      );
+    }
 
-          return Column(
+    final activeGalaxies = galaxyProvider.activeGalaxies;
+
+    return Column(
             children: [
+              // Action buttons when items are selected
+              if (_isSelectionMode && _selectedGalaxyIds.isNotEmpty)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
+                    vertical: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF0A0B1E).withValues(alpha: 0.8),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: SemanticHelper.label(
+                          label: l10n.deleteSelected,
+                          hint: 'Delete ${_selectedGalaxyIds.length} selected galaxy/galaxies',
+                          isButton: true,
+                          child: ElevatedButton.icon(
+                            onPressed: () => _deleteSelectedGalaxies(context, galaxyProvider),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: Colors.white,
+                              size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
+                            ),
+                            label: Text(
+                              l10n.deleteSelected,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                color: Colors.white,
+                                fontSize: FontScaling.getBodySmall(context).fontSize! * UIConstants.universalUIScale,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.withValues(alpha: 0.8),
+                              padding: EdgeInsets.symmetric(
+                                vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               // Galaxy list
               Expanded(
                 child: activeGalaxies.isEmpty
@@ -147,13 +285,10 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                       ),
                     ),
                   ),
-                      ),
+                ),
               ),
             ],
           );
-        },
-      ),
-    );
   }
 
   Widget _buildGalaxyItem(
@@ -163,45 +298,97 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
       AppLocalizations l10n,
       ) {
     final isActive = galaxyProvider.activeGalaxyId == galaxy.id;
+    final isSelected = _selectedGalaxyIds.contains(galaxy.id);
     final formattedDate = _formatDate(galaxy.createdAt);
 
     return SemanticHelper.label(
-      label: isActive
-          ? l10n.activeGalaxyItem(galaxy.name, galaxy.starCount)
-          : l10n.galaxyItem(galaxy.name, galaxy.starCount),
-      hint: isActive
-          ? l10n.currentlyActiveGalaxy
-          : l10n.tapToSwitchToGalaxy,
+      label: _isSelectionMode
+          ? (isSelected
+              ? 'Selected: ${galaxy.name}'
+              : 'Not selected: ${galaxy.name}')
+          : (isActive
+              ? l10n.activeGalaxyItem(galaxy.name, galaxy.starCount)
+              : l10n.galaxyItem(galaxy.name, galaxy.starCount)),
+      hint: _isSelectionMode
+          ? (isSelected ? 'Tap to deselect this galaxy' : 'Tap to select this galaxy')
+          : (isActive
+              ? l10n.currentlyActiveGalaxy
+              : l10n.tapToSwitchToGalaxy),
       isButton: true,
+      isToggle: _isSelectionMode,
+      toggleValue: _isSelectionMode ? isSelected : null,
       child: InkWell(
-        onTap: isActive ? null : () => _switchToGalaxy(context, galaxy.id, galaxyProvider),
-        onLongPress: () => _showRenameDialog(context, galaxy, galaxyProvider),
+        onTap: _isSelectionMode
+            ? () {
+                setState(() {
+                  if (isSelected) {
+                    _selectedGalaxyIds.remove(galaxy.id);
+                    if (_selectedGalaxyIds.isEmpty) {
+                      _isSelectionMode = false;
+                    }
+                  } else {
+                    _selectedGalaxyIds.add(galaxy.id);
+                  }
+                });
+              }
+            : (isActive ? null : () => _switchToGalaxy(context, galaxy.id, galaxyProvider)),
+        onLongPress: _isSelectionMode
+            ? null
+            : () => _showRenameDialog(context, galaxy, galaxyProvider),
         child: Container(
           padding: EdgeInsets.all(
             FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale,
           ),
           decoration: BoxDecoration(
-            color: isActive
+            color: isSelected
                 ? Color(0xFFFFE135).withValues(alpha: 0.1)
-                : Colors.transparent,
+                : (isActive
+                    ? Color(0xFFFFE135).withValues(alpha: 0.1)
+                    : Colors.transparent),
             borderRadius: BorderRadius.circular(
               FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale,
             ),
-            border: isActive
+            border: (isSelected || isActive)
                 ? Border.all(
-              color: Color(0xFFFFE135).withValues(alpha: 0.5),
-              width: 1,
+              color: Color(0xFFFFE135).withValues(alpha: isSelected ? 1.0 : 0.5),
+              width: isSelected ? 2 : 1,
             )
                 : null,
           ),
           child: Row(
             children: [
-              // Galaxy icon
-              Icon(
-                Icons.stars,
-                color: isActive ? Color(0xFFFFE135) : Colors.white70,
-                size: FontScaling.getResponsiveIconSize(context, 32) * UIConstants.universalUIScale,
-              ),
+              // Checkbox or Galaxy icon
+              _isSelectionMode
+                  ? SemanticHelper.label(
+                      label: isSelected
+                          ? 'Selected: ${galaxy.name}'
+                          : 'Not selected: ${galaxy.name}',
+                      hint: isSelected ? 'Tap to deselect' : 'Tap to select',
+                      isToggle: true,
+                      toggleValue: isSelected,
+                      child: Checkbox(
+                        value: isSelected,
+                        onChanged: (value) {
+                          setState(() {
+                            if (value == true) {
+                              _selectedGalaxyIds.add(galaxy.id);
+                            } else {
+                              _selectedGalaxyIds.remove(galaxy.id);
+                              if (_selectedGalaxyIds.isEmpty) {
+                                _isSelectionMode = false;
+                              }
+                            }
+                          });
+                        },
+                        activeColor: Color(0xFFFFE135),
+                        checkColor: Color(0xFF1A2238),
+                      ),
+                    )
+                  : Icon(
+                      Icons.stars,
+                      color: isActive ? Color(0xFFFFE135) : Colors.white70,
+                      size: FontScaling.getResponsiveIconSize(context, 32) * UIConstants.universalUIScale,
+                    ),
 
               SizedBox(width: FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale),
 
@@ -259,31 +446,33 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                 ),
               ),
 
-              // Edit button (visible for all galaxies)
-              SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
-              SemanticHelper.label(
-                label: l10n.editGalaxy,
-                hint: l10n.renameGalaxyHint,
-                isButton: true,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.edit_outlined,
-                    color: isActive ? Color(0xFFFFE135) : Colors.white60,
-                    size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
+              // Edit button (visible when not in selection mode)
+              if (!_isSelectionMode) ...[
+                SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                SemanticHelper.label(
+                  label: l10n.editGalaxy,
+                  hint: l10n.renameGalaxyHint,
+                  isButton: true,
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.edit_outlined,
+                      color: isActive ? Color(0xFFFFE135) : Colors.white60,
+                      size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
+                    ),
+                    onPressed: () => _showRenameDialog(context, galaxy, galaxyProvider),
+                    tooltip: l10n.renameGalaxy,
                   ),
-                  onPressed: () => _showRenameDialog(context, galaxy, galaxyProvider),
-                  tooltip: l10n.renameGalaxy,
                 ),
-              ),
 
-              // Arrow for non-active galaxies
-              if (!isActive) ...[
-                SizedBox(width: FontScaling.getResponsiveSpacing(context, 4)),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white60,
-                  size: FontScaling.getResponsiveIconSize(context, 16) * UIConstants.universalUIScale,
-                ),
+                // Arrow for non-active galaxies
+                if (!isActive) ...[
+                  SizedBox(width: FontScaling.getResponsiveSpacing(context, 4)),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.white60,
+                    size: FontScaling.getResponsiveIconSize(context, 16) * UIConstants.universalUIScale,
+                  ),
+                ],
               ],
             ],
           ),
@@ -398,6 +587,131 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  Future<void> _deleteSelectedGalaxies(BuildContext context, GalaxyProvider galaxyProvider) async {
+    if (_selectedGalaxyIds.isEmpty) return;
+
+    // Capture context-dependent objects before async gap
+    final l10n = AppLocalizations.of(context)!;
+    final count = _selectedGalaxyIds.length;
+    final messenger = ScaffoldMessenger.of(context);
+    final textStyle = FontScaling.getBodyMedium(context);
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Color(0xFF1A2238),
+        title: Text(
+          l10n.deleteSelected,
+          style: FontScaling.getHeadingMedium(dialogContext).copyWith(
+            color: Colors.red,
+          ),
+        ),
+        content: Text(
+          l10n.deleteSelectedGalaxies(count),
+          style: FontScaling.getBodyMedium(dialogContext).copyWith(
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              l10n.cancelButton,
+              style: FontScaling.getButtonText(dialogContext).copyWith(
+                color: Colors.white70,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              l10n.deleteButton,
+              style: FontScaling.getButtonText(dialogContext).copyWith(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Delete selected galaxies
+    try {
+      final galaxiesToDelete = galaxyProvider.activeGalaxies
+          .where((galaxy) => _selectedGalaxyIds.contains(galaxy.id))
+          .toList();
+
+      // Prevent deleting the active galaxy
+      final activeGalaxyId = galaxyProvider.activeGalaxyId;
+      final deletingActiveGalaxy = galaxiesToDelete.any((g) => g.id == activeGalaxyId);
+
+      if (deletingActiveGalaxy && galaxiesToDelete.length == 1) {
+        // Can't delete the only active galaxy
+        if (mounted && messenger.mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                'Cannot delete the active galaxy',
+                style: textStyle.copyWith(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+
+      for (final galaxy in galaxiesToDelete) {
+        // Skip if it's the active galaxy and there are other galaxies
+        if (galaxy.id == activeGalaxyId && galaxiesToDelete.length > 1) {
+          continue;
+        }
+        await galaxyProvider.deleteGalaxy(galaxy.id);
+      }
+
+      if (mounted) {
+        setState(() {
+          _selectedGalaxyIds.clear();
+          _isSelectionMode = false;
+        });
+
+        if (messenger.mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.galaxiesDeleted(count),
+                style: textStyle.copyWith(color: Colors.white),
+              ),
+              backgroundColor: Color(0xFF1A2238),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted && messenger.mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error deleting galaxies: $e',
+              style: textStyle.copyWith(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }
 

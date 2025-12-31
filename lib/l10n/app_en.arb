@@ -88,8 +88,9 @@
   "loginMenuItem": "Login",
   "listViewMenuItem": "List View",
   "mindfulnessIntervalLabel": "Delay (seconds)",
-  "mindfulnessNoStarsTitle": "No stars yet",
-  "mindfulnessNoStarsMessage": "Add a star first to use mindfulness mode",
+  "mindfulnessNoStarsTitle": "Not enough stars",
+  "mindfulnessNoStarsMessage": "Mindfulness mode gives you time to consider the things you're grateful for. Take a moment to reflect once you have multiple stars.",
+  "syncingData": "Syncing your data...",
   "listViewTitle": "Your Gratitude Stars",
   "jumpToStarButton": "Jump to Star",
   "todayLabel": "Today",
@@ -400,6 +401,46 @@
   "@displayNameUpdated": {
     "description": "Success message after updating display name"
   },
+  "errorNameRequired": "Please enter a name",
+  "@errorNameRequired": {
+    "description": "Error message when name field is empty"
+  },
+  "errorNameUpdateFailed": "Error updating name. Please try again.",
+  "@errorNameUpdateFailed": {
+    "description": "Error message when name update fails"
+  },
+  "signOutKeepDataQuestion": "Would you like to keep your local data?",
+  "@signOutKeepDataQuestion": {
+    "description": "Question asking anonymous user if they want to keep data when signing out"
+  },
+  "signOutKeepDataButton": "Sign Out and Keep Data",
+  "@signOutKeepDataButton": {
+    "description": "Button to sign out while preserving local data"
+  },
+  "signOutClearDataButton": "Sign Out and Clear Data",
+  "@signOutClearDataButton": {
+    "description": "Button to sign out and clear all local data"
+  },
+  "signOutClearDataWarning": "Warning: This will permanently delete all local data. This action cannot be undone.",
+  "@signOutClearDataWarning": {
+    "description": "Warning message for anonymous users when clearing data on sign out"
+  },
+  "signOutEmailMessage": "Local data will be permanently deleted. Your cloud data remains safe.",
+  "@signOutEmailMessage": {
+    "description": "Message for email users when signing out, explaining that local data is deleted but cloud data remains"
+  },
+  "signInPromptMessage": "Save your stars to the cloud? Sign in to sync across devices.",
+  "@signInPromptMessage": {
+    "description": "Message shown in sign-in prompt banner for anonymous users"
+  },
+  "signInPromptButton": "Sign In",
+  "@signInPromptButton": {
+    "description": "Button text in sign-in prompt banner"
+  },
+  "signInPromptDismiss": "Maybe Later",
+  "@signInPromptDismiss": {
+    "description": "Tooltip for dismiss button in sign-in prompt banner"
+  },
   "sortNewestFirst": "Newest First",
   "@sortNewestFirst": {
     "description": "Sort option to display gratitude stars from newest to oldest"
@@ -536,6 +577,30 @@
   "viewDeletedGratitudes": "View and restore deleted gratitudes",
   "trash": "Trash",
   "sendFeedbackHint": "Send feedback about the app",
+  "galaxiesMergedTitle": "Galaxies Merged",
+  "@galaxiesMergedTitle": {
+    "description": "Title for galaxies merge dialog"
+  },
+  "galaxiesMergedMessage": "We found galaxies on this device and in your cloud account. We've merged them together so you can access all your galaxies. This only happens when signing in for the first time.",
+  "@galaxiesMergedMessage": {
+    "description": "Message explaining that galaxies were merged during sign-in"
+  },
+  "emptyGalaxyDetectedTitle": "Empty Default Galaxy Detected",
+  "@emptyGalaxyDetectedTitle": {
+    "description": "Title for dialog when empty default galaxy is detected during sign-in"
+  },
+  "emptyGalaxyDetectedMessage": "We found an empty \"My First Galaxy\" on this device, but your cloud account has galaxies with stars. Would you like to delete the empty default galaxy?",
+  "@emptyGalaxyDetectedMessage": {
+    "description": "Message asking if user wants to delete empty default galaxy when cloud has real galaxies"
+  },
+  "deleteEmptyGalaxyButton": "Delete Empty Galaxy",
+  "@deleteEmptyGalaxyButton": {
+    "description": "Button to delete empty default galaxy"
+  },
+  "keepEmptyGalaxyButton": "Keep It",
+  "@keepEmptyGalaxyButton": {
+    "description": "Button to keep empty default galaxy"
+  },
   "closeAppHint": "Close the application",
   "clearLayerCache": "Clear Layer Cache",
   "regenerateBackgroundHint": "Regenerate background layers",
@@ -1285,5 +1350,78 @@
         "viewLegalDocuments": "View privacy policy and terms",
         "@viewLegalDocuments": {
           "description": "Accessibility hint for legal menu items"
+        },
+        "selectMode": "Select",
+        "@selectMode": {
+          "description": "Button to enter selection mode"
+        },
+        "cancelSelection": "Cancel",
+        "@cancelSelection": {
+          "description": "Button to exit selection mode"
+        },
+        "selectAll": "Select All",
+        "@selectAll": {
+          "description": "Button to select all items"
+        },
+        "deselectAll": "Deselect All",
+        "@deselectAll": {
+          "description": "Button to deselect all items"
+        },
+        "selectedCount": "{count} selected",
+        "@selectedCount": {
+          "description": "Number of items selected",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "deleteSelected": "Delete Selected",
+        "@deleteSelected": {
+          "description": "Button to delete selected items"
+        },
+        "moveSelected": "Move Selected",
+        "@moveSelected": {
+          "description": "Button to move selected stars to another galaxy"
+        },
+        "deleteSelectedStars": "Delete {count} star(s)?",
+        "@deleteSelectedStars": {
+          "description": "Confirmation message for deleting selected stars",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "deleteSelectedGalaxies": "Delete {count} galaxy/galaxies?",
+        "@deleteSelectedGalaxies": {
+          "description": "Confirmation message for deleting selected galaxies",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "starsDeleted": "{count} star(s) deleted",
+        "@starsDeleted": {
+          "description": "Success message after deleting stars",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "galaxiesDeleted": "{count} galaxy/galaxies deleted",
+        "@galaxiesDeleted": {
+          "description": "Success message after deleting galaxies",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "noItemsSelected": "No items selected",
+        "@noItemsSelected": {
+          "description": "Message when trying to perform action with no items selected"
         }
     }

@@ -6,6 +6,7 @@ import 'l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'features/gratitudes/presentation/state/gratitude_provider.dart';
+import 'core/accessibility/semantic_helper.dart';
 
 class ListViewScreen extends StatefulWidget {
   final Function(GratitudeStar) onStarTap;
@@ -23,6 +24,8 @@ class ListViewScreen extends StatefulWidget {
 
 class _ListViewScreenState extends State<ListViewScreen> {
   String _sortMethod = 'newest';
+  bool _isSelectionMode = false;
+  final Set<String> _selectedStarIds = {};
 
   List<GratitudeStar> _getSortedStars(List<GratitudeStar> stars) {
     final sortedStars = List<GratitudeStar>.from(stars);
@@ -98,37 +101,112 @@ class _ListViewScreenState extends State<ListViewScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          AppLocalizations.of(context)!.listViewTitle,
+          _isSelectionMode && _selectedStarIds.isNotEmpty
+              ? AppLocalizations.of(context)!.selectedCount(_selectedStarIds.length)
+              : AppLocalizations.of(context)!.listViewTitle,
           style: FontScaling.getHeadingMedium(context).copyWith(
             color: Color(0xFFFFE135),
           ),
         ),
         actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 8),
-            child: PopupMenuButton<String>(
-              icon: Icon(
-                Icons.sort,
-                color: Color(0xFFFFE135),
-                size: FontScaling.getResponsiveIconSize(context, 24),
-              ),
-              color: Color(0xFF1A2238).withValues(alpha: 0.98),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
-                  width: 1,
+          if (_isSelectionMode) ...[
+            // Select All / Deselect All button
+            SemanticHelper.label(
+              label: _selectedStarIds.length == _getSortedStars(stars).length
+                  ? AppLocalizations.of(context)!.deselectAll
+                  : AppLocalizations.of(context)!.selectAll,
+              hint: _selectedStarIds.length == _getSortedStars(stars).length
+                  ? 'Deselect all stars'
+                  : 'Select all stars',
+              isButton: true,
+              child: IconButton(
+                icon: Icon(
+                  _selectedStarIds.length == _getSortedStars(stars).length
+                      ? Icons.deselect
+                      : Icons.select_all,
+                  color: Color(0xFFFFE135),
+                  size: FontScaling.getResponsiveIconSize(context, 24),
                 ),
+                onPressed: () {
+                  setState(() {
+                    if (_selectedStarIds.length == _getSortedStars(stars).length) {
+                      _selectedStarIds.clear();
+                    } else {
+                      _selectedStarIds.addAll(_getSortedStars(stars).map((s) => s.id));
+                    }
+                  });
+                },
+                tooltip: _selectedStarIds.length == _getSortedStars(stars).length
+                    ? AppLocalizations.of(context)!.deselectAll
+                    : AppLocalizations.of(context)!.selectAll,
               ),
-              onSelected: (value) {
-                setState(() {
-                  _sortMethod = value;
-                });
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'newest',
-                  child: Row(
+            ),
+            // Cancel selection mode
+            SemanticHelper.label(
+              label: AppLocalizations.of(context)!.cancelSelection,
+              hint: 'Exit selection mode',
+              isButton: true,
+              child: IconButton(
+                icon: Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: FontScaling.getResponsiveIconSize(context, 24),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isSelectionMode = false;
+                    _selectedStarIds.clear();
+                  });
+                },
+                tooltip: AppLocalizations.of(context)!.cancelSelection,
+              ),
+            ),
+          ] else ...[
+            // Enter selection mode button
+            SemanticHelper.label(
+              label: AppLocalizations.of(context)!.selectMode,
+              hint: 'Enter selection mode to select multiple stars',
+              isButton: true,
+              child: IconButton(
+                icon: Icon(
+                  Icons.check_box_outline_blank,
+                  color: Color(0xFFFFE135),
+                  size: FontScaling.getResponsiveIconSize(context, 24),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isSelectionMode = true;
+                  });
+                },
+                tooltip: AppLocalizations.of(context)!.selectMode,
+              ),
+            ),
+            // Sort menu
+            Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.sort,
+                  color: Color(0xFFFFE135),
+                  size: FontScaling.getResponsiveIconSize(context, 24),
+                ),
+                color: Color(0xFF1A2238).withValues(alpha: 0.98),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                onSelected: (value) {
+                  setState(() {
+                    _sortMethod = value;
+                  });
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'newest',
+                    child: Row(
                     children: [
                       Icon(
                         Icons.arrow_downward,
@@ -148,10 +226,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       ),
                     ],
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'oldest',
-                  child: Row(
+                  ),
+                  PopupMenuItem(
+                    value: 'oldest',
+                    child: Row(
                     children: [
                       Icon(
                         Icons.arrow_upward,
@@ -171,10 +249,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       ),
                     ],
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'by_month',
-                  child: Row(
+                  ),
+                  PopupMenuItem(
+                    value: 'by_month',
+                    child: Row(
                     children: [
                       Icon(
                         Icons.calendar_month,
@@ -194,10 +272,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       ),
                     ],
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'by_year',
-                  child: Row(
+                  ),
+                  PopupMenuItem(
+                    value: 'by_year',
+                    child: Row(
                     children: [
                       Icon(
                         Icons.calendar_today,
@@ -217,10 +295,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       ),
                     ],  // ← ADD THIS ] bracket
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'alpha_az',
-                  child: Row(
+                  ),
+                  PopupMenuItem(
+                    value: 'alpha_az',
+                    child: Row(
                     children: [
                       Icon(
                         Icons.sort_by_alpha,
@@ -240,10 +318,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       ),
                     ],
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'alpha_za',
-                  child: Row(
+                  ),
+                  PopupMenuItem(
+                    value: 'alpha_za',
+                    child: Row(
                     children: [
                       Icon(
                         Icons.sort_by_alpha,
@@ -263,10 +341,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       ),
                     ],
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'color',
-                  child: Row(
+                  ),
+                  PopupMenuItem(
+                    value: 'color',
+                    child: Row(
                     children: [
                       Icon(
                         Icons.palette,
@@ -286,11 +364,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       ),
                     ],
                   ),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            ],
+          ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Container(
@@ -299,20 +378,76 @@ class _ListViewScreenState extends State<ListViewScreen> {
           ),
         ),
       ),
-      body: sortedStars.isEmpty
-          ? _buildEmptyState(context)
-              : (_sortMethod == 'by_month' || _sortMethod == 'by_year')
-          ? _buildGroupedList(sortedStars)
-              : ListView.builder(
-        padding: EdgeInsets.symmetric(
-          horizontal: FontScaling.getResponsiveSpacing(context, 16),
-          vertical: FontScaling.getResponsiveSpacing(context, 16),
-        ),
-        itemCount: sortedStars.length,
-        itemBuilder: (context, index) {
-          final star = sortedStars[index];
-          return _buildListItem(context, star);
-        },
+      body: Column(
+        children: [
+          // Action buttons when items are selected
+          if (_isSelectionMode && _selectedStarIds.isNotEmpty)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                vertical: FontScaling.getResponsiveSpacing(context, 8),
+              ),
+              decoration: BoxDecoration(
+                color: Color(0xFF0A0B1E).withValues(alpha: 0.8),
+                border: Border(
+                  bottom: BorderSide(
+                    color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: SemanticHelper.label(
+                      label: AppLocalizations.of(context)!.deleteSelected,
+                      hint: 'Delete ${_selectedStarIds.length} selected star(s)',
+                      isButton: true,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _deleteSelectedStars(context, provider),
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: Colors.white,
+                          size: FontScaling.getResponsiveIconSize(context, 20),
+                        ),
+                        label: Text(
+                          AppLocalizations.of(context)!.deleteSelected,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.withValues(alpha: 0.8),
+                          padding: EdgeInsets.symmetric(
+                            vertical: FontScaling.getResponsiveSpacing(context, 12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          // List content
+          Expanded(
+            child: sortedStars.isEmpty
+                ? _buildEmptyState(context)
+                : (_sortMethod == 'by_month' || _sortMethod == 'by_year')
+                    ? _buildGroupedList(sortedStars)
+                    : ListView.builder(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                          vertical: FontScaling.getResponsiveSpacing(context, 16),
+                        ),
+                        itemCount: sortedStars.length,
+                        itemBuilder: (context, index) {
+                          final star = sortedStars[index];
+                          return _buildListItem(context, star);
+                        },
+                      ),
+          ),
+        ],
       ),
         );
       },
@@ -346,16 +481,22 @@ class _ListViewScreenState extends State<ListViewScreen> {
   }
 
   Widget _buildListItem(BuildContext context, GratitudeStar star) {
+    final isSelected = _selectedStarIds.contains(star.id);
+    
     return Container(
       margin: EdgeInsets.only(
         bottom: FontScaling.getResponsiveSpacing(context, 12),
       ),
       decoration: BoxDecoration(
-        color: Color(0xFF0A0B1E).withValues(alpha: 0.6),
+        color: isSelected
+            ? Color(0xFFFFE135).withValues(alpha: 0.1)
+            : Color(0xFF0A0B1E).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: star.color.withValues(alpha: 0.3),
-          width: 1,
+          color: isSelected
+              ? Color(0xFFFFE135)
+              : star.color.withValues(alpha: 0.3),
+          width: isSelected ? 2 : 1,
         ),
       ),
       child: ListTile(
@@ -363,24 +504,51 @@ class _ListViewScreenState extends State<ListViewScreen> {
           horizontal: FontScaling.getResponsiveSpacing(context, 16),
           vertical: FontScaling.getResponsiveSpacing(context, 8),
         ),
-        leading: Container(
-          width: FontScaling.getResponsiveIconSize(context, 40),
-          height: FontScaling.getResponsiveIconSize(context, 40),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: star.color.withValues(alpha: 0.2),
-            border: Border.all(
-              color: star.color,
-              width: 2,
-            ),
-          ),
-          child: SvgPicture.asset(
-            'assets/icon_star.svg',
-            width: FontScaling.getResponsiveIconSize(context, 20),
-            height: FontScaling.getResponsiveIconSize(context, 20),
-            colorFilter: ColorFilter.mode(star.color, BlendMode.srcIn),
-          ),
-        ),
+        leading: _isSelectionMode
+            ? SemanticHelper.label(
+                label: isSelected
+                    ? 'Selected: ${_truncateText(star.text, 50)}'
+                    : 'Not selected: ${_truncateText(star.text, 50)}',
+                hint: isSelected ? 'Tap to deselect this star' : 'Tap to select this star',
+                isToggle: true,
+                toggleValue: isSelected,
+                child: Checkbox(
+                  value: isSelected,
+                  onChanged: (value) {
+                    setState(() {
+                      if (value == true) {
+                        _selectedStarIds.add(star.id);
+                      } else {
+                        _selectedStarIds.remove(star.id);
+                      }
+                      // Exit selection mode if nothing selected
+                      if (_selectedStarIds.isEmpty) {
+                        _isSelectionMode = false;
+                      }
+                    });
+                  },
+                  activeColor: Color(0xFFFFE135),
+                  checkColor: Color(0xFF1A2238),
+                ),
+              )
+            : Container(
+                width: FontScaling.getResponsiveIconSize(context, 40),
+                height: FontScaling.getResponsiveIconSize(context, 40),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: star.color.withValues(alpha: 0.2),
+                  border: Border.all(
+                    color: star.color,
+                    width: 2,
+                  ),
+                ),
+                child: SvgPicture.asset(
+                  'assets/icon_star.svg',
+                  width: FontScaling.getResponsiveIconSize(context, 20),
+                  height: FontScaling.getResponsiveIconSize(context, 20),
+                  colorFilter: ColorFilter.mode(star.color, BlendMode.srcIn),
+                ),
+              ),
         title: Text(
           _truncateText(star.text, 80),
           style: FontScaling.getBodySmall(context).copyWith(
@@ -400,12 +568,27 @@ class _ListViewScreenState extends State<ListViewScreen> {
             ),
           ),
         ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: Colors.white.withValues(alpha: 0.5),
-          size: FontScaling.getResponsiveIconSize(context, 24),
-        ),
-        onTap: () => widget.onStarTap(star),
+        trailing: _isSelectionMode
+            ? null
+            : Icon(
+                Icons.chevron_right,
+                color: Colors.white.withValues(alpha: 0.5),
+                size: FontScaling.getResponsiveIconSize(context, 24),
+              ),
+        onTap: _isSelectionMode
+            ? () {
+                setState(() {
+                  if (isSelected) {
+                    _selectedStarIds.remove(star.id);
+                    if (_selectedStarIds.isEmpty) {
+                      _isSelectionMode = false;
+                    }
+                  } else {
+                    _selectedStarIds.add(star.id);
+                  }
+                });
+              }
+            : () => widget.onStarTap(star),
       ),
     );
   }
@@ -447,9 +630,59 @@ class _ListViewScreenState extends State<ListViewScreen> {
       widgets.add(_buildListItem(context, star));
     }
 
-    return ListView(
-      padding: EdgeInsets.only(bottom: FontScaling.getResponsiveSpacing(context, 16)),
-      children: widgets,
+    return Column(
+      children: [
+        // Action buttons when items are selected (for grouped list)
+        if (_isSelectionMode && _selectedStarIds.isNotEmpty)
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: FontScaling.getResponsiveSpacing(context, 16),
+              vertical: FontScaling.getResponsiveSpacing(context, 8),
+            ),
+            decoration: BoxDecoration(
+              color: Color(0xFF0A0B1E).withValues(alpha: 0.8),
+              border: Border(
+                bottom: BorderSide(
+                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _deleteSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: Colors.white,
+                      size: FontScaling.getResponsiveIconSize(context, 20),
+                    ),
+                    label: Text(
+                      AppLocalizations.of(context)!.deleteSelected,
+                      style: FontScaling.getBodySmall(context).copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.withValues(alpha: 0.8),
+                      padding: EdgeInsets.symmetric(
+                        vertical: FontScaling.getResponsiveSpacing(context, 12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.only(bottom: FontScaling.getResponsiveSpacing(context, 16)),
+            children: widgets,
+          ),
+        ),
+      ],
     );
   }
 
@@ -457,5 +690,109 @@ class _ListViewScreenState extends State<ListViewScreen> {
     // Use Flutter's built-in localization
     final date = DateTime(2025, month);
     return DateFormat.MMMM().format(date);
+  }
+
+  Future<void> _deleteSelectedStars(BuildContext context, GratitudeProvider provider) async {
+    if (_selectedStarIds.isEmpty) return;
+
+    // Capture context-dependent objects before async gap
+    final l10n = AppLocalizations.of(context)!;
+    final count = _selectedStarIds.length;
+    final messenger = ScaffoldMessenger.of(context);
+    final textStyle = FontScaling.getBodySmall(context);
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Color(0xFF1A2238),
+        title: Text(
+          l10n.deleteSelected,
+          style: FontScaling.getHeadingMedium(dialogContext).copyWith(
+            color: Colors.red,
+          ),
+        ),
+        content: Text(
+          l10n.deleteSelectedStars(count),
+          style: FontScaling.getBodyMedium(dialogContext).copyWith(
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              l10n.cancelButton,
+              style: FontScaling.getButtonText(dialogContext).copyWith(
+                color: Colors.white70,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              l10n.deleteButton,
+              style: FontScaling.getButtonText(dialogContext).copyWith(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Delete selected stars
+    try {
+      final starsToDelete = provider.gratitudeStars
+          .where((star) => _selectedStarIds.contains(star.id))
+          .toList();
+
+      for (final star in starsToDelete) {
+        await provider.deleteGratitude(star);
+      }
+
+      if (mounted) {
+        setState(() {
+          _selectedStarIds.clear();
+          _isSelectionMode = false;
+        });
+
+        if (messenger.mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.starsDeleted(count),
+                style: textStyle.copyWith(
+                  color: Colors.white,
+                ),
+              ),
+              backgroundColor: Color(0xFF1A2238),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted && messenger.mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error deleting stars: $e',
+              style: textStyle.copyWith(
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }

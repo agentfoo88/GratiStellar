@@ -180,11 +180,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mindfulnessIntervalLabel => 'Delay (seconds)';
 
   @override
-  String get mindfulnessNoStarsTitle => 'No stars yet';
+  String get mindfulnessNoStarsTitle => 'Not enough stars';
 
   @override
   String get mindfulnessNoStarsMessage =>
-      'Add a star first to use mindfulness mode';
+      'Mindfulness mode gives you time to consider the things you\'re grateful for. Take a moment to reflect once you have multiple stars.';
+
+  @override
+  String get syncingData => 'Syncing your data...';
 
   @override
   String get listViewTitle => 'Your Gratitude Stars';
@@ -464,6 +467,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get displayNameUpdated => 'Display name updated successfully!';
 
   @override
+  String get errorNameRequired => 'Please enter a name';
+
+  @override
+  String get errorNameUpdateFailed => 'Error updating name. Please try again.';
+
+  @override
+  String get signOutKeepDataQuestion =>
+      'Would you like to keep your local data?';
+
+  @override
+  String get signOutKeepDataButton => 'Sign Out and Keep Data';
+
+  @override
+  String get signOutClearDataButton => 'Sign Out and Clear Data';
+
+  @override
+  String get signOutClearDataWarning =>
+      'Warning: This will permanently delete all local data. This action cannot be undone.';
+
+  @override
+  String get signOutEmailMessage =>
+      'Local data will be permanently deleted. Your cloud data remains safe.';
+
+  @override
+  String get signInPromptMessage =>
+      'Save your stars to the cloud? Sign in to sync across devices.';
+
+  @override
+  String get signInPromptButton => 'Sign In';
+
+  @override
+  String get signInPromptDismiss => 'Maybe Later';
+
+  @override
   String get sortNewestFirst => 'Newest First';
 
   @override
@@ -623,6 +660,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sendFeedbackHint => 'Send feedback about the app';
+
+  @override
+  String get galaxiesMergedTitle => 'Galaxies Merged';
+
+  @override
+  String get galaxiesMergedMessage =>
+      'We found galaxies on this device and in your cloud account. We\'ve merged them together so you can access all your galaxies. This only happens when signing in for the first time.';
+
+  @override
+  String get emptyGalaxyDetectedTitle => 'Empty Default Galaxy Detected';
+
+  @override
+  String get emptyGalaxyDetectedMessage =>
+      'We found an empty \"My First Galaxy\" on this device, but your cloud account has galaxies with stars. Would you like to delete the empty default galaxy?';
+
+  @override
+  String get deleteEmptyGalaxyButton => 'Delete Empty Galaxy';
+
+  @override
+  String get keepEmptyGalaxyButton => 'Keep It';
 
   @override
   String get closeAppHint => 'Close the application';
@@ -1149,4 +1206,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewLegalDocuments => 'View privacy policy and terms';
+
+  @override
+  String get selectMode => 'Select';
+
+  @override
+  String get cancelSelection => 'Cancel';
+
+  @override
+  String get selectAll => 'Select All';
+
+  @override
+  String get deselectAll => 'Deselect All';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get deleteSelected => 'Delete Selected';
+
+  @override
+  String get moveSelected => 'Move Selected';
+
+  @override
+  String deleteSelectedStars(int count) {
+    return 'Delete $count star(s)?';
+  }
+
+  @override
+  String deleteSelectedGalaxies(int count) {
+    return 'Delete $count galaxy/galaxies?';
+  }
+
+  @override
+  String starsDeleted(int count) {
+    return '$count star(s) deleted';
+  }
+
+  @override
+  String galaxiesDeleted(int count) {
+    return '$count galaxy/galaxies deleted';
+  }
+
+  @override
+  String get noItemsSelected => 'No items selected';
 }

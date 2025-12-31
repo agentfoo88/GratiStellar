@@ -36,3 +36,6 @@ adb logcat | Select-String -Pattern "DEBUG|SYNC|AUTH|ERROR|gratistellar|flutter"
 
 Write-Host "`nLog capture complete! Check $logFile for details." -ForegroundColor Green
 
+
+
+

@@ -16,6 +16,8 @@ import '../../../../services/auth_service.dart';
 import '../../../../services/daily_reminder_service.dart';
 import '../../../../services/layer_cache_service.dart';
 import '../../../../services/url_launch_service.dart';
+import '../../../../services/user_profile_manager.dart';
+import '../../../../services/user_scoped_storage.dart';
 import '../../../../storage.dart';
 import '../../../../gratitude_stars.dart';
 import '../../../../widgets/backup_restore_dialog.dart';
@@ -663,28 +665,31 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           // Account Section
           _buildSectionHeader(context, l10n.accountSettings),
 
-          SemanticHelper.label(
-            label: l10n.accountSettings,
-            hint: l10n.manageAccountHint,
-            isButton: true,
-            child: ListTile(
-              leading: Icon(Icons.account_circle, color: Colors.white70),
-              title: Text(
-                widget.authService.hasEmailAccount
-                    ? l10n.accountMenuItem
-                    : l10n.signInWithEmailMenuItem,
-                style: FontScaling.getBodyMedium(context).copyWith(
-                  fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+          FutureBuilder<String>(
+            future: _getAccountDisplayName(),
+            builder: (context, snapshot) {
+              final displayName = snapshot.data ?? l10n.defaultUserName;
+              
+              return SemanticHelper.label(
+                label: l10n.accountSettings,
+                hint: l10n.manageAccountHint,
+                isButton: true,
+                child: ListTile(
+                  leading: Icon(Icons.account_circle, color: Colors.white70),
+                  title: Text(
+                    l10n.accountMenuItem,
+                    style: FontScaling.getBodyMedium(context).copyWith(
+                      fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                    ),
+                  ),
+                  subtitle: Text(
+                    displayName,
+                    style: FontScaling.getCaption(context),
+                  ),
+                  onTap: widget.onAccountTap,
                 ),
-              ),
-              subtitle: widget.authService.hasEmailAccount
-                  ? Text(
-                widget.authService.currentUser?.displayName ?? l10n.defaultUserName,
-                style: FontScaling.getCaption(context),
-              )
-                  : null,
-              onTap: widget.onAccountTap,
-            ),
+              );
+            },
           ),
 
           _buildThickDivider(),
@@ -992,6 +997,32 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
     } catch (e) {
       AppLogger.error('Failed to get trash count: $e');
       return 0;
+    }
+  }
+
+  Future<String> _getAccountDisplayName() async {
+    try {
+      // Get l10n before async operations
+      final l10n = AppLocalizations.of(context)!;
+      final defaultName = l10n.defaultUserName;
+      
+      if (widget.authService.hasEmailAccount) {
+        // For email users, get from Firebase
+        final name = await widget.authService.getDisplayName(defaultName: defaultName);
+        return name ?? defaultName;
+      } else {
+        // For anonymous users, get from local storage
+        final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+        final userId = await userProfileManager.getOrCreateActiveUserId();
+        
+        // Use helper method to get display name (handles both Firebase UID and device-based IDs)
+        return await UserScopedStorage.getDisplayName(userId, defaultName: defaultName);
+      }
+    } catch (e) {
+      AppLogger.error('Failed to get account display name: $e');
+      if (!mounted) return 'User';
+      final l10n = AppLocalizations.of(context)!;
+      return l10n.defaultUserName;
     }
   }
 

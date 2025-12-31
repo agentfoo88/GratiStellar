@@ -18,7 +18,9 @@ class ReminderController {
   Future<void> checkAndShowReminderPrompt() async {
     if (!mounted()) return;
 
-    final reminderService = context.read<DailyReminderService>();
+    // Store context before async operations
+    final currentContext = context;
+    final reminderService = Provider.of<DailyReminderService>(currentContext, listen: false);
 
     if (!reminderService.isInitialized) {
       AppLogger.info('🔔 Reminder service not initialized, waiting...');
@@ -26,7 +28,7 @@ class ReminderController {
       for (int i = 0; i < 10; i++) {
         await Future.delayed(const Duration(milliseconds: 100));
         if (!mounted()) return;
-        final service = context.read<DailyReminderService>();
+        final service = Provider.of<DailyReminderService>(currentContext, listen: false);
         if (service.isInitialized) {
           AppLogger.info(
             '🔔 Reminder service initialized after ${(i + 1) * 100}ms',
@@ -39,7 +41,7 @@ class ReminderController {
     if (!mounted()) return;
 
     // Read fresh state after potential initialization wait
-    final freshService = context.read<DailyReminderService>();
+    final freshService = Provider.of<DailyReminderService>(currentContext, listen: false);
 
     // Defensive check: Don't show if already shown OR if reminder is already enabled
     if (freshService.hasShownPrompt) {
@@ -62,7 +64,7 @@ class ReminderController {
     if (!mounted()) return;
 
     // Check again after delay with fresh state (user might have enabled during wait)
-    final finalService = context.read<DailyReminderService>();
+    final finalService = Provider.of<DailyReminderService>(currentContext, listen: false);
 
     if (finalService.hasShownPrompt) {
       AppLogger.info('🔔 Reminder prompt was shown during wait, skipping');
@@ -84,9 +86,10 @@ class ReminderController {
 
     AppLogger.info('🔔 Showing reminder prompt bottom sheet');
 
-    // Show bottom sheet
+    // Show bottom sheet - use stored context
+    if (!mounted()) return;
     showModalBottomSheet(
-      context: context,
+      context: currentContext,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       isDismissible: true,

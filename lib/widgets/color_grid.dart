@@ -6,15 +6,20 @@ import '../gratitude_stars.dart'; // For StarColors
 class ColorGrid extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onColorTap;
+  final List<Color>? colors; // Optional custom color list
 
   const ColorGrid({
     super.key,
     required this.selectedIndex,
     required this.onColorTap,
+    this.colors, // Optional - defaults to StarColors.palette
   });
 
   @override
   Widget build(BuildContext context) {
+    // Use provided colors or fall back to default palette
+    final colorList = colors ?? StarColors.palette;
+    
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -23,14 +28,15 @@ class ColorGrid extends StatelessWidget {
         crossAxisSpacing: FontScaling.getResponsiveSpacing(context, 8),
         mainAxisSpacing: FontScaling.getResponsiveSpacing(context, 8),
       ),
-      itemCount: StarColors.palette.length,
+      itemCount: colorList.length,
       itemBuilder: (context, index) {
         final isSelected = index == selectedIndex;
+        final color = colorList[index];
         return GestureDetector(
           onTap: () => onColorTap(index),
           child: Container(
             decoration: BoxDecoration(
-              color: StarColors.palette[index],
+              color: color,
               shape: BoxShape.circle,
               border: isSelected ? Border.all(
                 color: Colors.white,
@@ -38,7 +44,7 @@ class ColorGrid extends StatelessWidget {
               ) : null,
               boxShadow: isSelected ? [
                 BoxShadow(
-                  color: StarColors.palette[index].withValues(alpha:0.5),
+                  color: color.withValues(alpha:0.5),
                   blurRadius: 8,
                   spreadRadius: 2,
                 ),

@@ -91,23 +91,46 @@ class GalaxyLocalDataSource {
     }
   }
 
-  /// Get the active galaxy ID
+  /// Get the active galaxy ID (user-scoped)
   Future<String?> getActiveGalaxyId() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_activeGalaxyKey);
+      
+      String? activeId;
+      if (_userProfileManager != null) {
+        // Use user-scoped storage
+        final userId = await _userProfileManager.getOrCreateActiveUserId();
+        final userScopedKey = '${_activeGalaxyKey}_$userId';
+        activeId = prefs.getString(userScopedKey);
+      } else {
+        // Fallback to global storage (backward compatibility)
+        activeId = prefs.getString(_activeGalaxyKey);
+      }
+      
+      // Return null for empty strings
+      return (activeId == null || activeId.isEmpty) ? null : activeId;
     } catch (e) {
       AppLogger.error('⚠️ Error getting active galaxy ID: $e');
       return null;
     }
   }
 
-  /// Set the active galaxy ID
+  /// Set the active galaxy ID (user-scoped)
   Future<void> setActiveGalaxyId(String galaxyId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_activeGalaxyKey, galaxyId);
-      AppLogger.success('✅ Set active galaxy: $galaxyId');
+      
+      if (_userProfileManager != null) {
+        // Use user-scoped storage
+        final userId = await _userProfileManager.getOrCreateActiveUserId();
+        final userScopedKey = '${_activeGalaxyKey}_$userId';
+        await prefs.setString(userScopedKey, galaxyId);
+        AppLogger.success('✅ Set active galaxy: $galaxyId for user: $userId');
+      } else {
+        // Fallback to global storage (backward compatibility)
+        await prefs.setString(_activeGalaxyKey, galaxyId);
+        AppLogger.success('✅ Set active galaxy: $galaxyId');
+      }
     } catch (e) {
       AppLogger.error('⚠️ Error setting active galaxy ID: $e');
       rethrow;
@@ -119,7 +142,17 @@ class GalaxyLocalDataSource {
     try {
       await _secureStorage.delete(key: _galaxiesKey);
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_activeGalaxyKey);
+      
+      if (_userProfileManager != null) {
+        // Clear user-scoped active galaxy ID
+        final userId = await _userProfileManager.getOrCreateActiveUserId();
+        final userScopedKey = '${_activeGalaxyKey}_$userId';
+        await prefs.remove(userScopedKey);
+      } else {
+        // Fallback to global storage (backward compatibility)
+        await prefs.remove(_activeGalaxyKey);
+      }
+      
       AppLogger.data('🗑️ Cleared all galaxy data from local storage');
     } catch (e) {
       AppLogger.error('⚠️ Error clearing galaxy data: $e');

@@ -133,8 +133,10 @@ class _RestoreDialogState extends State<RestoreDialog> {
       final currentStars = gratitudeProvider.gratitudeStars;
       final currentGalaxies = galaxyProvider.galaxies;
       final currentFontScale = await StorageService.getFontScale();
+      final currentPalettePreset = await StorageService.getSelectedPalettePreset();
       final currentPreferences = {
         'fontScale': currentFontScale,
+        'selectedPalettePreset': currentPalettePreset,
       };
 
       // Import backup
@@ -165,6 +167,11 @@ class _RestoreDialogState extends State<RestoreDialog> {
         if (result.mergedPreferences!.containsKey('fontScale')) {
           await StorageService.saveFontScale(
             result.mergedPreferences!['fontScale'] as double,
+          );
+        }
+        if (result.mergedPreferences!.containsKey('selectedPalettePreset')) {
+          await StorageService.saveSelectedPalettePreset(
+            result.mergedPreferences!['selectedPalettePreset'] as String,
           );
         }
 

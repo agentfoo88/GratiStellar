@@ -12,6 +12,7 @@ import 'widgets/color_picker_dialog.dart';
 import 'widgets/color_grid.dart';
 import 'widgets/scrollable_dialog_content.dart';
 import 'core/accessibility/semantic_helper.dart';
+import 'core/config/palette_preset_config.dart';
 
 /// Centralized dialogs for GratiStellar app
 /// All modal dialogs are static methods that accept callbacks for actions
@@ -504,6 +505,10 @@ class GratitudeDialogs {
     // Load default color preference
     final defaultColor = await StorageService.getDefaultColor();
 
+    // Load selected palette preset for the colour grid
+    final selectedPresetId = await StorageService.getSelectedPalettePreset();
+    final selectedPreset = PalettePresetConfig.getPresetById(selectedPresetId);
+
     if (!context.mounted) return;
 
     showDialog(
@@ -516,11 +521,30 @@ class GratitudeDialogs {
         int? selectedColorIndex = defaultColor?.$1; // Preset index or null
         Color? customColorPreview = defaultColor?.$2; // Custom color or null
         bool setAsDefault = false; // Checkbox state
+        // Initialize paletteColors as a state variable
+        List<Color> paletteColors =
+            selectedPreset?.colors ?? StarColors.palette;
 
         return StatefulBuilder(
           builder: (context, setState) {
             final remainingChars = maxCharacters - controller.text.length;
             final isOverLimit = remainingChars < 0;
+
+            // Function to reload palette from storage
+            Future<void> reloadPalette() async {
+              final updatedPresetId =
+                  await StorageService.getSelectedPalettePreset();
+              final updatedPreset = PalettePresetConfig.getPresetById(
+                updatedPresetId,
+              );
+              final updatedPaletteColors =
+                  updatedPreset?.colors ?? StarColors.palette;
+              if (context.mounted) {
+                setState(() {
+                  paletteColors = updatedPaletteColors;
+                });
+              }
+            }
 
             return Dialog(
               backgroundColor: Colors.transparent,
@@ -642,12 +666,21 @@ class GratitudeDialogs {
                                     // Create the star
                                     if (showColorPicker &&
                                         selectedColorIndex != null) {
-                                      onAdd(
-                                        selectedColorIndex,
-                                        customColorPreview,
-                                      );
+                                      // Map palette colour to StarColors.palette index if it exists, otherwise use as custom
+                                      final selectedColour =
+                                          selectedColorIndex! <
+                                              paletteColors.length
+                                          ? paletteColors[selectedColorIndex!]
+                                          : paletteColors[0];
+                                      final starColorsIndex = StarColors.palette
+                                          .indexOf(selectedColour);
+                                      if (starColorsIndex >= 0) {
+                                        onAdd(starColorsIndex, null);
+                                      } else {
+                                        onAdd(null, selectedColour);
+                                      }
                                     } else {
-                                      onAdd(); // Random color
+                                      onAdd(); // Random colour
                                     }
                                     if (context.mounted) {
                                       Navigator.of(context).pop();
@@ -668,38 +701,65 @@ class GratitudeDialogs {
                           // Optional color selection (collapsed by default)
                           Column(
                             children: [
-                              // Toggle button
-                              TextButton.icon(
-                                onPressed: () {
-                                  setState(() {
-                                    showColorPicker = !showColorPicker;
-                                    // Set default color when opening
-                                    if (showColorPicker &&
-                                        selectedColorIndex == null) {
-                                      selectedColorIndex = 0;
-                                    }
-                                  });
-                                },
-                                icon: Icon(
-                                  showColorPicker
-                                      ? Icons.expand_less
-                                      : Icons.palette,
-                                  size: FontScaling.getResponsiveIconSize(
-                                    context,
-                                    20,
+                              // Toggle button - Made more prominent with palette indicator
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(
+                                      0xFFFFE135,
+                                    ).withValues(alpha: 0.5),
+                                    width: 1.5,
                                   ),
                                 ),
-                                label: Text(
-                                  showColorPicker
-                                      ? AppLocalizations.of(
-                                          context,
-                                        )!.useRandomColor
-                                      : AppLocalizations.of(
-                                          context,
-                                        )!.chooseColorButton,
-                                  style: FontScaling.getButtonText(
-                                    context,
-                                  ).copyWith(color: const Color(0xFFFFE135)),
+                                child: TextButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      showColorPicker = !showColorPicker;
+                                      // Set default color when opening
+                                      if (showColorPicker &&
+                                          selectedColorIndex == null) {
+                                        selectedColorIndex = 0;
+                                      }
+                                    });
+                                  },
+                                  icon: Icon(
+                                    showColorPicker
+                                        ? Icons.expand_less
+                                        : Icons.palette,
+                                    size: FontScaling.getResponsiveIconSize(
+                                      context,
+                                      24,
+                                    ),
+                                    color: const Color(0xFFFFE135),
+                                  ),
+                                  label: Text(
+                                    showColorPicker
+                                        ? AppLocalizations.of(
+                                            context,
+                                          )!.useRandomColor
+                                        : '${AppLocalizations.of(context)!.chooseColorButton} (Palette Options)',
+                                    style: FontScaling.getButtonText(context)
+                                        .copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal:
+                                          FontScaling.getResponsiveSpacing(
+                                            context,
+                                            16,
+                                          ),
+                                      vertical:
+                                          FontScaling.getResponsiveSpacing(
+                                            context,
+                                            12,
+                                          ),
+                                    ),
+                                  ),
                                 ),
                               ),
 
@@ -736,9 +796,11 @@ class GratitudeDialogs {
                                     ),
                                     colorFilter: ColorFilter.mode(
                                       customColorPreview ??
-                                          StarColors.getColor(
-                                            selectedColorIndex ?? 0,
-                                          ),
+                                          (selectedColorIndex != null &&
+                                                  selectedColorIndex! <
+                                                      paletteColors.length
+                                              ? paletteColors[selectedColorIndex!]
+                                              : paletteColors[0]),
                                       BlendMode.srcIn,
                                     ),
                                   ),
@@ -751,7 +813,8 @@ class GratitudeDialogs {
                                 ),
 
                                 ColorGrid(
-                                  // Use the new ColorGrid widget
+                                  // Use the selected palette preset colours
+                                  colors: paletteColors,
                                   selectedIndex: customColorPreview != null
                                       ? -1
                                       : (selectedColorIndex ?? 0),
@@ -800,7 +863,10 @@ class GratitudeDialogs {
                                               },
                                         );
                                       },
-                                    );
+                                    ).then((_) {
+                                      // Reload palette when ColorPickerDialog closes
+                                      reloadPalette();
+                                    });
                                   },
                                   icon: Icon(
                                     Icons.color_lens,

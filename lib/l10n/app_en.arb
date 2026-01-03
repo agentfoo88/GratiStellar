@@ -13,33 +13,33 @@
   "createStarButton": "Create Star",
   "cancelButton": "Cancel",
   "closeButton": "Close",
-  "chooseColorButton": "Choose Star Color",
+  "chooseColorButton": "Choose Star Colour",
   "@chooseColorButton": {
-    "description": "Button to optionally choose star color during creation"
+    "description": "Button to optionally choose star colour during creation"
   },
-  "useRandomColor": "Use Random Color",
+  "useRandomColor": "Use Random Colour",
   "@useRandomColor": {
-    "description": "Button to collapse color picker and use random color"
+    "description": "Button to collapse colour picker and use random colour"
   },
-  "customColorButton": "Custom Color",
+  "customColorButton": "Additional Colour options",
   "@customColorButton": {
-    "description": "Button to open advanced color picker"
+    "description": "Button to open advanced colour picker"
   },
-  "setAsDefaultColor": "Set as default color for new stars",
+  "setAsDefaultColor": "Set as default colour for new stars",
   "@setAsDefaultColor": {
-    "description": "Checkbox label to set color as default for new stars"
+    "description": "Checkbox label to set colour as default for new stars"
   },
   "clearDefaultColor": "Clear Default",
   "@clearDefaultColor": {
     "description": "Button to clear the default color preference"
   },
-  "defaultStarColor": "Default Star Color",
+  "defaultStarColor": "Default Star Colour",
   "@defaultStarColor": {
-    "description": "Label for default star color setting"
+    "description": "Label for default star colour setting"
   },
-  "usingDefaultColor": "Currently using default color",
+  "usingDefaultColor": "Currently using default colour",
   "@usingDefaultColor": {
-    "description": "Message shown when using default color"
+    "description": "Message shown when using default colour"
   },
   "statsTotal": "Total",
   "statsThisWeek": "This Week",
@@ -50,7 +50,7 @@
   "shareButton": "Share",
   "deleteButton": "Delete",
   "saveButton": "Save",
-  "changeColorButton": "Change Color",
+  "changeColorButton": "Change Colour",
   "editGratitudeHint": "Edit your gratitude...",
   "deleteConfirmTitle": "Delete this gratitude?",
   "deleteWarning": "Move to Trash? (Recoverable for 30 days)",
@@ -79,10 +79,10 @@
   "gratitudePermanentlyDeleted": "Gratitude permanently deleted",
   "deleteConfirmationContent": "Move to Trash? (Recoverable for 30 days)",
   "comingSoonTitle": "Coming Soon",
-  "colorPreviewTitle": "Color Preview",
-  "presetColorsTitle": "Preset Colors",
-  "customColorTitle": "Custom Color",
-  "hexColorLabel": "Hex Color",
+  "colorPreviewTitle": "Colour Preview",
+  "presetColorsTitle": "Preset Colours",
+  "customColorTitle": "Custom Colour",
+  "hexColorLabel": "Hex Colour",
   "hexColorHint": "#FFE135",
   "applyButton": "Apply",
   "loginMenuItem": "Login",
@@ -208,6 +208,10 @@
   "signInSuccess": "Signed in successfully!",
   "@signInSuccess": {
     "description": "Success message after signing in"
+  },
+  "signInCancelled": "Sign-in was cancelled. Please resolve the anonymous data migration and try again.",
+  "@signInCancelled": {
+    "description": "Error message when sign-in is cancelled due to migration dialog cancellation"
   },
   "errorEmailPassword": "Please enter both email and password",
   "@errorEmailPassword": {
@@ -457,9 +461,9 @@
   "@sortAlphabeticalZA": {
     "description": "Sort option to display gratitude stars alphabetically from Z to A"
   },
-  "sortByColor": "By Color",
+  "sortByColor": "By Colour",
   "@sortByColor": {
-    "description": "Sort option to display gratitude stars grouped by color"
+    "description": "Sort option to display gratitude stars grouped by colour"
   },
   "sortByMonth": "By Month",
   "@sortByMonth": {
@@ -528,6 +532,10 @@
   "feedbackError": "Failed to submit feedback. Please try again.",
   "@feedbackError": {
     "description": "Error message when feedback submission fails"
+  },
+  "feedbackErrorSignIn": "Please sign in to submit feedback.",
+  "@feedbackErrorSignIn": {
+    "description": "Error message when user needs to sign in to submit feedback"
   },
   "restoreTooltip": "Restore",
   "@restoreTooltip": {
@@ -600,6 +608,38 @@
   "keepEmptyGalaxyButton": "Keep It",
   "@keepEmptyGalaxyButton": {
     "description": "Button to keep empty default galaxy"
+  },
+  "anonymousDataDetectedTitle": "Anonymous Data Found",
+  "@anonymousDataDetectedTitle": {
+    "description": "Title for dialog when anonymous data is detected during email sign-in"
+  },
+  "anonymousDataDetectedMessage": "We found data from an anonymous profile on this device ({starsCount} stars, {galaxiesCount} galaxies). Would you like to merge it with your email account or delete it?",
+  "@anonymousDataDetectedMessage": {
+    "description": "Message asking if user wants to merge or delete anonymous data when signing in with email",
+    "placeholders": {
+      "starsCount": {
+        "type": "int"
+      },
+      "galaxiesCount": {
+        "type": "int"
+      }
+    }
+  },
+  "mergeAnonymousDataButton": "Merge Data",
+  "@mergeAnonymousDataButton": {
+    "description": "Button to merge anonymous data with email account"
+  },
+  "deleteAnonymousDataButton": "Delete Data",
+  "@deleteAnonymousDataButton": {
+    "description": "Button to delete anonymous data"
+  },
+  "mergeAnonymousDataDescription": "Combine anonymous data with your email account (recommended)",
+  "@mergeAnonymousDataDescription": {
+    "description": "Description of merge option for anonymous data"
+  },
+  "deleteAnonymousDataDescription": "Permanently delete anonymous data",
+  "@deleteAnonymousDataDescription": {
+    "description": "Description of delete option for anonymous data"
   },
   "closeAppHint": "Close the application",
   "clearLayerCache": "Clear Layer Cache",
@@ -1444,5 +1484,117 @@
         "noItemsSelected": "No items selected",
         "@noItemsSelected": {
           "description": "Message when trying to perform action with no items selected"
+        },
+        "palettePresetTitle": "Colour Palette",
+        "@palettePresetTitle": {
+          "description": "Title for palette preset selector"
+        },
+        "palettePresetWarmWhites": "Warm Whites",
+        "@palettePresetWarmWhites": {
+          "description": "Name of warm whites palette preset"
+        },
+        "palettePresetRealisticStars": "Realistic Stars",
+        "@palettePresetRealisticStars": {
+          "description": "Name of realistic star colors palette preset"
+        },
+        "palettePresetCoolBlues": "Cool Blues",
+        "@palettePresetCoolBlues": {
+          "description": "Name of cool blues palette preset"
+        },
+        "palettePresetVibrant": "Vibrant Colours",
+        "@palettePresetVibrant": {
+          "description": "Name of vibrant colours palette preset"
+        },
+        "palettePresetPastelDreams": "Pastel Dreams",
+        "@palettePresetPastelDreams": {
+          "description": "Name of pastel dreams palette preset"
+        },
+        "seasonSpring": "Spring",
+        "@seasonSpring": {
+          "description": "Name of spring season"
+        },
+        "seasonSummer": "Summer",
+        "@seasonSummer": {
+          "description": "Name of summer season"
+        },
+        "seasonAutumn": "Autumn",
+        "@seasonAutumn": {
+          "description": "Name of autumn season"
+        },
+        "seasonWinter": "Winter",
+        "@seasonWinter": {
+          "description": "Name of winter season"
+        },
+        "seasonDrawerTitle": "Season",
+        "@seasonDrawerTitle": {
+          "description": "Title for season drawer"
+        },
+        "seasonCycleButton": "Cycle Season",
+        "@seasonCycleButton": {
+          "description": "Button to cycle to next season"
+        },
+        "seasonReturnToNow": "Now",
+        "@seasonReturnToNow": {
+          "description": "Button to return to current season"
+        },
+        "seasonTrackingLabel": "Season Tracking",
+        "@seasonTrackingLabel": {
+          "description": "Label for season tracking toggle"
+        },
+        "seasonDrawerShow": "Show season controls",
+        "@seasonDrawerShow": {
+          "description": "Accessibility label for showing season drawer"
+        },
+        "seasonDrawerHide": "Hide season controls",
+        "@seasonDrawerHide": {
+          "description": "Accessibility label for hiding season drawer"
+        },
+        "seasonCycleHint": "Click to preview next season",
+        "@seasonCycleHint": {
+          "description": "Accessibility hint for cycle season button"
+        },
+        "seasonReturnHint": "Reset to actual current season",
+        "@seasonReturnHint": {
+          "description": "Accessibility hint for return to current time button"
+        },
+        "switchProfile": "Switch Profile",
+        "@switchProfile": {
+          "description": "Button to switch between profiles"
+        },
+        "createNewProfile": "Create New Profile",
+        "@createNewProfile": {
+          "description": "Button to create a new anonymous profile"
+        },
+        "deleteProfile": "Delete Profile",
+        "@deleteProfile": {
+          "description": "Button to delete a profile"
+        },
+        "currentProfile": "Current Profile",
+        "@currentProfile": {
+          "description": "Label indicating the currently active profile"
+        },
+        "profileName": "Profile Name",
+        "@profileName": {
+          "description": "Label for profile name"
+        },
+        "profileStars": "Stars",
+        "@profileStars": {
+          "description": "Label for number of stars in a profile"
+        },
+        "profileGalaxies": "Galaxies",
+        "@profileGalaxies": {
+          "description": "Label for number of galaxies in a profile"
+        },
+        "switchProfileTitle": "Switch Profile",
+        "@switchProfileTitle": {
+          "description": "Title for profile switching dialog"
+        },
+        "createProfileTitle": "Create New Profile",
+        "@createProfileTitle": {
+          "description": "Title for create profile dialog"
+        },
+        "deleteProfileConfirm": "Are you sure you want to delete this profile? All data will be permanently deleted.",
+        "@deleteProfileConfirm": {
+          "description": "Confirmation message for deleting a profile"
         }
     }

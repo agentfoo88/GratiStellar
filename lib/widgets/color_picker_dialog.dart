@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../core/security/input_validator.dart';
+import '../core/config/palette_preset_config.dart';
 import '../font_scaling.dart';
 import '../gratitude_stars.dart'; // For StarColors
 import '../l10n/app_localizations.dart';
@@ -46,6 +47,8 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
   late Color _previewColor;
   int? _selectedColorIndex;
   (int?, Color?)? _defaultColor; // Store default color preference
+  String _selectedPresetId = 'vibrant'; // Selected palette preset
+  List<Color> _currentPaletteColors = StarColors.palette; // Current palette colors
 
   // Color picker owns its controllers
   late final TextEditingController _hexController;
@@ -77,6 +80,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
     _updateColorControllers(_previewColor);
     _loadDefaultColor();
+    _loadPalettePreset();
   }
 
   Future<void> _loadDefaultColor() async {
@@ -84,6 +88,45 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
     if (mounted) {
       setState(() {
         _defaultColor = defaultColor;
+      });
+    }
+  }
+
+  Future<void> _loadPalettePreset() async {
+    final presetId = await StorageService.getSelectedPalettePreset();
+    if (mounted) {
+      setState(() {
+        _selectedPresetId = presetId;
+        _updatePaletteColors(presetId);
+      });
+    }
+  }
+
+  void _updatePaletteColors(String presetId) {
+    final preset = PalettePresetConfig.getPresetById(presetId);
+    if (preset != null) {
+      _currentPaletteColors = preset.colors;
+      
+      // If current selected index is out of bounds for new palette, clear it
+      if (_selectedColorIndex != null && _selectedColorIndex! >= _currentPaletteColors.length) {
+        _selectedColorIndex = null;
+        // Keep preview color as-is (might be custom)
+      } else if (_selectedColorIndex != null) {
+        // Update preview to match new palette color
+        _previewColor = _currentPaletteColors[_selectedColorIndex!];
+        _updateColorControllers(_previewColor);
+      }
+    }
+  }
+
+  Future<void> _onPresetChanged(String? newPresetId) async {
+    if (newPresetId == null || newPresetId == _selectedPresetId) return;
+    
+    await StorageService.saveSelectedPalettePreset(newPresetId);
+    if (mounted) {
+      setState(() {
+        _selectedPresetId = newPresetId;
+        _updatePaletteColors(newPresetId);
       });
     }
   }
@@ -181,6 +224,91 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               ),
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
 
+              // Palette preset selector
+              Text(
+                'Color Palette', // TODO: Use l10n after regeneration
+                style: FontScaling.getBodyMedium(context).copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+              SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+              Theme(
+                data: Theme.of(context).copyWith(
+                  highlightColor: const Color(0xFF1A2238).withValues(alpha: 0.5),
+                  splashColor: const Color(0xFF1A2238).withValues(alpha: 0.3),
+                ),
+                child: DropdownButtonFormField<String>(
+                  key: ValueKey<String>('preset_$_selectedPresetId'), // Force rebuild when preset changes
+                  initialValue: _selectedPresetId,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: const Color(0xFFFFE135).withValues(alpha: 0.8),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                      vertical: FontScaling.getResponsiveSpacing(context, 12),
+                    ),
+                  ),
+                  dropdownColor: const Color(0xFF1A2238),
+                  style: FontScaling.getBodyMedium(context).copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                  iconEnabledColor: Colors.white.withValues(alpha: 0.9),
+                items: PalettePresetConfig.getPresets().map((preset) {
+                  // Get localized name - use fallback until l10n is regenerated
+                  String displayName;
+                  switch (preset.l10nKey) {
+                    case 'palettePresetWarmWhites':
+                      displayName = 'Warm Whites';
+                      break;
+                    case 'palettePresetRealisticStars':
+                      displayName = 'Realistic Stars';
+                      break;
+                    case 'palettePresetCoolBlues':
+                      displayName = 'Cool Blues';
+                      break;
+                    case 'palettePresetVibrant':
+                      displayName = 'Vibrant Colors';
+                      break;
+                    case 'palettePresetPastelDreams':
+                      displayName = 'Pastel Dreams';
+                      break;
+                    default:
+                      displayName = preset.id;
+                  }
+                  return DropdownMenuItem<String>(
+                    value: preset.id,
+                    child: Text(
+                      displayName,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  );
+                }).toList(),
+                  onChanged: _onPresetChanged,
+                ),
+              ),
+              SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+
               // Preset colors grid
               Text(
                 AppLocalizations.of(context)!.presetColorsTitle,
@@ -192,10 +320,11 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                 onColorTap: (index) {
                   setState(() {
                     _selectedColorIndex = index;
-                    _previewColor = StarColors.getColor(index);
+                    _previewColor = _currentPaletteColors[index];
                     _updateColorControllers(_previewColor);
                   });
                 },
+                colors: _currentPaletteColors,
               ),
 
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
@@ -373,11 +502,28 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      widget.onColorSelected(
-                          _selectedColorIndex,
-                          _selectedColorIndex == null
-                              ? _previewColor
-                              : null);
+                      // If using preset color, need to map index to actual color
+                      // since preset colors might differ from StarColors.palette
+                      if (_selectedColorIndex != null && _selectedColorIndex! < _currentPaletteColors.length) {
+                        // Using preset color - pass null for index (custom color)
+                        // OR map to StarColors.palette if it exists there
+                        final presetColor = _currentPaletteColors[_selectedColorIndex!];
+                        // Check if this color exists in StarColors.palette
+                        final starColorsIndex = StarColors.palette.indexOf(presetColor);
+                        if (starColorsIndex >= 0) {
+                          widget.onColorSelected(starColorsIndex, null);
+                        } else {
+                          // Color not in StarColors.palette, use as custom
+                          widget.onColorSelected(null, presetColor);
+                        }
+                      } else {
+                        // Custom color or no selection
+                        widget.onColorSelected(
+                            _selectedColorIndex,
+                            _selectedColorIndex == null
+                                ? _previewColor
+                                : null);
+                      }
                       Navigator.of(context).pop();
                     },
                     style: ElevatedButton.styleFrom(

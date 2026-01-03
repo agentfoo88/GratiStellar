@@ -10,6 +10,8 @@ import '../../../../screens/sign_in_screen.dart';
 import '../../../../widgets/scrollable_dialog_content.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/accessibility/semantic_helper.dart';
+import 'profile_switcher_dialog.dart';
 
 /// Account dialog widget for displaying and editing user account information
 class AccountDialog extends StatefulWidget {
@@ -49,6 +51,7 @@ class _AccountDialogState extends State<AccountDialog> {
   bool _isLoadingName = false; // Start as false so field is enabled immediately
   bool _hasInitialized = false;
   bool _isSaving = false; // Prevent reload while saving
+  String? _lastUserId; // Track last user ID to detect changes
 
   @override
   void initState() {
@@ -65,6 +68,34 @@ class _AccountDialogState extends State<AccountDialog> {
       final l10n = AppLocalizations.of(context)!;
       _displayNameController.text = l10n.defaultUserName;
       _loadDisplayName();
+    } else {
+      // Check if user has changed (e.g., profile switch)
+      _checkForUserChange();
+    }
+  }
+
+  /// Check if the active user has changed and reload if needed
+  Future<void> _checkForUserChange() async {
+    if (widget.authService.hasEmailAccount) {
+      // Email users don't change via profile switching
+      return;
+    }
+    
+    try {
+      final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+      final currentUserId = await userProfileManager.getOrCreateActiveUserId();
+      
+      // If user ID changed, reload display name
+      if (_lastUserId != null && _lastUserId != currentUserId) {
+        AppLogger.data('🔄 User changed from $_lastUserId to $currentUserId, reloading display name');
+        _lastUserId = currentUserId;
+        await _loadDisplayName();
+      } else {
+        // First time, just track it
+        _lastUserId ??= currentUserId;
+      }
+    } catch (e) {
+      AppLogger.error('⚠️ Error checking for user change: $e');
     }
   }
 
@@ -87,6 +118,9 @@ class _AccountDialogState extends State<AccountDialog> {
         // For anonymous users, get from local storage
         final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
         final userId = await userProfileManager.getOrCreateActiveUserId();
+        
+        // Track current user ID
+        _lastUserId = userId;
         
         // Use helper method to get display name (handles both Firebase UID and device-based IDs)
         displayName = await UserScopedStorage.getDisplayName(userId, defaultName: l10n.defaultUserName);
@@ -436,6 +470,50 @@ class _AccountDialogState extends State<AccountDialog> {
                       ],
                     ),
                   ),
+                // Profile switching section (only for anonymous users)
+                if (!widget.authService.hasEmailAccount) ...[
+                  SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                  SemanticHelper.label(
+                    label: l10n.switchProfile,
+                    hint: l10n.switchProfile,
+                    isButton: true,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          // Show profile switcher and wait for it to close
+                          await ProfileSwitcherDialog.show(
+                            context: context,
+                            authService: widget.authService,
+                          );
+                          // Reload display name after profile switch
+                          if (mounted) {
+                            await _checkForUserChange();
+                          }
+                        },
+                        icon: Icon(
+                          Icons.swap_horiz,
+                          color: Color(0xFFFFE135),
+                        ),
+                        label: Text(
+                          l10n.switchProfile,
+                          style: FontScaling.getButtonText(context),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: Color(0xFFFFE135).withValues(alpha: 0.5),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: FontScaling.getResponsiveSpacing(context, 16),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
                 // Actions
                 Row(

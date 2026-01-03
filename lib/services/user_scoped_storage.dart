@@ -178,21 +178,26 @@ class UserScopedStorage {
       await _secureStorage.delete(key: starsKey);
       await _secureStorage.delete(key: galaxiesKey);
       
-      // For anonymous users, also clear display name and device ID
+      // For anonymous users, clear display name (but preserve device_id)
       if (userId.startsWith('anonymous_')) {
         final deviceId = await getDeviceIdFromUserId(userId);
         if (deviceId != null) {
-          // Clear display name
+          // Clear display name for this specific device ID
           final displayNameKey = '${_displayNameBaseKey}_anonymous_$deviceId';
           final prefs = await SharedPreferences.getInstance();
           await prefs.remove(displayNameKey);
           
-          // Clear device ID so a new one is generated on next use
-          await prefs.remove(_deviceIdKey);
+          // NOTE: device_id is NOT cleared - it's persistent per device
+          // This allows multiple anonymous profiles on the same device
           
-          AppLogger.data('🗑️ Cleared display name and device ID for anonymous user');
+          AppLogger.data('🗑️ Cleared display name for anonymous user (device_id preserved)');
         }
       }
+      
+      // Clear user-scoped onboarding state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('onboarding_completed_$userId');
+      await prefs.remove('age_gate_passed_$userId');
       
       // Untrack user from local_user_ids
       await untrackUser(userId);

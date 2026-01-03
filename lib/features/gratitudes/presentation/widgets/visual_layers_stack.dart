@@ -1,14 +1,17 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../cached_painters.dart';
 import '../../../../camera_controller.dart';
 import '../../../../core/animation/animation_manager.dart';
+import '../../../../core/config/season_config.dart';
 import '../../../../gratitude_stars.dart';
 import '../../../../services/layer_cache_service.dart';
 import '../../../../starfield.dart';
 import '../../../../storage.dart';
+import '../state/galaxy_provider.dart';
 import 'floating_label.dart';
 
 /// All visual rendering layers for the gratitude visualization
@@ -49,55 +52,81 @@ class VisualLayersStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Layer 1: Cached background
-        Positioned.fill(
-          child: AnimatedBuilder(
-            animation: cameraController,
-            builder: (context, child) {
-              return Transform(
-                transform: cameraController.getBackgroundTransform(),
-                child: CustomPaint(
-                  painter: CachedBackgroundPainter(
-                    layerCacheInitialized
-                        ? LayerCacheService().backgroundImage
-                        : null,
-                  ),
-                  size: Size.infinite,
-                ),
-              );
-            },
-          ),
-        ),
+    return Consumer<GalaxyProvider>(
+      builder: (context, galaxyProvider, _) {
+        final galaxy = galaxyProvider.activeGalaxy;
+        List<Color>? seasonGradientColors;
 
-        // Layer 2: Nebula Asset (pre-made image)
-        if (nebulaAssetImage != null)
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: Listenable.merge(
-                  [animationManager.background, cameraController]),
-              builder: (context, child) {
-              return Transform(
-                transform: cameraController.getNebulaTransform(),
-                child: CustomPaint(
-                    painter: AssetNebulaPainter(
-                      nebulaAssetImage,
-                      animationManager.background.value,
+        // Generate season gradient if season tracking is enabled
+        if (galaxy?.seasonTrackingEnabled == true && galaxy?.currentSeason != null) {
+          final season = galaxy!.currentSeason!;
+          if (galaxy.isManualOverride) {
+            // Manual override - use season gradient without interpolation
+            seasonGradientColors = SeasonConfig.generateGradientStops(season);
+          } else {
+            // Auto mode - calculate actual season and interpolate
+            final seasonInfo = SeasonConfig.calculateSeason(
+              DateTime.now(),
+              galaxy.hemisphere,
+            );
+            seasonGradientColors = SeasonConfig.generateSeasonalGradient(
+              seasonInfo.season,
+              seasonInfo.progress,
+              seasonInfo.nextSeason,
+            );
+          }
+        }
+
+        return Stack(
+          children: [
+            // Layer 1: Cached background
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: cameraController,
+                builder: (context, child) {
+                  return Transform(
+                    transform: cameraController.getBackgroundTransform(),
+                    child: CustomPaint(
+                      painter: CachedBackgroundPainter(
+                        layerCacheInitialized
+                            ? LayerCacheService().backgroundImage
+                            : null,
+                        seasonGradientColors: seasonGradientColors,
+                      ),
+                      size: Size.infinite,
                     ),
-                    size: Size.infinite,
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
 
-        // Layer 2.5: Cached Van Gogh base + animated twinklers
-        Positioned.fill(
-          child: AnimatedBuilder(
-            animation: cameraController,
-            builder: (context, child) {
-              return Transform(
+            // Layer 2: Nebula Asset (pre-made image)
+            if (nebulaAssetImage != null)
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: Listenable.merge(
+                      [animationManager.background, cameraController]),
+                  builder: (context, child) {
+                  return Transform(
+                    transform: cameraController.getNebulaTransform(),
+                    child: CustomPaint(
+                        painter: AssetNebulaPainter(
+                          nebulaAssetImage,
+                          animationManager.background.value,
+                        ),
+                        size: Size.infinite,
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+            // Layer 2.5: Cached Van Gogh base + animated twinklers
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: cameraController,
+                builder: (context, child) {
+                  return Transform(
                 transform: cameraController.getVanGoghTransform(),
                 child: CustomPaint(
                   painter: CachedVanGoghPainter(
@@ -223,7 +252,9 @@ class VisualLayersStack extends StatelessWidget {
               },
             ),
           ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

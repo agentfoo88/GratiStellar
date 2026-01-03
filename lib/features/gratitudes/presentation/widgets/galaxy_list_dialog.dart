@@ -1041,86 +1041,127 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return AlertDialog(
-      backgroundColor: Color(0xFF1A2238),
-      title: Text(
-        l10n.renameGalaxy,
-        style: FontScaling.getHeadingMedium(
-          context,
-        ).copyWith(color: Color(0xFFFFE135)),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SemanticHelper.label(
-            label: l10n.galaxyNameField,
-            hint: l10n.enterNewGalaxyName,
-            child: TextField(
-              controller: _controller,
-              style: FontScaling.getBodyMedium(
-                context,
-              ).copyWith(color: Colors.white),
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFFE135)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Color(0xFFFFE135).withValues(alpha: 0.5),
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFFE135)),
-                ),
-              ),
-              autofocus: true,
-              maxLength: 50,
-              enabled: !_isRenaming,
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: 500,
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A2238).withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 20,
+              spreadRadius: 5,
             ),
-          ),
-        ],
-      ),
-      actions: [
-        // Delete button on the left
-        TextButton(
-          onPressed: _isRenaming ? null : () => _confirmDelete(context),
-          child: Text(
-            l10n.deleteButton,
-            style: FontScaling.getButtonText(
-              context,
-            ).copyWith(color: Colors.red.withValues(alpha: 0.8)),
-          ),
+          ],
         ),
-        Spacer(),
-        TextButton(
-          onPressed: _isRenaming ? null : () => Navigator.of(context).pop(),
-          child: Text(
-            l10n.cancel,
-            style: FontScaling.getButtonText(
-              context,
-            ).copyWith(color: Colors.white70),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: _isRenaming ? null : _renameGalaxy,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFFFE135),
-            foregroundColor: Color(0xFF1A2238),
-          ),
-          child: _isRenaming
-              ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF1A2238),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.renameGalaxy,
+                style: FontScaling.getHeadingMedium(
+                  context,
+                ).copyWith(color: const Color(0xFFFFE135)),
+              ),
+              SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+              SemanticHelper.label(
+                label: l10n.galaxyNameField,
+                hint: l10n.enterNewGalaxyName,
+                child: TextField(
+                  controller: _controller,
+                  style: FontScaling.getBodyMedium(
+                    context,
+                  ).copyWith(color: Colors.white),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFFFE135)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: const Color(0xFFFFE135).withValues(alpha: 0.5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFFFE135)),
                     ),
                   ),
-                )
-              : Text(l10n.save),
+                  autofocus: true,
+                  maxLength: 50,
+                  enabled: !_isRenaming,
+                ),
+              ),
+              SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
+              // Actions row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // Delete button on the left
+                  TextButton(
+                    onPressed: _isRenaming
+                        ? null
+                        : () => _confirmDelete(context),
+                    child: Text(
+                      l10n.deleteButton,
+                      style: FontScaling.getButtonText(
+                        context,
+                      ).copyWith(color: Colors.red.withValues(alpha: 0.8)),
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: _isRenaming
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    child: Text(
+                      l10n.cancel,
+                      style: FontScaling.getButtonText(
+                        context,
+                      ).copyWith(color: Colors.white70),
+                    ),
+                  ),
+                  SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                  ElevatedButton(
+                    onPressed: _isRenaming ? null : _renameGalaxy,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFE135),
+                      foregroundColor: const Color(0xFF1A2238),
+                    ),
+                    child: _isRenaming
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Color(0xFF1A2238),
+                              ),
+                            ),
+                          )
+                        : Text(l10n.save),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 

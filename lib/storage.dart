@@ -509,7 +509,10 @@ class StorageService {
       await prefs.remove(_defaultColorPresetKey);
       await prefs.remove(_defaultColorCustomKey);
 
-      AppLogger.data('🗑️ Cleared all local storage');
+      // NOTE: device_id is NOT cleared - it's persistent per device
+      // This allows multiple anonymous profiles on the same device
+
+      AppLogger.data('🗑️ Cleared all local storage (device_id preserved)');
     } catch (e) {
       debugPrint('⚠️ Error clearing storage: $e');
     }
@@ -641,6 +644,32 @@ class StorageService {
       AppLogger.data('🗑️ Cleared default color');
     } catch (e) {
       debugPrint('⚠️ Error clearing default color: $e');
+    }
+  }
+
+  // Palette preset preference (separate from default color)
+  static const String _selectedPalettePresetKey = 'selected_palette_preset';
+
+  /// Get selected palette preset ID
+  /// Returns preset ID (e.g., 'vibrant', 'warm_whites'), defaults to 'vibrant'
+  static Future<String> getSelectedPalettePreset() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_selectedPalettePresetKey) ?? 'vibrant';
+    } catch (e) {
+      debugPrint('⚠️ Error getting selected palette preset: $e');
+      return 'vibrant'; // Default fallback
+    }
+  }
+
+  /// Save selected palette preset ID
+  static Future<void> saveSelectedPalettePreset(String presetId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_selectedPalettePresetKey, presetId);
+      AppLogger.data('💾 Saved selected palette preset: $presetId');
+    } catch (e) {
+      debugPrint('⚠️ Error saving selected palette preset: $e');
     }
   }
 

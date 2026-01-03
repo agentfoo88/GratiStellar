@@ -308,6 +308,11 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                     ElevatedButton(
                       onPressed: _isSubmitting ? null : () async {
                         if (_formKey.currentState!.validate()) {
+                          // Capture navigator, scaffold messenger, and text style before async gap
+                          final navigator = Navigator.of(context);
+                          final scaffoldMessenger = ScaffoldMessenger.of(context);
+                          final bodyMediumStyle = FontScaling.getBodyMedium(context);
+                          
                           setState(() {
                             _isSubmitting = true;
                           });
@@ -317,9 +322,6 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                           // #endregion
 
                           final feedbackService = FeedbackService();
-
-                          // Capture navigator before async operations
-                          final navigator = Navigator.of(context);
 
                           try {
                             final success = await feedbackService.submitFeedback(
@@ -343,11 +345,32 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                             AppLogger.info('Stack trace: $stack');
                             // #endregion
 
+                            // Show error message to user before closing
+                            if (mounted) {
+                              final errorMessage = e.toString().contains('sign in')
+                                  ? 'Please sign in to submit feedback.'
+                                  : l10n.feedbackError;
+                              
+                              if (mounted) {
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      errorMessage,
+                                      style: bodyMediumStyle,
+                                    ),
+                                    backgroundColor: Colors.red,
+                                    duration: const Duration(seconds: 3),
+                                  ),
+                                );
+                              }
+                            }
+
                             // Close dialog and return failure
                             if (mounted) {
                               navigator.pop(false);
                             }
                           } finally {
+                            // Always reset submitting state if still mounted
                             if (mounted) {
                               setState(() {
                                 _isSubmitting = false;

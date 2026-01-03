@@ -62,6 +62,7 @@ class GratitudeProvider extends ChangeNotifier {
   StreamSubscription<User?>? _authSubscription;
   Timer? _syncDebouncer;
   bool _hasPendingChanges = false;
+  User? _previousUser; // Track previous user state to detect actual sign-out
 
   // Sync coordination
   bool _isSyncing = false;
@@ -129,6 +130,8 @@ class GratitudeProvider extends ChangeNotifier {
         _syncStatusService = syncStatusService,
         _random = random {
     _initializeUseCases();
+    // Initialize previous user state with current user
+    _previousUser = _authService.currentUser;
     _setupAuthListener();
   }
 
@@ -148,15 +151,18 @@ class GratitudeProvider extends ChangeNotifier {
 
   void _setupAuthListener() {
     _authSubscription = _authService.authStateChanges.listen((user) {
-      if (user == null) {
-        // User signed out - clear all state
+      // Only clear if we had a user before and now we don't (actual sign-out)
+      // This prevents clearing data on initial null state for device-based anonymous users
+      if (_previousUser != null && user == null) {
         AppLogger.auth('👤 User signed out, clearing state...');
         clearState();
-      } else {
+      } else if (_previousUser == null && user != null) {
         // User signed in - reload their data
         AppLogger.auth('👤 Auth state changed, reloading gratitudes...');
         loadGratitudes();
       }
+      
+      _previousUser = user;
     });
   }
 
@@ -360,12 +366,37 @@ class GratitudeProvider extends ChangeNotifier {
         Color? customColor,
       }) async {
     // Safety check: Ensure galaxy system is initialized
+    // If not initialized, wait a bit and retry (handles race condition)
     if (_galaxyProvider.activeGalaxyId == null) {
-      AppLogger.error('❌ Cannot create star: No active galaxy (initialization incomplete)');
-      throw StateError(
-          'Galaxy system not initialized. Please wait a moment and try again.'
-      );
+      AppLogger.warning('⚠️ No active galaxy, waiting for initialization...');
+      
+      // Wait up to 2 seconds for initialization
+      int attempts = 0;
+      const maxAttempts = 20; // 20 * 100ms = 2 seconds
+      while (_galaxyProvider.activeGalaxyId == null && attempts < maxAttempts) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        attempts++;
+      }
+      
+      // If still not initialized, try initializing now
+      if (_galaxyProvider.activeGalaxyId == null) {
+        AppLogger.info('🔄 Attempting to initialize galaxy system...');
+        try {
+          await _galaxyProvider.initialize();
+        } catch (e) {
+          AppLogger.error('❌ Galaxy initialization failed: $e');
+        }
+      }
+      
+      // Final check
+      if (_galaxyProvider.activeGalaxyId == null) {
+        AppLogger.error('❌ Cannot create star: No active galaxy (initialization incomplete)');
+        throw StateError(
+            'Galaxy system not initialized. Please wait a moment and try again.'
+        );
+      }
     }
+    
     final star = await _addGratitudeUseCase(
       AddGratitudeParams(
         text: text,

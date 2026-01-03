@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'camera_controller.dart';
+import 'core/config/palette_preset_config.dart';
 import 'storage.dart';
 
 // ========================================
@@ -216,7 +217,7 @@ class GratitudeStarService {
   }
 
   // Create a new gratitude star with normalized coordinates and smart positioning
-  static GratitudeStar createStar(
+  static Future<GratitudeStar> createStar(
       String text,
       Size screenSize,
       math.Random random,
@@ -224,7 +225,7 @@ class GratitudeStarService {
         required String galaxyId,
         int? colorPresetIndex,
         Color? customColor,
-      }) {
+      }) async {
     // Calculate current universe size based on star count
     final universeSize = UniverseManager.calculateUniverseSize(existingStars.length);
     final universeCenter = UniverseManager.getUniverseCenter(universeSize);
@@ -278,12 +279,42 @@ class GratitudeStarService {
     final pulseMinScaleV = random.nextDouble() * StarConfig.pulseMinScaleMax;
     // --- End animation property calculations ---
 
+    // Get random color from selected palette preset if no color specified
+    int? finalColorPresetIndex = colorPresetIndex;
+    Color? finalCustomColor = customColor;
+    
+    if (finalColorPresetIndex == null && finalCustomColor == null) {
+      // Use selected palette preset for random color
+      try {
+        final presetId = await StorageService.getSelectedPalettePreset();
+        final preset = PalettePresetConfig.getPresetById(presetId);
+        if (preset != null && preset.colors.isNotEmpty) {
+          // Pick random color from preset
+          final randomColor = preset.colors[random.nextInt(preset.colors.length)];
+          // Check if this color exists in StarColors.palette
+          final starColorsIndex = StarColors.palette.indexOf(randomColor);
+          if (starColorsIndex >= 0) {
+            finalColorPresetIndex = starColorsIndex;
+          } else {
+            // Use as custom color if not in StarColors.palette
+            finalCustomColor = randomColor;
+          }
+        } else {
+          // Fallback to StarColors.palette
+          finalColorPresetIndex = random.nextInt(StarColors.palette.length);
+        }
+      } catch (e) {
+        // Fallback to StarColors.palette on error
+        finalColorPresetIndex = random.nextInt(StarColors.palette.length);
+      }
+    }
+
     return GratitudeStar(
       text: text,
       worldX: worldX,
       worldY: worldY,
-      colorPresetIndex: colorPresetIndex ?? random.nextInt(StarColors.palette.length),
-      customColor: customColor,
+      colorPresetIndex: finalColorPresetIndex ?? 0, // Default to first color if null
+      customColor: finalCustomColor,
       size: 18.0 + random.nextDouble() * 9.0,  // Base size 18.0 (50% larger than 12.0)
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       createdAt: DateTime.now(),

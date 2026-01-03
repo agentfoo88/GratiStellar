@@ -142,28 +142,28 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get closeButton;
 
-  /// Button to optionally choose star color during creation
+  /// Button to optionally choose star colour during creation
   ///
   /// In en, this message translates to:
-  /// **'Choose Star Color'**
+  /// **'Choose Star Colour'**
   String get chooseColorButton;
 
-  /// Button to collapse color picker and use random color
+  /// Button to collapse colour picker and use random colour
   ///
   /// In en, this message translates to:
-  /// **'Use Random Color'**
+  /// **'Use Random Colour'**
   String get useRandomColor;
 
-  /// Button to open advanced color picker
+  /// Button to open advanced colour picker
   ///
   /// In en, this message translates to:
-  /// **'Custom Color'**
+  /// **'Additional Colour options'**
   String get customColorButton;
 
-  /// Checkbox label to set color as default for new stars
+  /// Checkbox label to set colour as default for new stars
   ///
   /// In en, this message translates to:
-  /// **'Set as default color for new stars'**
+  /// **'Set as default colour for new stars'**
   String get setAsDefaultColor;
 
   /// Button to clear the default color preference
@@ -172,16 +172,16 @@ abstract class AppLocalizations {
   /// **'Clear Default'**
   String get clearDefaultColor;
 
-  /// Label for default star color setting
+  /// Label for default star colour setting
   ///
   /// In en, this message translates to:
-  /// **'Default Star Color'**
+  /// **'Default Star Colour'**
   String get defaultStarColor;
 
-  /// Message shown when using default color
+  /// Message shown when using default colour
   ///
   /// In en, this message translates to:
-  /// **'Currently using default color'**
+  /// **'Currently using default colour'**
   String get usingDefaultColor;
 
   /// No description provided for @statsTotal.
@@ -241,7 +241,7 @@ abstract class AppLocalizations {
   /// No description provided for @changeColorButton.
   ///
   /// In en, this message translates to:
-  /// **'Change Color'**
+  /// **'Change Colour'**
   String get changeColorButton;
 
   /// No description provided for @editGratitudeHint.
@@ -373,25 +373,25 @@ abstract class AppLocalizations {
   /// No description provided for @colorPreviewTitle.
   ///
   /// In en, this message translates to:
-  /// **'Color Preview'**
+  /// **'Colour Preview'**
   String get colorPreviewTitle;
 
   /// No description provided for @presetColorsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Preset Colors'**
+  /// **'Preset Colours'**
   String get presetColorsTitle;
 
   /// No description provided for @customColorTitle.
   ///
   /// In en, this message translates to:
-  /// **'Custom Color'**
+  /// **'Custom Colour'**
   String get customColorTitle;
 
   /// No description provided for @hexColorLabel.
   ///
   /// In en, this message translates to:
-  /// **'Hex Color'**
+  /// **'Hex Colour'**
   String get hexColorLabel;
 
   /// No description provided for @hexColorHint.
@@ -675,6 +675,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signed in successfully!'**
   String get signInSuccess;
+
+  /// Error message when sign-in is cancelled due to migration dialog cancellation
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in was cancelled. Please resolve the anonymous data migration and try again.'**
+  String get signInCancelled;
 
   /// Error when email or password is empty
   ///
@@ -1018,10 +1024,10 @@ abstract class AppLocalizations {
   /// **'Z → A'**
   String get sortAlphabeticalZA;
 
-  /// Sort option to display gratitude stars grouped by color
+  /// Sort option to display gratitude stars grouped by colour
   ///
   /// In en, this message translates to:
-  /// **'By Color'**
+  /// **'By Colour'**
   String get sortByColor;
 
   /// Sort option to display gratitude stars grouped by month
@@ -1125,6 +1131,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to submit feedback. Please try again.'**
   String get feedbackError;
+
+  /// Error message when user needs to sign in to submit feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to submit feedback.'**
+  String get feedbackErrorSignIn;
 
   /// Tooltip for restore button
   ///
@@ -1341,6 +1353,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep It'**
   String get keepEmptyGalaxyButton;
+
+  /// Title for dialog when anonymous data is detected during email sign-in
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous Data Found'**
+  String get anonymousDataDetectedTitle;
+
+  /// Message asking if user wants to merge or delete anonymous data when signing in with email
+  ///
+  /// In en, this message translates to:
+  /// **'We found data from an anonymous profile on this device ({starsCount} stars, {galaxiesCount} galaxies). Would you like to merge it with your email account or delete it?'**
+  String anonymousDataDetectedMessage(int starsCount, int galaxiesCount);
+
+  /// Button to merge anonymous data with email account
+  ///
+  /// In en, this message translates to:
+  /// **'Merge Data'**
+  String get mergeAnonymousDataButton;
+
+  /// Button to delete anonymous data
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Data'**
+  String get deleteAnonymousDataButton;
+
+  /// Description of merge option for anonymous data
+  ///
+  /// In en, this message translates to:
+  /// **'Combine anonymous data with your email account (recommended)'**
+  String get mergeAnonymousDataDescription;
+
+  /// Description of delete option for anonymous data
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete anonymous data'**
+  String get deleteAnonymousDataDescription;
 
   /// No description provided for @closeAppHint.
   ///
@@ -2355,6 +2403,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No items selected'**
   String get noItemsSelected;
+
+  /// Title for palette preset selector
+  ///
+  /// In en, this message translates to:
+  /// **'Colour Palette'**
+  String get palettePresetTitle;
+
+  /// Name of warm whites palette preset
+  ///
+  /// In en, this message translates to:
+  /// **'Warm Whites'**
+  String get palettePresetWarmWhites;
+
+  /// Name of realistic star colors palette preset
+  ///
+  /// In en, this message translates to:
+  /// **'Realistic Stars'**
+  String get palettePresetRealisticStars;
+
+  /// Name of cool blues palette preset
+  ///
+  /// In en, this message translates to:
+  /// **'Cool Blues'**
+  String get palettePresetCoolBlues;
+
+  /// Name of vibrant colours palette preset
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrant Colours'**
+  String get palettePresetVibrant;
+
+  /// Name of pastel dreams palette preset
+  ///
+  /// In en, this message translates to:
+  /// **'Pastel Dreams'**
+  String get palettePresetPastelDreams;
+
+  /// Name of spring season
+  ///
+  /// In en, this message translates to:
+  /// **'Spring'**
+  String get seasonSpring;
+
+  /// Name of summer season
+  ///
+  /// In en, this message translates to:
+  /// **'Summer'**
+  String get seasonSummer;
+
+  /// Name of autumn season
+  ///
+  /// In en, this message translates to:
+  /// **'Autumn'**
+  String get seasonAutumn;
+
+  /// Name of winter season
+  ///
+  /// In en, this message translates to:
+  /// **'Winter'**
+  String get seasonWinter;
+
+  /// Title for season drawer
+  ///
+  /// In en, this message translates to:
+  /// **'Season'**
+  String get seasonDrawerTitle;
+
+  /// Button to cycle to next season
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle Season'**
+  String get seasonCycleButton;
+
+  /// Button to return to current season
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get seasonReturnToNow;
+
+  /// Label for season tracking toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Season Tracking'**
+  String get seasonTrackingLabel;
+
+  /// Accessibility label for showing season drawer
+  ///
+  /// In en, this message translates to:
+  /// **'Show season controls'**
+  String get seasonDrawerShow;
+
+  /// Accessibility label for hiding season drawer
+  ///
+  /// In en, this message translates to:
+  /// **'Hide season controls'**
+  String get seasonDrawerHide;
+
+  /// Accessibility hint for cycle season button
+  ///
+  /// In en, this message translates to:
+  /// **'Click to preview next season'**
+  String get seasonCycleHint;
+
+  /// Accessibility hint for return to current time button
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to actual current season'**
+  String get seasonReturnHint;
+
+  /// Button to switch between profiles
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Profile'**
+  String get switchProfile;
+
+  /// Button to create a new anonymous profile
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Profile'**
+  String get createNewProfile;
+
+  /// Button to delete a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Profile'**
+  String get deleteProfile;
+
+  /// Label indicating the currently active profile
+  ///
+  /// In en, this message translates to:
+  /// **'Current Profile'**
+  String get currentProfile;
+
+  /// Label for profile name
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Name'**
+  String get profileName;
+
+  /// Label for number of stars in a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Stars'**
+  String get profileStars;
+
+  /// Label for number of galaxies in a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Galaxies'**
+  String get profileGalaxies;
+
+  /// Title for profile switching dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Profile'**
+  String get switchProfileTitle;
+
+  /// Title for create profile dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Profile'**
+  String get createProfileTitle;
+
+  /// Confirmation message for deleting a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this profile? All data will be permanently deleted.'**
+  String get deleteProfileConfirm;
 }
 
 class _AppLocalizationsDelegate

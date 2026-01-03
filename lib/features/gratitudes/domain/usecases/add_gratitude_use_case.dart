@@ -54,7 +54,7 @@ class AddGratitudeUseCase extends UseCase<GratitudeStar, AddGratitudeParams> {
     }
 
     // Create the new star using the sanitized text
-    final newStar = GratitudeStarService.createStar(
+    final newStar = await GratitudeStarService.createStar(
       sanitizedText,  // ← Use sanitized, not original
       params.screenSize,
       random,

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../../core/accessibility/semantic_helper.dart';
 import '../../core/config/constants.dart';
 import '../../font_scaling.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/onboarding_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/user_profile_manager.dart';
 import '../../services/user_profile_migration_service.dart';
 import '../../core/utils/app_logger.dart';
 import 'consent_screen.dart';
@@ -38,10 +40,14 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
   Future<void> _checkAgeGateStatus() async {
     try {
       final authService = AuthService();
-      final onboardingService = OnboardingService();
       
-      // Check local state first
-      final localAgeGatePassed = await onboardingService.hasPassedAgeGate();
+      // Get UserProfileManager from context
+      final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+      final userId = await userProfileManager.getOrCreateActiveUserId();
+      final onboardingService = OnboardingService(userProfileManager: userProfileManager);
+      
+      // Check local state first (user-scoped)
+      final localAgeGatePassed = await onboardingService.hasPassedAgeGate(userId);
       
       // If user is signed in, check Firebase profile
       if (authService.isSignedIn && authService.hasEmailAccount) {
@@ -63,8 +69,8 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
               if (firebaseAgeGatePassed) {
                 AppLogger.data('✅ Age gate already passed in Firebase, skipping screen');
                 if (!mounted) return;
-                // Mark locally as well
-                await onboardingService.markAgeGatePassed();
+                // Mark locally as well (user-scoped)
+                await onboardingService.markAgeGatePassed(userId);
                 if (!mounted) return;
                 // Capture navigator after async gap
                 final navigator = Navigator.of(context);
@@ -118,8 +124,10 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
 
     if (is13OrOlder) {
       // User is 13+, save and proceed to consent screen
-      final onboardingService = OnboardingService();
-      await onboardingService.markAgeGatePassed();
+      final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+      final userId = await userProfileManager.getOrCreateActiveUserId();
+      final onboardingService = OnboardingService(userProfileManager: userProfileManager);
+      await onboardingService.markAgeGatePassed(userId);
       
       // If user is signed in, save to Firebase
       final authService = AuthService();

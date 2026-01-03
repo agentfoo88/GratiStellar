@@ -1,4 +1,4 @@
-
+import 'core/config/season_config.dart';
 
 /// Metadata for a galaxy (collection of gratitude stars)
 class GalaxyMetadata {
@@ -10,6 +10,12 @@ class GalaxyMetadata {
   final DateTime? deletedAt;
   final int starCount; // Cached count
   final DateTime? lastViewedAt;
+  
+  // Season tracking fields
+  final bool seasonTrackingEnabled;
+  final Season? currentSeason;
+  final bool isManualOverride;
+  final Hemisphere hemisphere;
 
   GalaxyMetadata({
     required this.id,
@@ -19,6 +25,10 @@ class GalaxyMetadata {
     this.deletedAt,
     this.starCount = 0,
     this.lastViewedAt,
+    this.seasonTrackingEnabled = false,
+    this.currentSeason,
+    this.isManualOverride = false,
+    this.hemisphere = Hemisphere.north,
   });
 
   /// Create a new galaxy with timestamp ID
@@ -41,6 +51,10 @@ class GalaxyMetadata {
     DateTime? deletedAt,
     int? starCount,
     DateTime? lastViewedAt,
+    bool? seasonTrackingEnabled,
+    Season? currentSeason,
+    bool? isManualOverride,
+    Hemisphere? hemisphere,
   }) {
     return GalaxyMetadata(
       id: id,
@@ -50,6 +64,10 @@ class GalaxyMetadata {
       deletedAt: deletedAt ?? this.deletedAt,
       starCount: starCount ?? this.starCount,
       lastViewedAt: lastViewedAt ?? this.lastViewedAt,
+      seasonTrackingEnabled: seasonTrackingEnabled ?? this.seasonTrackingEnabled,
+      currentSeason: currentSeason ?? this.currentSeason,
+      isManualOverride: isManualOverride ?? this.isManualOverride,
+      hemisphere: hemisphere ?? this.hemisphere,
     );
   }
 
@@ -62,10 +80,40 @@ class GalaxyMetadata {
       'deletedAt': deletedAt?.millisecondsSinceEpoch,
       'starCount': starCount,
       'lastViewedAt': lastViewedAt?.millisecondsSinceEpoch,
+      'seasonTrackingEnabled': seasonTrackingEnabled,
+      'currentSeason': currentSeason?.name,
+      'isManualOverride': isManualOverride,
+      'hemisphere': hemisphere.name,
     };
   }
 
   factory GalaxyMetadata.fromJson(Map<String, dynamic> json) {
+    // Parse season with backward compatibility
+    Season? parseSeason(String? seasonName) {
+      if (seasonName == null) return null;
+      try {
+        return Season.values.firstWhere(
+          (s) => s.name == seasonName,
+          orElse: () => Season.winter, // Fallback
+        );
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Parse hemisphere with backward compatibility
+    Hemisphere parseHemisphere(String? hemisphereName) {
+      if (hemisphereName == null) return Hemisphere.north;
+      try {
+        return Hemisphere.values.firstWhere(
+          (h) => h.name == hemisphereName,
+          orElse: () => Hemisphere.north, // Default to north
+        );
+      } catch (e) {
+        return Hemisphere.north;
+      }
+    }
+
     return GalaxyMetadata(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -78,6 +126,10 @@ class GalaxyMetadata {
       lastViewedAt: json['lastViewedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['lastViewedAt'])
           : null,
+      seasonTrackingEnabled: json['seasonTrackingEnabled'] ?? false,
+      currentSeason: parseSeason(json['currentSeason'] as String?),
+      isManualOverride: json['isManualOverride'] ?? false,
+      hemisphere: parseHemisphere(json['hemisphere'] as String?),
     );
   }
 

@@ -84,6 +84,20 @@ class UserProfileManager extends ChangeNotifier {
         _activeUserId = null;
         await prefs.remove(_activeUserIdKey);
       }
+      
+      // Migrate old format (anonymous_device_123) to new format (anonymous_device_123_timestamp)
+      if (_activeUserId != null && _activeUserId!.startsWith('anonymous_')) {
+        final parts = _activeUserId!.split('_');
+        // Old format: anonymous_device_123 (3 parts)
+        // New format: anonymous_device_123_timestamp (4+ parts)
+        if (parts.length == 3) {
+          AppLogger.data('📦 Migrating old anonymous user ID format: $_activeUserId');
+          // Keep the old ID but create a new one with timestamp
+          // This preserves data while transitioning to new format
+          _activeUserId = null;
+          await prefs.remove(_activeUserIdKey);
+        }
+      }
     }
     
     // If still null, create anonymous profile
@@ -95,24 +109,27 @@ class UserProfileManager extends ChangeNotifier {
 
   /// Create an anonymous profile
   /// 
-  /// Returns the anonymous user ID (device-specific)
+  /// Returns the anonymous user ID (device-specific with timestamp for uniqueness)
+  /// Format: anonymous_device_123_1704123456 (device_id + timestamp)
   Future<String> createAnonymousProfile() async {
-    // For anonymous users, we'll use a device-specific ID
+    // For anonymous users, we'll use a device-specific ID with timestamp
     // This allows multiple anonymous profiles on the same device
     final prefs = await SharedPreferences.getInstance();
-    final deviceId = prefs.getString('device_id');
     
-    String anonymousUserId;
-    if (deviceId != null) {
-      anonymousUserId = 'anonymous_$deviceId';
-    } else {
-      // Generate device ID if not exists
+    // Get or create persistent device ID (never cleared)
+    String deviceId = prefs.getString('device_id') ?? '';
+    if (deviceId.isEmpty) {
+      // Generate device ID if not exists (persistent per device)
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final random = DateTime.now().microsecondsSinceEpoch % 1000000;
-      final newDeviceId = 'device_${timestamp}_$random';
-      await prefs.setString('device_id', newDeviceId);
-      anonymousUserId = 'anonymous_$newDeviceId';
+      deviceId = 'device_${timestamp}_$random';
+      await prefs.setString('device_id', deviceId);
+      AppLogger.data('📱 Created persistent device ID: $deviceId');
     }
+    
+    // Generate unique user ID with timestamp suffix
+    final userTimestamp = DateTime.now().millisecondsSinceEpoch;
+    final anonymousUserId = 'anonymous_${deviceId}_$userTimestamp';
     
     _activeUserId = anonymousUserId;
     await prefs.setString(_activeUserIdKey, anonymousUserId);

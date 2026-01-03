@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'background.dart';
@@ -8,15 +10,32 @@ import 'starfield.dart';
 // ========================================
 
 /// Painter that uses cached background image instead of drawing stars
+/// Supports season-based gradients when season tracking is enabled
 class CachedBackgroundPainter extends CustomPainter {
   final ui.Image? cachedImage;  // Changed from Image to ui.Image
+  final List<Color>? seasonGradientColors; // Optional season gradient colors (5 stops)
 
-  CachedBackgroundPainter(this.cachedImage);
+  CachedBackgroundPainter(this.cachedImage, {this.seasonGradientColors});
 
   @override
   void paint(Canvas canvas, Size size) {
+    // #region agent log
+    _writeDebugLog('cached_painters.dart:19', 'CachedBackgroundPainter.paint() called', {
+      'hasCachedImage': cachedImage != null,
+      'hasSeasonGradient': seasonGradientColors != null,
+      'seasonGradientLength': seasonGradientColors?.length ?? 0,
+      'size': '${size.width}x${size.height}',
+    }, 'A');
+    // #endregion
+
+    // ALWAYS draw cached image first (contains gradient + background stars)
     if (cachedImage != null) {
-      // Draw cached image - single GPU call!
+      // #region agent log
+      _writeDebugLog('cached_painters.dart:28', 'Drawing cached background image', {
+        'imageSize': '${cachedImage!.width}x${cachedImage!.height}',
+        'hasSeasonGradient': seasonGradientColors != null,
+      }, 'A');
+      // #endregion
       final paint = Paint()..filterQuality = FilterQuality.medium;
       canvas.drawImageRect(
         cachedImage!,
@@ -26,6 +45,9 @@ class CachedBackgroundPainter extends CustomPainter {
       );
     } else {
       // Fallback: solid gradient if cache not ready
+      // #region agent log
+      _writeDebugLog('cached_painters.dart:40', 'No cached image - using fallback gradient', {}, 'A');
+      // #endregion
       final gradient = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -40,10 +62,63 @@ class CachedBackgroundPainter extends CustomPainter {
         ..shader = gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height));
       canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
     }
+
+    // THEN overlay season gradient using blend mode that preserves star brightness
+    if (seasonGradientColors != null && seasonGradientColors!.length == 4) {
+      // #region agent log
+      _writeDebugLog('cached_painters.dart:58', 'Overlaying season gradient with color blend', {
+        'blendMode': 'color',
+        'opacity': 0.33,
+      }, 'B');
+      // #endregion
+      // Use BlendMode.color to preserve luminance (brightness) of stars
+      // This tints the gradient while keeping stars visible
+      final seasonGradient = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: seasonGradientColors!,
+        stops: const [0.0, 0.3, 0.7, 1.0], // 4 stops: top, 30%, 70%, bottom
+      );
+      final seasonPaint = Paint()
+        ..shader = seasonGradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+        ..color = Colors.white.withValues(alpha: 0.33) // Reduced opacity
+        ..blendMode = BlendMode.color; // Preserves brightness/luminance
+      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), seasonPaint);
+    }
+  }
+
+  /// Write debug log to file (for debug mode instrumentation)
+  void _writeDebugLog(String location, String message, Map<String, dynamic> data, String hypothesisId) {
+    try {
+      final logFile = File('.cursor/debug.log');
+      logFile.parent.createSync(recursive: true);
+      
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final logEntry = {
+        'id': 'log_${timestamp}_$hypothesisId',
+        'timestamp': timestamp,
+        'location': location,
+        'message': message,
+        'data': data,
+        'sessionId': 'debug-session',
+        'runId': 'test-stars',
+        'hypothesisId': hypothesisId,
+      };
+      final jsonLine = jsonEncode(logEntry);
+      logFile.writeAsStringSync(
+        '${logFile.existsSync() ? logFile.readAsStringSync() : ""}$jsonLine\n',
+        mode: FileMode.append,
+      );
+    } catch (e) {
+      // Silently fail - don't break app if logging fails
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CachedBackgroundPainter oldDelegate) {
+    // Repaint if season gradient colors changed
+    return seasonGradientColors != oldDelegate.seasonGradientColors;
+  }
 }
 
 /// Painter for cached Van Gogh base + animated twinklers

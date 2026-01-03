@@ -58,8 +58,10 @@ class ExportBackupUseCase {
   }) async {
     try {
       // Prepare preferences
+      final selectedPalettePreset = await StorageService.getSelectedPalettePreset();
       final preferences = {
         'fontScale': fontScale,
+        'selectedPalettePreset': selectedPalettePreset,
       };
 
       // Create backup data

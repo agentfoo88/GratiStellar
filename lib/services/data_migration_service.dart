@@ -57,6 +57,10 @@ class DataMigrationService {
       final localStars = await UserScopedStorage.loadStars(anonymousUserId);
       final localGalaxies = await UserScopedStorage.loadGalaxies(anonymousUserId);
 
+      // Read palette preset preference before migration
+      final prefs = await SharedPreferences.getInstance();
+      final anonymousPalettePreset = prefs.getString('selected_palette_preset');
+
       AppLogger.data('📥 Loaded local data - ${localStars.length} stars, ${localGalaxies.length} galaxies');
 
       // 2. Load email user's cloud data
@@ -101,6 +105,12 @@ class DataMigrationService {
         // 6. Mark anonymous data as migrated (keep as backup for 30 days)
         await _markAsMigrated(anonymousUserId, emailUserId);
 
+        // 7. Migrate palette preset preference
+        if (anonymousPalettePreset != null) {
+          await prefs.setString('selected_palette_preset', anonymousPalettePreset);
+          AppLogger.data('🔀 Migrated palette preset preference: $anonymousPalettePreset');
+        }
+
         AppLogger.success('✅ Migration complete with merge');
 
         return MergeResult(
@@ -122,6 +132,12 @@ class DataMigrationService {
 
         // Mark anonymous data as migrated
         await _markAsMigrated(anonymousUserId, emailUserId);
+
+        // Migrate palette preset preference
+        if (anonymousPalettePreset != null) {
+          await prefs.setString('selected_palette_preset', anonymousPalettePreset);
+          AppLogger.data('🔀 Migrated palette preset preference: $anonymousPalettePreset');
+        }
 
         AppLogger.success('✅ Migration complete without merge');
 

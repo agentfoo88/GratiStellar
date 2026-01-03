@@ -16,6 +16,8 @@ import '../core/utils/app_logger.dart';
 import '../core/error/error_context.dart';
 import '../core/error/error_handler.dart';
 import '../widgets/password_reset_dialog.dart';
+import '../services/data_migration_service.dart';
+import '../features/gratitudes/data/datasources/galaxy_remote_data_source.dart';
 import 'gratitude_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -73,7 +75,9 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  Future<void> _triggerCloudSync() async {
+  /// Trigger cloud sync after sign-in
+  /// Returns true if sync completed successfully, false if cancelled or failed
+  Future<bool> _triggerCloudSync() async {
     // #region agent log
     final currentUser = _authService.currentUser;
     AppLogger.sync('🔄 DEBUG: _triggerCloudSync started - user=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
@@ -84,18 +88,76 @@ class _SignInScreenState extends State<SignInScreen> {
 
     if (currentUserId == null) {
       AppLogger.sync('⚠️ No user signed in, skipping sync');
-      return;
+      return false;
     }
 
     try {
       if (!mounted) {
         AppLogger.sync('⚠️ Widget not mounted, skipping sync');
-        return;
+        return false;
       }
 
       final galaxyProvider = context.read<GalaxyProvider>();
 
-      // STEP 0: Check for empty default galaxies BEFORE syncing
+      // STEP 0: Check for anonymous data and prompt for migration BEFORE syncing
+      final anonymousUserId = await _checkForAnonymousData();
+      if (anonymousUserId != null && mounted) {
+        AppLogger.auth('🔍 Found anonymous data from user: $anonymousUserId');
+        final migrationChoice = await _showAnonymousDataMigrationDialog(anonymousUserId);
+        
+        if (migrationChoice == true) {
+          // User chose to merge
+          AppLogger.auth('🔀 User chose to merge anonymous data');
+          try {
+            final migrationService = DataMigrationService(
+              firestoreService: firestoreService,
+              galaxyRemoteDataSource: GalaxyRemoteDataSource(
+                authService: _authService,
+              ),
+            );
+            
+            final result = await migrationService.migrateAnonymousToEmail(
+              anonymousUserId,
+              currentUserId,
+            );
+            
+            AppLogger.success(
+              '✅ Migration complete - merged: ${result.merged}, '
+              'local: ${result.localStarsCount} stars/${result.localGalaxiesCount} galaxies, '
+              'cloud: ${result.cloudStarsCount} stars/${result.cloudGalaxiesCount} galaxies',
+            );
+            
+            // Reload galaxies after migration (they're now in email user's storage)
+            await galaxyProvider.loadGalaxies();
+            
+            // Reload gratitudes after migration
+            if (mounted) {
+              final gratitudeProvider = context.read<GratitudeProvider>();
+              await gratitudeProvider.loadGratitudes();
+            }
+          } catch (e, stack) {
+            AppLogger.error('❌ Migration failed: $e');
+            AppLogger.error('Stack trace: $stack');
+            // Continue with sync even if migration fails
+          }
+        } else if (migrationChoice == false) {
+          // User chose to delete
+          AppLogger.auth('🗑️ User chose to delete anonymous data');
+          try {
+            await UserScopedStorage.clearUserData(anonymousUserId);
+            AppLogger.success('✅ Deleted anonymous data for user: $anonymousUserId');
+          } catch (e) {
+            AppLogger.error('⚠️ Error deleting anonymous data: $e');
+            // Continue with sync even if deletion fails
+          }
+        } else {
+          // User cancelled - abort sign-in
+          AppLogger.auth('❌ User cancelled migration, aborting sign-in');
+          return false;
+        }
+      }
+
+      // STEP 1: Check for empty default galaxies BEFORE syncing
       // Load local galaxies first to check for empty "My First Galaxy"
       await galaxyProvider.loadGalaxies();
       final localGalaxiesBeforeSync = galaxyProvider.galaxies;
@@ -186,8 +248,8 @@ class _SignInScreenState extends State<SignInScreen> {
         }
       }
 
-      // STEP 1: Sync galaxies FROM cloud first (so stars can reference correct galaxy IDs)
-      AppLogger.sync('☁️ STEP 1: Syncing galaxies FROM cloud...');
+      // STEP 2: Sync galaxies FROM cloud first (so stars can reference correct galaxy IDs)
+      AppLogger.sync('☁️ STEP 2: Syncing galaxies FROM cloud...');
       bool mergeDetected = false;
       try {
         // Check for merge scenario: if local galaxies exist AND cloud galaxies exist
@@ -215,8 +277,8 @@ class _SignInScreenState extends State<SignInScreen> {
         }
       }
 
-      // STEP 2: Sync stars (now that galaxies are synced)
-      AppLogger.sync('⭐ STEP 2: Syncing stars...');
+      // STEP 3: Sync stars (now that galaxies are synced)
+      AppLogger.sync('⭐ STEP 3: Syncing stars...');
       final mergedFromUid = await _checkForMergedAccount();
 
       if (mergedFromUid != null) {
@@ -253,8 +315,8 @@ class _SignInScreenState extends State<SignInScreen> {
         }
       }
 
-      // STEP 3: Sync galaxies TO cloud (upload any local-only galaxies)
-      AppLogger.sync('☁️ STEP 3: Syncing galaxies TO cloud...');
+      // STEP 4: Sync galaxies TO cloud (upload any local-only galaxies)
+      AppLogger.sync('☁️ STEP 4: Syncing galaxies TO cloud...');
       try {
         await galaxyProvider.syncToCloud();
         AppLogger.sync('✅ All galaxies synced to cloud');
@@ -264,8 +326,8 @@ class _SignInScreenState extends State<SignInScreen> {
         // Continue anyway - stars are safe
       }
 
-      // STEP 4: Reconcile star counts
-      AppLogger.sync('🔍 STEP 4: Reconciling star counts...');
+      // STEP 5: Reconcile star counts
+      AppLogger.sync('🔍 STEP 5: Reconciling star counts...');
       try {
         // Recalculate all star counts after sync
         // This will be done automatically by galaxyProvider after syncFromCloud
@@ -277,14 +339,14 @@ class _SignInScreenState extends State<SignInScreen> {
         // Non-critical, continue
       }
 
-      // STEP 5: Show merge warning if merge detected
+      // STEP 6: Show merge warning if merge detected
       if (mergeDetected && mounted) {
         _showMergeWarningDialog();
       }
 
-      AppLogger.sync('✅ Cloud sync complete (galaxies → stars → galaxies → reconcile)');
+      AppLogger.sync('✅ Cloud sync complete (migration → galaxies → stars → galaxies → reconcile)');
       
-      // STEP 6: Reload gratitudes to refresh UI with synced stars
+      // STEP 7: Reload gratitudes to refresh UI with synced stars
       if (mounted) {
         try {
           final gratitudeProvider = context.read<GratitudeProvider>();
@@ -299,10 +361,13 @@ class _SignInScreenState extends State<SignInScreen> {
           // Continue anyway - stars are saved, will load on next app launch
         }
       }
+      
+      return true;
     } catch (e) {
       AppLogger.sync('⚠️ Cloud sync failed: $e');
       // Don't show error to user - local data is still safe
       // Sync will retry on next app launch or galaxy switch
+      return false;
     }
   }
 
@@ -418,6 +483,42 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
+  /// Show dialog asking user what to do with anonymous data
+  /// Returns true if merge, false if delete, null if cancelled
+  Future<bool?> _showAnonymousDataMigrationDialog(String anonymousUserId) async {
+    if (!mounted) return null;
+
+    try {
+      // Load data counts for display
+      final stars = await UserScopedStorage.loadStars(anonymousUserId);
+      final galaxies = await UserScopedStorage.loadGalaxies(anonymousUserId);
+      final starsCount = stars.where((s) => !s.deleted).length;
+      final galaxiesCount = galaxies.where((g) => !g.deleted).length;
+
+      if (starsCount == 0 && galaxiesCount == 0) {
+        // No data to migrate
+        return null;
+      }
+
+      if (!mounted) return null;
+      
+      final l10n = AppLocalizations.of(context)!;
+
+      return showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => _AnonymousDataMigrationDialog(
+          l10n: l10n,
+          starsCount: starsCount,
+          galaxiesCount: galaxiesCount,
+        ),
+      );
+    } catch (e) {
+      AppLogger.error('⚠️ Error showing migration dialog: $e');
+      return null;
+    }
+  }
+
   Future<String?> _checkForMergedAccount() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -431,6 +532,67 @@ class _SignInScreenState extends State<SignInScreen> {
       return userDoc.data()?['mergedFromAnonymous'] as String?;
     } catch (e) {
       AppLogger.auth('⚠️ Error checking for merged account: $e');
+      return null;
+    }
+  }
+
+  /// Check for device-based anonymous data that needs migration
+  /// Returns anonymous user ID with data, or null if none found or already migrated
+  Future<String?> _checkForAnonymousData() async {
+    try {
+      final emailUser = _authService.currentUser;
+      if (emailUser == null) return null;
+
+      // Get all local user IDs
+      final allUserIds = await UserScopedStorage.getLocalUserIds();
+      
+      // Filter for anonymous users
+      final anonymousUserIds = allUserIds.where((id) => id.startsWith('anonymous_')).toList();
+      
+      if (anonymousUserIds.isEmpty) {
+        AppLogger.auth('🔍 No anonymous profiles found');
+        return null;
+      }
+
+      // Check each anonymous user for data and migration status
+      final migrationService = DataMigrationService(
+        firestoreService: FirestoreService(),
+        galaxyRemoteDataSource: GalaxyRemoteDataSource(
+          authService: _authService,
+        ),
+      );
+
+      String? bestCandidate;
+      int bestDataCount = 0;
+
+      for (final anonymousUserId in anonymousUserIds) {
+        // Check if already migrated
+        final migratedTo = await migrationService.getMigratedTo(anonymousUserId);
+        if (migratedTo != null) {
+          AppLogger.auth('🔍 Anonymous user $anonymousUserId already migrated to $migratedTo');
+          continue;
+        }
+
+        // Check if user has data
+        final stars = await UserScopedStorage.loadStars(anonymousUserId);
+        final galaxies = await UserScopedStorage.loadGalaxies(anonymousUserId);
+        final activeStars = stars.where((s) => !s.deleted).length;
+        final activeGalaxies = galaxies.where((g) => !g.deleted).length;
+        final dataCount = activeStars + activeGalaxies;
+
+        if (dataCount > 0) {
+          AppLogger.auth('🔍 Found anonymous user $anonymousUserId with $activeStars stars, $activeGalaxies galaxies');
+          // Prefer the one with most data
+          if (dataCount > bestDataCount) {
+            bestCandidate = anonymousUserId;
+            bestDataCount = dataCount;
+          }
+        }
+      }
+
+      return bestCandidate;
+    } catch (e) {
+      AppLogger.error('⚠️ Error checking for anonymous data: $e');
       return null;
     }
   }
@@ -555,10 +717,20 @@ class _SignInScreenState extends State<SignInScreen> {
         }
 
         // Trigger sync BEFORE navigation - stars AND galaxies loaded fresh inside sync function
-        await _triggerCloudSync();
+        final syncSuccess = await _triggerCloudSync();
 
         if (mounted) {
           Navigator.of(context).pop(); // Close loading dialog
+          
+          if (!syncSuccess) {
+            // Sync was cancelled or failed - sign out and show error
+            await _authService.signOut();
+            setState(() {
+              _isLoading = false;
+              _errorMessage = l10n.signInCancelled;
+            });
+            return;
+          }
           
           // Navigate back to GratitudeScreen - use pushAndRemoveUntil to ensure clean navigation
           // This clears the navigation stack and ensures we're on the main screen
@@ -627,10 +799,20 @@ class _SignInScreenState extends State<SignInScreen> {
         }
 
         // Trigger sync BEFORE navigation - stars AND galaxies loaded fresh inside sync function
-        await _triggerCloudSync();
+        final syncSuccess = await _triggerCloudSync();
 
         if (mounted) {
           Navigator.of(context).pop(); // Close loading dialog
+          
+          if (!syncSuccess) {
+            // Sync was cancelled or failed - sign out and show error
+            await _authService.signOut();
+            setState(() {
+              _isLoading = false;
+              _errorMessage = l10n.signInCancelled;
+            });
+            return;
+          }
           
           // Navigate back to GratitudeScreen - use pushAndRemoveUntil to ensure clean navigation
           // This clears the navigation stack and ensures we're on the main screen
@@ -1017,6 +1199,164 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Dialog for choosing what to do with anonymous data
+class _AnonymousDataMigrationDialog extends StatefulWidget {
+  final AppLocalizations l10n;
+  final int starsCount;
+  final int galaxiesCount;
+
+  const _AnonymousDataMigrationDialog({
+    required this.l10n,
+    required this.starsCount,
+    required this.galaxiesCount,
+  });
+
+  @override
+  State<_AnonymousDataMigrationDialog> createState() => _AnonymousDataMigrationDialogState();
+}
+
+class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDialog> {
+  bool? _selectedChoice;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 500, minWidth: 300),
+        padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
+        decoration: BoxDecoration(
+          color: Color(0xFF1A2238).withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 20,
+              spreadRadius: 5,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.account_circle_outlined,
+              color: Color(0xFFFFE135).withValues(alpha: 0.8),
+              size: FontScaling.getResponsiveIconSize(context, 48),
+            ),
+            SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+            Text(
+              widget.l10n.anonymousDataDetectedTitle,
+              style: FontScaling.getHeadingMedium(context).copyWith(
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+            Text(
+              widget.l10n.anonymousDataDetectedMessage(widget.starsCount, widget.galaxiesCount),
+              style: FontScaling.getBodySmall(context).copyWith(
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
+            // Radio buttons for merge/delete
+            RadioGroup<bool>(
+              groupValue: _selectedChoice,
+              onChanged: (value) {
+                setState(() {
+                  _selectedChoice = value;
+                });
+              },
+              child: Column(
+                children: [
+                  RadioListTile<bool>(
+                    title: Text(
+                      widget.l10n.mergeAnonymousDataButton,
+                      style: FontScaling.getBodyMedium(context).copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                    subtitle: Text(
+                      widget.l10n.mergeAnonymousDataDescription,
+                      style: FontScaling.getBodySmall(context).copyWith(
+                        color: Colors.white.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    value: true,
+                    activeColor: Color(0xFFFFE135),
+                  ),
+                  RadioListTile<bool>(
+                    title: Text(
+                      widget.l10n.deleteAnonymousDataButton,
+                      style: FontScaling.getBodyMedium(context).copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                    subtitle: Text(
+                      widget.l10n.deleteAnonymousDataDescription,
+                      style: FontScaling.getBodySmall(context).copyWith(
+                        color: Colors.white.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    value: false,
+                    activeColor: Color(0xFFFFE135),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(null),
+                  child: Text(
+                    widget.l10n.cancel,
+                    style: FontScaling.getButtonText(context).copyWith(
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: _selectedChoice == null
+                      ? null
+                      : () => Navigator.of(context).pop(_selectedChoice),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFFFE135),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 20),
+                      vertical: FontScaling.getResponsiveSpacing(context, 12),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: Text(
+                    _selectedChoice == true
+                        ? widget.l10n.mergeAnonymousDataButton
+                        : _selectedChoice == false
+                            ? widget.l10n.deleteAnonymousDataButton
+                            : widget.l10n.cancel,
+                    style: FontScaling.getButtonText(context).copyWith(
+                      color: Color(0xFF1A2238),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

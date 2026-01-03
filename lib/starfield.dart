@@ -36,7 +36,7 @@ class SimpleNoise {
 // Configuration for Van Gogh background stars
 class VanGoghConfig {
   // Star Generation
-  static const int starCount = 12000;
+  static const int starCount = 24000;
   static const double parallaxFactor = 0.1;
 
   // Density-based generation (instead of fixed count)

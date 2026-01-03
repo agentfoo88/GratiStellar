@@ -22,15 +22,20 @@ class FeedbackService {
       // #endregion
 
       final user = _auth.currentUser;
+      // Require authentication (even anonymous) for Firestore security rules
       if (user == null) {
         // #region agent log
-        AppLogger.error('📤 DEBUG: No user signed in for feedback submission');
+        AppLogger.error('📤 DEBUG: No user authenticated for feedback submission');
         // #endregion
-        throw Exception('No user signed in');
+        throw Exception('Please sign in to submit feedback');
       }
 
+      final userId = user.uid;
+      final userEmail = user.email;
+      final displayName = user.displayName;
+
       // #region agent log
-      AppLogger.info('📤 DEBUG: User authenticated - uid=${user.uid}, email=${user.email}');
+      AppLogger.info('📤 DEBUG: Submitting feedback - userId=$userId, isAnonymous=${user.isAnonymous}, hasEmail=${userEmail != null}');
       // #endregion
 
       // Get app version
@@ -48,9 +53,9 @@ class FeedbackService {
       };
 
       final feedback = FeedbackItem(
-        userId: user.uid,
-        userEmail: user.email,
-        displayName: user.displayName,
+        userId: userId,
+        userEmail: userEmail,
+        displayName: displayName,
         type: type,
         message: message.trim(),
         contactEmail: contactEmail?.trim(),

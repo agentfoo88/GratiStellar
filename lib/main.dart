@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -20,7 +19,6 @@ import 'features/gratitudes/presentation/state/gratitude_provider.dart';
 import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
-import 'screens/gratitude_screen.dart';
 import 'screens/onboarding/age_gate_screen.dart';
 import 'screens/onboarding/enhanced_splash_screen.dart';
 import 'services/auth_service.dart';
@@ -189,18 +187,30 @@ class GratiStellarApp extends StatelessWidget {
             }
 
             // Initialize galaxy system ONCE, then load gratitudes
-            if (!galaxyProvider.isLoading && galaxyProvider.activeGalaxyId == null) {
+            // Check if initialization is needed (activeGalaxyId is null)
+            if (galaxyProvider.activeGalaxyId == null) {
               // First time - initialize galaxies
+              // Use Future.microtask to avoid blocking the build
               Future.microtask(() async {
-                await galaxyProvider.initialize();
-                // After galaxies are ready, load gratitudes
-                await gratitudeProvider!.loadGratitudes();
+                try {
+                  await galaxyProvider.initialize();
+                  // After galaxies are ready, load gratitudes
+                  if (gratitudeProvider != null) {
+                    await gratitudeProvider.loadGratitudes();
+                  }
+                } catch (e) {
+                  AppLogger.error('❌ Error during galaxy initialization: $e');
+                }
               });
             } else if (galaxyProvider.activeGalaxyId != null &&
                 gratitudeProvider.gratitudeStars.isEmpty &&
                 !gratitudeProvider.isLoading) {
               // Galaxy is ready but gratitudes not loaded yet
-              Future.microtask(() => gratitudeProvider!.loadGratitudes());
+              Future.microtask(() {
+                if (gratitudeProvider != null) {
+                  gratitudeProvider.loadGratitudes();
+                }
+              });
             }
 
             return gratitudeProvider;
@@ -362,16 +372,6 @@ class _SplashWrapperState extends State<_SplashWrapper> {
     );
   }
 
-  /// Check if Firebase is ready
-  bool _isFirebaseReady() {
-    try {
-      Firebase.app();
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (!_splashComplete) {
@@ -390,83 +390,26 @@ class _SplashWrapperState extends State<_SplashWrapper> {
     }
 
     // After splash, show the appropriate screen based on onboarding/auth state
-    return FutureBuilder<bool>(
-      future: OnboardingService().isOnboardingComplete(),
-      builder: (context, onboardingSnapshot) {
-        // Show loading while checking onboarding status
-        if (onboardingSnapshot.connectionState == ConnectionState.waiting) {
+    // Get UserProfileManager from context
+    final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+    
+    return FutureBuilder<Widget>(
+      future: OnboardingService(userProfileManager: userProfileManager).getInitialScreen(),
+      builder: (context, snapshot) {
+        // Show loading while determining initial screen
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingScreen();
         }
 
-        // Handle errors in onboarding check
-        if (onboardingSnapshot.hasError) {
-          AppLogger.error('Error checking onboarding status: ${onboardingSnapshot.error}');
+        // Handle errors in initial screen determination
+        if (snapshot.hasError) {
+          AppLogger.error('Error determining initial screen: ${snapshot.error}');
           // On error, navigate to age gate to restart onboarding
           return const AgeGateScreen();
         }
 
-        final onboardingComplete = onboardingSnapshot.data ?? false;
-
-        if (!onboardingComplete) {
-          // First time user - start onboarding flow with age gate
-          return const AgeGateScreen();
-        }
-
-        // Onboarding complete - use auth state listener
-        // Check if Firebase is ready before accessing auth
-        if (!_isFirebaseReady()) {
-          AppLogger.warning('Firebase not ready, showing age gate as fallback');
-          return const AgeGateScreen();
-        }
-
-        // Wrap in try-catch to handle Firebase initialization issues
-        try {
-          return StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
-            builder: (context, authSnapshot) {
-              // Show loading while checking auth state
-              if (authSnapshot.connectionState == ConnectionState.waiting) {
-                return _buildLoadingScreen();
-              }
-
-              // Handle errors in auth stream
-              if (authSnapshot.hasError) {
-                AppLogger.error('Error in auth state stream: ${authSnapshot.error}');
-                // On error, restart onboarding as safe fallback
-                Future.microtask(() async {
-                  try {
-                    await OnboardingService().resetOnboarding();
-                  } catch (e) {
-                    AppLogger.error('Error resetting onboarding: $e');
-                  }
-                });
-                return const AgeGateScreen();
-              }
-
-              // If authenticated, show main app
-              if (authSnapshot.hasData) {
-                return GratitudeScreen();
-              }
-
-              // Edge case: onboarding complete but no user
-              // This shouldn't happen, but if it does, restart onboarding
-              AppLogger.warning('Onboarding complete but no user - restarting onboarding');
-              Future.microtask(() async {
-                try {
-                  await OnboardingService().resetOnboarding();
-                } catch (e) {
-                  AppLogger.error('Error resetting onboarding: $e');
-                }
-              });
-              return const AgeGateScreen();
-            },
-          );
-        } catch (e, stack) {
-          AppLogger.error('Error accessing Firebase Auth: $e');
-          CrashlyticsService().recordError(e, stack, reason: 'Firebase Auth access error');
-          // Fallback to age gate if Firebase Auth fails
-          return const AgeGateScreen();
-        }
+        // Return the determined screen (GratitudeScreen, AgeGateScreen, or ConsentScreen)
+        return snapshot.data ?? const AgeGateScreen();
       },
     );
   }

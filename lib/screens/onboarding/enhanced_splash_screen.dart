@@ -9,9 +9,6 @@ import '../../core/accessibility/semantic_helper.dart';
 import '../../core/config/app_colors.dart';
 import '../../font_scaling.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/onboarding_service.dart';
-import 'age_gate_screen.dart';
-import 'consent_screen.dart';
 
 /// Display mode for the enhanced splash screen
 enum SplashDisplayMode {
@@ -33,8 +30,8 @@ enum SplashDisplayMode {
 class EnhancedSplashScreen extends StatefulWidget {
   final SplashDisplayMode displayMode;
 
-  /// Optional callback called when splash completes (timer expires or tap)
-  /// If null, uses default navigation logic for onboarding mode
+  /// Callback called when splash completes (timer expires or tap)
+  /// Required for onboarding mode; optional for about mode (which just pops)
   final VoidCallback? onComplete;
 
   const EnhancedSplashScreen({
@@ -70,8 +67,6 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
 
   // Navigation flag to prevent double-navigation
   bool _isNavigating = false;
-
-  final OnboardingService _onboardingService = OnboardingService();
 
   @override
   void initState() {
@@ -179,37 +174,9 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
     if (_isNavigating) return;
     _isNavigating = true;
 
-    if (widget.onComplete != null) {
-      // Use provided callback (for regular app launches)
-      widget.onComplete!();
-    } else {
-      // Default behavior: navigate based on onboarding state
-      _navigateNext();
-    }
-  }
-
-  /// Navigate to next screen based on onboarding state
-  Future<void> _navigateNext() async {
-    if (_isNavigating) return;
-    _isNavigating = true;
-
-    final ageGatePassed = await _onboardingService.hasPassedAgeGate();
-
-    if (!mounted) return;
-
-    if (ageGatePassed) {
-      // Age gate already passed, go to consent screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ConsentScreen()),
-      );
-    } else {
-      // First time, show age gate
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AgeGateScreen()),
-      );
-    }
+    // Call the provided callback (required for onboarding mode)
+    // For about mode, this is handled by _handleTap() which just pops
+    widget.onComplete?.call();
   }
 
   @override

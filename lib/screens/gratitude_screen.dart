@@ -25,6 +25,7 @@ import '../features/gratitudes/presentation/widgets/loading_state.dart';
 import '../features/gratitudes/presentation/widgets/stats_card.dart';
 import '../features/gratitudes/presentation/widgets/sync_status_banner.dart';
 import '../features/gratitudes/presentation/widgets/sign_in_prompt_banner.dart';
+import '../features/gratitudes/presentation/widgets/season_drawer.dart';
 import '../features/gratitudes/presentation/widgets/visual_layers_stack.dart';
 import '../font_scaling.dart';
 import '../gratitude_stars.dart';
@@ -877,11 +878,12 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   },
                 ),
 
-              // Stats card
+              // Stats card - positioned at top center, below banners
               if (!_showBranding)
                 Consumer<GratitudeProvider>(
                   builder: (context, gratitudeProvider, child) {
                     // Calculate top position based on banners
+                    // Stats card should be at top, accounting for safe area and banners
                     double topOffset = MediaQuery.of(context).padding.top + 16;
                     if (_authService.hasEmailAccount && 
                         gratitudeProvider.syncStatus.status != SyncStatus.synced) {
@@ -894,6 +896,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         if (snapshot.hasData && snapshot.data! && !_authService.hasEmailAccount) {
                           topOffset += 60; // Sign-in prompt banner height
                         }
+                        // Stats card at top center - season drawer is at top-right, so no overlap
                         return Positioned(
                           top: topOffset,
                           left: 0,
@@ -915,10 +918,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   ),
                 ),
 
-              // Sync status indicator (top-right)
+              // Sync status indicator (top-right, below season drawer)
               if (!_showBranding)
                 Positioned(
-                  top: MediaQuery.of(context).padding.top + 16,
+                  top: MediaQuery.of(context).padding.top + 16 + 60, // Position below season drawer
                   right: 16,
                   child: Consumer<SyncStatusService>(
                     builder: (context, syncStatus, child) {
@@ -986,6 +989,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                     ),
                   ),
                 ),
+
+              // Season drawer (top-right) - must be last to ensure it's on top
+              if (!_showBranding) const SeasonDrawer(),
             ],
           ),
         ),

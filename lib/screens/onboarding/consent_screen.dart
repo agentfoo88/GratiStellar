@@ -47,10 +47,14 @@ class _ConsentScreenState extends State<ConsentScreen> {
   Future<void> _checkConsentStatus() async {
     try {
       final authService = AuthService();
-      final onboardingService = OnboardingService();
       
-      // Check local onboarding completion first
-      final localOnboardingComplete = await onboardingService.isOnboardingComplete();
+      // Get UserProfileManager from context
+      final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+      final userId = await userProfileManager.getOrCreateActiveUserId();
+      final onboardingService = OnboardingService(userProfileManager: userProfileManager);
+      
+      // Check local onboarding completion first (user-scoped)
+      final localOnboardingComplete = await onboardingService.isOnboardingComplete(userId);
       
       // If user is signed in, check Firebase profile
       if (authService.isSignedIn && authService.hasEmailAccount) {
@@ -73,8 +77,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
               if (firebasePrivacyAccepted && firebaseOnboardingComplete) {
                 AppLogger.data('✅ Consent already accepted in Firebase, skipping screen');
                 if (!mounted) return;
-                // Mark locally as well
-                await onboardingService.markOnboardingComplete();
+                // Mark locally as well (user-scoped)
+                await onboardingService.markOnboardingComplete(userId);
                 if (!mounted) return;
                 // Capture navigator after async gap
                 final navigator = Navigator.of(context);
@@ -214,11 +218,11 @@ class _ConsentScreenState extends State<ConsentScreen> {
       final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
       
       // Create device-scoped anonymous profile
-      await userProfileManager.getOrCreateActiveUserId();
+      final userId = await userProfileManager.getOrCreateActiveUserId();
       
-      // Mark onboarding as complete locally
-      final onboardingService = OnboardingService();
-      await onboardingService.markOnboardingComplete();
+      // Mark onboarding as complete locally (user-scoped)
+      final onboardingService = OnboardingService(userProfileManager: userProfileManager);
+      await onboardingService.markOnboardingComplete(userId);
       
       // If user is signed in, save consent to Firebase
       if (authService.isSignedIn && authService.hasEmailAccount) {

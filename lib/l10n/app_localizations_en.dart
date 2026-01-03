@@ -33,25 +33,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closeButton => 'Close';
 
   @override
-  String get chooseColorButton => 'Choose Star Color';
+  String get chooseColorButton => 'Choose Star Colour';
 
   @override
-  String get useRandomColor => 'Use Random Color';
+  String get useRandomColor => 'Use Random Colour';
 
   @override
-  String get customColorButton => 'Custom Color';
+  String get customColorButton => 'Additional Colour options';
 
   @override
-  String get setAsDefaultColor => 'Set as default color for new stars';
+  String get setAsDefaultColor => 'Set as default colour for new stars';
 
   @override
   String get clearDefaultColor => 'Clear Default';
 
   @override
-  String get defaultStarColor => 'Default Star Color';
+  String get defaultStarColor => 'Default Star Colour';
 
   @override
-  String get usingDefaultColor => 'Currently using default color';
+  String get usingDefaultColor => 'Currently using default colour';
 
   @override
   String get statsTotal => 'Total';
@@ -82,7 +82,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveButton => 'Save';
 
   @override
-  String get changeColorButton => 'Change Color';
+  String get changeColorButton => 'Change Colour';
 
   @override
   String get editGratitudeHint => 'Edit your gratitude...';
@@ -153,16 +153,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get comingSoonTitle => 'Coming Soon';
 
   @override
-  String get colorPreviewTitle => 'Color Preview';
+  String get colorPreviewTitle => 'Colour Preview';
 
   @override
-  String get presetColorsTitle => 'Preset Colors';
+  String get presetColorsTitle => 'Preset Colours';
 
   @override
-  String get customColorTitle => 'Custom Color';
+  String get customColorTitle => 'Custom Colour';
 
   @override
-  String get hexColorLabel => 'Hex Color';
+  String get hexColorLabel => 'Hex Colour';
 
   @override
   String get hexColorHint => '#FFE135';
@@ -315,6 +315,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signInSuccess => 'Signed in successfully!';
+
+  @override
+  String get signInCancelled =>
+      'Sign-in was cancelled. Please resolve the anonymous data migration and try again.';
 
   @override
   String get errorEmailPassword => 'Please enter both email and password';
@@ -513,7 +517,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortAlphabeticalZA => 'Z → A';
 
   @override
-  String get sortByColor => 'By Color';
+  String get sortByColor => 'By Colour';
 
   @override
   String get sortByMonth => 'By Month';
@@ -565,6 +569,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feedbackError => 'Failed to submit feedback. Please try again.';
+
+  @override
+  String get feedbackErrorSignIn => 'Please sign in to submit feedback.';
 
   @override
   String get restoreTooltip => 'Restore';
@@ -680,6 +687,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keepEmptyGalaxyButton => 'Keep It';
+
+  @override
+  String get anonymousDataDetectedTitle => 'Anonymous Data Found';
+
+  @override
+  String anonymousDataDetectedMessage(int starsCount, int galaxiesCount) {
+    return 'We found data from an anonymous profile on this device ($starsCount stars, $galaxiesCount galaxies). Would you like to merge it with your email account or delete it?';
+  }
+
+  @override
+  String get mergeAnonymousDataButton => 'Merge Data';
+
+  @override
+  String get deleteAnonymousDataButton => 'Delete Data';
+
+  @override
+  String get mergeAnonymousDataDescription =>
+      'Combine anonymous data with your email account (recommended)';
+
+  @override
+  String get deleteAnonymousDataDescription =>
+      'Permanently delete anonymous data';
 
   @override
   String get closeAppHint => 'Close the application';
@@ -1267,4 +1296,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noItemsSelected => 'No items selected';
+
+  @override
+  String get palettePresetTitle => 'Colour Palette';
+
+  @override
+  String get palettePresetWarmWhites => 'Warm Whites';
+
+  @override
+  String get palettePresetRealisticStars => 'Realistic Stars';
+
+  @override
+  String get palettePresetCoolBlues => 'Cool Blues';
+
+  @override
+  String get palettePresetVibrant => 'Vibrant Colours';
+
+  @override
+  String get palettePresetPastelDreams => 'Pastel Dreams';
+
+  @override
+  String get seasonSpring => 'Spring';
+
+  @override
+  String get seasonSummer => 'Summer';
+
+  @override
+  String get seasonAutumn => 'Autumn';
+
+  @override
+  String get seasonWinter => 'Winter';
+
+  @override
+  String get seasonDrawerTitle => 'Season';
+
+  @override
+  String get seasonCycleButton => 'Cycle Season';
+
+  @override
+  String get seasonReturnToNow => 'Now';
+
+  @override
+  String get seasonTrackingLabel => 'Season Tracking';
+
+  @override
+  String get seasonDrawerShow => 'Show season controls';
+
+  @override
+  String get seasonDrawerHide => 'Hide season controls';
+
+  @override
+  String get seasonCycleHint => 'Click to preview next season';
+
+  @override
+  String get seasonReturnHint => 'Reset to actual current season';
+
+  @override
+  String get switchProfile => 'Switch Profile';
+
+  @override
+  String get createNewProfile => 'Create New Profile';
+
+  @override
+  String get deleteProfile => 'Delete Profile';
+
+  @override
+  String get currentProfile => 'Current Profile';
+
+  @override
+  String get profileName => 'Profile Name';
+
+  @override
+  String get profileStars => 'Stars';
+
+  @override
+  String get profileGalaxies => 'Galaxies';
+
+  @override
+  String get switchProfileTitle => 'Switch Profile';
+
+  @override
+  String get createProfileTitle => 'Create New Profile';
+
+  @override
+  String get deleteProfileConfirm =>
+      'Are you sure you want to delete this profile? All data will be permanently deleted.';
 }

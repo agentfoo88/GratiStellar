@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../storage.dart';
 import '../core/utils/app_logger.dart';
 import 'user_profile_migration_service.dart';
@@ -28,7 +29,9 @@ class AuthService {
   Future<User?> signInWithEmail(String email, String password) async {
     try {
       // #region agent log
-      AppLogger.auth('🔐 DEBUG: signInWithEmail called - email=$email');
+      if (kDebugMode) {
+        AppLogger.auth('🔐 DEBUG: signInWithEmail called - email=$email');
+      }
       // #endregion
 
       final userCredential = await _auth.signInWithEmailAndPassword(
@@ -44,7 +47,9 @@ class AuthService {
         final refreshedUser = _auth.currentUser;
 
         // #region agent log
-        AppLogger.auth('🔐 DEBUG: signInWithEmail completed - user=${refreshedUser?.uid}, isAnonymous=${refreshedUser?.isAnonymous}, email=${refreshedUser?.email}');
+        if (kDebugMode) {
+          AppLogger.auth('🔐 DEBUG: signInWithEmail completed - user=${refreshedUser?.uid}, isAnonymous=${refreshedUser?.isAnonymous}, email=${refreshedUser?.email}');
+        }
         // #endregion
 
         // Update last seen
@@ -61,7 +66,9 @@ class AuthService {
       return user;
     } catch (e) {
       // #region agent log
-      AppLogger.error('🔐 DEBUG: signInWithEmail failed - error=$e');
+      if (kDebugMode) {
+        AppLogger.error('🔐 DEBUG: signInWithEmail failed - error=$e');
+      }
       // #endregion
       AppLogger.auth('Error signing in with email: $e');
       rethrow;

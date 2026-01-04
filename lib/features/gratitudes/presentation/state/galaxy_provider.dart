@@ -5,6 +5,10 @@ import '../../../gratitudes/data/repositories/gratitude_repository.dart';
 import 'gratitude_provider.dart';
 import '../../../../core/utils/app_logger.dart';
 
+/// Default galaxy name constant - used as system identifier
+/// The localized display name is in l10n (defaultGalaxyName)
+const String kDefaultGalaxyName = 'My First Galaxy';
+
 /// Provider for galaxy state management
 ///
 /// Manages all galaxy-related state and coordinates with repository
@@ -91,9 +95,11 @@ class GalaxyProvider extends ChangeNotifier {
 
       // Load the saved active galaxy ID from storage
       _activeGalaxyId = await _galaxyRepository.getActiveGalaxyId();
-      AppLogger.data(
-        '📝 DEBUG: Loaded active galaxy from storage - activeGalaxyId=$_activeGalaxyId, totalGalaxies=$totalCount, galaxyIds=${_galaxies.map((g) => g.id).toList()}',
-      );
+      if (kDebugMode) {
+        AppLogger.data(
+          '📝 DEBUG: Loaded active galaxy from storage - activeGalaxyId=$_activeGalaxyId, totalGalaxies=$totalCount, galaxyIds=${_galaxies.map((g) => g.id).toList()}',
+        );
+      }
       AppLogger.data('📝 Loaded active galaxy from storage: $_activeGalaxyId');
 
       // Validate that active galaxy ID points to a non-deleted galaxy
@@ -114,7 +120,7 @@ class GalaxyProvider extends ChangeNotifier {
         // Check if we have any galaxies at all (including deleted)
         if (_galaxies.isEmpty) {
           AppLogger.start('📝 No galaxies found, creating default galaxy');
-          await createGalaxy(name: 'My First Galaxy', switchToNew: true);
+          await createGalaxy(name: kDefaultGalaxyName, switchToNew: true);
           // Reload galaxies after creation to ensure state is consistent
           await loadGalaxies();
           _activeGalaxyId = await _galaxyRepository.getActiveGalaxyId();
@@ -500,7 +506,7 @@ class GalaxyProvider extends ChangeNotifier {
     try {
       AppLogger.start('📝 No galaxies remaining, creating default galaxy');
       final newGalaxy = await createGalaxy(
-        name: 'My First Galaxy',
+        name: kDefaultGalaxyName,
         switchToNew: true,
       );
 

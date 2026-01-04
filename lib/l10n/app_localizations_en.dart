@@ -1381,4 +1381,46 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteProfileConfirm =>
       'Are you sure you want to delete this profile? All data will be permanently deleted.';
+
+  @override
+  String get defaultGalaxyName => 'My First Galaxy';
+
+  @override
+  String get syncStatusPending => 'Changes pending sync';
+
+  @override
+  String get syncStatusSyncing => 'Syncing...';
+
+  @override
+  String get syncStatusError => 'Sync failed - tap to retry';
+
+  @override
+  String get deselectAllStars => 'Deselect all stars';
+
+  @override
+  String get selectAllStars => 'Select all stars';
+
+  @override
+  String get deselectAllGalaxies => 'Deselect all galaxies';
+
+  @override
+  String get selectAllGalaxies => 'Select all galaxies';
+
+  @override
+  String get nameInputLabel => 'Name';
+
+  @override
+  String get nameInputHint => 'Enter your name';
+
+  @override
+  String get colorPaletteTitle => 'Color Palette';
+
+  @override
+  String get seasonTitle => 'Season';
+
+  @override
+  String get nowLabel => 'Now';
+
+  @override
+  String get seasonTrackingTitle => 'Season Tracking';
 }

@@ -71,7 +71,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
     } else if (difference.inDays <= 7) {
       return AppLocalizations.of(context)!.daysAgoLabel(difference.inDays);
     } else {
-      return DateFormat('yyyy/MMM/dd').format(date);
+      // Locale-aware date format (display only - does not affect database storage)
+      return DateFormat.yMMMd().format(date);
     }
   }
 
@@ -116,8 +117,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
                   ? AppLocalizations.of(context)!.deselectAll
                   : AppLocalizations.of(context)!.selectAll,
               hint: _selectedStarIds.length == _getSortedStars(stars).length
-                  ? 'Deselect all stars'
-                  : 'Select all stars',
+                  ? AppLocalizations.of(context)!.deselectAllStars
+                  : AppLocalizations.of(context)!.selectAllStars,
               isButton: true,
               child: IconButton(
                 icon: Icon(

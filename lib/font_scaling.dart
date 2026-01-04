@@ -323,7 +323,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: Colors.white.withValues(alpha: 0.4),
+      color: Colors.white.withValues(alpha: 0.6),  // WCAG AA: improved contrast
     );
   }
 

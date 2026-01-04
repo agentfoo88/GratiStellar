@@ -2571,6 +2571,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this profile? All data will be permanently deleted.'**
   String get deleteProfileConfirm;
+
+  /// Default name for the first galaxy created automatically
+  ///
+  /// In en, this message translates to:
+  /// **'My First Galaxy'**
+  String get defaultGalaxyName;
+
+  /// Sync status tooltip when changes are waiting to sync
+  ///
+  /// In en, this message translates to:
+  /// **'Changes pending sync'**
+  String get syncStatusPending;
+
+  /// Sync status tooltip when actively syncing
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing...'**
+  String get syncStatusSyncing;
+
+  /// Sync status tooltip when sync has failed
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed - tap to retry'**
+  String get syncStatusError;
+
+  /// Accessibility hint to deselect all stars in list view
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all stars'**
+  String get deselectAllStars;
+
+  /// Accessibility hint to select all stars in list view
+  ///
+  /// In en, this message translates to:
+  /// **'Select all stars'**
+  String get selectAllStars;
+
+  /// Accessibility hint to deselect all galaxies
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all galaxies'**
+  String get deselectAllGalaxies;
+
+  /// Accessibility hint to select all galaxies
+  ///
+  /// In en, this message translates to:
+  /// **'Select all galaxies'**
+  String get selectAllGalaxies;
+
+  /// Label for name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get nameInputLabel;
+
+  /// Hint text for name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your name'**
+  String get nameInputHint;
+
+  /// Title for color palette dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Color Palette'**
+  String get colorPaletteTitle;
+
+  /// Label for season in season drawer
+  ///
+  /// In en, this message translates to:
+  /// **'Season'**
+  String get seasonTitle;
+
+  /// Label indicating current time/season
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get nowLabel;
+
+  /// Title for season tracking feature
+  ///
+  /// In en, this message translates to:
+  /// **'Season Tracking'**
+  String get seasonTrackingTitle;
 }
 
 class _AppLocalizationsDelegate

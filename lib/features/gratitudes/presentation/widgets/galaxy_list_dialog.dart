@@ -78,8 +78,8 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                           ? l10n.deselectAll
                           : l10n.selectAll,
                       hint: _selectedGalaxyIds.length == activeGalaxies.length
-                          ? 'Deselect all galaxies'
-                          : 'Select all galaxies',
+                          ? l10n.deselectAllGalaxies
+                          : l10n.selectAllGalaxies,
                       isButton: true,
                       child: IconButton(
                         icon: Icon(

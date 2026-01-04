@@ -12,7 +12,11 @@
       "Bash(flutter clean:*)",
       "Bash(git add:*)",
       "Bash(cat:*)",
-      "Bash(git show-ref:*)"
+      "Bash(git show-ref:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(done)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

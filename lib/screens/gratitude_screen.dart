@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -576,6 +577,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   Widget _buildSyncStatusIndicator(SyncStatusService syncStatus) {
+    final l10n = AppLocalizations.of(context)!;
+
     // Hide when fully synced
     if (syncStatus.status == SyncStatus.synced) {
       return SizedBox.shrink();
@@ -591,22 +594,22 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       case SyncStatus.pending:
         icon = Icons.cloud_upload_outlined;
         color = Colors.orange;
-        tooltip = 'Changes pending sync';
+        tooltip = l10n.syncStatusPending;
         break;
       case SyncStatus.syncing:
         icon = Icons.sync;
         color = Colors.blue;
-        tooltip = 'Syncing...';
+        tooltip = l10n.syncStatusSyncing;
         break;
       case SyncStatus.offline:
         icon = Icons.cloud_off_outlined;
         color = Colors.grey;
-        tooltip = 'Offline - will sync when connected';
+        tooltip = 'Offline - will sync when connected';  // Keep existing for now
         break;
       case SyncStatus.error:
         icon = Icons.cloud_sync_outlined;
         color = Colors.red;
-        tooltip = 'Sync failed - tap to retry';
+        tooltip = l10n.syncStatusError;
         break;
     }
 
@@ -614,8 +617,8 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       label: tooltip,
       button: syncStatus.status == SyncStatus.error,
       child: Container(
-        width: 44,
-        height: 44,
+        width: 48,  // WCAG AA: 48dp minimum touch target
+        height: 48,
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.3),
           shape: BoxShape.circle,
@@ -695,13 +698,26 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   void _showFeedbackDialog() async {
+    if (kDebugMode) {
+      AppLogger.info('📤 DEBUG: Opening feedback dialog');
+    }
+
     final result = await FeedbackDialog.show(
       context: context,
       authService: _authService,
     );
 
+    if (kDebugMode) {
+      AppLogger.info('📤 DEBUG: Feedback dialog returned with result: $result');
+      AppLogger.info('📤 DEBUG: mounted=$mounted');
+    }
+
     // Show SnackBar if dialog returned a result
     if (result != null && mounted) {
+      if (kDebugMode) {
+        AppLogger.info('📤 DEBUG: About to show SnackBar for result: $result');
+      }
+
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -719,6 +735,14 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           duration: Duration(seconds: 3),
         ),
       );
+
+      if (kDebugMode) {
+        AppLogger.info('📤 DEBUG: SnackBar shown successfully');
+      }
+    } else {
+      if (kDebugMode) {
+        AppLogger.info('📤 DEBUG: NOT showing SnackBar - result=$result, mounted=$mounted');
+      }
     }
   }
 
@@ -782,26 +806,21 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           authService: _authService,
           onAccountTap: _handleAccountTap,
           onListViewTap: () {
-            Navigator.pop(context);
             _navigateToListView();
           },
           onGalaxiesTap: () {
-            Navigator.pop(context);
             _showGalaxiesDialog();
           },
           onFeedbackTap: () {
-            Navigator.pop(context);
             _showFeedbackDialog();
           },
           onTrashTap: () {
-            Navigator.pop(context); // Close drawer
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => TrashScreen()),
             );
           },
           onExitTap: () {
-            Navigator.pop(context);
             GratitudeDialogs.showQuitConfirmation(context);
           },
           onFontScaleChanged: _loadFontScale,

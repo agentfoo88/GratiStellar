@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../../../galaxy_metadata.dart';
 import '../../../../services/auth_service.dart';
 import '../datasources/galaxy_local_data_source.dart';
@@ -280,15 +282,17 @@ class GalaxyRepository {
   }
 
   /// Sync galaxies from cloud to local
-  /// 
+  ///
   /// Merges cloud galaxies with local galaxies instead of overwriting.
   /// Preserves local galaxies and merges with cloud galaxies.
   Future<void> syncFromCloud() async {
     // #region agent log
-    final currentUser = _authService.currentUser;
-    AppLogger.auth('🔐 DEBUG: syncFromCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+    if (kDebugMode) {
+      final currentUser = _authService.currentUser;
+      AppLogger.auth('🔐 DEBUG: syncFromCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+    }
     // #endregion
-    
+
     if (!_authService.hasEmailAccount) {
       AppLogger.auth('⚠️ Not authenticated, skipping galaxy sync');
       return;
@@ -378,15 +382,17 @@ class GalaxyRepository {
   }
 
   /// Sync galaxies from local to cloud
-  /// 
+  ///
   /// Syncs all galaxies with per-galaxy error handling to ensure
   /// all galaxies are attempted even if some fail.
   Future<void> syncToCloud() async {
     // #region agent log
-    final currentUser = _authService.currentUser;
-    AppLogger.auth('🔐 DEBUG: syncToCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+    if (kDebugMode) {
+      final currentUser = _authService.currentUser;
+      AppLogger.auth('🔐 DEBUG: syncToCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+    }
     // #endregion
-    
+
     if (!_authService.hasEmailAccount) {
       AppLogger.auth('⚠️ Not authenticated, skipping galaxy sync');
       return;

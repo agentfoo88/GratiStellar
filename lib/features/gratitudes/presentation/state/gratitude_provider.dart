@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -215,28 +216,32 @@ class GratitudeProvider extends ChangeNotifier {
     // Filter for display: only non-deleted stars from the current galaxy
     // CRITICAL: Must filter by galaxy ID to match syncWithCloud() behavior!
     final activeGalaxyId = _galaxyProvider.activeGalaxyId;
-    
+
     // #region agent log
-    final allStarsCount = purgedStars.length;
-    final galaxyIdCounts = <String, int>{};
-    for (final star in purgedStars) {
-      if (!star.deleted) {
-        galaxyIdCounts[star.galaxyId] = (galaxyIdCounts[star.galaxyId] ?? 0) + 1;
+    if (kDebugMode) {
+      final allStarsCount = purgedStars.length;
+      final galaxyIdCounts = <String, int>{};
+      for (final star in purgedStars) {
+        if (!star.deleted) {
+          galaxyIdCounts[star.galaxyId] = (galaxyIdCounts[star.galaxyId] ?? 0) + 1;
+        }
       }
+      AppLogger.sync('📋 DEBUG: loadGratitudes filtering - totalStarsInStorage=$allStarsCount, activeGalaxyId=$activeGalaxyId, starsByGalaxyId=${galaxyIdCounts.toString()}');
     }
-    AppLogger.sync('📋 DEBUG: loadGratitudes filtering - totalStarsInStorage=$allStarsCount, activeGalaxyId=$activeGalaxyId, starsByGalaxyId=${galaxyIdCounts.toString()}');
     // #endregion
-    
+
     _gratitudeStars = purgedStars
         .where((star) =>
             !star.deleted &&
             star.galaxyId == activeGalaxyId)
         .toList();
-    
+
     // #region agent log
-    AppLogger.sync('📋 DEBUG: loadGratitudes filtered result - filteredStarsCount=${_gratitudeStars.length}, activeGalaxyId=$activeGalaxyId');
+    if (kDebugMode) {
+      AppLogger.sync('📋 DEBUG: loadGratitudes filtered result - filteredStarsCount=${_gratitudeStars.length}, activeGalaxyId=$activeGalaxyId');
+    }
     // #endregion
-    
+
     _isLoading = false;
     notifyListeners();
 

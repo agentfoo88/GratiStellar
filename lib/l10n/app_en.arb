@@ -1596,5 +1596,61 @@
         "deleteProfileConfirm": "Are you sure you want to delete this profile? All data will be permanently deleted.",
         "@deleteProfileConfirm": {
           "description": "Confirmation message for deleting a profile"
+        },
+        "defaultGalaxyName": "My First Galaxy",
+        "@defaultGalaxyName": {
+          "description": "Default name for the first galaxy created automatically"
+        },
+        "syncStatusPending": "Changes pending sync",
+        "@syncStatusPending": {
+          "description": "Sync status tooltip when changes are waiting to sync"
+        },
+        "syncStatusSyncing": "Syncing...",
+        "@syncStatusSyncing": {
+          "description": "Sync status tooltip when actively syncing"
+        },
+        "syncStatusError": "Sync failed - tap to retry",
+        "@syncStatusError": {
+          "description": "Sync status tooltip when sync has failed"
+        },
+        "deselectAllStars": "Deselect all stars",
+        "@deselectAllStars": {
+          "description": "Accessibility hint to deselect all stars in list view"
+        },
+        "selectAllStars": "Select all stars",
+        "@selectAllStars": {
+          "description": "Accessibility hint to select all stars in list view"
+        },
+        "deselectAllGalaxies": "Deselect all galaxies",
+        "@deselectAllGalaxies": {
+          "description": "Accessibility hint to deselect all galaxies"
+        },
+        "selectAllGalaxies": "Select all galaxies",
+        "@selectAllGalaxies": {
+          "description": "Accessibility hint to select all galaxies"
+        },
+        "nameInputLabel": "Name",
+        "@nameInputLabel": {
+          "description": "Label for name input field"
+        },
+        "nameInputHint": "Enter your name",
+        "@nameInputHint": {
+          "description": "Hint text for name input field"
+        },
+        "colorPaletteTitle": "Color Palette",
+        "@colorPaletteTitle": {
+          "description": "Title for color palette dialog"
+        },
+        "seasonTitle": "Season",
+        "@seasonTitle": {
+          "description": "Label for season in season drawer"
+        },
+        "nowLabel": "Now",
+        "@nowLabel": {
+          "description": "Label indicating current time/season"
+        },
+        "seasonTrackingTitle": "Season Tracking",
+        "@seasonTrackingTitle": {
+          "description": "Title for season tracking feature"
         }
     }

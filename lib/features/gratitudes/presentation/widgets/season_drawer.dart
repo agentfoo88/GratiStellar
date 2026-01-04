@@ -5,6 +5,7 @@ import '../../../../core/config/season_config.dart';
 import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../font_scaling.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../state/galaxy_provider.dart';
 
 /// Season drawer widget - slide-out panel from top-right
@@ -210,7 +211,7 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                                   ),
                                   SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
                                   Text(
-                                    'Season', // TODO: Use l10n after regeneration
+                                    AppLocalizations.of(context)!.seasonTitle,
                                     style: FontScaling.getBodyMedium(context),
                                   ),
                                   SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
@@ -281,7 +282,7 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                                     onPressed: () => _returnToCurrentTime(galaxyProvider),
                                     icon: const Text('🕐', style: TextStyle(fontSize: 18)),
                                     label: Text(
-                                      'Now', // TODO: Use l10n after regeneration
+                                      AppLocalizations.of(context)!.nowLabel,
                                       style: FontScaling.getButtonText(context).copyWith(
                                         color: Colors.white, // Full opacity for WCAG contrast
                                       ),
@@ -310,7 +311,7 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'Season Tracking', // TODO: Use l10n after regeneration
+                                      AppLocalizations.of(context)!.seasonTrackingTitle,
                                       style: FontScaling.getBodyMedium(context),
                                     ),
                                     Switch(

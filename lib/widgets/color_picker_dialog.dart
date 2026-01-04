@@ -226,7 +226,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
               // Palette preset selector
               Text(
-                'Color Palette', // TODO: Use l10n after regeneration
+                AppLocalizations.of(context)!.colorPaletteTitle,
                 style: FontScaling.getBodyMedium(context).copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                 ),

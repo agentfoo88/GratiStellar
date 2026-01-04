@@ -18,14 +18,18 @@ class FeedbackService {
   }) async {
     try {
       // #region agent log
-      AppLogger.info('📤 DEBUG: submitFeedback called - type=$type, messageLength=${message.length}, hasContactEmail=${contactEmail != null}');
+      if (kDebugMode) {
+        AppLogger.info('📤 DEBUG: submitFeedback called - type=$type, messageLength=${message.length}, hasContactEmail=${contactEmail != null}');
+      }
       // #endregion
 
       final user = _auth.currentUser;
       // Require authentication (even anonymous) for Firestore security rules
       if (user == null) {
         // #region agent log
-        AppLogger.error('📤 DEBUG: No user authenticated for feedback submission');
+        if (kDebugMode) {
+          AppLogger.error('📤 DEBUG: No user authenticated for feedback submission');
+        }
         // #endregion
         throw Exception('Please sign in to submit feedback');
       }
@@ -35,7 +39,9 @@ class FeedbackService {
       final displayName = user.displayName;
 
       // #region agent log
-      AppLogger.info('📤 DEBUG: Submitting feedback - userId=$userId, isAnonymous=${user.isAnonymous}, hasEmail=${userEmail != null}');
+      if (kDebugMode) {
+        AppLogger.info('📤 DEBUG: Submitting feedback - userId=$userId, isAnonymous=${user.isAnonymous}, hasEmail=${userEmail != null}');
+      }
       // #endregion
 
       // Get app version
@@ -64,21 +70,27 @@ class FeedbackService {
       );
 
       // #region agent log
-      AppLogger.info('📤 DEBUG: Attempting to write feedback to Firestore - feedbackId=${feedback.id}');
+      if (kDebugMode) {
+        AppLogger.info('📤 DEBUG: Attempting to write feedback to Firestore - feedbackId=${feedback.id}');
+      }
       // #endregion
 
       await _firestore.collection('feedback').doc(feedback.id).set(feedback.toJson());
 
       // #region agent log
-      AppLogger.success('📤 DEBUG: Feedback successfully written to Firestore - feedbackId=${feedback.id}');
+      if (kDebugMode) {
+        AppLogger.success('📤 DEBUG: Feedback successfully written to Firestore - feedbackId=${feedback.id}');
+      }
       // #endregion
 
       AppLogger.success('✅ Feedback submitted: ${feedback.id}');
       return true;
     } catch (e, stack) {
       // #region agent log
-      AppLogger.error('📤 DEBUG: Feedback submission failed - error=$e');
-      AppLogger.info('Stack trace: $stack');
+      if (kDebugMode) {
+        AppLogger.error('📤 DEBUG: Feedback submission failed - error=$e');
+        AppLogger.info('Stack trace: $stack');
+      }
       // #endregion
       AppLogger.error('❌ Error submitting feedback: $e');
       return false;

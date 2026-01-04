@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
@@ -78,9 +79,12 @@ class _SignInScreenState extends State<SignInScreen> {
   /// Trigger cloud sync after sign-in
   /// Returns true if sync completed successfully, false if cancelled or failed
   Future<bool> _triggerCloudSync() async {
-    // #region agent log
     final currentUser = _authService.currentUser;
-    AppLogger.sync('🔄 DEBUG: _triggerCloudSync started - user=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+
+    // #region agent log
+    if (kDebugMode) {
+      AppLogger.sync('🔄 DEBUG: _triggerCloudSync started - user=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+    }
     // #endregion
 
     final firestoreService = FirestoreService();
@@ -162,10 +166,10 @@ class _SignInScreenState extends State<SignInScreen> {
       await galaxyProvider.loadGalaxies();
       final localGalaxiesBeforeSync = galaxyProvider.galaxies;
       
-      // Detect empty "My First Galaxy" galaxies
+      // Detect empty default galaxies
       final emptyDefaultGalaxies = localGalaxiesBeforeSync.where((galaxy) {
-        return galaxy.name == 'My First Galaxy' && 
-               galaxy.starCount == 0 && 
+        return galaxy.name == kDefaultGalaxyName &&
+               galaxy.starCount == 0 &&
                !galaxy.deleted;
       }).toList();
       
@@ -299,13 +303,15 @@ class _SignInScreenState extends State<SignInScreen> {
           final mergedStars = await firestoreService.syncStars(localStars);
           
           // #region agent log
-          final galaxyIdCounts = <String, int>{};
-          for (final star in mergedStars) {
-            galaxyIdCounts[star.galaxyId] = (galaxyIdCounts[star.galaxyId] ?? 0) + 1;
+          if (kDebugMode) {
+            final galaxyIdCounts = <String, int>{};
+            for (final star in mergedStars) {
+              galaxyIdCounts[star.galaxyId] = (galaxyIdCounts[star.galaxyId] ?? 0) + 1;
+            }
+            AppLogger.sync('💾 DEBUG: Saving merged stars after sync - total=${mergedStars.length}, by galaxy=${galaxyIdCounts.toString()}');
           }
-          AppLogger.sync('💾 DEBUG: Saving merged stars after sync - total=${mergedStars.length}, by galaxy=${galaxyIdCounts.toString()}');
           // #endregion
-          
+
           await StorageService.saveGratitudeStars(mergedStars);
           AppLogger.sync('✅ Synced ${mergedStars.length} stars');
         } else {
@@ -351,7 +357,9 @@ class _SignInScreenState extends State<SignInScreen> {
         try {
           final gratitudeProvider = context.read<GratitudeProvider>();
           // #region agent log
-          AppLogger.sync('🔄 DEBUG: Reloading gratitudes after sync - activeGalaxyId=${galaxyProvider.activeGalaxyId}');
+          if (kDebugMode) {
+            AppLogger.sync('🔄 DEBUG: Reloading gratitudes after sync - activeGalaxyId=${galaxyProvider.activeGalaxyId}');
+          }
           // #endregion
           await gratitudeProvider.loadGratitudes(waitForSync: false);
           AppLogger.sync('✅ Gratitudes reloaded after sync');
@@ -748,14 +756,18 @@ class _SignInScreenState extends State<SignInScreen> {
         }
       } else {
         // #region agent log
-        AppLogger.auth('🔐 DEBUG: Starting signInWithEmail - email=$email');
+        if (kDebugMode) {
+          AppLogger.auth('🔐 DEBUG: Starting signInWithEmail - email=$email');
+        }
         // #endregion
 
         await _authService.signInWithEmail(email, password);
 
         // #region agent log
-        final userAfterSignIn = _authService.currentUser;
-        AppLogger.auth('🔐 DEBUG: After signInWithEmail - user=${userAfterSignIn?.uid}, isAnonymous=${userAfterSignIn?.isAnonymous}, email=${userAfterSignIn?.email}, hasEmailAccount=${_authService.hasEmailAccount}');
+        if (kDebugMode) {
+          final userAfterSignIn = _authService.currentUser;
+          AppLogger.auth('🔐 DEBUG: After signInWithEmail - user=${userAfterSignIn?.uid}, isAnonymous=${userAfterSignIn?.isAnonymous}, email=${userAfterSignIn?.email}, hasEmailAccount=${_authService.hasEmailAccount}');
+        }
         // #endregion
 
         // Mark current user as local data owner
@@ -963,9 +975,9 @@ class _SignInScreenState extends State<SignInScreen> {
                               textCapitalization: TextCapitalization.words,
                               style: FontScaling.getInputText(context),
                               decoration: InputDecoration(
-                                labelText: 'Name',
+                                labelText: l10n.nameInputLabel,
                                 labelStyle: FontScaling.getBodySmall(context),
-                                hintText: 'Enter your name',
+                                hintText: l10n.nameInputHint,
                                 hintStyle: FontScaling.getInputHint(context),
                                 filled: true,
                                 fillColor: Colors.white.withValues(alpha: 0.1),

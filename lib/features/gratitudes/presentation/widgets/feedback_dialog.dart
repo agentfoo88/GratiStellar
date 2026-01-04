@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -21,6 +22,7 @@ class FeedbackDialog extends StatefulWidget {
   }) {
     return showDialog<bool>(
       context: context,
+      barrierDismissible: false,  // Prevent accidental dismissal
       barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (dialogContext) => FeedbackDialog(authService: authService),
     );
@@ -308,17 +310,14 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                     ElevatedButton(
                       onPressed: _isSubmitting ? null : () async {
                         if (_formKey.currentState!.validate()) {
-                          // Capture navigator, scaffold messenger, and text style before async gap
-                          final navigator = Navigator.of(context);
-                          final scaffoldMessenger = ScaffoldMessenger.of(context);
-                          final bodyMediumStyle = FontScaling.getBodyMedium(context);
-                          
                           setState(() {
                             _isSubmitting = true;
                           });
 
                           // #region agent log
-                          AppLogger.info('📤 DEBUG: Submitting feedback - type=$_selectedType, messageLength=${_message.length}');
+                          if (kDebugMode) {
+                            AppLogger.info('📤 DEBUG: Submitting feedback - type=$_selectedType, messageLength=${_message.length}');
+                          }
                           // #endregion
 
                           final feedbackService = FeedbackService();
@@ -332,50 +331,66 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                             );
 
                             // #region agent log
-                            AppLogger.info('📤 DEBUG: Feedback submission result - success=$success');
+                            if (kDebugMode) {
+                              AppLogger.info('📤 DEBUG: Feedback submission result - success=$success');
+                              AppLogger.info('📤 DEBUG: About to close dialog - mounted=$mounted');
+                            }
                             // #endregion
 
                             // Close dialog and return result
-                            if (mounted) {
-                              navigator.pop(success);
+                            if (!mounted) {
+                              if (kDebugMode) {
+                                AppLogger.error('📤 DEBUG: Widget not mounted, cannot close dialog!');
+                              }
+                              return;
                             }
-                          } catch (e, stack) {
+
                             // #region agent log
-                            AppLogger.error('📤 DEBUG: Feedback submission exception - $e');
-                            AppLogger.info('Stack trace: $stack');
+                            if (kDebugMode) {
+                              AppLogger.info('📤 DEBUG: Calling Navigator.pop with result: $success');
+                            }
                             // #endregion
 
-                            // Show error message to user before closing
-                            if (mounted) {
-                              final errorMessage = e.toString().contains('sign in')
-                                  ? 'Please sign in to submit feedback.'
-                                  : l10n.feedbackError;
-                              
-                              if (mounted) {
-                                scaffoldMessenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      errorMessage,
-                                      style: bodyMediumStyle,
-                                    ),
-                                    backgroundColor: Colors.red,
-                                    duration: const Duration(seconds: 3),
-                                  ),
-                                );
-                              }
+                            // ignore: use_build_context_synchronously
+                            Navigator.of(context).pop(success);
+
+                            // #region agent log
+                            if (kDebugMode) {
+                              AppLogger.info('📤 DEBUG: Navigator.pop completed');
                             }
+                            // #endregion
+                          } catch (e, stack) {
+                            // #region agent log
+                            if (kDebugMode) {
+                              AppLogger.error('📤 DEBUG: Feedback submission exception - $e');
+                              AppLogger.info('Stack trace: $stack');
+                              AppLogger.info('📤 DEBUG: About to close dialog with error - mounted=$mounted');
+                            }
+                            // #endregion
 
                             // Close dialog and return failure
-                            if (mounted) {
-                              navigator.pop(false);
+                            // Parent will handle showing error message
+                            if (!mounted) {
+                              if (kDebugMode) {
+                                AppLogger.error('📤 DEBUG: Widget not mounted, cannot close dialog!');
+                              }
+                              return;
                             }
-                          } finally {
-                            // Always reset submitting state if still mounted
-                            if (mounted) {
-                              setState(() {
-                                _isSubmitting = false;
-                              });
+
+                            // #region agent log
+                            if (kDebugMode) {
+                              AppLogger.info('📤 DEBUG: Calling Navigator.pop with result: false');
                             }
+                            // #endregion
+
+                            // ignore: use_build_context_synchronously
+                            Navigator.of(context).pop(false);
+
+                            // #region agent log
+                            if (kDebugMode) {
+                              AppLogger.info('📤 DEBUG: Navigator.pop completed (error case)');
+                            }
+                            // #endregion
                           }
                         }
                       },

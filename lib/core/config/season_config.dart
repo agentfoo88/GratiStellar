@@ -110,9 +110,9 @@ class SeasonConfig {
     final baseRgb = hexToRgb(baseColor);
     final tintRgb = hexToRgb(tintColor);
 
-    final r = (baseRgb[0] * 0.66 + tintRgb[0] * 0.33).round();
-    final g = (baseRgb[1] * 0.66 + tintRgb[1] * 0.33).round();
-    final b = (baseRgb[2] * 0.66 + tintRgb[2] * 0.33).round();
+    final r = (baseRgb[0] * 0.0 + tintRgb[0] * 1).round();
+    final g = (baseRgb[1] * 0.0 + tintRgb[1] * 1).round();
+    final b = (baseRgb[2] * 0.0 + tintRgb[2] * 1).round();
 
     return rgbToColor(r, g, b);
   }

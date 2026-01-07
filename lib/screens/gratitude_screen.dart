@@ -34,6 +34,7 @@ import '../l10n/app_localizations.dart';
 import '../list_view_screen.dart';
 import '../modal_dialogs.dart';
 import '../services/auth_service.dart';
+import '../services/daily_reminder_service.dart';
 import '../services/layer_cache_service.dart';
 import '../services/sync_status_service.dart';
 import '../starfield.dart';
@@ -78,14 +79,23 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     if (provider.animatingStar != null) {
       HapticFeedback.mediumImpact();
 
+      // Capture context-dependent values before async gap
+      final reminderService = context.read<DailyReminderService>();
+      final screenSize = MediaQuery.of(context).size;
+
       await provider.completeBirthAnimation();
+
+      if (!mounted) return;
+
+      // Reschedule reminder for tomorrow (prevents reminder from firing today)
+      await reminderService.rescheduleForTomorrow();
 
       if (!mounted) return;
 
       // Update camera bounds for new star
       _cameraController.updateBounds(
         provider.gratitudeStars,
-        MediaQuery.of(context).size,
+        screenSize,
       );
 
       _animationManager.resetBirthAnimation();

@@ -19,7 +19,7 @@ class GalaxyListDialog extends StatefulWidget {
 }
 
 class _GalaxyListDialogState extends State<GalaxyListDialog> {
-  bool _isLoading = false;
+  final bool _isLoading = false;
   bool _isSelectionMode = false;
   final Set<String> _selectedGalaxyIds = {};
   late final ScrollController _scrollController;
@@ -613,63 +613,53 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     String galaxyId,
     GalaxyProvider galaxyProvider,
   ) async {
-    setState(() => _isLoading = true);
+    // Capture context-dependent objects BEFORE async gap and dialog close
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final bodyMediumStyle = FontScaling.getBodyMedium(context);
 
-    // Capture l10n before async gap to avoid BuildContext warning
-    final l10n = mounted ? AppLocalizations.of(context) : null;
+    // Close dialog immediately for instant feedback
+    navigator.popUntil((route) => route.isFirst);
 
     try {
       // switchGalaxy handles everything: sets active, updates filter, loads gratitudes, AND syncs
+      // This happens on the main screen now, with loading state visible in the provider
       await galaxyProvider.switchGalaxy(galaxyId);
 
-      if (context.mounted) {
-        // Store galaxy name for toast before popping
-        final galaxyName =
-            galaxyProvider.activeGalaxy?.name ?? 'Unknown Galaxy';
+      // Store galaxy name for success message
+      final galaxyName = galaxyProvider.activeGalaxy?.name ?? 'Unknown Galaxy';
 
-        // Close dialog FIRST
-        Navigator.of(context).popUntil((route) => route.isFirst);
-
-        // Show confirmation on main screen context
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.galaxySwitchedSuccess(galaxyName),
-              style: FontScaling.getBodyMedium(context),
-            ),
-            duration: Duration(seconds: 2),
-            backgroundColor: Color(0xFF1A2238),
+      // Show confirmation on main screen
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.galaxySwitchedSuccess(galaxyName),
+            style: bodyMediumStyle,
           ),
-        );
-      }
+          duration: Duration(seconds: 2),
+          backgroundColor: Color(0xFF1A2238),
+        ),
+      );
     } catch (e, stack) {
       // Handle error with ErrorHandler for user-friendly message
       final error = ErrorHandler.handle(
         e,
         stack,
         context: ErrorContext.galaxy,
-        l10n: l10n, // Use captured value
+        l10n: l10n,
       );
 
-      // Only show error if dialog is still mounted
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.galaxySwitchFailed(error.userMessage),
-              style: FontScaling.getBodyMedium(context),
-            ),
-            backgroundColor: Colors.red,
+      // Show error on main screen
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.galaxySwitchFailed(error.userMessage),
+            style: bodyMediumStyle,
           ),
-        );
-      }
-    } finally {
-      // Always reset loading state (whether success or error)
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

@@ -124,6 +124,186 @@ abstract class AppLocalizations {
   /// **'What lights up your heart today?'**
   String get createStarHint;
 
+  /// Gratitude creation prompt #1 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s something that made you smile today?'**
+  String get createStarHint1;
+
+  /// Gratitude creation prompt #2 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What did you do well today?'**
+  String get createStarHint2;
+
+  /// Gratitude creation prompt #3 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What is something beautiful you saw today?'**
+  String get createStarHint3;
+
+  /// Gratitude creation prompt #4 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What was an act of kindness that someone did for you?'**
+  String get createStarHint4;
+
+  /// Gratitude creation prompt #5 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What is a routine or ritual that brings you comfort?'**
+  String get createStarHint5;
+
+  /// Gratitude creation prompt #6 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Who has supported you in your life? How?'**
+  String get createStarHint6;
+
+  /// Gratitude creation prompt #7 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Who has supported you in your personal life? How?'**
+  String get createStarHint7;
+
+  /// Gratitude creation prompt #8 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Who has supported you in your career? How?'**
+  String get createStarHint8;
+
+  /// Gratitude creation prompt #9 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Who has taught you something? What did they teach you?'**
+  String get createStarHint9;
+
+  /// Gratitude creation prompt #10 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Who makes you feel loved?'**
+  String get createStarHint10;
+
+  /// Gratitude creation prompt #11 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'When was the last time you laughed? Describe the situation'**
+  String get createStarHint11;
+
+  /// Gratitude creation prompt #12 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Who believed in you?'**
+  String get createStarHint12;
+
+  /// Gratitude creation prompt #13 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Who makes you feel special?'**
+  String get createStarHint13;
+
+  /// Gratitude creation prompt #14 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What is a challenge you overcame?'**
+  String get createStarHint14;
+
+  /// Gratitude creation prompt #15 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What did you learn today?'**
+  String get createStarHint15;
+
+  /// Gratitude creation prompt #16 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What did you learn this week?'**
+  String get createStarHint16;
+
+  /// Gratitude creation prompt #17 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your favourite food?'**
+  String get createStarHint17;
+
+  /// Gratitude creation prompt #18 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your favourite song?'**
+  String get createStarHint18;
+
+  /// Gratitude creation prompt #19 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your favourite clothing or object?'**
+  String get createStarHint19;
+
+  /// Gratitude creation prompt #20 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Where\'s your favourite place?'**
+  String get createStarHint20;
+
+  /// Gratitude creation prompt #21 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Where is somewhere that brings you peace?'**
+  String get createStarHint21;
+
+  /// Gratitude creation prompt #22 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'Where\'s your favourite spot in your home?'**
+  String get createStarHint22;
+
+  /// Gratitude creation prompt #23 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s something you take for granted?'**
+  String get createStarHint23;
+
+  /// Gratitude creation prompt #24 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s a piece of art that brings you joy?'**
+  String get createStarHint24;
+
+  /// Gratitude creation prompt #25 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s a modern convenience that makes life easier?'**
+  String get createStarHint25;
+
+  /// Gratitude creation prompt #26 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s a challenge that\'s brought you strength or wisdom?'**
+  String get createStarHint26;
+
+  /// Gratitude creation prompt #27 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What skill do you feel proud of?'**
+  String get createStarHint27;
+
+  /// Gratitude creation prompt #28 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What memory brings you joy?'**
+  String get createStarHint28;
+
+  /// Gratitude creation prompt #29 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What opportunity are you grateful for?'**
+  String get createStarHint29;
+
+  /// Gratitude creation prompt #30 of 30
+  ///
+  /// In en, this message translates to:
+  /// **'What brings you hope?'**
+  String get createStarHint30;
+
   /// No description provided for @createStarButton.
   ///
   /// In en, this message translates to:

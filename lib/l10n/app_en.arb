@@ -10,6 +10,126 @@
   "loadingMessage": "Preparing your personal universe...",
   "createStarModalTitle": "Birth a New Star",
   "createStarHint": "What lights up your heart today?",
+  "createStarHint1": "What's something that made you smile today?",
+  "@createStarHint1": {
+    "description": "Gratitude creation prompt #1 of 30"
+  },
+  "createStarHint2": "What did you do well today?",
+  "@createStarHint2": {
+    "description": "Gratitude creation prompt #2 of 30"
+  },
+  "createStarHint3": "What is something beautiful you saw today?",
+  "@createStarHint3": {
+    "description": "Gratitude creation prompt #3 of 30"
+  },
+  "createStarHint4": "What was an act of kindness that someone did for you?",
+  "@createStarHint4": {
+    "description": "Gratitude creation prompt #4 of 30"
+  },
+  "createStarHint5": "What is a routine or ritual that brings you comfort?",
+  "@createStarHint5": {
+    "description": "Gratitude creation prompt #5 of 30"
+  },
+  "createStarHint6": "Who has supported you in your life? How?",
+  "@createStarHint6": {
+    "description": "Gratitude creation prompt #6 of 30"
+  },
+  "createStarHint7": "Who has supported you in your personal life? How?",
+  "@createStarHint7": {
+    "description": "Gratitude creation prompt #7 of 30"
+  },
+  "createStarHint8": "Who has supported you in your career? How?",
+  "@createStarHint8": {
+    "description": "Gratitude creation prompt #8 of 30"
+  },
+  "createStarHint9": "Who has taught you something? What did they teach you?",
+  "@createStarHint9": {
+    "description": "Gratitude creation prompt #9 of 30"
+  },
+  "createStarHint10": "Who makes you feel loved?",
+  "@createStarHint10": {
+    "description": "Gratitude creation prompt #10 of 30"
+  },
+  "createStarHint11": "When was the last time you laughed? Describe the situation",
+  "@createStarHint11": {
+    "description": "Gratitude creation prompt #11 of 30"
+  },
+  "createStarHint12": "Who believed in you?",
+  "@createStarHint12": {
+    "description": "Gratitude creation prompt #12 of 30"
+  },
+  "createStarHint13": "Who makes you feel special?",
+  "@createStarHint13": {
+    "description": "Gratitude creation prompt #13 of 30"
+  },
+  "createStarHint14": "What is a challenge you overcame?",
+  "@createStarHint14": {
+    "description": "Gratitude creation prompt #14 of 30"
+  },
+  "createStarHint15": "What did you learn today?",
+  "@createStarHint15": {
+    "description": "Gratitude creation prompt #15 of 30"
+  },
+  "createStarHint16": "What did you learn this week?",
+  "@createStarHint16": {
+    "description": "Gratitude creation prompt #16 of 30"
+  },
+  "createStarHint17": "What's your favourite food?",
+  "@createStarHint17": {
+    "description": "Gratitude creation prompt #17 of 30"
+  },
+  "createStarHint18": "What's your favourite song?",
+  "@createStarHint18": {
+    "description": "Gratitude creation prompt #18 of 30"
+  },
+  "createStarHint19": "What's your favourite clothing or object?",
+  "@createStarHint19": {
+    "description": "Gratitude creation prompt #19 of 30"
+  },
+  "createStarHint20": "Where's your favourite place?",
+  "@createStarHint20": {
+    "description": "Gratitude creation prompt #20 of 30"
+  },
+  "createStarHint21": "Where is somewhere that brings you peace?",
+  "@createStarHint21": {
+    "description": "Gratitude creation prompt #21 of 30"
+  },
+  "createStarHint22": "Where's your favourite spot in your home?",
+  "@createStarHint22": {
+    "description": "Gratitude creation prompt #22 of 30"
+  },
+  "createStarHint23": "What's something you take for granted?",
+  "@createStarHint23": {
+    "description": "Gratitude creation prompt #23 of 30"
+  },
+  "createStarHint24": "What's a piece of art that brings you joy?",
+  "@createStarHint24": {
+    "description": "Gratitude creation prompt #24 of 30"
+  },
+  "createStarHint25": "What's a modern convenience that makes life easier?",
+  "@createStarHint25": {
+    "description": "Gratitude creation prompt #25 of 30"
+  },
+  "createStarHint26": "What's a challenge that's brought you strength or wisdom?",
+  "@createStarHint26": {
+    "description": "Gratitude creation prompt #26 of 30"
+  },
+  "createStarHint27": "What skill do you feel proud of?",
+  "@createStarHint27": {
+    "description": "Gratitude creation prompt #27 of 30"
+  },
+  "createStarHint28": "What memory brings you joy?",
+  "@createStarHint28": {
+    "description": "Gratitude creation prompt #28 of 30"
+  },
+  "createStarHint29": "What opportunity are you grateful for?",
+  "@createStarHint29": {
+    "description": "Gratitude creation prompt #29 of 30"
+  },
+  "createStarHint30": "What brings you hope?",
+  "@createStarHint30": {
+    "description": "Gratitude creation prompt #30 of 30"
+  },
   "createStarButton": "Create Star",
   "cancelButton": "Cancel",
   "closeButton": "Close",

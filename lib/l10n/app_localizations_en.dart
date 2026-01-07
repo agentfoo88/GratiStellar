@@ -24,6 +24,103 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createStarHint => 'What lights up your heart today?';
 
   @override
+  String get createStarHint1 => 'What\'s something that made you smile today?';
+
+  @override
+  String get createStarHint2 => 'What did you do well today?';
+
+  @override
+  String get createStarHint3 => 'What is something beautiful you saw today?';
+
+  @override
+  String get createStarHint4 =>
+      'What was an act of kindness that someone did for you?';
+
+  @override
+  String get createStarHint5 =>
+      'What is a routine or ritual that brings you comfort?';
+
+  @override
+  String get createStarHint6 => 'Who has supported you in your life? How?';
+
+  @override
+  String get createStarHint7 =>
+      'Who has supported you in your personal life? How?';
+
+  @override
+  String get createStarHint8 => 'Who has supported you in your career? How?';
+
+  @override
+  String get createStarHint9 =>
+      'Who has taught you something? What did they teach you?';
+
+  @override
+  String get createStarHint10 => 'Who makes you feel loved?';
+
+  @override
+  String get createStarHint11 =>
+      'When was the last time you laughed? Describe the situation';
+
+  @override
+  String get createStarHint12 => 'Who believed in you?';
+
+  @override
+  String get createStarHint13 => 'Who makes you feel special?';
+
+  @override
+  String get createStarHint14 => 'What is a challenge you overcame?';
+
+  @override
+  String get createStarHint15 => 'What did you learn today?';
+
+  @override
+  String get createStarHint16 => 'What did you learn this week?';
+
+  @override
+  String get createStarHint17 => 'What\'s your favourite food?';
+
+  @override
+  String get createStarHint18 => 'What\'s your favourite song?';
+
+  @override
+  String get createStarHint19 => 'What\'s your favourite clothing or object?';
+
+  @override
+  String get createStarHint20 => 'Where\'s your favourite place?';
+
+  @override
+  String get createStarHint21 => 'Where is somewhere that brings you peace?';
+
+  @override
+  String get createStarHint22 => 'Where\'s your favourite spot in your home?';
+
+  @override
+  String get createStarHint23 => 'What\'s something you take for granted?';
+
+  @override
+  String get createStarHint24 => 'What\'s a piece of art that brings you joy?';
+
+  @override
+  String get createStarHint25 =>
+      'What\'s a modern convenience that makes life easier?';
+
+  @override
+  String get createStarHint26 =>
+      'What\'s a challenge that\'s brought you strength or wisdom?';
+
+  @override
+  String get createStarHint27 => 'What skill do you feel proud of?';
+
+  @override
+  String get createStarHint28 => 'What memory brings you joy?';
+
+  @override
+  String get createStarHint29 => 'What opportunity are you grateful for?';
+
+  @override
+  String get createStarHint30 => 'What brings you hope?';
+
+  @override
   String get createStarButton => 'Create Star';
 
   @override

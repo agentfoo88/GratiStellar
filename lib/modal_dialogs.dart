@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'font_scaling.dart';
 import 'gratitude_stars.dart';
 import 'l10n/app_localizations.dart';
+import 'l10n/app_localizations_extensions.dart';
 import 'storage.dart';
 import 'widgets/app_dialog.dart';
 import 'widgets/edit_star_dialog.dart';
@@ -603,7 +604,7 @@ class GratitudeDialogs {
                                 decoration: InputDecoration(
                                   hintText: AppLocalizations.of(
                                     context,
-                                  )!.createStarHint,
+                                  )!.getRandomCreateStarHint(),
                                   hintStyle: FontScaling.getInputHint(context),
                                   filled: true,
                                   fillColor: Colors.white.withValues(

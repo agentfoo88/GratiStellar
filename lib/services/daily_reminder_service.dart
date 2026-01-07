@@ -259,6 +259,61 @@ class DailyReminderService extends ChangeNotifier {
     }
   }
 
+  /// Reschedule reminder for tomorrow (called when user creates a gratitude)
+  /// This prevents the reminder from firing today if already completed
+  Future<void> rescheduleForTomorrow() async {
+    if (!_isEnabled) return;
+
+    try {
+      AppLogger.info('🔔 Rescheduling reminder for tomorrow...');
+
+      // Cancel today's pending notification
+      await cancelReminder();
+
+      // Calculate tomorrow at the same time
+      final now = tz.TZDateTime.now(tz.local);
+      final tomorrow = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        _reminderTime.hour,
+        _reminderTime.minute,
+      ).add(const Duration(days: 1));
+
+      // Schedule the notification for tomorrow
+      await _notifications.zonedSchedule(
+        _notificationId,
+        'Time for gratitude ✨',
+        'Take a moment to reflect on what you\'re grateful for today.',
+        tomorrow,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'daily_reminders',
+            'Daily Reminders',
+            channelDescription: 'Daily gratitude reminders',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: false,
+            presentSound: true,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+
+      AppLogger.success(
+          '✅ Reminder rescheduled for tomorrow at ${_reminderTime.format24()} (${tomorrow.toLocal()})');
+    } catch (e) {
+      AppLogger.error('❌ Error rescheduling reminder for tomorrow: $e');
+    }
+  }
+
   /// Enable or disable reminders
   Future<void> setEnabled(bool enabled) async {
     _isEnabled = enabled;

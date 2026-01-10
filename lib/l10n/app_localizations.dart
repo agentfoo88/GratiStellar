@@ -1924,6 +1924,54 @@ abstract class AppLocalizations {
   /// **'Encrypted for security'**
   String get backupEncrypted;
 
+  /// Label for backup format selection
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Format:'**
+  String get backupFormat;
+
+  /// Encrypted backup format option
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted (Recommended)'**
+  String get backupFormatEncrypted;
+
+  /// Description of encrypted format
+  ///
+  /// In en, this message translates to:
+  /// **'File is encrypted for security and privacy'**
+  String get backupFormatEncryptedDescription;
+
+  /// Plaintext backup format option
+  ///
+  /// In en, this message translates to:
+  /// **'Plaintext (GDPR Export)'**
+  String get backupFormatPlaintext;
+
+  /// Description of plaintext format
+  ///
+  /// In en, this message translates to:
+  /// **'Unencrypted JSON file for data portability'**
+  String get backupFormatPlaintextDescription;
+
+  /// Warning that backup is not encrypted
+  ///
+  /// In en, this message translates to:
+  /// **'NOT encrypted - plaintext format'**
+  String get backupNotEncrypted;
+
+  /// Title for plaintext warning
+  ///
+  /// In en, this message translates to:
+  /// **'Security Warning'**
+  String get backupPlaintextWarningTitle;
+
+  /// Warning message about plaintext backup security
+  ///
+  /// In en, this message translates to:
+  /// **'This export is NOT ENCRYPTED. Anyone with access to the file can read your data. Only use this format for GDPR compliance or data portability needs. For regular backups, use encrypted format.'**
+  String get backupPlaintextWarningMessage;
+
   /// Button text to create backup
   ///
   /// In en, this message translates to:

@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'background.dart';
+import 'core/services/firebase_initializer.dart';
 import 'core/utils/app_logger.dart';
 import 'features/gratitudes/data/datasources/galaxy_local_data_source.dart';
 import 'features/gratitudes/data/datasources/galaxy_remote_data_source.dart';
@@ -16,7 +17,6 @@ import 'features/gratitudes/data/repositories/galaxy_repository.dart';
 import 'features/gratitudes/data/repositories/gratitude_repository.dart';
 import 'features/gratitudes/presentation/state/galaxy_provider.dart';
 import 'features/gratitudes/presentation/state/gratitude_provider.dart';
-import 'firebase_options.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/onboarding/age_gate_screen.dart';
@@ -35,25 +35,24 @@ void main() async {
   AppLogger.start('🚀 App starting...');
   WidgetsFlutterBinding.ensureInitialized();
 
-  AppLogger.data('🔥 Initializing Firebase...');
-  // Initialize Firebase with generated options
+  // CRITICAL FIX: Set first run flag BEFORE initializing providers
+  // This prevents the first run cleanup from deleting galaxies created during initialization
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(
-      const Duration(seconds: 10), // Increased timeout for slower devices
-      onTimeout: () {
-        AppLogger.error('❌ Firebase initialization timed out!');
-        throw TimeoutException('Firebase init timeout');
-      },
-    );
-    AppLogger.success('✅ Firebase initialized');
-    
-    // Verify Firebase is actually ready by checking if we can access it
-    if (Firebase.apps.isEmpty) {
-      throw Exception('Firebase apps list is empty after initialization');
+    final prefs = await SharedPreferences.getInstance();
+    final hasRunBefore = prefs.getBool('has_run_before') ?? false;
+    if (!hasRunBefore) {
+      AppLogger.info('🆕 First run detected - will skip data cleanup during provider initialization');
+      await prefs.setBool('has_run_before', true);
     }
-    
+  } catch (e) {
+    AppLogger.error('⚠️ Error setting first run flag: $e');
+  }
+
+  AppLogger.data('🔥 Initializing Firebase...');
+  // Initialize Firebase using FirebaseInitializer with retry logic
+  final firebaseInitialized = await FirebaseInitializer.instance.ensureInitialized();
+
+  if (firebaseInitialized) {
     // Initialize Crashlytics only if Firebase is ready
     AppLogger.data('💥 Initializing Crashlytics...');
     try {
@@ -68,18 +67,10 @@ void main() async {
     } catch (e) {
       AppLogger.error('❌ Crashlytics failed: $e (continuing anyway)');
     }
-  } catch (e, stack) {
-    AppLogger.error('❌ Firebase initialization failed: $e');
-    // Only try to log to Crashlytics if Firebase might be partially initialized
-    try {
-      if (Firebase.apps.isNotEmpty) {
-        CrashlyticsService().recordError(e, stack, reason: 'Firebase initialization failed');
-      }
-    } catch (_) {
-      // Ignore - Crashlytics might not be available
-    }
-    // Don't throw - let the app continue and handle gracefully
-    // The app will show onboarding which doesn't require Firebase immediately
+  } else {
+    // Firebase failed to initialize after all retries
+    AppLogger.warning('⚠️ Firebase initialization failed, app will run in offline mode');
+    AppLogger.warning('⚠️ Some features may be unavailable');
   }
 
   AppLogger.data('📦 Loading textures...');
@@ -131,7 +122,9 @@ class GratiStellarApp extends StatelessWidget {
 
     // Initialize galaxy services
     final galaxyLocalDataSource = GalaxyLocalDataSource(userProfileManager: userProfileManager);
-    final galaxyRemoteDataSource = GalaxyRemoteDataSource(authService: authService);
+    final galaxyRemoteDataSource = GalaxyRemoteDataSource(
+      authService: authService,
+    );
     final galaxyRepository = GalaxyRepository(
       localDataSource: galaxyLocalDataSource,
       remoteDataSource: galaxyRemoteDataSource,
@@ -184,33 +177,6 @@ class GratiStellarApp extends StatelessWidget {
               // Link on first update if needed
               gratitudeProvider.setGalaxyProvider(galaxyProvider);
               galaxyProvider.setGratitudeProvider(gratitudeProvider);
-            }
-
-            // Initialize galaxy system ONCE, then load gratitudes
-            // Check if initialization is needed (activeGalaxyId is null)
-            if (galaxyProvider.activeGalaxyId == null) {
-              // First time - initialize galaxies
-              // Use Future.microtask to avoid blocking the build
-              Future.microtask(() async {
-                try {
-                  await galaxyProvider.initialize();
-                  // After galaxies are ready, load gratitudes
-                  if (gratitudeProvider != null) {
-                    await gratitudeProvider.loadGratitudes();
-                  }
-                } catch (e) {
-                  AppLogger.error('❌ Error during galaxy initialization: $e');
-                }
-              });
-            } else if (galaxyProvider.activeGalaxyId != null &&
-                gratitudeProvider.gratitudeStars.isEmpty &&
-                !gratitudeProvider.isLoading) {
-              // Galaxy is ready but gratitudes not loaded yet
-              Future.microtask(() {
-                if (gratitudeProvider != null) {
-                  gratitudeProvider.loadGratitudes();
-                }
-              });
             }
 
             return gratitudeProvider;
@@ -389,28 +355,195 @@ class _SplashWrapperState extends State<_SplashWrapper> {
       );
     }
 
-    // After splash, show the appropriate screen based on onboarding/auth state
-    // Get UserProfileManager from context
-    final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
-    
-    return FutureBuilder<Widget>(
-      future: OnboardingService(userProfileManager: userProfileManager).getInitialScreen(),
-      builder: (context, snapshot) {
-        // Show loading while determining initial screen
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingScreen();
+    // After splash, wait for galaxy initialization before showing the main app
+    final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+    final gratitudeProvider = Provider.of<GratitudeProvider?>(context, listen: false);
+
+    return FutureBuilder<void>(
+      future: _initializeProviders(galaxyProvider, gratitudeProvider).timeout(
+        Duration(seconds: 90),  // Generous timeout for slow emulators
+        onTimeout: () {
+          AppLogger.error('❌ Initialization hung for 90+ seconds, showing error');
+          throw TimeoutException('App initialization timed out after 90 seconds');
+        },
+      ),
+      builder: (context, initSnapshot) {
+        // Show loading while initializing
+        if (initSnapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+                  ),
+                  SizedBox(height: 24),
+                  Text(
+                    'Preparing your universe...',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
-        // Handle errors in initial screen determination
-        if (snapshot.hasError) {
-          AppLogger.error('Error determining initial screen: ${snapshot.error}');
-          // On error, navigate to age gate to restart onboarding
-          return const AgeGateScreen();
+        // Handle initialization errors
+        if (initSnapshot.hasError) {
+          final error = initSnapshot.error;
+          AppLogger.error('Error during initialization: $error');
+
+          // Handle timeout errors specifically
+          if (error is TimeoutException) {
+            return Scaffold(
+              backgroundColor: Color(0xFF0A0E27),
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.timer_off, color: Colors.orange, size: 64),
+                      SizedBox(height: 16),
+                      Text(
+                        'Initialization took too long',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'The app may be experiencing connectivity issues or running slowly.',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 32),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Force restart initialization
+                          setState(() {});
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFFFE135),
+                          foregroundColor: Color(0xFF0A0E27),
+                          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        ),
+                        child: Text(
+                          'Try Again',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+
+          // Handle other errors
+          return Scaffold(
+            backgroundColor: Color(0xFF0A0E27),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 64),
+                    SizedBox(height: 16),
+                    Text(
+                      'Failed to initialize app',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      '$error',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {});
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFFFFE135),
+                        foregroundColor: Color(0xFF0A0E27),
+                      ),
+                      child: Text('Try Again'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
         }
 
-        // Return the determined screen (GratitudeScreen, AgeGateScreen, or ConsentScreen)
-        return snapshot.data ?? const AgeGateScreen();
+        // After initialization, show the appropriate screen based on onboarding/auth state
+        final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+
+        return FutureBuilder<Widget>(
+          future: OnboardingService(userProfileManager: userProfileManager).getInitialScreen(),
+          builder: (context, snapshot) {
+            // Show loading while determining initial screen
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return _buildLoadingScreen();
+            }
+
+            // Handle errors in initial screen determination
+            if (snapshot.hasError) {
+              AppLogger.error('Error determining initial screen: ${snapshot.error}');
+              // On error, navigate to age gate to restart onboarding
+              return const AgeGateScreen();
+            }
+
+            // Return the determined screen (GratitudeScreen, AgeGateScreen, or ConsentScreen)
+            return snapshot.data ?? const AgeGateScreen();
+          },
+        );
       },
     );
+  }
+
+  /// Initialize providers in the correct order
+  Future<void> _initializeProviders(
+    GalaxyProvider galaxyProvider,
+    GratitudeProvider? gratitudeProvider,
+  ) async {
+    try {
+      // Initialize galaxy system first
+      await galaxyProvider.initialize();
+      AppLogger.success('✅ Galaxy system initialized');
+
+      // Then load gratitudes
+      if (gratitudeProvider != null) {
+        await gratitudeProvider.loadGratitudes();
+        AppLogger.success('✅ Gratitudes loaded');
+      }
+    } catch (e) {
+      AppLogger.error('❌ Provider initialization failed: $e');
+      rethrow;
+    }
   }
 }

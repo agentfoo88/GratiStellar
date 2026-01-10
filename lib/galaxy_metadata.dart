@@ -10,7 +10,8 @@ class GalaxyMetadata {
   final DateTime? deletedAt;
   final int starCount; // Cached count
   final DateTime? lastViewedAt;
-  
+  final DateTime? lastModifiedAt; // When galaxy metadata was last modified
+
   // Season tracking fields
   final bool seasonTrackingEnabled;
   final Season? currentSeason;
@@ -25,6 +26,7 @@ class GalaxyMetadata {
     this.deletedAt,
     this.starCount = 0,
     this.lastViewedAt,
+    this.lastModifiedAt,
     this.seasonTrackingEnabled = false,
     this.currentSeason,
     this.isManualOverride = false,
@@ -42,6 +44,7 @@ class GalaxyMetadata {
       name: name,
       createdAt: now,
       lastViewedAt: now,
+      lastModifiedAt: now,
     );
   }
 
@@ -51,6 +54,7 @@ class GalaxyMetadata {
     DateTime? deletedAt,
     int? starCount,
     DateTime? lastViewedAt,
+    DateTime? lastModifiedAt,
     bool? seasonTrackingEnabled,
     Season? currentSeason,
     bool? isManualOverride,
@@ -64,6 +68,7 @@ class GalaxyMetadata {
       deletedAt: deletedAt ?? this.deletedAt,
       starCount: starCount ?? this.starCount,
       lastViewedAt: lastViewedAt ?? this.lastViewedAt,
+      lastModifiedAt: lastModifiedAt ?? this.lastModifiedAt,
       seasonTrackingEnabled: seasonTrackingEnabled ?? this.seasonTrackingEnabled,
       currentSeason: currentSeason ?? this.currentSeason,
       isManualOverride: isManualOverride ?? this.isManualOverride,
@@ -80,6 +85,7 @@ class GalaxyMetadata {
       'deletedAt': deletedAt?.millisecondsSinceEpoch,
       'starCount': starCount,
       'lastViewedAt': lastViewedAt?.millisecondsSinceEpoch,
+      'lastModifiedAt': lastModifiedAt?.millisecondsSinceEpoch,
       'seasonTrackingEnabled': seasonTrackingEnabled,
       'currentSeason': currentSeason?.name,
       'isManualOverride': isManualOverride,
@@ -125,6 +131,9 @@ class GalaxyMetadata {
       starCount: json['starCount'] ?? 0,
       lastViewedAt: json['lastViewedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['lastViewedAt'])
+          : null,
+      lastModifiedAt: json['lastModifiedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['lastModifiedAt'])
           : null,
       seasonTrackingEnabled: json['seasonTrackingEnabled'] ?? false,
       currentSeason: parseSeason(json['currentSeason'] as String?),

@@ -1053,6 +1053,38 @@
         "@backupEncrypted": {
           "description": "Backup is encrypted"
         },
+        "backupFormat": "Backup Format:",
+        "@backupFormat": {
+          "description": "Label for backup format selection"
+        },
+        "backupFormatEncrypted": "Encrypted (Recommended)",
+        "@backupFormatEncrypted": {
+          "description": "Encrypted backup format option"
+        },
+        "backupFormatEncryptedDescription": "File is encrypted for security and privacy",
+        "@backupFormatEncryptedDescription": {
+          "description": "Description of encrypted format"
+        },
+        "backupFormatPlaintext": "Plaintext (GDPR Export)",
+        "@backupFormatPlaintext": {
+          "description": "Plaintext backup format option"
+        },
+        "backupFormatPlaintextDescription": "Unencrypted JSON file for data portability",
+        "@backupFormatPlaintextDescription": {
+          "description": "Description of plaintext format"
+        },
+        "backupNotEncrypted": "NOT encrypted - plaintext format",
+        "@backupNotEncrypted": {
+          "description": "Warning that backup is not encrypted"
+        },
+        "backupPlaintextWarningTitle": "Security Warning",
+        "@backupPlaintextWarningTitle": {
+          "description": "Title for plaintext warning"
+        },
+        "backupPlaintextWarningMessage": "This export is NOT ENCRYPTED. Anyone with access to the file can read your data. Only use this format for GDPR compliance or data portability needs. For regular backups, use encrypted format.",
+        "@backupPlaintextWarningMessage": {
+          "description": "Warning message about plaintext backup security"
+        },
         "createBackup": "Create Backup",
         "@createBackup": {
           "description": "Button text to create backup"

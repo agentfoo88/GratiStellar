@@ -1,16 +1,45 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/error/error_context.dart';
 import '../core/error/error_handler.dart';
 import '../core/security/rate_limiter.dart';
+import '../core/services/firebase_initializer.dart';
 import '../storage.dart';
 import '../core/utils/app_logger.dart';
 
 class FirestoreService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Lazy-initialize Firebase services to handle cases where Firebase isn't ready yet
+  FirebaseFirestore? _firestoreInstance;
+  FirebaseAuth? _authInstance;
+
+  /// Get FirebaseFirestore instance, ensuring Firebase is initialized first
+  FirebaseFirestore get _firestore {
+    if (_firestoreInstance == null) {
+      if (!FirebaseInitializer.instance.isInitialized) {
+        throw StateError(
+          'Firebase not initialized. Cannot access Firestore services. '
+          'The app may be running in offline mode.'
+        );
+      }
+      _firestoreInstance = FirebaseFirestore.instance;
+    }
+    return _firestoreInstance!;
+  }
+
+  /// Get FirebaseAuth instance, ensuring Firebase is initialized first
+  FirebaseAuth get _auth {
+    if (_authInstance == null) {
+      if (!FirebaseInitializer.instance.isInitialized) {
+        throw StateError(
+          'Firebase not initialized. Cannot access authentication services. '
+          'The app may be running in offline mode.'
+        );
+      }
+      _authInstance = FirebaseAuth.instance;
+    }
+    return _authInstance!;
+  }
 
   // Get current user's stars collection reference
   CollectionReference? get _starsCollection {
@@ -168,21 +197,10 @@ class FirestoreService {
 
       final snapshot = await query.get();
 
-      // #region agent log
-      if (kDebugMode) {
-        AppLogger.sync('📥 DEBUG: downloadDeltaStars query executed - lastSyncTime=${lastSyncTime?.toIso8601String()}, queryType=${lastSyncTime != null ? 'delta' : 'first'}, totalDocs=${snapshot.docs.length}');
-      }
-      // #endregion
-
       final stars = snapshot.docs
           .map((doc) {
         try {
           final star = GratitudeStar.fromJson(doc.data() as Map<String, dynamic>);
-          // #region agent log
-          if (kDebugMode) {
-            AppLogger.sync('📥 DEBUG: Downloaded star ${star.id} - galaxyId=${star.galaxyId}, deleted=${star.deleted}, updatedAt=${star.updatedAt.toIso8601String()}');
-          }
-          // #endregion
           return star;
         } catch (e) {
           AppLogger.error('⚠️ Error parsing star ${doc.id}: $e');
@@ -191,16 +209,6 @@ class FirestoreService {
       })
           .whereType<GratitudeStar>()
           .toList();
-
-      // #region agent log
-      if (kDebugMode) {
-        final galaxyIdCounts = <String, int>{};
-        for (final star in stars) {
-          galaxyIdCounts[star.galaxyId] = (galaxyIdCounts[star.galaxyId] ?? 0) + 1;
-        }
-        AppLogger.sync('✅ DEBUG: Delta download complete: ${stars.length} stars by galaxy - ${galaxyIdCounts.toString()}');
-      }
-      // #endregion
 
       AppLogger.sync('✅ Delta download complete: ${stars.length} stars');
       return stars;
@@ -344,35 +352,15 @@ class FirestoreService {
         if (localStar == null) {
           // New star from cloud - add it
           localStarsMap[cloudStar.id] = cloudStar;
-          // #region agent log
-          if (kDebugMode) {
-            AppLogger.sync('🔄 DEBUG: Adding new cloud star ${cloudStar.id} - galaxyId=${cloudStar.galaxyId}');
-          }
-          // #endregion
         } else {
           // Star exists locally - keep newer version
           if (cloudStar.updatedAt.isAfter(localStar.updatedAt)) {
             localStarsMap[cloudStar.id] = cloudStar;
-            // #region agent log
-            if (kDebugMode) {
-              AppLogger.sync('🔄 DEBUG: Replacing local star ${cloudStar.id} with cloud version - galaxyId=${cloudStar.galaxyId}, cloudUpdatedAt=${cloudStar.updatedAt.toIso8601String()}, localUpdatedAt=${localStar.updatedAt.toIso8601String()}');
-            }
-            // #endregion
           }
         }
       }
 
       final mergedStars = localStarsMap.values.toList();
-
-      // #region agent log
-      if (kDebugMode) {
-        final mergedGalaxyIdCounts = <String, int>{};
-        for (final star in mergedStars) {
-          mergedGalaxyIdCounts[star.galaxyId] = (mergedGalaxyIdCounts[star.galaxyId] ?? 0) + 1;
-        }
-        AppLogger.sync('🔄 DEBUG: Merged stars summary - total=${mergedStars.length}, by galaxy=${mergedGalaxyIdCounts.toString()}');
-      }
-      // #endregion
 
       // Upload local stars modified since last sync
       await uploadDeltaStars(mergedStars);

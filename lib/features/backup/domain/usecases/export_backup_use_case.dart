@@ -5,6 +5,7 @@ import 'package:file_saver/file_saver.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../storage.dart';
 import '../../data/repositories/backup_repository.dart';
+import '../models/backup_format.dart';
 
 /// Result of backup export operation
 class ExportBackupResult {
@@ -43,18 +44,21 @@ class ExportBackupUseCase {
   ExportBackupUseCase(this._repository);
 
   /// Execute backup export
-  /// 
+  ///
   /// Collects all user data (stars, galaxies, preferences) and creates
-  /// an encrypted backup file.
-  /// 
+  /// a backup file in the specified format.
+  ///
   /// IMPORTANT: [stars] parameter must include ALL stars from ALL galaxies,
   /// not just the currently active galaxy. Use StorageService.loadGratitudeStars()
   /// to get the complete unfiltered list.
+  ///
+  /// [format] The backup format to use (encrypted or plaintext). Defaults to encrypted.
   Future<ExportBackupResult> execute({
     required List<GratitudeStar> stars,
     required List<GalaxyMetadata> galaxies,
     required double fontScale,
     String? activeGalaxyId,
+    BackupFormat format = BackupFormat.encrypted,
   }) async {
     try {
       // Prepare preferences
@@ -72,8 +76,8 @@ class ExportBackupUseCase {
         activeGalaxyId: activeGalaxyId,
       );
 
-      // Export to encrypted file
-      final filePath = await _repository.exportBackup(backup);
+      // Export to file with specified format
+      final filePath = await _repository.exportBackup(backup, format: format);
 
       return ExportBackupResult.success(filePath, backup);
     } on BackupException catch (e) {
@@ -87,20 +91,24 @@ class ExportBackupUseCase {
   ///
   /// Opens a "Save As" dialog to allow user to save the backup file.
   /// Returns the saved file path on success, or null if user canceled.
-  Future<String?> saveBackupFile(String filePath, String filename) async {
+  ///
+  /// [format] The backup format to determine the correct file extension
+  Future<String?> saveBackupFile(String filePath, String filename, BackupFormat format) async {
     try {
-      // Read the encrypted backup file
+      // Read the backup file
       final file = File(filePath);
       final bytes = await file.readAsBytes();
 
       // Extract filename without extension (file_saver adds it automatically)
-      final nameWithoutExt = filename.replaceAll('.gratistellar', '');
+      final nameWithoutExt = filename
+          .replaceAll('.gratistellar-plain', '')
+          .replaceAll('.gratistellar', '');
 
-      // Save with guaranteed .gratistellar extension
+      // Save with format-specific extension
       final savedPath = await FileSaver.instance.saveAs(
         name: nameWithoutExt,
         bytes: bytes,
-        fileExtension: 'gratistellar',
+        fileExtension: format.fileExtension,
         mimeType: MimeType.other,
       );
 

@@ -69,6 +69,7 @@ class GratitudeProvider extends ChangeNotifier {
   bool _isSyncing = false;
   DateTime? _lastSuccessfulSync;
   bool _needsResyncAfterCurrent = false; // Flag to re-sync after current sync completes
+  bool _needsDeduplication = false; // Flag to indicate deduplication is needed after merge
 
   // Sign-in prompt tracking
   static const String _signInPromptDismissedKey = 'sign_in_prompt_dismissed';
@@ -197,17 +198,25 @@ class GratitudeProvider extends ChangeNotifier {
   Future<void> loadGratitudes({bool waitForSync = false}) async {
     final result = await _loadGratitudesUseCase(NoParams());
 
-    // Deduplicate by ID (in case of storage corruption or sync issues)
-    final seenIds = <String>{};
-    final dedupedStars = <GratitudeStar>[];
+    // Only deduplicate if we suspect duplicates (after merge operations)
+    List<GratitudeStar> dedupedStars;
+    if (_needsDeduplication) {
+      // Deduplicate by ID
+      final seenIds = <String>{};
+      dedupedStars = [];
 
-    for (final star in result.stars) {
-      if (!seenIds.contains(star.id)) {
-        seenIds.add(star.id);
-        dedupedStars.add(star);
-      } else {
-        AppLogger.warning('⚠️ Duplicate star detected and removed: ${star.id}');
+      for (final star in result.stars) {
+        if (!seenIds.contains(star.id)) {
+          seenIds.add(star.id);
+          dedupedStars.add(star);
+        } else {
+          AppLogger.warning('⚠️ Duplicate star detected and removed: ${star.id}');
+        }
       }
+
+      _needsDeduplication = false;
+    } else {
+      dedupedStars = result.stars;
     }
 
     // Purge old deleted items (30+ days)
@@ -287,6 +296,14 @@ class GratitudeProvider extends ChangeNotifier {
     // Smart sync: Skip if recently synced and no pending changes (unless forced)
     if (!force && _lastSuccessfulSync != null && !_hasPendingChanges) {
       final timeSinceLastSync = DateTime.now().difference(_lastSuccessfulSync!);
+
+      // Very aggressive skip for syncs within 5 seconds (prevents sync loops)
+      if (timeSinceLastSync < Duration(seconds: 5)) {
+        AppLogger.sync('⏭️ Skipping sync - synced less than 5 seconds ago with no pending changes');
+        return;
+      }
+
+      // Standard skip for syncs within 5 minutes
       if (timeSinceLastSync < Duration(minutes: 5)) {
         AppLogger.sync('⏭️ Skipping sync - recently synced ${timeSinceLastSync.inMinutes}m ago with no pending changes');
         return;
@@ -301,25 +318,40 @@ class GratitudeProvider extends ChangeNotifier {
       // Get ALL stars (unfiltered) for sync to prevent data loss across galaxies
       final allStarsUnfiltered = await _repository.getAllGratitudesUnfiltered();
       
-      // DEBUG: Log what we're syncing
-      AppLogger.sync('📋 Preparing to sync ${allStarsUnfiltered.length} stars:');
-      for (final star in allStarsUnfiltered) {
-        AppLogger.info('   - "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" (${star.id}) galaxy:${star.galaxyId} deleted:${star.deleted}');
-      }
+      // Log sync preparation
+      AppLogger.sync('📋 Preparing to sync ${allStarsUnfiltered.length} stars');
       
       final result = await _syncGratitudesUseCase(
         SyncGratitudesParams(localStars: allStarsUnfiltered),
+      ).timeout(
+        Duration(seconds: 30),  // Match existing timeout pattern in loadGratitudes()
+        onTimeout: () {
+          throw TimeoutException('Cloud sync timed out after 30 seconds');
+        },
       );
 
-      // Deduplicate by ID (in case of sync issues)
-      final seenIds = <String>{};
-      final dedupedStars = <GratitudeStar>[];
+      // Mark that deduplication is needed after merge
+      _needsDeduplication = true;
 
-      for (final star in result.mergedStars) {
-        if (!seenIds.contains(star.id)) {
-          seenIds.add(star.id);
-          dedupedStars.add(star);
+      // Only deduplicate if we suspect duplicates (after merge operations)
+      List<GratitudeStar> dedupedStars;
+      if (_needsDeduplication) {
+        // Deduplicate by ID
+        final seenIds = <String>{};
+        dedupedStars = [];
+
+        for (final star in result.mergedStars) {
+          if (!seenIds.contains(star.id)) {
+            seenIds.add(star.id);
+            dedupedStars.add(star);
+          } else {
+            AppLogger.warning('⚠️ Duplicate star detected and removed: ${star.id}');
+          }
         }
+
+        _needsDeduplication = false;
+      } else {
+        dedupedStars = result.mergedStars;
       }
 
       // Filter for UI display: only non-deleted stars from the current galaxy
@@ -343,22 +375,31 @@ class GratitudeProvider extends ChangeNotifier {
       rethrow; // Let caller handle the error
     } finally {
       _isSyncing = false;
-      
-      // If changes were made during sync, trigger another sync immediately
+
+      // If changes were made during sync, trigger another sync
       if (wasResync || _needsResyncAfterCurrent) {
-        AppLogger.sync('🔄 Changes occurred during sync, triggering immediate re-sync (force=true)...');
-        final hadPendingChanges = _needsResyncAfterCurrent;
-        _needsResyncAfterCurrent = false;
-        // Run in background to avoid blocking
-        Future.delayed(Duration(milliseconds: 100), () {
-          syncWithCloud(force: true).catchError((e) {
-            AppLogger.sync('⚠️ Re-sync failed: $e');
-            // If re-sync fails and we had pending changes, keep the flag set
-            if (hadPendingChanges) {
-              _hasPendingChanges = true;
+        // Only trigger re-sync if not already syncing
+        if (!_isSyncing) {
+          AppLogger.sync('🔄 Changes occurred during sync, scheduling re-sync...');
+          final hadPendingChanges = _needsResyncAfterCurrent;
+          _needsResyncAfterCurrent = false;
+
+          // Longer delay to allow UI to settle and batch changes
+          Future.delayed(Duration(milliseconds: 500), () {
+            // Double-check sync state before executing
+            if (!_isSyncing) {
+              syncWithCloud(force: true).catchError((e) {
+                AppLogger.sync('⚠️ Re-sync failed: $e');
+                if (hadPendingChanges) {
+                  _hasPendingChanges = true;
+                }
+              });
             }
           });
-        });
+        } else {
+          AppLogger.sync('⏸️ Sync already in progress, marking for later re-sync');
+          _needsResyncAfterCurrent = true;
+        }
       }
     }
   }
@@ -371,37 +412,15 @@ class GratitudeProvider extends ChangeNotifier {
         Color? customColor,
       }) async {
     // Safety check: Ensure galaxy system is initialized
-    // If not initialized, wait a bit and retry (handles race condition)
+    // At this point, galaxy should always be initialized due to the initialization
+    // guard in _SplashWrapper. However, we keep this check for safety.
     if (_galaxyProvider.activeGalaxyId == null) {
-      AppLogger.warning('⚠️ No active galaxy, waiting for initialization...');
-      
-      // Wait up to 2 seconds for initialization
-      int attempts = 0;
-      const maxAttempts = 20; // 20 * 100ms = 2 seconds
-      while (_galaxyProvider.activeGalaxyId == null && attempts < maxAttempts) {
-        await Future.delayed(const Duration(milliseconds: 100));
-        attempts++;
-      }
-      
-      // If still not initialized, try initializing now
-      if (_galaxyProvider.activeGalaxyId == null) {
-        AppLogger.info('🔄 Attempting to initialize galaxy system...');
-        try {
-          await _galaxyProvider.initialize();
-        } catch (e) {
-          AppLogger.error('❌ Galaxy initialization failed: $e');
-        }
-      }
-      
-      // Final check
-      if (_galaxyProvider.activeGalaxyId == null) {
-        AppLogger.error('❌ Cannot create star: No active galaxy (initialization incomplete)');
-        throw StateError(
-            'Galaxy system not initialized. Please wait a moment and try again.'
-        );
-      }
+      AppLogger.error('❌ Cannot create star: No active galaxy');
+      throw StateError(
+        'Galaxy system not initialized. This should not happen - please report this error.'
+      );
     }
-    
+
     final star = await _addGratitudeUseCase(
       AddGratitudeParams(
         text: text,

@@ -8,6 +8,7 @@ import 'package:crypto/crypto.dart';
 
 import '../../../../galaxy_metadata.dart';
 import '../../../../storage.dart';
+import '../../domain/models/backup_format.dart';
 
 /// Exception thrown when backup operations fail
 class BackupException implements Exception {
@@ -36,6 +37,8 @@ class BackupRepository {
   // Fixed encryption key for portability - backups can be restored on any device
   // This provides basic obfuscation. For stronger security, consider password-based encryption.
   static const String _fixedEncryptionKey = 'GratiStellar_Backup_Key_v1.0_2024';
+  // Plaintext backup format marker
+  static const String _plaintextMarker = 'GRATISTELLAR_PLAINTEXT_BACKUP_V1';
 
   /// Create a backup of current data
   Future<BackupData> createBackup({
@@ -65,47 +68,59 @@ class BackupRepository {
     }
   }
 
-  /// Export backup to encrypted file and return file path
-  Future<String> exportBackup(BackupData backup) async {
+  /// Export backup to file and return file path
+  ///
+  /// [backup] The backup data to export
+  /// [format] The format to use (encrypted or plaintext), defaults to encrypted
+  Future<String> exportBackup(BackupData backup, {BackupFormat format = BackupFormat.encrypted}) async {
     try {
       // Serialize to JSON
       final jsonString = json.encode(backup.toJson());
-      
-      // Encrypt data
-      final encryptedData = await _encryptData(jsonString);
-      
+
+      // Process data based on format
+      late List<int> fileData;
+      late String extension;
+
+      if (format == BackupFormat.encrypted) {
+        fileData = await _encryptData(jsonString);
+        extension = 'gratistellar';
+      } else {
+        fileData = await _createPlaintextData(jsonString);
+        extension = 'gratistellar-plain';
+      }
+
       // Generate filename with timestamp
       final timestamp = backup.createdAt.toIso8601String().replaceAll(':', '-').split('.')[0];
-      final filename = 'gratistellar_backup_$timestamp.gratistellar';
-      
+      final filename = 'gratistellar_backup_$timestamp.$extension';
+
       // Get temporary directory for the file
       final directory = await getTemporaryDirectory();
       final filePath = '${directory.path}/$filename';
-      
-      // Write encrypted data to file
+
+      // Write data to file
       final file = File(filePath);
-      await file.writeAsBytes(encryptedData);
-      
-      debugPrint('✅ Backup exported to: $filePath');
+      await file.writeAsBytes(fileData);
+
+      debugPrint('✅ Backup exported to: $filePath (${format.name})');
       return filePath;
     } catch (e) {
       throw BackupException('Failed to export backup', e);
     }
   }
 
-  /// Import backup from encrypted file
+  /// Import backup from file (auto-detects encrypted or plaintext format)
   Future<BackupData> importBackup(String filePath) async {
     try {
-      // Read encrypted file
+      // Read backup file
       final file = File(filePath);
       if (!await file.exists()) {
         throw ValidationException('Backup file not found');
       }
-      
-      final encryptedData = await file.readAsBytes();
-      
-      // Decrypt data
-      final jsonString = await _decryptData(encryptedData);
+
+      final fileData = await file.readAsBytes();
+
+      // Auto-detect format and decode data
+      final jsonString = await _decodeBackupData(fileData);
 
       // Parse JSON
       Map<String, dynamic> decoded;
@@ -307,6 +322,77 @@ class BackupRepository {
     }
   }
 
+  /// Create plaintext backup data with marker
+  ///
+  /// Wraps JSON data in a structure with plaintext marker and version info.
+  /// Pretty-prints JSON for human readability (GDPR requirement).
+  Future<List<int>> _createPlaintextData(String jsonData) async {
+    try {
+      // Create a structured plaintext format with metadata
+      final plaintextContent = {
+        'format': _plaintextMarker,
+        'version': _backupVersion,
+        'data': json.decode(jsonData),
+      };
+
+      // Pretty-print JSON for readability (GDPR requirement: human-readable)
+      const encoder = JsonEncoder.withIndent('  ');
+      final prettyJson = encoder.convert(plaintextContent);
+
+      return utf8.encode(prettyJson);
+    } catch (e) {
+      throw BackupException('Failed to create plaintext backup', e);
+    }
+  }
+
+  /// Auto-detect backup format and decode data
+  ///
+  /// Detects whether the file is encrypted or plaintext format
+  /// and returns the decoded JSON string.
+  Future<String> _decodeBackupData(List<int> fileData) async {
+    try {
+      // Check for encrypted format marker
+      final encryptedMarker = utf8.encode('GRATISTELLAR_BACKUP_V1:');
+      if (fileData.length >= encryptedMarker.length) {
+        bool isEncrypted = true;
+        for (var i = 0; i < encryptedMarker.length; i++) {
+          if (fileData[i] != encryptedMarker[i]) {
+            isEncrypted = false;
+            break;
+          }
+        }
+
+        if (isEncrypted) {
+          debugPrint('🔒 Detected encrypted backup format');
+          return await _decryptData(fileData);
+        }
+      }
+
+      // Try parsing as plaintext JSON
+      try {
+        final jsonString = utf8.decode(fileData);
+        final decoded = json.decode(jsonString);
+
+        // Check for plaintext marker
+        if (decoded is Map && decoded['format'] == _plaintextMarker) {
+          debugPrint('📄 Detected plaintext backup format');
+          // Return the inner data as JSON string
+          return json.encode(decoded['data']);
+        }
+      } catch (e) {
+        // Not plaintext, will fall through to error
+      }
+
+      // Unknown format
+      throw ValidationException(
+        'Unable to detect backup file format. '
+        'This may not be a valid GratiStellar backup file, or it may be corrupted.'
+      );
+    } catch (e) {
+      if (e is ValidationException) rethrow;
+      throw BackupException('Failed to decode backup data', e);
+    }
+  }
 
   /// Check if backup version is compatible
   bool _isVersionCompatible(String backupVersion) {

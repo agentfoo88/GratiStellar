@@ -164,6 +164,7 @@ class GalaxyRepository {
     final restoredGalaxy = galaxy.copyWith(
       deleted: false,
       deletedAt: null,
+      lastModifiedAt: DateTime.now(),
     );
     galaxies[index] = restoredGalaxy;
     await saveGalaxies(galaxies);
@@ -335,9 +336,9 @@ class GalaxyRepository {
           AppLogger.sync('   ➕ Added new cloud galaxy: ${cloudGalaxy.name} (${cloudGalaxy.id})');
         } else {
           // Galaxy exists in both - merge metadata
-          // Keep the one with more recent lastViewedAt or createdAt
-          final localDate = localGalaxy.lastViewedAt ?? localGalaxy.createdAt;
-          final cloudDate = cloudGalaxy.lastViewedAt ?? cloudGalaxy.createdAt;
+          // Keep the one with more recent lastModifiedAt, falling back to createdAt
+          final localDate = localGalaxy.lastModifiedAt ?? localGalaxy.createdAt;
+          final cloudDate = cloudGalaxy.lastModifiedAt ?? cloudGalaxy.createdAt;
 
           if (cloudDate.isAfter(localDate)) {
             // Cloud is newer - use cloud but preserve local star count if it's higher

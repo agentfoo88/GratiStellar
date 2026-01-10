@@ -7,8 +7,10 @@ import '../../../../font_scaling.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../storage.dart';
+import '../../../../widgets/scrollable_dialog_content.dart';
 import '../../../gratitudes/presentation/state/galaxy_provider.dart';
 import '../../data/repositories/backup_repository.dart';
+import '../../domain/models/backup_format.dart';
 import '../../domain/usecases/export_backup_use_case.dart';
 
 /// Dialog for exporting backup
@@ -23,6 +25,7 @@ class _BackupDialogState extends State<BackupDialog> {
   bool _isExporting = false;
   String? _errorMessage;
   String? _successMessage;
+  BackupFormat _selectedFormat = BackupFormat.encrypted;
 
   Future<void> _exportBackup() async {
     setState(() {
@@ -68,11 +71,13 @@ class _BackupDialogState extends State<BackupDialog> {
         galaxies: galaxies,
         fontScale: fontScale,
         activeGalaxyId: galaxyProvider.activeGalaxyId,
+        format: _selectedFormat,
       );
 
       if (result.success && result.filePath != null) {
         // Save the backup file with guaranteed extension
         final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
+        final extension = _selectedFormat.fileExtension;
 
         // Capture l10n before async operation
         final l10n = mounted ? AppLocalizations.of(context) : null;
@@ -81,7 +86,8 @@ class _BackupDialogState extends State<BackupDialog> {
         try {
           savedPath = await useCase.saveBackupFile(
             result.filePath!,
-            'gratistellar_backup_$timestamp.gratistellar',
+            'gratistellar_backup_$timestamp.$extension',
+            _selectedFormat,
           );
         } catch (saveError, stack) {
           // Handle file_saver specific errors with ErrorHandler
@@ -178,7 +184,7 @@ class _BackupDialogState extends State<BackupDialog> {
           ),
         ],
       ),
-      content: SingleChildScrollView(
+      content: ScrollableDialogContent(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,6 +237,115 @@ class _BackupDialogState extends State<BackupDialog> {
                 style: FontScaling.getBodyMedium(context),
               ),
               SizedBox(height: 16),
+              Text(
+                l10n.backupFormat,
+                style: FontScaling.getBodySmall(context).copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Column(
+                children: [
+                  RadioListTile<BackupFormat>(
+                    value: BackupFormat.encrypted,
+                    groupValue: _selectedFormat,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedFormat = value!;
+                      });
+                    },
+                    title: Text(
+                      l10n.backupFormatEncrypted,
+                      style: FontScaling.getBodySmall(context),
+                    ),
+                    subtitle: Text(
+                      l10n.backupFormatEncryptedDescription,
+                      style: FontScaling.getCaption(context),
+                    ),
+                    activeColor: Color(0xFFFFE135),
+                  ),
+                  RadioListTile<BackupFormat>(
+                    value: BackupFormat.plaintext,
+                    groupValue: _selectedFormat,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedFormat = value!;
+                      });
+                    },
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.backupFormatPlaintext,
+                            style: FontScaling.getBodySmall(context),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(
+                          Icons.warning_amber,
+                          color: Colors.orange,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                    subtitle: Text(
+                      l10n.backupFormatPlaintextDescription,
+                      style: FontScaling.getCaption(context).copyWith(
+                        color: Colors.orange,
+                      ),
+                    ),
+                    activeColor: Colors.orange,
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              if (_selectedFormat == BackupFormat.plaintext)
+                Semantics(
+                  label: '${l10n.backupPlaintextWarningTitle}: ${l10n.backupPlaintextWarningMessage}',
+                  container: true,
+                  child: Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.orange,
+                          size: 24,
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.backupPlaintextWarningTitle,
+                                style: FontScaling.getBodySmall(context).copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                l10n.backupPlaintextWarningMessage,
+                                style: FontScaling.getCaption(context),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (_selectedFormat == BackupFormat.plaintext) SizedBox(height: 16),
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -264,7 +379,9 @@ class _BackupDialogState extends State<BackupDialog> {
                     _buildInfoItem(l10n.backupIncludesGratitudes),
                     _buildInfoItem(l10n.backupIncludesGalaxies),
                     _buildInfoItem(l10n.backupIncludesPreferences),
-                    _buildInfoItem(l10n.backupEncrypted),
+                    _buildInfoItem(_selectedFormat == BackupFormat.encrypted
+                        ? l10n.backupEncrypted
+                        : l10n.backupNotEncrypted),
                   ],
                 ),
               ),
@@ -341,9 +458,11 @@ class _BackupDialogState extends State<BackupDialog> {
             size: 16,
           ),
           SizedBox(width: 8),
-          Text(
-            text,
-            style: FontScaling.getBodySmall(context),
+          Expanded(
+            child: Text(
+              text,
+              style: FontScaling.getBodySmall(context),
+            ),
           ),
         ],
       ),

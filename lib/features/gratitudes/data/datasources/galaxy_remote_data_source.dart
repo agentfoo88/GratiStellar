@@ -1,18 +1,31 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../core/services/firebase_initializer.dart';
 import '../../../../core/utils/app_logger.dart';
 
 /// Remote data source for galaxy metadata operations
 class GalaxyRemoteDataSource {
-  final FirebaseFirestore _firestore;
+  FirebaseFirestore? _firestoreInstance;
   final AuthService _authService;
 
+  /// Get FirebaseFirestore instance, ensuring Firebase is initialized first
+  FirebaseFirestore get _firestore {
+    if (_firestoreInstance == null) {
+      if (!FirebaseInitializer.instance.isInitialized) {
+        throw StateError(
+          'Firebase not initialized. Cannot access Galaxy remote data services. '
+          'The app may be running in offline mode.'
+        );
+      }
+      _firestoreInstance = FirebaseFirestore.instance;
+    }
+    return _firestoreInstance!;
+  }
+
   GalaxyRemoteDataSource({
-    FirebaseFirestore? firestore,
     required AuthService authService,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _authService = authService;
+  }) : _authService = authService;
 
   /// Get reference to user's galaxy collection
   CollectionReference? _getGalaxyCollection() {

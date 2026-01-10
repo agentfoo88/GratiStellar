@@ -48,9 +48,11 @@ class _RestoreDialogState extends State<RestoreDialog> {
 
         // Warn if extension is wrong, but still try to validate file content
         // This allows users to rename files without breaking import
-        final hasCorrectExtension = filePath.toLowerCase().endsWith('.gratistellar');
+        // Accept both .gratistellar (encrypted) and .gratistellar-plain (plaintext)
+        final hasCorrectExtension = filePath.toLowerCase().endsWith('.gratistellar') ||
+                                     filePath.toLowerCase().endsWith('.gratistellar-plain');
         if (!hasCorrectExtension) {
-          AppLogger.warning('⚠️ Selected file does not have .gratistellar extension: $filePath');
+          AppLogger.warning('⚠️ Selected file does not have valid extension: $filePath');
           // Continue anyway - we'll validate the file content
         }
         

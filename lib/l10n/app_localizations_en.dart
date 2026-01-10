@@ -1020,6 +1020,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupEncrypted => 'Encrypted for security';
 
   @override
+  String get backupFormat => 'Backup Format:';
+
+  @override
+  String get backupFormatEncrypted => 'Encrypted (Recommended)';
+
+  @override
+  String get backupFormatEncryptedDescription =>
+      'File is encrypted for security and privacy';
+
+  @override
+  String get backupFormatPlaintext => 'Plaintext (GDPR Export)';
+
+  @override
+  String get backupFormatPlaintextDescription =>
+      'Unencrypted JSON file for data portability';
+
+  @override
+  String get backupNotEncrypted => 'NOT encrypted - plaintext format';
+
+  @override
+  String get backupPlaintextWarningTitle => 'Security Warning';
+
+  @override
+  String get backupPlaintextWarningMessage =>
+      'This export is NOT ENCRYPTED. Anyone with access to the file can read your data. Only use this format for GDPR compliance or data portability needs. For regular backups, use encrypted format.';
+
+  @override
   String get createBackup => 'Create Backup';
 
   @override

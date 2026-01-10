@@ -2,27 +2,85 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../storage.dart';
+import '../core/services/firebase_initializer.dart';
 import '../core/utils/app_logger.dart';
 import 'user_profile_migration_service.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Lazy-initialize Firebase services to handle cases where Firebase isn't ready yet
+  FirebaseAuth? _authInstance;
+  FirebaseFirestore? _firestoreInstance;
+
+  /// Get FirebaseAuth instance, ensuring Firebase is initialized first
+  FirebaseAuth get _auth {
+    if (_authInstance == null) {
+      if (!FirebaseInitializer.instance.isInitialized) {
+        throw StateError(
+          'Firebase not initialized. Cannot access authentication services. '
+          'The app may be running in offline mode.'
+        );
+      }
+      _authInstance = FirebaseAuth.instance;
+    }
+    return _authInstance!;
+  }
+
+  /// Get FirebaseFirestore instance, ensuring Firebase is initialized first
+  FirebaseFirestore get _firestore {
+    if (_firestoreInstance == null) {
+      if (!FirebaseInitializer.instance.isInitialized) {
+        throw StateError(
+          'Firebase not initialized. Cannot access Firestore services. '
+          'The app may be running in offline mode.'
+        );
+      }
+      _firestoreInstance = FirebaseFirestore.instance;
+    }
+    return _firestoreInstance!;
+  }
+
   final UserProfileMigrationService _migrationService = UserProfileMigrationService();
 
-  // Get current user
-  User? get currentUser => _auth.currentUser;
+  // Get current user (returns null if Firebase not initialized)
+  User? get currentUser {
+    try {
+      return _auth.currentUser;
+    } catch (e) {
+      AppLogger.warning('⚠️ Cannot access currentUser: Firebase not initialized');
+      return null;
+    }
+  }
 
   // Get current user stream
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  Stream<User?> get authStateChanges {
+    try {
+      return _auth.authStateChanges();
+    } catch (e) {
+      AppLogger.warning('⚠️ Cannot access authStateChanges: Firebase not initialized');
+      // Return a stream that emits null
+      return Stream.value(null);
+    }
+  }
 
   // Check if user is signed in
-  bool get isSignedIn => _auth.currentUser != null;
+  bool get isSignedIn {
+    try {
+      return _auth.currentUser != null;
+    } catch (e) {
+      AppLogger.warning('⚠️ Cannot check isSignedIn: Firebase not initialized');
+      return false;
+    }
+  }
 
   // Check if user has email (upgraded from anonymous)
   bool get hasEmailAccount {
-    final user = _auth.currentUser;
-    return user != null && !user.isAnonymous;
+    try {
+      final user = _auth.currentUser;
+      return user != null && !user.isAnonymous;
+    } catch (e) {
+      AppLogger.warning('⚠️ Cannot check hasEmailAccount: Firebase not initialized');
+      return false;
+    }
   }
 
   // Sign in with email/password (for returning users)

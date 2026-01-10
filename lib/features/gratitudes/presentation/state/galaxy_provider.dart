@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../gratitudes/data/repositories/galaxy_repository.dart';
@@ -23,6 +24,11 @@ class GalaxyProvider extends ChangeNotifier {
   final bool _isLoading = false;
   bool _isSwitching = false;
   bool _isInitialized = false; // Guard against duplicate initialization
+  Timer? _starCountUpdateTimer;
+  DateTime? _lastReconciliationTime;
+
+  // Completer for tracking initialization status
+  Completer<void>? _initializationCompleter;
 
   GalaxyProvider({
     required GalaxyRepository galaxyRepository,
@@ -40,6 +46,15 @@ class GalaxyProvider extends ChangeNotifier {
   String? get activeGalaxyId => _activeGalaxyId;
   bool get isLoading => _isLoading;
   bool get isSwitching => _isSwitching;
+
+  /// Get a Future that completes when initialization is done
+  /// Returns immediately if already initialized
+  Future<void> get initialized {
+    if (_isInitialized) {
+      return Future.value();
+    }
+    return _initializationCompleter?.future ?? Future.value();
+  }
 
   /// Get active galaxy metadata
   GalaxyMetadata? get activeGalaxy {
@@ -76,6 +91,15 @@ class GalaxyProvider extends ChangeNotifier {
       AppLogger.warning('ℹ️ Galaxy system already initialized, skipping...');
       return;
     }
+
+    // If already initializing, return the existing completer
+    if (_initializationCompleter != null && !_initializationCompleter!.isCompleted) {
+      AppLogger.info('⏳ Galaxy initialization already in progress, waiting...');
+      return _initializationCompleter!.future;
+    }
+
+    // Start new initialization
+    _initializationCompleter = Completer<void>();
 
     try {
       await loadGalaxies();
@@ -177,8 +201,14 @@ class GalaxyProvider extends ChangeNotifier {
       AppLogger.success(
         '✅ Galaxy system initialized, active: $_activeGalaxyId',
       );
+
+      // Complete the initialization completer
+      _initializationCompleter?.complete();
     } catch (e) {
       AppLogger.error('❌ Galaxy initialization failed: $e');
+      // Complete with error
+      _initializationCompleter?.completeError(e);
+      rethrow;
     }
   }
 
@@ -200,6 +230,12 @@ class GalaxyProvider extends ChangeNotifier {
   /// Reconcile star counts - verify cached counts match actual star data
   /// This fixes drift caused by failed updates, sync issues, or data corruption
   Future<void> _reconcileStarCounts() async {
+    // Skip if reconciled in last 2 seconds
+    if (_lastReconciliationTime != null &&
+        DateTime.now().difference(_lastReconciliationTime!).inSeconds < 2) {
+      return;
+    }
+
     try {
       // Get all stars (unfiltered) to count per galaxy
       final allStars = await _gratitudeRepository.getAllGratitudesUnfiltered();
@@ -257,6 +293,9 @@ class GalaxyProvider extends ChangeNotifier {
           '✅ Reconciled star counts for ${updatedGalaxies.length} galaxies',
         );
       }
+
+      // Update reconciliation timestamp to prevent repeated reconciliation
+      _lastReconciliationTime = DateTime.now();
     } catch (e) {
       AppLogger.error('⚠️ Error reconciling star counts: $e');
       // Don't rethrow - this is a background operation
@@ -441,7 +480,10 @@ class GalaxyProvider extends ChangeNotifier {
           ? newName.substring(0, GalaxyMetadata.maxNameLength)
           : newName;
 
-      final updatedGalaxy = _galaxies[index].copyWith(name: truncatedName);
+      final updatedGalaxy = _galaxies[index].copyWith(
+        name: truncatedName,
+        lastModifiedAt: DateTime.now(),
+      );
       await _galaxyRepository.updateGalaxy(updatedGalaxy);
       await loadGalaxies();
 
@@ -554,13 +596,18 @@ class GalaxyProvider extends ChangeNotifier {
   Future<void> updateActiveGalaxyStarCount(int count) async {
     if (_activeGalaxyId == null) return;
 
-    try {
-      await _galaxyRepository.updateStarCount(_activeGalaxyId!, count);
-      await loadGalaxies();
-      notifyListeners();
-    } catch (e) {
-      AppLogger.error('⚠️ Error updating star count: $e');
-    }
+    // Debounce: cancel pending update and schedule new one
+    _starCountUpdateTimer?.cancel();
+    _starCountUpdateTimer = Timer(Duration(milliseconds: 300), () async {
+      try {
+        await _galaxyRepository.updateStarCount(_activeGalaxyId!, count);
+        await loadGalaxies();
+        notifyListeners();
+      } catch (e, stack) {
+        AppLogger.error('Failed to update galaxy star count: $e');
+        AppLogger.error('Stack trace: $stack');
+      }
+    });
   }
 
   /// Update galaxy metadata

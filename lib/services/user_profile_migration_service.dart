@@ -1,21 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/config/app_config.dart';
+import '../core/services/firebase_initializer.dart';
 import '../core/utils/app_logger.dart';
 
 /// Result of user profile migration
 class MigrationResult {
   /// Whether migration triggered UI flows (e.g., missing critical fields)
   final bool shouldTriggerUI;
-  
+
   /// Whether age gate should be shown
   final bool shouldShowAgeGate;
-  
+
   /// Whether consent screen should be shown
   final bool shouldShowConsent;
-  
+
   /// Fields that were added during migration
   final List<String> fieldsAdded;
-  
+
   /// Migration version applied
   final String? migrationVersion;
 
@@ -29,24 +30,36 @@ class MigrationResult {
 }
 
 /// Service for migrating user profiles and adding missing fields
-/// 
+///
 /// Handles versioned migrations to add missing fields to user profiles
 /// in Firebase. Can trigger UI flows if critical fields are missing.
 class UserProfileMigrationService {
-  final FirebaseFirestore _firestore;
-  
+  FirebaseFirestore? _firestoreInstance;
+
+  /// Get FirebaseFirestore instance, ensuring Firebase is initialized first
+  FirebaseFirestore get _firestore {
+    if (_firestoreInstance == null) {
+      if (!FirebaseInitializer.instance.isInitialized) {
+        throw StateError(
+          'Firebase not initialized. Cannot access migration services. '
+          'The app may be running in offline mode.'
+        );
+      }
+      _firestoreInstance = FirebaseFirestore.instance;
+    }
+    return _firestoreInstance!;
+  }
+
   /// Current migration version - increment when adding new fields
   static const String currentMigrationVersion = '1.0';
-  
+
   /// Fields that trigger UI flows if missing
   static const String fieldAgeGatePassed = 'ageGatePassed';
   static const String fieldPrivacyPolicyAccepted = 'privacyPolicyAccepted';
   static const String fieldPrivacyPolicyVersion = 'privacyPolicyVersion';
   static const String fieldOnboardingCompleted = 'onboardingCompleted';
 
-  UserProfileMigrationService({
-    FirebaseFirestore? firestore,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance;
+  UserProfileMigrationService();
 
   /// Migrate user profile - add missing fields with defaults
   /// 
@@ -182,4 +195,5 @@ class UserProfileMigrationService {
     }
   }
 }
+
 

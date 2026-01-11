@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/error/error_context.dart';
 import '../../../../core/error/error_handler.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -157,11 +158,11 @@ class _BackupDialogState extends State<BackupDialog> {
     final l10n = AppLocalizations.of(context)!;
     
     return AlertDialog(
-      backgroundColor: Color(0xFF1A2238),
+      backgroundColor: AppTheme.backgroundDark,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: Color(0xFFFFE135).withValues(alpha: 0.3),
+          color: AppTheme.borderSubtle,
           width: 1,
         ),
       ),
@@ -169,7 +170,7 @@ class _BackupDialogState extends State<BackupDialog> {
         children: [
           Icon(
             Icons.backup,
-            color: Color(0xFFFFE135),
+            color: AppTheme.primary,
             size: 28,
           ),
           SizedBox(width: 12),
@@ -177,7 +178,7 @@ class _BackupDialogState extends State<BackupDialog> {
             child: Text(
               l10n.exportBackup,
               style: FontScaling.getHeadingMedium(context).copyWith(
-                color: Color(0xFFFFE135),
+                color: AppTheme.primary,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -194,7 +195,7 @@ class _BackupDialogState extends State<BackupDialog> {
                 child: Column(
                   children: [
                     CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation(Color(0xFFFFE135)),
+                      valueColor: AlwaysStoppedAnimation(AppTheme.primary),
                     ),
                     SizedBox(height: 16),
                     Text(
@@ -262,7 +263,7 @@ class _BackupDialogState extends State<BackupDialog> {
                       l10n.backupFormatEncryptedDescription,
                       style: FontScaling.getCaption(context),
                     ),
-                    activeColor: Color(0xFFFFE135),
+                    activeColor: AppTheme.primary,
                   ),
                   RadioListTile<BackupFormat>(
                     value: BackupFormat.plaintext,
@@ -349,10 +350,10 @@ class _BackupDialogState extends State<BackupDialog> {
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFFE135).withValues(alpha: 0.1),
+                  color: AppTheme.overlaySubtle,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                    color: AppTheme.borderSubtle,
                   ),
                 ),
                 child: Column(
@@ -362,7 +363,7 @@ class _BackupDialogState extends State<BackupDialog> {
                       children: [
                         Icon(
                           Icons.info_outline,
-                          color: Color(0xFFFFE135),
+                          color: AppTheme.primary,
                           size: 20,
                         ),
                         SizedBox(width: 8),
@@ -370,7 +371,7 @@ class _BackupDialogState extends State<BackupDialog> {
                           l10n.backupWhatsIncluded,
                           style: FontScaling.getBodySmall(context).copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFFFFE135),
+                            color: AppTheme.primary,
                           ),
                         ),
                       ],
@@ -401,8 +402,8 @@ class _BackupDialogState extends State<BackupDialog> {
           ElevatedButton(
             onPressed: _exportBackup,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFFFE135),
-              foregroundColor: Color(0xFF1A2238),
+              backgroundColor: AppTheme.primary,
+              foregroundColor: AppTheme.textOnLight,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -410,7 +411,7 @@ class _BackupDialogState extends State<BackupDialog> {
             child: Text(
               l10n.createBackup,
               style: FontScaling.getBodyMedium(context).copyWith(
-                color: Color(0xFF1A2238),
+                color: AppTheme.textOnLight,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -432,13 +433,13 @@ class _BackupDialogState extends State<BackupDialog> {
               _exportBackup();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFFFE135),
-              foregroundColor: Color(0xFF1A2238),
+              backgroundColor: AppTheme.primary,
+              foregroundColor: AppTheme.textOnLight,
             ),
             child: Text(
               l10n.retry,
               style: FontScaling.getBodyMedium(context).copyWith(
-                color: Color(0xFF1A2238),
+                color: AppTheme.textOnLight,
               ),
             ),
           ),
@@ -454,7 +455,7 @@ class _BackupDialogState extends State<BackupDialog> {
         children: [
           Icon(
             Icons.check,
-            color: Color(0xFFFFE135),
+            color: AppTheme.primary,
             size: 16,
           ),
           SizedBox(width: 8),

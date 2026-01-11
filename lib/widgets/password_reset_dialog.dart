@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/accessibility/semantic_helper.dart';
 import '../core/error/error_context.dart';
 import '../core/error/error_handler.dart';
+import '../core/theme/app_theme.dart';
 import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
@@ -79,7 +80,7 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
                 ),
               ],
             ),
-            backgroundColor: Color(0xFF4CAF50),
+            backgroundColor: AppTheme.success,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -111,11 +112,11 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
     final l10n = AppLocalizations.of(context)!;
 
     return AlertDialog(
-      backgroundColor: Color(0xFF1A2238),
+      backgroundColor: AppTheme.backgroundDark,
       title: Text(
         l10n.passwordResetTitle,
         style: FontScaling.getHeadingMedium(context).copyWith(
-          color: Color(0xFFFFE135),
+          color: AppTheme.primary,
         ),
       ),
       content: SingleChildScrollView(
@@ -146,23 +147,23 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
                   hintStyle: FontScaling.getInputHint(context),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.1),
-                  prefixIcon: Icon(Icons.email, color: Color(0xFFFFE135)),
+                  prefixIcon: Icon(Icons.email, color: AppTheme.primary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                      color: AppTheme.borderSubtle,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                      color: AppTheme.borderSubtle,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: Color(0xFFFFE135),
+                      color: AppTheme.borderFocused,
                       width: 2,
                     ),
                   ),
@@ -215,8 +216,8 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
         ElevatedButton(
           onPressed: _isLoading ? null : _handleReset,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFFFE135),
-            foregroundColor: Color(0xFF1A2238),
+            backgroundColor: AppTheme.primary,
+            foregroundColor: AppTheme.textOnPrimary,
           ),
           child: _isLoading
               ? SizedBox(
@@ -224,13 +225,13 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1A2238)),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.textOnPrimary),
                   ),
                 )
               : Text(
                   l10n.sendResetEmail,
                   style: FontScaling.getButtonText(context).copyWith(
-                    color: Color(0xFF1A2238),
+                    color: AppTheme.textOnPrimary,
                   ),
                 ),
         ),

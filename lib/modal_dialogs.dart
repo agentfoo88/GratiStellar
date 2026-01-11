@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'core/accessibility/semantic_helper.dart';
+import 'core/config/palette_preset_config.dart';
+import 'core/theme/app_theme.dart';
 import 'font_scaling.dart';
 import 'gratitude_stars.dart';
 import 'l10n/app_localizations.dart';
@@ -12,8 +15,6 @@ import 'widgets/edit_star_dialog.dart';
 import 'widgets/color_picker_dialog.dart';
 import 'widgets/color_grid.dart';
 import 'widgets/scrollable_dialog_content.dart';
-import 'core/accessibility/semantic_helper.dart';
-import 'core/config/palette_preset_config.dart';
 
 /// Centralized dialogs for GratiStellar app
 /// All modal dialogs are static methods that accept callbacks for actions
@@ -66,10 +67,10 @@ class GratitudeDialogs {
                 FontScaling.getResponsiveSpacing(context, 24),
               ),
               decoration: BoxDecoration(
-                color: Color(0xFF1A2238).withValues(alpha: 0.95),
+                color: AppTheme.getDialogBackground(opacity: 0.95),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                  color: AppTheme.borderSubtle,
                   width: 2,
                 ),
                 boxShadow: [
@@ -105,7 +106,7 @@ class GratitudeDialogs {
                     l10n.signOutKeepDataQuestion,
                     style: FontScaling.getBodySmall(
                       context,
-                    ).copyWith(color: Colors.white.withValues(alpha: 0.7)),
+                    ).copyWith(color: AppTheme.textSecondary),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(
@@ -171,7 +172,7 @@ class GratitudeDialogs {
                           onConfirm();
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFFFE135),
+                          backgroundColor: AppTheme.primary,
                           padding: EdgeInsets.symmetric(
                             vertical: FontScaling.getResponsiveSpacing(
                               context,
@@ -186,7 +187,7 @@ class GratitudeDialogs {
                           l10n.signOutKeepDataButton,
                           style: FontScaling.getButtonText(
                             context,
-                          ).copyWith(color: Color(0xFF1A2238)),
+                          ).copyWith(color: AppTheme.textOnLight),
                         ),
                       ),
                     ),
@@ -241,7 +242,7 @@ class GratitudeDialogs {
                         l10n.cancelButton,
                         style: FontScaling.getBodySmall(
                           context,
-                        ).copyWith(color: Colors.white.withValues(alpha: 0.7)),
+                        ).copyWith(color: AppTheme.textSecondary),
                       ),
                     ),
                   ),
@@ -284,10 +285,10 @@ class GratitudeDialogs {
               FontScaling.getResponsiveSpacing(context, 24),
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A2238).withValues(alpha: 0.95),
+              color: AppTheme.getDialogBackground(opacity: 0.95),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                color: AppTheme.borderSubtle,
                 width: 2,
               ),
               boxShadow: [
@@ -303,7 +304,7 @@ class GratitudeDialogs {
               children: [
                 Icon(
                   Icons.self_improvement,
-                  color: const Color(0xFFFFE135),
+                  color: AppTheme.primary,
                   size: FontScaling.getResponsiveIconSize(context, 48),
                 ),
                 SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
@@ -317,7 +318,7 @@ class GratitudeDialogs {
                   AppLocalizations.of(context)!.mindfulnessNoStarsMessage,
                   style: FontScaling.getBodyMedium(
                     context,
-                  ).copyWith(color: Colors.white.withValues(alpha: 0.7)),
+                  ).copyWith(color: AppTheme.textSecondary),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
@@ -327,7 +328,7 @@ class GratitudeDialogs {
                     AppLocalizations.of(context)!.closeButton,
                     style: FontScaling.getButtonText(
                       context,
-                    ).copyWith(color: const Color(0xFFFFE135)),
+                    ).copyWith(color: AppTheme.primary),
                   ),
                 ),
               ],
@@ -357,10 +358,10 @@ class GratitudeDialogs {
               FontScaling.getResponsiveSpacing(context, 24),
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A2238).withValues(alpha: 0.95),
+              color: AppTheme.getDialogBackground(opacity: 0.95),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.red.withValues(alpha: 0.5),
+                color: AppTheme.error.withValues(alpha: 0.5),
                 width: 2,
               ),
               boxShadow: [
@@ -404,7 +405,7 @@ class GratitudeDialogs {
                     child: Text(
                       '"${star.text}"',
                       style: FontScaling.getBodySmall(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: AppTheme.textSecondary,
                         fontStyle: FontStyle.italic,
                       ),
                       textAlign: TextAlign.center,
@@ -428,35 +429,40 @@ class GratitudeDialogs {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(
-                          AppLocalizations.of(context)!.cancelButton,
-                          style: FontScaling.getButtonText(context).copyWith(
-                            color: Colors.white.withValues(alpha: 0.6),
+                      Flexible(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text(
+                            AppLocalizations.of(context)!.cancelButton,
+                            style: FontScaling.getButtonText(context).copyWith(
+                              color: AppTheme.textTertiary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          onDelete(star);
-                          Navigator.of(context).pop(); // Close confirmation
-                          Navigator.of(modalContext).pop(); // Close edit modal
+                      Flexible(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            onDelete(star);
+                            Navigator.of(context).pop(); // Close confirmation
+                            Navigator.of(modalContext).pop(); // Close edit modal
 
-                          // Trigger refresh callback
-                          onAfterDelete?.call();
-                        },
-                        icon: Icon(
-                          Icons.close,
-                          size: FontScaling.getResponsiveIconSize(context, 18),
-                        ),
-                        label: Text(
-                          AppLocalizations.of(context)!.deleteButton,
-                          style: FontScaling.getButtonText(context),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
+                            // Trigger refresh callback
+                            onAfterDelete?.call();
+                          },
+                          icon: Icon(
+                            Icons.close,
+                            size: FontScaling.getResponsiveIconSize(context, 18),
+                          ),
+                          label: Text(
+                            AppLocalizations.of(context)!.deleteButton,
+                            style: FontScaling.getButtonText(context),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.error,
+                            foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(
                             horizontal: FontScaling.getResponsiveSpacing(
                               context,
@@ -471,6 +477,7 @@ class GratitudeDialogs {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           elevation: 0,
+                        ),
                         ),
                       ),
                     ],
@@ -553,12 +560,12 @@ class GratitudeDialogs {
                 constraints: const BoxConstraints(maxWidth: 500, minWidth: 400),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1A2238).withValues(alpha: 0.95),
+                    color: AppTheme.getDialogBackground(opacity: 0.95),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
                       color: isOverLimit
-                          ? Colors.red
-                          : const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          ? AppTheme.error
+                          : AppTheme.borderSubtle,
                       width: 2,
                     ),
                     boxShadow: [
@@ -613,33 +620,27 @@ class GratitudeDialogs {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide(
-                                      color: const Color(
-                                        0xFFFFE135,
-                                      ).withValues(alpha: 0.3),
+                                      color: AppTheme.borderSubtle,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide(
-                                      color: const Color(
-                                        0xFFFFE135,
-                                      ).withValues(alpha: 0.3),
+                                      color: AppTheme.borderSubtle,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFFFE135),
+                                    borderSide: BorderSide(
+                                      color: AppTheme.primary,
                                       width: 2,
                                     ),
                                   ),
                                   counterStyle: FontScaling.getCaption(context)
                                       .copyWith(
                                         color: isOverLimit
-                                            ? Colors.red
-                                            : Colors.white.withValues(
-                                                alpha: 0.6,
-                                              ),
+                                            ? AppTheme.error
+                                            : AppTheme.textTertiary,
                                       ),
                                 ),
                                 style: FontScaling.getInputText(context),
@@ -708,9 +709,7 @@ class GratitudeDialogs {
                                   color: Colors.white.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: const Color(
-                                      0xFFFFE135,
-                                    ).withValues(alpha: 0.5),
+                                    color: AppTheme.borderNormal,
                                     width: 1.5,
                                   ),
                                 ),
@@ -733,7 +732,7 @@ class GratitudeDialogs {
                                       context,
                                       24,
                                     ),
-                                    color: const Color(0xFFFFE135),
+                                    color: AppTheme.primary,
                                   ),
                                   label: Text(
                                     showColorPicker
@@ -882,9 +881,7 @@ class GratitudeDialogs {
                                     )!.customColorButton,
                                     style: FontScaling.getButtonText(context)
                                         .copyWith(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.7,
-                                          ),
+                                          color: AppTheme.textSecondary,
                                         ),
                                   ),
                                 ),
@@ -914,15 +911,13 @@ class GratitudeDialogs {
                                     )!.setAsDefaultColor,
                                     style: FontScaling.getBodySmall(context)
                                         .copyWith(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.7,
-                                          ),
+                                          color: AppTheme.textSecondary,
                                         ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  activeColor: const Color(0xFFFFE135),
-                                  checkColor: const Color(0xFF1A2238),
+                                  activeColor: AppTheme.primary,
+                                  checkColor: AppTheme.textOnLight,
                                 ),
                               ],
                             ],
@@ -946,9 +941,7 @@ class GratitudeDialogs {
                                   AppLocalizations.of(context)!.cancelButton,
                                   style: FontScaling.getButtonText(context)
                                       .copyWith(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.6,
-                                        ),
+                                        color: AppTheme.textTertiary,
                                       ),
                                 ),
                               ),
@@ -991,7 +984,7 @@ class GratitudeDialogs {
                                         }
                                       },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFFE135),
+                                  backgroundColor: AppTheme.primary,
                                   disabledBackgroundColor: Colors.grey,
                                   padding: EdgeInsets.symmetric(
                                     horizontal:
@@ -1015,7 +1008,7 @@ class GratitudeDialogs {
                                   )!.createStarButton,
                                   style: FontScaling.getButtonText(
                                     context,
-                                  ).copyWith(color: const Color(0xFF1A2238)),
+                                  ).copyWith(color: AppTheme.textOnLight),
                                 ),
                               ),
                             ],
@@ -1098,7 +1091,7 @@ class GratitudeDialogs {
           children: [
             Icon(
               icon,
-              color: const Color(0xFFFFE135),
+              color: AppTheme.primary,
               size: FontScaling.getResponsiveIconSize(context, 28),
             ),
             SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),

@@ -1,25 +1,26 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../core/error/error_context.dart';
+import '../core/error/error_handler.dart';
+import '../core/theme/app_theme.dart';
+import '../core/utils/app_logger.dart';
+import '../features/gratitudes/data/datasources/galaxy_remote_data_source.dart';
+import '../features/gratitudes/presentation/state/galaxy_provider.dart';
+import '../features/gratitudes/presentation/state/gratitude_provider.dart';
+import '../font_scaling.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
+import '../services/data_migration_service.dart';
 import '../services/firestore_service.dart';
 import '../services/user_profile_manager.dart';
 import '../services/user_scoped_storage.dart';
 import '../storage.dart';
-import '../font_scaling.dart';
-import '../l10n/app_localizations.dart';
-import '../features/gratitudes/presentation/state/galaxy_provider.dart';
-import '../features/gratitudes/presentation/state/gratitude_provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../core/utils/app_logger.dart';
-import '../core/error/error_context.dart';
-import '../core/error/error_handler.dart';
 import '../widgets/password_reset_dialog.dart';
-import '../services/data_migration_service.dart';
-import '../features/gratitudes/data/datasources/galaxy_remote_data_source.dart';
 import 'gratitude_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -1307,7 +1308,7 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
                       ),
                     ),
                     value: true,
-                    activeColor: Color(0xFFFFE135),
+                    activeColor: AppTheme.primary,
                   ),
                   RadioListTile<bool>(
                     title: Text(
@@ -1323,7 +1324,7 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
                       ),
                     ),
                     value: false,
-                    activeColor: Color(0xFFFFE135),
+                    activeColor: AppTheme.primary,
                   ),
                 ],
               ),

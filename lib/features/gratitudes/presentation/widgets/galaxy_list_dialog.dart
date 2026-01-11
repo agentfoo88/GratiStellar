@@ -5,6 +5,7 @@ import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../core/error/error_context.dart';
 import '../../../../core/error/error_handler.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -45,9 +46,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
         final activeGalaxies = galaxyProvider.activeGalaxies;
 
         return Scaffold(
-          backgroundColor: Color(0xFF1A2238).withValues(alpha: 0.98),
+          backgroundColor: AppTheme.backgroundDark.withValues(alpha: 0.98),
           appBar: AppBar(
-            backgroundColor: Color(0xFF1A2238),
+            backgroundColor: AppTheme.backgroundDark,
             elevation: 0,
             leading: SemanticHelper.label(
               label: l10n.closeButton,
@@ -63,7 +64,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   ? l10n.selectedCount(_selectedGalaxyIds.length)
                   : l10n.myGalaxies,
               style: FontScaling.getHeadingMedium(context).copyWith(
-                color: Color(0xFFFFE135),
+                color: AppTheme.primary,
                 fontSize:
                     FontScaling.getHeadingMedium(context).fontSize! *
                     UIConstants.universalUIScale,
@@ -86,7 +87,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                           _selectedGalaxyIds.length == activeGalaxies.length
                               ? Icons.deselect
                               : Icons.select_all,
-                          color: Color(0xFFFFE135),
+                          color: AppTheme.primary,
                           size:
                               FontScaling.getResponsiveIconSize(context, 24) *
                               UIConstants.universalUIScale,
@@ -141,7 +142,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                       child: IconButton(
                         icon: Icon(
                           Icons.check_box_outline_blank,
-                          color: Color(0xFFFFE135),
+                          color: AppTheme.primary,
                           size:
                               FontScaling.getResponsiveIconSize(context, 24) *
                               UIConstants.universalUIScale,
@@ -170,7 +171,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     if (galaxyProvider.isLoading || _isLoading) {
       return Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
         ),
       );
     }
@@ -191,10 +192,10 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   UIConstants.universalUIScale,
             ),
             decoration: BoxDecoration(
-              color: Color(0xFF0A0B1E).withValues(alpha: 0.8),
+              color: AppTheme.backgroundDarker.withValues(alpha: 0.8),
               border: Border(
                 bottom: BorderSide(
-                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                  color: AppTheme.primary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -226,6 +227,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                               FontScaling.getBodySmall(context).fontSize! *
                               UIConstants.universalUIScale,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red.withValues(alpha: 0.8),
@@ -256,7 +258,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                     ),
                     itemCount: activeGalaxies.length,
                     separatorBuilder: (context, index) => Divider(
-                      color: Color(0xFFFFE135).withValues(alpha: 0.2),
+                      color: AppTheme.primary.withValues(alpha: 0.2),
                       height: FontScaling.getResponsiveSpacing(context, 1),
                     ),
                     itemBuilder: (context, index) {
@@ -282,7 +284,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                color: AppTheme.primary.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -297,7 +299,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   : () => _showCreateGalaxyDialog(context),
               icon: Icon(
                 Icons.add,
-                color: Color(0xFF1A2238),
+                color: AppTheme.backgroundDark,
                 size:
                     FontScaling.getResponsiveIconSize(context, 20) *
                     UIConstants.universalUIScale,
@@ -305,7 +307,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               label: Text(
                 l10n.createNewGalaxy,
                 style: FontScaling.getBodyMedium(context).copyWith(
-                  color: Color(0xFF1A2238),
+                  color: AppTheme.backgroundDark,
                   fontWeight: FontWeight.w600,
                   fontSize:
                       FontScaling.getBodyMedium(context).fontSize! *
@@ -313,8 +315,8 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFFFE135),
-                foregroundColor: Color(0xFF1A2238),
+                backgroundColor: AppTheme.primary,
+                foregroundColor: AppTheme.backgroundDark,
                 padding: EdgeInsets.symmetric(
                   horizontal:
                       FontScaling.getResponsiveSpacing(context, 24) *
@@ -390,9 +392,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
           ),
           decoration: BoxDecoration(
             color: isSelected
-                ? Color(0xFFFFE135).withValues(alpha: 0.1)
+                ? AppTheme.primary.withValues(alpha: 0.1)
                 : (isActive
-                      ? Color(0xFFFFE135).withValues(alpha: 0.1)
+                      ? AppTheme.primary.withValues(alpha: 0.1)
                       : Colors.transparent),
             borderRadius: BorderRadius.circular(
               FontScaling.getResponsiveSpacing(context, 8) *
@@ -432,13 +434,13 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                             }
                           });
                         },
-                        activeColor: Color(0xFFFFE135),
-                        checkColor: Color(0xFF1A2238),
+                        activeColor: AppTheme.primary,
+                        checkColor: AppTheme.backgroundDark,
                       ),
                     )
                   : Icon(
                       Icons.stars,
-                      color: isActive ? Color(0xFFFFE135) : Colors.white70,
+                      color: isActive ? AppTheme.primary : Colors.white70,
                       size:
                           FontScaling.getResponsiveIconSize(context, 32) *
                           UIConstants.universalUIScale,
@@ -462,7 +464,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                             galaxy.name,
                             style: FontScaling.getBodyLarge(context).copyWith(
                               color: isActive
-                                  ? Color(0xFFFFE135)
+                                  ? AppTheme.primary
                                   : Colors.white,
                               fontWeight: isActive
                                   ? FontWeight.w600
@@ -487,7 +489,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                                   UIConstants.universalUIScale,
                             ),
                             decoration: BoxDecoration(
-                              color: Color(0xFFFFE135).withValues(alpha: 0.2),
+                              color: AppTheme.primary.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(
                                 FontScaling.getResponsiveSpacing(context, 12) *
                                     UIConstants.universalUIScale,
@@ -496,7 +498,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                             child: Text(
                               l10n.active.toUpperCase(),
                               style: FontScaling.getCaption(context).copyWith(
-                                color: Color(0xFFFFE135),
+                                color: AppTheme.primary,
                                 fontWeight: FontWeight.bold,
                                 fontSize:
                                     FontScaling.getCaption(context).fontSize! *
@@ -533,7 +535,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   child: IconButton(
                     icon: Icon(
                       Icons.edit_outlined,
-                      color: isActive ? Color(0xFFFFE135) : Colors.white60,
+                      color: isActive ? AppTheme.primary : Colors.white60,
                       size:
                           FontScaling.getResponsiveIconSize(context, 20) *
                           UIConstants.universalUIScale,
@@ -578,7 +580,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               size:
                   FontScaling.getResponsiveIconSize(context, 64) *
                   UIConstants.universalUIScale,
-              color: Color(0xFFFFE135).withValues(alpha: 0.6),
+              color: AppTheme.primary.withValues(alpha: 0.6),
             ),
             SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
             Text(
@@ -638,7 +640,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
             style: bodyMediumStyle,
           ),
           duration: Duration(seconds: 2),
-          backgroundColor: Color(0xFF1A2238),
+          backgroundColor: AppTheme.backgroundDark,
         ),
       );
     } catch (e, stack) {
@@ -706,7 +708,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: Color(0xFF1A2238),
+        backgroundColor: AppTheme.backgroundDark,
         title: Text(
           isDeletingAllGalaxies
               ? l10n.deleteLastGalaxyTitle
@@ -785,7 +787,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                 successMessage,
                 style: textStyle.copyWith(color: Colors.white),
               ),
-              backgroundColor: Color(0xFF1A2238),
+              backgroundColor: AppTheme.backgroundDark,
               duration: Duration(seconds: 2),
             ),
           );
@@ -843,12 +845,12 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
     final l10n = AppLocalizations.of(context)!;
 
     return AlertDialog(
-      backgroundColor: Color(0xFF1A2238),
+      backgroundColor: AppTheme.backgroundDark,
       title: Text(
         l10n.createNewGalaxy,
         style: FontScaling.getHeadingMedium(
           context,
-        ).copyWith(color: Color(0xFFFFE135)),
+        ).copyWith(color: AppTheme.primary),
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -876,15 +878,15 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
                     context,
                   ).copyWith(color: Colors.white60),
                   border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFFFE135)),
+                    borderSide: BorderSide(color: AppTheme.primary),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0xFFFFE135).withValues(alpha: 0.5),
+                      color: AppTheme.primary.withValues(alpha: 0.5),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFFFE135)),
+                    borderSide: BorderSide(color: AppTheme.primary),
                   ),
                 ),
                 autofocus: true,
@@ -915,8 +917,8 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
         ElevatedButton(
           onPressed: _isCreating ? null : _createGalaxy,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFFFE135),
-            foregroundColor: Color(0xFF1A2238),
+            backgroundColor: AppTheme.primary,
+            foregroundColor: AppTheme.backgroundDark,
           ),
           child: _isCreating
               ? SizedBox(
@@ -925,7 +927,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF1A2238),
+                      AppTheme.backgroundDark,
                     ),
                   ),
                 )
@@ -961,7 +963,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(l10n.galaxyCreatedSuccess(name), style: textStyle),
-            backgroundColor: const Color(0xFF1A2238),
+            backgroundColor: AppTheme.backgroundDark,
             duration: Duration(seconds: 2),
           ),
         );
@@ -1040,10 +1042,10 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
         ),
         padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A2238).withValues(alpha: 0.95),
+          color: AppTheme.backgroundDark.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+            color: AppTheme.primary.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
@@ -1063,7 +1065,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
                 l10n.renameGalaxy,
                 style: FontScaling.getHeadingMedium(
                   context,
-                ).copyWith(color: const Color(0xFFFFE135)),
+                ).copyWith(color: AppTheme.primary),
               ),
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
               SemanticHelper.label(
@@ -1079,17 +1081,17 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
                     fillColor: Colors.white.withValues(alpha: 0.1),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFFFE135)),
+                      borderSide: const BorderSide(color: AppTheme.primary),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: const Color(0xFFFFE135).withValues(alpha: 0.5),
+                        color: AppTheme.primary.withValues(alpha: 0.5),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFFFE135)),
+                      borderSide: const BorderSide(color: AppTheme.primary),
                     ),
                   ),
                   autofocus: true,
@@ -1130,8 +1132,8 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
                   ElevatedButton(
                     onPressed: _isRenaming ? null : _renameGalaxy,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFE135),
-                      foregroundColor: const Color(0xFF1A2238),
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: AppTheme.backgroundDark,
                     ),
                     child: _isRenaming
                         ? SizedBox(
@@ -1140,7 +1142,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: const AlwaysStoppedAnimation<Color>(
-                                Color(0xFF1A2238),
+                                AppTheme.backgroundDark,
                               ),
                             ),
                           )
@@ -1166,7 +1168,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: Color(0xFF1A2238),
+        backgroundColor: AppTheme.backgroundDark,
         title: Text(
           isLastGalaxy ? l10n.deleteLastGalaxyTitle : l10n.deleteGalaxy,
           style: FontScaling.getHeadingMedium(
@@ -1248,7 +1250,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(successMessage, style: textStyle),
-            backgroundColor: const Color(0xFF1A2238),
+            backgroundColor: AppTheme.backgroundDark,
             duration: Duration(seconds: 2),
           ),
         );
@@ -1309,7 +1311,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(l10n.galaxyRenamedSuccess(name), style: textStyle),
-            backgroundColor: const Color(0xFF1A2238),
+            backgroundColor: AppTheme.backgroundDark,
             duration: Duration(seconds: 2),
           ),
         );

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/error/error_context.dart';
 import '../../../../core/error/error_handler.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -217,11 +218,11 @@ class _RestoreDialogState extends State<RestoreDialog> {
     final l10n = AppLocalizations.of(context)!;
     
     return AlertDialog(
-      backgroundColor: Color(0xFF1A2238),
+      backgroundColor: AppTheme.backgroundDark,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: Color(0xFFFFE135).withValues(alpha: 0.3),
+          color: AppTheme.primary.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -229,7 +230,7 @@ class _RestoreDialogState extends State<RestoreDialog> {
         children: [
           Icon(
             Icons.restore,
-            color: Color(0xFFFFE135),
+            color: AppTheme.primary,
             size: 28,
           ),
           SizedBox(width: 12),
@@ -237,7 +238,7 @@ class _RestoreDialogState extends State<RestoreDialog> {
             child: Text(
               l10n.restoreBackup,
               style: FontScaling.getHeadingMedium(context).copyWith(
-                color: Color(0xFFFFE135),
+                color: AppTheme.primary,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -254,7 +255,7 @@ class _RestoreDialogState extends State<RestoreDialog> {
                 child: Column(
                   children: [
                     CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation(Color(0xFFFFE135)),
+                      valueColor: AlwaysStoppedAnimation(AppTheme.primary),
                     ),
                     SizedBox(height: 16),
                     Text(
@@ -270,14 +271,14 @@ class _RestoreDialogState extends State<RestoreDialog> {
                   children: [
                     Icon(
                       Icons.check_circle,
-                      color: Colors.green,
+                      color: AppTheme.success,
                       size: 48,
                     ),
                     SizedBox(height: 16),
                     Text(
                       _successMessage!,
                       style: FontScaling.getBodyMedium(context).copyWith(
-                        color: Colors.green,
+                        color: AppTheme.success,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -294,14 +295,14 @@ class _RestoreDialogState extends State<RestoreDialog> {
               // File picker button
               OutlinedButton.icon(
                 onPressed: _pickFile,
-                icon: Icon(Icons.folder_open, color: Color(0xFFFFE135)),
+                icon: Icon(Icons.folder_open, color: AppTheme.primary),
                 label: Text(
                   _selectedFilePath == null ? l10n.selectBackupFile : l10n.changeFile,
                   style: FontScaling.getBodyMedium(context),
                 ),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Color(0xFFFFE135),
-                  side: BorderSide(color: Color(0xFFFFE135)),
+                  foregroundColor: AppTheme.primary,
+                  side: BorderSide(color: AppTheme.primary),
                   padding: EdgeInsets.all(16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -314,19 +315,19 @@ class _RestoreDialogState extends State<RestoreDialog> {
                 Container(
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
+                    color: AppTheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error, color: Colors.red, size: 20),
+                      Icon(Icons.error, color: AppTheme.error, size: 20),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _errorMessage!,
                           style: FontScaling.getBodySmall(context).copyWith(
-                            color: Colors.red,
+                            color: AppTheme.error,
                           ),
                         ),
                       ),
@@ -340,22 +341,22 @@ class _RestoreDialogState extends State<RestoreDialog> {
                 Container(
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: AppTheme.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                    border: Border.all(color: AppTheme.success.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green, size: 20),
+                          Icon(Icons.check_circle, color: AppTheme.success, size: 20),
                           SizedBox(width: 8),
                           Text(
                             l10n.validBackup,
                             style: FontScaling.getBodySmall(context).copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.green,
+                              color: AppTheme.success,
                             ),
                           ),
                         ],
@@ -406,7 +407,7 @@ class _RestoreDialogState extends State<RestoreDialog> {
                           l10n.restoreStrategyMergeDescription,
                           style: FontScaling.getCaption(context),
                         ),
-                        activeColor: Color(0xFFFFE135),
+                        activeColor: AppTheme.primary,
                       ),
 
                       RadioListTile<MergeStrategy>(
@@ -418,10 +419,10 @@ class _RestoreDialogState extends State<RestoreDialog> {
                         subtitle: Text(
                           l10n.restoreStrategyReplaceDescription,
                           style: FontScaling.getCaption(context).copyWith(
-                            color: Colors.orange,
+                            color: AppTheme.warning,
                           ),
                         ),
-                        activeColor: Colors.orange,
+                        activeColor: AppTheme.warning,
                       ),
                     ],
                   ),
@@ -444,8 +445,8 @@ class _RestoreDialogState extends State<RestoreDialog> {
             ElevatedButton(
               onPressed: _importBackup,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFFFE135),
-                foregroundColor: Color(0xFF1A2238),
+                backgroundColor: AppTheme.primary,
+                foregroundColor: AppTheme.backgroundDark,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -453,7 +454,7 @@ class _RestoreDialogState extends State<RestoreDialog> {
               child: Text(
                 l10n.restore,
                 style: FontScaling.getBodyMedium(context).copyWith(
-                  color: Color(0xFF1A2238),
+                  color: AppTheme.backgroundDark,
                   fontWeight: FontWeight.bold,
                 ),
               ),

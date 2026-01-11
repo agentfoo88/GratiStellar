@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../core/theme/app_theme.dart';
 import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
 import '../modal_dialogs.dart'; // For showDeleteConfirmation
@@ -87,7 +88,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
         constraints: const BoxConstraints(maxWidth: 500, minWidth: 400),
         padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A2238).withValues(alpha:0.95),
+          color: AppTheme.backgroundDark.withValues(alpha:0.95),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: currentStar.color.withValues(alpha:0.5),
@@ -112,7 +113,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
               Text(
                 currentStar.text,
                 style: FontScaling.getBodyLarge(context).copyWith(
-                  color: Colors.white.withValues(alpha:0.9),
+                  color: AppTheme.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               )
@@ -140,31 +141,31 @@ class _EditStarDialogState extends State<EditStarDialog> {
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide(
                             color: isOverLimit // <--- UPDATED LOGIC
-                                ? Colors.red
-                                : const Color(0xFFFFE135).withValues(alpha:0.3),
+                                ? AppTheme.error
+                                : AppTheme.borderSubtle,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder( // <--- ADDED FOR CONSISTENCY
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide(
                             color: isOverLimit // <--- UPDATED LOGIC
-                                ? Colors.red
-                                : const Color(0xFFFFE135).withValues(alpha:0.3),
+                                ? AppTheme.error
+                                : AppTheme.borderSubtle,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder( // <--- ADDED FOR CONSISTENCY
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide(
                             color: isOverLimit // <--- UPDATED LOGIC
-                                ? Colors.red
-                                : const Color(0xFFFFE135),
+                                ? AppTheme.error
+                                : AppTheme.borderFocused,
                             width: isOverLimit ? 2 : 2, // Keep width 2
                           ),
                         ),
                         counterStyle: FontScaling.getCaption(context).copyWith( // <--- ADDED COUNTER STYLE
                           color: isOverLimit
-                              ? Colors.red
-                              : Colors.white.withValues(alpha:0.6),
+                              ? AppTheme.error
+                              : AppTheme.textTertiary,
                         ),
                       ),
                       style: FontScaling.getInputText(context),
@@ -220,12 +221,12 @@ class _EditStarDialogState extends State<EditStarDialog> {
                       label: Text(
                         AppLocalizations.of(context)!.jumpToStarButton,
                         style: FontScaling.getButtonText(context).copyWith(
-                          color: const Color(0xFF1A2238),
+                          color: AppTheme.textOnPrimary,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFE135),
-                        foregroundColor: const Color(0xFF1A2238),
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.textOnPrimary,
                         minimumSize: const Size(double.infinity, 48),
                         padding: EdgeInsets.symmetric(
                           horizontal: FontScaling.getResponsiveSpacing(context, 20),
@@ -268,8 +269,8 @@ class _EditStarDialogState extends State<EditStarDialog> {
                       style: FontScaling.getButtonText(context),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFE135).withValues(alpha:0.2),
-                      foregroundColor: const Color(0xFFFFE135),
+                      backgroundColor: AppTheme.overlayLight,
+                      foregroundColor: AppTheme.primary,
                       minimumSize: const Size(double.infinity, 48),
                       padding: EdgeInsets.symmetric(
                         horizontal: FontScaling.getResponsiveSpacing(context, 20),
@@ -302,8 +303,8 @@ class _EditStarDialogState extends State<EditStarDialog> {
                           style: FontScaling.getButtonText(context),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppTheme.error,
+                          foregroundColor: AppTheme.textPrimary,
                           padding: EdgeInsets.symmetric(
                             horizontal: FontScaling.getResponsiveSpacing(context, 16),
                             vertical: FontScaling.getResponsiveSpacing(context, 10),
@@ -327,7 +328,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
                         child: Text(
                           AppLocalizations.of(context)!.cancelButton,
                           style: FontScaling.getButtonText(context).copyWith(
-                            color: Colors.white.withValues(alpha:0.6),
+                            color: AppTheme.textTertiary,
                           ),
                         ),
                       ),
@@ -355,7 +356,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
                           Navigator.of(context).pop('saved'); // ← Pass result
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFE135),
+                          backgroundColor: AppTheme.primary,
                           padding: EdgeInsets.symmetric(
                             horizontal: FontScaling.getResponsiveSpacing(context, 20),
                             vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -368,7 +369,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
                         child: Text(
                           AppLocalizations.of(context)!.saveButton,
                           style: FontScaling.getButtonText(context).copyWith(
-                            color: const Color(0xFF1A2238),
+                            color: AppTheme.textOnPrimary,
                           ),
                         ),
                       ),

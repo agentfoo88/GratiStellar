@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'storage.dart';
-import 'font_scaling.dart';
-import 'l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'features/gratitudes/presentation/state/gratitude_provider.dart';
+
 import 'core/accessibility/semantic_helper.dart';
+import 'core/theme/app_theme.dart';
+import 'features/gratitudes/presentation/state/gratitude_provider.dart';
+import 'font_scaling.dart';
+import 'l10n/app_localizations.dart';
+import 'storage.dart';
 
 class ListViewScreen extends StatefulWidget {
   final Function(GratitudeStar) onStarTap;
@@ -89,9 +91,9 @@ class _ListViewScreenState extends State<ListViewScreen> {
         final sortedStars = _getSortedStars(stars);
 
         return Scaffold(
-      backgroundColor: Color(0xFF1A2238),
+      backgroundColor: AppTheme.backgroundDark,
       appBar: AppBar(
-        backgroundColor: Color(0xFF1A2238),
+        backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
@@ -106,7 +108,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
               ? AppLocalizations.of(context)!.selectedCount(_selectedStarIds.length)
               : AppLocalizations.of(context)!.listViewTitle,
           style: FontScaling.getHeadingMedium(context).copyWith(
-            color: Color(0xFFFFE135),
+            color: AppTheme.primary,
           ),
         ),
         actions: [
@@ -125,7 +127,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                   _selectedStarIds.length == _getSortedStars(stars).length
                       ? Icons.deselect
                       : Icons.select_all,
-                  color: Color(0xFFFFE135),
+                  color: AppTheme.primary,
                   size: FontScaling.getResponsiveIconSize(context, 24),
                 ),
                 onPressed: () {
@@ -171,7 +173,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
               child: IconButton(
                 icon: Icon(
                   Icons.check_box_outline_blank,
-                  color: Color(0xFFFFE135),
+                  color: AppTheme.primary,
                   size: FontScaling.getResponsiveIconSize(context, 24),
                 ),
                 onPressed: () {
@@ -188,14 +190,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
               child: PopupMenuButton<String>(
                 icon: Icon(
                   Icons.sort,
-                  color: Color(0xFFFFE135),
+                  color: AppTheme.primary,
                   size: FontScaling.getResponsiveIconSize(context, 24),
                 ),
-                color: Color(0xFF1A2238).withValues(alpha: 0.98),
+                color: AppTheme.backgroundDark.withValues(alpha: 0.98),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
-                    color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                    color: AppTheme.borderSubtle,
                     width: 1,
                   ),
                 ),
@@ -207,164 +209,257 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 itemBuilder: (context) => [
                   PopupMenuItem(
                     value: 'newest',
-                    child: Row(
-                    children: [
-                      Icon(
-                        Icons.arrow_downward,
-                        color: _sortMethod == 'newest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
-                        size: FontScaling.getResponsiveIconSize(context, 20),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.sortNewestFirst,
-                          style: FontScaling.getBodySmall(context).copyWith(
-                            color: _sortMethod == 'newest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                    child: Container(
+                      decoration: _sortMethod == 'newest'
+                          ? BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          : null,
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.arrow_downward,
+                            // WCAG FIX: Dark icon on yellow background (14:1 contrast)
+                            color: _sortMethod == 'newest'
+                                ? AppTheme.textOnLight
+                                : AppTheme.textSecondary,
+                            size: FontScaling.getResponsiveIconSize(context, 20),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.sortNewestFirst,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                // WCAG FIX: Dark text on yellow background (14:1 contrast)
+                                color: _sortMethod == 'newest'
+                                    ? AppTheme.textOnLight
+                                    : Colors.white.withValues(alpha: 0.9),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'oldest',
-                    child: Row(
-                    children: [
-                      Icon(
-                        Icons.arrow_upward,
-                        color: _sortMethod == 'oldest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
-                        size: FontScaling.getResponsiveIconSize(context, 20),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.sortOldestFirst,
-                          style: FontScaling.getBodySmall(context).copyWith(
-                            color: _sortMethod == 'oldest' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                    child: Container(
+                      decoration: _sortMethod == 'oldest'
+                          ? BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          : null,
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.arrow_upward,
+                            color: _sortMethod == 'oldest'
+                                ? AppTheme.textOnLight
+                                : AppTheme.textSecondary,
+                            size: FontScaling.getResponsiveIconSize(context, 20),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.sortOldestFirst,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                color: _sortMethod == 'oldest'
+                                    ? AppTheme.textOnLight
+                                    : Colors.white.withValues(alpha: 0.9),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'by_month',
-                    child: Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_month,
-                        color: _sortMethod == 'by_month' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
-                        size: FontScaling.getResponsiveIconSize(context, 20),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.sortByMonth,
-                          style: FontScaling.getBodySmall(context).copyWith(
-                            color: _sortMethod == 'by_month' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                    child: Container(
+                      decoration: _sortMethod == 'by_month'
+                          ? BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          : null,
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_month,
+                            color: _sortMethod == 'by_month'
+                                ? AppTheme.textOnLight
+                                : AppTheme.textSecondary,
+                            size: FontScaling.getResponsiveIconSize(context, 20),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.sortByMonth,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                color: _sortMethod == 'by_month'
+                                    ? AppTheme.textOnLight
+                                    : Colors.white.withValues(alpha: 0.9),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'by_year',
-                    child: Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        color: _sortMethod == 'by_year' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
-                        size: FontScaling.getResponsiveIconSize(context, 20),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.sortByYear,
-                          style: FontScaling.getBodySmall(context).copyWith(
-                            color: _sortMethod == 'by_year' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                    child: Container(
+                      decoration: _sortMethod == 'by_year'
+                          ? BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          : null,
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            color: _sortMethod == 'by_year'
+                                ? AppTheme.textOnLight
+                                : AppTheme.textSecondary,
+                            size: FontScaling.getResponsiveIconSize(context, 20),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.sortByYear,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                color: _sortMethod == 'by_year'
+                                    ? AppTheme.textOnLight
+                                    : Colors.white.withValues(alpha: 0.9),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],  // ← ADD THIS ] bracket
-                  ),
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'alpha_az',
-                    child: Row(
-                    children: [
-                      Icon(
-                        Icons.sort_by_alpha,
-                        color: _sortMethod == 'alpha_az' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
-                        size: FontScaling.getResponsiveIconSize(context, 20),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.sortAlphabeticalAZ,
-                          style: FontScaling.getBodySmall(context).copyWith(
-                            color: _sortMethod == 'alpha_az' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                    child: Container(
+                      decoration: _sortMethod == 'alpha_az'
+                          ? BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          : null,
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.sort_by_alpha,
+                            color: _sortMethod == 'alpha_az'
+                                ? AppTheme.textOnLight
+                                : AppTheme.textSecondary,
+                            size: FontScaling.getResponsiveIconSize(context, 20),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.sortAlphabeticalAZ,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                color: _sortMethod == 'alpha_az'
+                                    ? AppTheme.textOnLight
+                                    : Colors.white.withValues(alpha: 0.9),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'alpha_za',
-                    child: Row(
-                    children: [
-                      Icon(
-                        Icons.sort_by_alpha,
-                        color: _sortMethod == 'alpha_za' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
-                        size: FontScaling.getResponsiveIconSize(context, 20),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.sortAlphabeticalZA,
-                          style: FontScaling.getBodySmall(context).copyWith(
-                            color: _sortMethod == 'alpha_za' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                    child: Container(
+                      decoration: _sortMethod == 'alpha_za'
+                          ? BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          : null,
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.sort_by_alpha,
+                            color: _sortMethod == 'alpha_za'
+                                ? AppTheme.textOnLight
+                                : AppTheme.textSecondary,
+                            size: FontScaling.getResponsiveIconSize(context, 20),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.sortAlphabeticalZA,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                color: _sortMethod == 'alpha_za'
+                                    ? AppTheme.textOnLight
+                                    : Colors.white.withValues(alpha: 0.9),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'color',
-                    child: Row(
-                    children: [
-                      Icon(
-                        Icons.palette,
-                        color: _sortMethod == 'color' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.7),
-                        size: FontScaling.getResponsiveIconSize(context, 20),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.sortByColor,
-                          style: FontScaling.getBodySmall(context).copyWith(
-                            color: _sortMethod == 'color' ? Color(0xFFFFE135) : Colors.white.withValues(alpha: 0.9),
+                    child: Container(
+                      decoration: _sortMethod == 'color'
+                          ? BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          : null,
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.palette,
+                            color: _sortMethod == 'color'
+                                ? AppTheme.textOnLight
+                                : AppTheme.textSecondary,
+                            size: FontScaling.getResponsiveIconSize(context, 20),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.sortByColor,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                color: _sortMethod == 'color'
+                                    ? AppTheme.textOnLight
+                                    : Colors.white.withValues(alpha: 0.9),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
                   ),
                 ],
               ),
@@ -374,7 +469,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Container(
-            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+            color: AppTheme.borderSubtle,
             height: 1,
           ),
         ),

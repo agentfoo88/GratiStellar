@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/auth_service.dart';
@@ -51,10 +52,10 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
           FontScaling.getResponsiveSpacing(context, 24),
         ),
         decoration: BoxDecoration(
-          color: Color(0xFF1A2238).withValues(alpha: 0.95),
+          color: AppTheme.backgroundDark.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Color(0xFFFFE135).withValues(alpha: 0.5),
+            color: AppTheme.borderNormal,
             width: 2,
           ),
           boxShadow: [
@@ -77,7 +78,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                   l10n.feedbackDialogTitle,
                   style: FontScaling.getModalTitle(
                     context,
-                  ).copyWith(color: Color(0xFFFFE135)),
+                  ).copyWith(color: AppTheme.primary),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(
@@ -96,7 +97,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                 ),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedType,
-                  dropdownColor: Color(0xFF1A2238),
+                  dropdownColor: AppTheme.backgroundDark,
                   style: FontScaling.getInputText(context),
                   decoration: InputDecoration(
                     filled: true,
@@ -104,19 +105,19 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                        color: AppTheme.borderSubtle,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                        color: AppTheme.borderSubtle,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Color(0xFFFFE135),
+                        color: AppTheme.borderFocused,
                         width: 2,
                       ),
                     ),
@@ -169,41 +170,41 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                     hintText: l10n.feedbackMessageHint,
                     hintStyle: FontScaling.getInputText(
                       context,
-                    ).copyWith(color: Colors.white.withValues(alpha: 0.3)),
+                    ).copyWith(color: AppTheme.textHint),
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                        color: AppTheme.borderSubtle,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                        color: AppTheme.borderSubtle,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Color(0xFFFFE135),
+                        color: AppTheme.borderFocused,
                         width: 2,
                       ),
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Colors.red.withValues(alpha: 0.5),
+                        color: AppTheme.error.withValues(alpha: 0.5),
                       ),
                     ),
                     focusedErrorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.red, width: 2),
+                      borderSide: BorderSide(color: AppTheme.error, width: 2),
                     ),
                     counterStyle: FontScaling.getCaption(
                       context,
-                    ).copyWith(color: Colors.white.withValues(alpha: 0.5)),
+                    ).copyWith(color: AppTheme.textDisabled),
                   ),
                   maxLines: 5,
                   maxLength: 1000,
@@ -238,42 +239,42 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                     decoration: InputDecoration(
                       hintText: l10n.feedbackEmailHint,
                       hintStyle: FontScaling.getInputText(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: AppTheme.textHint,
                       ),
                       counterStyle: FontScaling.getCaption(context)
                           .copyWith(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: AppTheme.textDisabled,
                           ),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.05),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                          color: AppTheme.borderSubtle,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                          color: AppTheme.borderSubtle,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Color(0xFFFFE135),
+                          color: AppTheme.borderFocused,
                           width: 2,
                         ),
                       ),
                       errorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.red.withValues(alpha: 0.5),
+                          color: AppTheme.error.withValues(alpha: 0.5),
                         ),
                       ),
                       focusedErrorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.red, width: 2),
+                        borderSide: BorderSide(color: AppTheme.error, width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -303,7 +304,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                       child: Text(
                         l10n.cancelButton,
                         style: FontScaling.getInputText(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: AppTheme.textTertiary,
                         ),
                       ),
                     ),
@@ -316,7 +317,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
 
                           // #region agent log
                           if (kDebugMode) {
-                            AppLogger.info('📤 DEBUG: Submitting feedback - type=$_selectedType, messageLength=${_message.length}');
+                            AppLogger.info('📤 Submitting feedback - type=$_selectedType, messageLength=${_message.length}');
                           }
                           // #endregion
 
@@ -332,22 +333,22 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
 
                             // #region agent log
                             if (kDebugMode) {
-                              AppLogger.info('📤 DEBUG: Feedback submission result - success=$success');
-                              AppLogger.info('📤 DEBUG: About to close dialog - mounted=$mounted');
+                              AppLogger.info('📤 Feedback submission result - success=$success');
+                              AppLogger.info('📤 About to close dialog - mounted=$mounted');
                             }
                             // #endregion
 
                             // Close dialog and return result
                             if (!mounted) {
                               if (kDebugMode) {
-                                AppLogger.error('📤 DEBUG: Widget not mounted, cannot close dialog!');
+                                AppLogger.error('📤 Widget not mounted, cannot close dialog!');
                               }
                               return;
                             }
 
                             // #region agent log
                             if (kDebugMode) {
-                              AppLogger.info('📤 DEBUG: Calling Navigator.pop with result: $success');
+                              AppLogger.info('📤 Calling Navigator.pop with result: $success');
                             }
                             // #endregion
 
@@ -356,15 +357,15 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
 
                             // #region agent log
                             if (kDebugMode) {
-                              AppLogger.info('📤 DEBUG: Navigator.pop completed');
+                              AppLogger.info('📤 Navigator.pop completed');
                             }
                             // #endregion
                           } catch (e, stack) {
                             // #region agent log
                             if (kDebugMode) {
-                              AppLogger.error('📤 DEBUG: Feedback submission exception - $e');
+                              AppLogger.error('📤 Feedback submission exception - $e');
                               AppLogger.info('Stack trace: $stack');
-                              AppLogger.info('📤 DEBUG: About to close dialog with error - mounted=$mounted');
+                              AppLogger.info('📤 About to close dialog with error - mounted=$mounted');
                             }
                             // #endregion
 
@@ -372,14 +373,14 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                             // Parent will handle showing error message
                             if (!mounted) {
                               if (kDebugMode) {
-                                AppLogger.error('📤 DEBUG: Widget not mounted, cannot close dialog!');
+                                AppLogger.error('📤 Widget not mounted, cannot close dialog!');
                               }
                               return;
                             }
 
                             // #region agent log
                             if (kDebugMode) {
-                              AppLogger.info('📤 DEBUG: Calling Navigator.pop with result: false');
+                              AppLogger.info('📤 Calling Navigator.pop with result: false');
                             }
                             // #endregion
 
@@ -388,15 +389,15 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
 
                             // #region agent log
                             if (kDebugMode) {
-                              AppLogger.info('📤 DEBUG: Navigator.pop completed (error case)');
+                              AppLogger.info('📤 Navigator.pop completed (error case)');
                             }
                             // #endregion
                           }
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFE135),
-                        foregroundColor: Color(0xFF1A2238),
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.textOnPrimary,
                         padding: EdgeInsets.symmetric(
                           horizontal: FontScaling.getResponsiveSpacing(
                             context,
@@ -418,7 +419,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF1A2238),
+                                  AppTheme.textOnPrimary,
                                 ),
                               ),
                             )
@@ -426,7 +427,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                               l10n.feedbackSubmit,
                               style: FontScaling.getButtonText(
                                 context,
-                              ).copyWith(color: Color(0xFF1A2238)),
+                              ).copyWith(color: AppTheme.textOnPrimary),
                             ),
                     ),
                   ],

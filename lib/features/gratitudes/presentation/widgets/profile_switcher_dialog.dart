@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/user_profile_manager.dart';
@@ -178,7 +179,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
               'Failed to switch profile',
               style: FontScaling.getBodyMedium(context),
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
           ),
         );
       }
@@ -239,7 +240,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
               'Failed to create profile',
               style: FontScaling.getBodyMedium(context),
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
           ),
         );
       }
@@ -256,7 +257,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
               'Cannot delete active profile',
               style: FontScaling.getBodyMedium(context),
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
           ),
         );
       }
@@ -267,11 +268,11 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A2238),
+        backgroundColor: AppTheme.backgroundDark,
         title: Text(
           l10n.deleteProfile,
           style: FontScaling.getHeadingMedium(context).copyWith(
-            color: const Color(0xFFFFE135),
+            color: AppTheme.primary,
           ),
         ),
         content: Text(
@@ -291,7 +292,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
             child: Text(
               l10n.deleteProfile,
               style: FontScaling.getButtonText(context).copyWith(
-                color: Colors.red,
+                color: AppTheme.error,
               ),
             ),
           ),
@@ -323,7 +324,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
                 'Failed to delete profile',
                 style: FontScaling.getBodyMedium(context),
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.error,
             ),
           );
         }
@@ -336,11 +337,11 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
     final l10n = AppLocalizations.of(context)!;
 
     return Dialog(
-      backgroundColor: const Color(0xFF1A2238),
+      backgroundColor: AppTheme.backgroundDark,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: const BorderSide(
-          color: Color(0xFFFFE135),
+          color: AppTheme.primary,
           width: 2,
         ),
       ),
@@ -355,7 +356,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
             Text(
               l10n.switchProfileTitle,
               style: FontScaling.getHeadingMedium(context).copyWith(
-                color: const Color(0xFFFFE135),
+                color: AppTheme.primary,
               ),
             ),
             const SizedBox(height: 16),
@@ -364,7 +365,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
             if (_isLoading)
               const Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
                 ),
               )
             else if (_userIds.isEmpty)
@@ -394,7 +395,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
                       borderRadius: BorderRadius.circular(12),
                       child: Card(
                         color: isActive
-                            ? const Color(0xFFFFE135).withValues(alpha: 0.2)
+                            ? AppTheme.overlayLight
                             : Colors.white.withValues(alpha: 0.05),
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
@@ -412,7 +413,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
                                 Text(
                                   l10n.currentProfile,
                                   style: FontScaling.getBodySmall(context).copyWith(
-                                    color: const Color(0xFFFFE135),
+                                    color: AppTheme.primary,
                                   ),
                                 ),
                             ],
@@ -427,13 +428,13 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
                               if (!isActive)
                                 IconButton(
                                   icon: const Icon(Icons.swap_horiz),
-                                  color: const Color(0xFFFFE135),
+                                  color: AppTheme.primary,
                                   onPressed: () => _switchProfile(userId),
                                   tooltip: l10n.switchProfile,
                                 ),
                               IconButton(
                                 icon: const Icon(Icons.delete),
-                                color: Colors.red,
+                                color: AppTheme.error,
                                 onPressed: () => _deleteProfile(userId),
                                 tooltip: l10n.deleteProfile,
                               ),
@@ -456,7 +457,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
               child: ElevatedButton(
                 onPressed: _createNewProfile,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFE135),
+                  backgroundColor: AppTheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -465,7 +466,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
                 child: Text(
                   l10n.createNewProfile,
                   style: FontScaling.getButtonText(context).copyWith(
-                    color: const Color(0xFF1A2238),
+                    color: AppTheme.textOnPrimary,
                   ),
                 ),
               ),

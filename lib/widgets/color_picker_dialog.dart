@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../core/security/input_validator.dart';
 import '../core/config/palette_preset_config.dart';
+import '../core/theme/app_theme.dart';
 import '../font_scaling.dart';
 import '../gratitude_stars.dart'; // For StarColors
 import '../l10n/app_localizations.dart';
@@ -184,10 +185,10 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
       child: Container(
         padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A2238).withValues(alpha:0.95),
+          color: AppTheme.backgroundDark.withValues(alpha:0.95),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFFFE135).withValues(alpha:0.3),
+            color: AppTheme.primary.withValues(alpha:0.3),
             width: 2,
           ),
           boxShadow: [
@@ -234,8 +235,8 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
               Theme(
                 data: Theme.of(context).copyWith(
-                  highlightColor: const Color(0xFF1A2238).withValues(alpha: 0.5),
-                  splashColor: const Color(0xFF1A2238).withValues(alpha: 0.3),
+                  highlightColor: AppTheme.backgroundDark.withValues(alpha: 0.5),
+                  splashColor: AppTheme.backgroundDark.withValues(alpha: 0.3),
                 ),
                 child: DropdownButtonFormField<String>(
                   key: ValueKey<String>('preset_$_selectedPresetId'), // Force rebuild when preset changes
@@ -258,7 +259,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: const Color(0xFFFFE135).withValues(alpha: 0.8),
+                        color: AppTheme.primary.withValues(alpha: 0.8),
                         width: 2,
                       ),
                     ),
@@ -267,7 +268,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                       vertical: FontScaling.getResponsiveSpacing(context, 12),
                     ),
                   ),
-                  dropdownColor: const Color(0xFF1A2238),
+                  dropdownColor: AppTheme.backgroundDark,
                   style: FontScaling.getBodyMedium(context).copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
@@ -527,7 +528,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                       Navigator.of(context).pop();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFE135),
+                      backgroundColor: AppTheme.primary,
                       padding: EdgeInsets.symmetric(
                         horizontal: FontScaling.getResponsiveSpacing(context, 24),
                         vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -540,7 +541,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                     child: Text(
                       AppLocalizations.of(context)!.applyButton,
                       style: FontScaling.getButtonText(context).copyWith(
-                        color: const Color(0xFF1A2238),
+                        color: AppTheme.backgroundDark,
                       ),
                     ),
                   ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'background.dart';
 import 'core/services/firebase_initializer.dart';
+import 'core/theme/app_theme.dart';
 import 'core/utils/app_logger.dart';
 import 'features/gratitudes/data/datasources/galaxy_local_data_source.dart';
 import 'features/gratitudes/data/datasources/galaxy_remote_data_source.dart';
@@ -92,6 +94,12 @@ void main() async {
 
   // Note: Layer cache will be initialized per screen size in GratitudeScreen
   // This is because we need to know the actual screen size first
+
+  // Validate WCAG compliance in debug mode
+  if (kDebugMode) {
+    AppLogger.data('🎨 Validating WCAG compliance...');
+    AppTheme.validateWCAG();
+  }
 
   AppLogger.start('🏃 Running app...');
   runApp(GratiStellarApp());
@@ -208,21 +216,21 @@ class GratiStellarApp extends StatelessWidget {
             ),
           ),
           // Add focus theme
-          focusColor: Color(0xFFFFE135),
+          focusColor: AppTheme.primary,
           // Update input decoration theme for visible focus
           inputDecorationTheme: InputDecorationTheme(
-            focusColor: Color(0xFFFFE135),
+            focusColor: AppTheme.primary,
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Color(0xFFFFE135),
+                color: AppTheme.primary,
                 width: 2,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                color: AppTheme.borderSubtle,
               ),
             ),
           ),
@@ -231,7 +239,7 @@ class GratiStellarApp extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               overlayColor: WidgetStateColor.resolveWith((states) {
                 if (states.contains(WidgetState.focused)) {
-                  return Color(0xFFFFE135).withValues(alpha: 0.2);
+                  return AppTheme.overlayLight;
                 }
                 return Colors.transparent;
               }),
@@ -239,50 +247,50 @@ class GratiStellarApp extends StatelessWidget {
           ),
           // Time picker theme to match app design
           timePickerTheme: TimePickerThemeData(
-            backgroundColor: const Color(0xFF1A2238),
-            dialBackgroundColor: const Color(0xFF0A0E27),
-            dialHandColor: const Color(0xFFFFE135),
+            backgroundColor: AppTheme.backgroundDark,
+            dialBackgroundColor: AppTheme.backgroundDarker,
+            dialHandColor: AppTheme.primary,
             dialTextColor: Colors.white.withValues(alpha: 0.9),
-            hourMinuteTextColor: const Color(0xFFFFE135),
-            hourMinuteColor: const Color(0xFF1A2238),
+            hourMinuteTextColor: AppTheme.primary,
+            hourMinuteColor: AppTheme.backgroundDark,
             dayPeriodTextColor: Colors.white.withValues(alpha: 0.9),
-            dayPeriodColor: const Color(0xFF1A2238),
-            dayPeriodBorderSide: const BorderSide(
-              color: Color(0xFFFFE135),
+            dayPeriodColor: AppTheme.backgroundDark,
+            dayPeriodBorderSide: BorderSide(
+              color: AppTheme.primary,
               width: 1,
             ),
-            hourMinuteTextStyle: const TextStyle(
+            hourMinuteTextStyle: TextStyle(
               fontSize: 60,
               fontWeight: FontWeight.w600,
-              color: Color(0xFFFFE135),
+              color: AppTheme.primary,
             ),
             dayPeriodTextStyle: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
-            helpTextStyle: const TextStyle(
+            helpTextStyle: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Color(0xFFFFE135),
+              color: AppTheme.primary,
             ),
-            entryModeIconColor: const Color(0xFFFFE135),
+            entryModeIconColor: AppTheme.primary,
             padding: const EdgeInsets.all(16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: const BorderSide(
-                color: Color(0xFFFFE135),
+              side: BorderSide(
+                color: AppTheme.primary,
                 width: 2,
               ),
             ),
           ),
           // Dialog theme for consistency
           dialogTheme: DialogThemeData(
-            backgroundColor: const Color(0xFF1A2238),
-            titleTextStyle: const TextStyle(
+            backgroundColor: AppTheme.backgroundDark,
+            titleTextStyle: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Color(0xFFFFE135),
+              color: AppTheme.primary,
             ),
             contentTextStyle: const TextStyle(
               fontSize: 16,
@@ -291,8 +299,8 @@ class GratiStellarApp extends StatelessWidget {
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: const BorderSide(
-                color: Color(0xFFFFE135),
+              side: BorderSide(
+                color: AppTheme.primary,
                 width: 2,
               ),
             ),
@@ -300,7 +308,7 @@ class GratiStellarApp extends StatelessWidget {
           // Text button theme for dialog actions
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFFFE135),
+              foregroundColor: AppTheme.primary,
               textStyle: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -329,10 +337,10 @@ class _SplashWrapperState extends State<_SplashWrapper> {
 
   /// Build a simple loading screen
   Widget _buildLoadingScreen() {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
         ),
       ),
     );
@@ -376,7 +384,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
                   ),
                   SizedBox(height: 24),
                   Text(
@@ -401,7 +409,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
           // Handle timeout errors specifically
           if (error is TimeoutException) {
             return Scaffold(
-              backgroundColor: Color(0xFF0A0E27),
+              backgroundColor: AppTheme.backgroundDarker,
               body: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -423,7 +431,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                       Text(
                         'The app may be experiencing connectivity issues or running slowly.',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: AppTheme.textSecondary,
                           fontSize: 14,
                         ),
                         textAlign: TextAlign.center,
@@ -435,8 +443,8 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                           setState(() {});
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFFFE135),
-                          foregroundColor: Color(0xFF0A0E27),
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: AppTheme.backgroundDarker,
                           padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                         ),
                         child: Text(
@@ -456,7 +464,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
 
           // Handle other errors
           return Scaffold(
-            backgroundColor: Color(0xFF0A0E27),
+            backgroundColor: AppTheme.backgroundDarker,
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -477,7 +485,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                     Text(
                       '$error',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: AppTheme.textSecondary,
                         fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
@@ -488,8 +496,8 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                         setState(() {});
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFE135),
-                        foregroundColor: Color(0xFF0A0E27),
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.backgroundDarker,
                       ),
                       child: Text('Try Again'),
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../core/theme/app_theme.dart';
 import '../services/daily_reminder_service.dart';
 import '../font_scaling.dart';
 import '../core/accessibility/semantic_helper.dart';
@@ -33,7 +34,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
         if (!mounted) return;
         scaffoldMessenger.showSnackBar(SnackBar(
           content: Text(l10n.reminderPermissionDenied, style: FontScaling.getBodyMedium(context)),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.error,
         ));
         setState(() => _isProcessing = false);
         return;
@@ -74,7 +75,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF4CAF50),
+        backgroundColor: AppTheme.success,
         behavior: SnackBarBehavior.floating,
       ));
 
@@ -83,7 +84,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
       if (!mounted) return;
       scaffoldMessenger.showSnackBar(SnackBar(
         content: Text('Error enabling reminder: $e', style: FontScaling.getBodyMedium(context)),
-        backgroundColor: Colors.red,
+        backgroundColor: AppTheme.error,
       ));
       setState(() => _isProcessing = false);
     }
@@ -108,10 +109,10 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
           maxHeight: screenHeight * 0.5, // Cap at 50% max
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A2238).withValues(alpha: 0.98),
+          color: AppTheme.backgroundDark.withValues(alpha: 0.98),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           border: Border.all(
-            color: const Color(0xFFFFE135).withValues(alpha: 0.5),
+            color: AppTheme.primary.withValues(alpha: 0.5),
             width: 2,
           ),
         ),
@@ -124,7 +125,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
           SemanticHelper.decorative(
             child: Icon(
               Icons.celebration,
-              color: const Color(0xFFFFE135),
+              color: AppTheme.primary,
               size: FontScaling.getResponsiveIconSize(context, 48),
             ),
           ),
@@ -134,7 +135,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
           Text(
             l10n.reminderPromptTitle,
             style: FontScaling.getModalTitle(context).copyWith(
-              color: const Color(0xFFFFE135),
+              color: AppTheme.primary,
               fontSize:
                   FontScaling.getModalTitle(context).fontSize! * 1.0,
             ),
@@ -146,7 +147,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
           Text(
             l10n.reminderPromptBody,
             style: FontScaling.getBodyMedium(context).copyWith(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: AppTheme.textSecondary,
               fontSize:
                   FontScaling.getBodyMedium(context).fontSize! * 1.0,
             ),
@@ -158,7 +159,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
           Text(
             l10n.reminderPromptSubtext,
             style: FontScaling.getBodySmall(context).copyWith(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: AppTheme.textDisabled,
               fontSize:
                   FontScaling.getBodySmall(context).fontSize! * 1.0,
             ),
@@ -179,7 +180,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
                   child: Text(
                     l10n.maybeLaterButton,
                     style: FontScaling.getButtonText(context).copyWith(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: AppTheme.textTertiary,
                       fontSize:
                           FontScaling.getButtonText(context).fontSize! * 1.0,
                     ),
@@ -195,8 +196,8 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
                 child: ElevatedButton(
                   onPressed: _isProcessing ? null : _handleEnable,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFE135),
-                    foregroundColor: const Color(0xFF1A2238),
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.backgroundDark,
                     padding: EdgeInsets.symmetric(
                       horizontal:
                           FontScaling.getResponsiveSpacing(context, 24),
@@ -215,14 +216,14 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(0xFF1A2238),
+                              AppTheme.backgroundDark,
                             ),
                           ),
                         )
                       : Text(
                           l10n.enableReminderButton,
                           style: FontScaling.getButtonText(context).copyWith(
-                            color: const Color(0xFF1A2238),
+                            color: AppTheme.backgroundDark,
                             fontWeight: FontWeight.w600,
                             fontSize: FontScaling.getButtonText(context)
                                     .fontSize! *

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../core/accessibility/semantic_helper.dart';
+import '../../../../core/config/constants.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../screens/sign_in_screen.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/user_profile_manager.dart';
 import '../../../../services/user_scoped_storage.dart';
-import '../../../../screens/sign_in_screen.dart';
 import '../../../../widgets/scrollable_dialog_content.dart';
-import '../../../../core/config/constants.dart';
-import '../../../../core/utils/app_logger.dart';
-import '../../../../core/accessibility/semantic_helper.dart';
 import 'profile_switcher_dialog.dart';
 
 /// Account dialog widget for displaying and editing user account information
@@ -521,40 +523,49 @@ class _AccountDialogState extends State<AccountDialog> {
                   children: [
                     // Show "Sign in with Email" for anonymous users
                     if (!widget.authService.hasEmailAccount)
-                    TextButton(
-                      onPressed: () => _handleSignIn(context),
-                      child: Text(
-                        l10n.signInWithEmailMenuItem,
-                        style: FontScaling.getButtonText(context).copyWith(
-                          color: Color(0xFFFFE135),
+                    Flexible(
+                      child: TextButton(
+                        onPressed: () => _handleSignIn(context),
+                        child: Text(
+                          l10n.signInWithEmailMenuItem,
+                          style: FontScaling.getButtonText(context).copyWith(
+                            color: AppTheme.primary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
                   // Always show "Sign Out"
-                  TextButton(
-                    onPressed: () => _handleSignOut(context),
-                    child: Text(
-                      l10n.signOutButton,
-                      style: FontScaling.getButtonText(context).copyWith(
-                        color: Colors.red,
+                  Flexible(
+                    child: TextButton(
+                      onPressed: () => _handleSignOut(context),
+                      child: Text(
+                        l10n.signOutButton,
+                        style: FontScaling.getButtonText(context).copyWith(
+                          color: AppTheme.error,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFFFE135),
-                      padding: EdgeInsets.symmetric(
-                        vertical: FontScaling.getResponsiveSpacing(context, 16),
+                  Flexible(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        padding: EdgeInsets.symmetric(
+                          vertical: FontScaling.getResponsiveSpacing(context, 16),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: Text(
-                      l10n.closeButton,
-                      style: FontScaling.getButtonText(context).copyWith(
-                        color: Color(0xFF1A2238),
+                      child: Text(
+                        l10n.closeButton,
+                        style: FontScaling.getButtonText(context).copyWith(
+                          color: AppTheme.textOnLight,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),

@@ -66,9 +66,16 @@ class GalaxyProvider extends ChangeNotifier {
     }
   }
 
-  /// Get non-deleted galaxies
+  /// Get non-deleted galaxies (deduplicated by ID)
   List<GalaxyMetadata> get activeGalaxies {
-    return _galaxies.where((g) => !g.deleted).toList()..sort((a, b) {
+    // Deduplicate by ID (keep most recent version if duplicates exist)
+    final seenIds = <String>{};
+    final deduplicated = _galaxies
+        .where((g) => !g.deleted)
+        .where((g) => seenIds.add(g.id)) // add returns false if already present
+        .toList();
+
+    return deduplicated..sort((a, b) {
       // Sort by last viewed (most recent first)
       final aDate = a.lastViewedAt ?? a.createdAt;
       final bDate = b.lastViewedAt ?? b.createdAt;

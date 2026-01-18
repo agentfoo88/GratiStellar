@@ -661,6 +661,13 @@ class _SignInScreenState extends State<SignInScreen> {
       return;
     }
 
+    if (_isSignUp && password != _passwordConfirmController.text) {
+      setState(() {
+        _errorMessage = l10n.errorPasswordsDoNotMatch;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -751,7 +758,7 @@ class _SignInScreenState extends State<SignInScreen> {
           // Show success message after navigation
           Future.delayed(Duration(milliseconds: 300), () {
             if (mounted) {
-              _showSuccessSnackBar('Account created! Please check your email to verify your account.');
+              _showSuccessSnackBar(AppLocalizations.of(context)!.accountCreatedWithEmailVerification);
             }
           });
         }
@@ -1079,6 +1086,46 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                             onSubmitted: (_) => _handleSubmit(),
                           ),
+
+                          // Password confirmation field (only for sign-up)
+                          if (_isSignUp) ...[
+                            SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                            TextField(
+                              controller: _passwordConfirmController,
+                              enabled: !_isLoading,
+                              obscureText: true,
+                              style: FontScaling.getInputText(context),
+                              decoration: InputDecoration(
+                                labelText: l10n.confirmPasswordLabel,
+                                labelStyle: FontScaling.getBodySmall(context),
+                                hintText: l10n.confirmPasswordHint,
+                                hintStyle: FontScaling.getInputHint(context),
+                                filled: true,
+                                fillColor: Colors.white.withValues(alpha: 0.1),
+                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFFFE135)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFFFE135),
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              onSubmitted: (_) => _handleSubmit(),
+                            ),
+                          ],
 
                           // Forgot Password link
                           if (!_isSignUp) ...[

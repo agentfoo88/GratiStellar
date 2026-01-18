@@ -27,6 +27,7 @@ class TrashScreen extends StatelessWidget {
         ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Color(0xFFFFE135)),
+          tooltip: l10n.backButton,
           onPressed: () => Navigator.pop(context),
         ),
       ),

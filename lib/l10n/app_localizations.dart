@@ -124,6 +124,18 @@ abstract class AppLocalizations {
   /// **'What lights up your heart today?'**
   String get createStarHint;
 
+  /// Default gratitude prompt shown when creating a new star
+  ///
+  /// In en, this message translates to:
+  /// **'What are you grateful for today?'**
+  String get defaultCreateStarHint;
+
+  /// Tooltip for the shuffle prompt button
+  ///
+  /// In en, this message translates to:
+  /// **'Get a random prompt'**
+  String get shufflePromptTooltip;
+
   /// Gratitude creation prompt #1 of 30
   ///
   /// In en, this message translates to:
@@ -1081,7 +1093,7 @@ abstract class AppLocalizations {
   /// Menu item to sign in with email
   ///
   /// In en, this message translates to:
-  /// **'Sign In with Email'**
+  /// **'Sign In'**
   String get signInWithEmailMenuItem;
 
   /// Default display name for anonymous users
@@ -1768,7 +1780,7 @@ abstract class AppLocalizations {
   /// **'{name} (Active) - {starCount} stars'**
   String activeGalaxyItem(String name, int starCount);
 
-  /// Success message when switching to a different galaxy
+  /// Success message when switching to a galaxy
   ///
   /// In en, this message translates to:
   /// **'Switched to {galaxyName}'**
@@ -1813,7 +1825,7 @@ abstract class AppLocalizations {
   /// Confirmation message for deleting a galaxy
   ///
   /// In en, this message translates to:
-  /// **'Delete \"{name}\" and all {starCount} stars?'**
+  /// **'Delete \"{name}\" and all {starCount, plural, =1{1 star} other{{starCount} stars}}?'**
   String deleteGalaxyConfirmation(String name, int starCount);
 
   /// Success message when galaxy is deleted
@@ -2883,6 +2895,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Season Tracking'**
   String get seasonTrackingTitle;
+
+  /// Tooltip for move star button
+  ///
+  /// In en, this message translates to:
+  /// **'Move star'**
+  String get moveStar;
+
+  /// Title for galaxy picker bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Select Target Galaxy'**
+  String get selectTargetGalaxy;
+
+  /// Display count of stars in a galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 star} other{{count} stars}}'**
+  String galaxyStarCount(int count);
+
+  /// Message when no other galaxies available to move star
+  ///
+  /// In en, this message translates to:
+  /// **'No other galaxies available. Create a new galaxy to move stars.'**
+  String get noOtherGalaxies;
+
+  /// Success message when star is moved
+  ///
+  /// In en, this message translates to:
+  /// **'Star moved to {galaxyName}'**
+  String starMovedSuccess(String galaxyName);
+
+  /// Success message when multiple stars are moved
+  ///
+  /// In en, this message translates to:
+  /// **'{count} stars moved to {galaxyName}'**
+  String starsMovedSuccess(int count, String galaxyName);
+
+  /// Error message when star move fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to move star: {error}'**
+  String starMoveFailed(String error);
+
+  /// Label for password confirmation field
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPasswordLabel;
+
+  /// Hint text for password confirmation field
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter your password'**
+  String get confirmPasswordHint;
+
+  /// Error message when passwords don't match
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get errorPasswordsDoNotMatch;
+
+  /// Title for change password dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get changePasswordTitle;
+
+  /// Button text for change password action
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get changePassword;
+
+  /// Button text for change password submit button
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get changePasswordButton;
+
+  /// Label for current password field
+  ///
+  /// In en, this message translates to:
+  /// **'Current Password'**
+  String get currentPasswordLabel;
+
+  /// Hint text for current password field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current password'**
+  String get currentPasswordHint;
+
+  /// Label for new password field
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPasswordLabel;
+
+  /// Hint text for new password field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter new password (min 6 characters)'**
+  String get newPasswordHint;
+
+  /// Error message when required fields are empty
+  ///
+  /// In en, this message translates to:
+  /// **'All fields are required'**
+  String get errorAllFieldsRequired;
+
+  /// Error message when new password is same as current
+  ///
+  /// In en, this message translates to:
+  /// **'New password must be different from current password'**
+  String get errorSamePassword;
+
+  /// Error message when current password is incorrect
+  ///
+  /// In en, this message translates to:
+  /// **'Current password is incorrect'**
+  String get errorCurrentPasswordIncorrect;
+
+  /// Error message when password change fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to change password. Please try again.'**
+  String get errorPasswordChangeFailed;
+
+  /// Success message when password is changed
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed successfully!'**
+  String get passwordChangedSuccess;
+
+  /// Sync status message when device is offline
+  ///
+  /// In en, this message translates to:
+  /// **'Offline - will sync when connected'**
+  String get syncStatusOffline;
+
+  /// Semantic label for warning icons in dialogs
+  ///
+  /// In en, this message translates to:
+  /// **'Warning icon'**
+  String get warningIconLabel;
+
+  /// Success message when account is created and email verification is required
+  ///
+  /// In en, this message translates to:
+  /// **'Account created! Please check your email to verify your account.'**
+  String get accountCreatedWithEmailVerification;
+
+  /// Hint text on branding overlay to skip
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to skip'**
+  String get tapToSkipBranding;
+
+  /// Accessibility label for retry sync action on banner
+  ///
+  /// In en, this message translates to:
+  /// **'Retry sync'**
+  String get retrySync;
+
+  /// Tooltip for back navigation button
+  ///
+  /// In en, this message translates to:
+  /// **'Go back'**
+  String get backButton;
+
+  /// Full sync status message when changes are pending with tap hint
+  ///
+  /// In en, this message translates to:
+  /// **'Changes pending sync - Tap to sync now'**
+  String get syncStatusPendingTap;
+
+  /// Full sync status message while syncing in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing...'**
+  String get syncStatusSyncingMessage;
+
+  /// Full sync status message when all synced
+  ///
+  /// In en, this message translates to:
+  /// **'All changes synced'**
+  String get syncStatusSyncedMessage;
+
+  /// Full sync status message when sync failed with tap hint
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed - tap to retry'**
+  String get syncStatusErrorTap;
+
+  /// Full sync status message when device is offline
+  ///
+  /// In en, this message translates to:
+  /// **'Offline - will sync when connected'**
+  String get syncStatusOfflineMessage;
+
+  /// Accessibility hint for selecting an item in selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to select this item'**
+  String get hintTapToSelect;
+
+  /// Accessibility hint for deselecting an item in selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to deselect this item'**
+  String get hintTapToDeselect;
+
+  /// Accessibility hint for editing a gratitude item
+  ///
+  /// In en, this message translates to:
+  /// **'Double tap to edit this gratitude'**
+  String get hintDoubleTapToEdit;
+
+  /// Accessibility hint for canceling a swipe delete action
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe right to cancel delete'**
+  String get hintCancelDelete;
+
+  /// Accessibility hint for swipe to delete action
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left to delete'**
+  String get hintSwipeDelete;
 }
 
 class _AppLocalizationsDelegate

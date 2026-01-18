@@ -253,6 +253,52 @@ class AuthService {
     }
   }
 
+  /// Change password for current user (requires reauthentication)
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('No user signed in');
+      }
+
+      if (user.isAnonymous) {
+        throw Exception('Cannot change password for anonymous users');
+      }
+
+      final email = user.email;
+      if (email == null) {
+        throw Exception('User email not found');
+      }
+
+      // Reauthenticate user (required by Firebase for sensitive operations)
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+      AppLogger.auth('✅ User reauthenticated successfully');
+
+      // Update password
+      await user.updatePassword(newPassword);
+      await user.reload();
+
+      // Update timestamp in Firestore
+      await _firestore.collection('users').doc(user.uid).update({
+        'passwordChangedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      AppLogger.success('✅ Password changed successfully');
+    } catch (e) {
+      AppLogger.error('❌ Error changing password: $e');
+      rethrow;
+    }
+  }
+
   // Send email verification
   Future<void> sendEmailVerification() async {
     try {

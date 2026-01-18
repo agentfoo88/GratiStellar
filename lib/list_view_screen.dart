@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'core/accessibility/semantic_helper.dart';
 import 'core/theme/app_theme.dart';
 import 'features/gratitudes/presentation/state/gratitude_provider.dart';
+import 'features/gratitudes/presentation/widgets/galaxy_picker_bottom_sheet.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'storage.dart';
@@ -493,31 +494,60 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 ),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: SemanticHelper.label(
-                      label: AppLocalizations.of(context)!.deleteSelected,
-                      hint: 'Delete ${_selectedStarIds.length} selected star(s)',
-                      isButton: true,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _deleteSelectedStars(context, provider),
-                        icon: Icon(
-                          Icons.delete_outline,
+                  // Move button
+                  SemanticHelper.label(
+                    label: AppLocalizations.of(context)!.moveSelected,
+                    hint: 'Move ${_selectedStarIds.length} selected star(s)',
+                    isButton: true,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _moveSelectedStars(context, provider),
+                      icon: Icon(
+                        Icons.drive_file_move_outline,
+                        color: Colors.white,
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      label: Text(
+                        AppLocalizations.of(context)!.moveSelected,
+                        style: FontScaling.getBodySmall(context).copyWith(
                           color: Colors.white,
-                          size: FontScaling.getResponsiveIconSize(context, 20),
                         ),
-                        label: Text(
-                          AppLocalizations.of(context)!.deleteSelected,
-                          style: FontScaling.getBodySmall(context).copyWith(
-                            color: Colors.white,
-                          ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.8),
+                        foregroundColor: Color(0xFF1A2238),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                          vertical: FontScaling.getResponsiveSpacing(context, 12),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.withValues(alpha: 0.8),
-                          padding: EdgeInsets.symmetric(
-                            vertical: FontScaling.getResponsiveSpacing(context, 12),
-                          ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
+                  // Delete button
+                  SemanticHelper.label(
+                    label: AppLocalizations.of(context)!.deleteSelected,
+                    hint: 'Delete ${_selectedStarIds.length} selected star(s)',
+                    isButton: true,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _deleteSelectedStars(context, provider),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: Colors.white,
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      label: Text(
+                        AppLocalizations.of(context)!.deleteSelected,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.withValues(alpha: 0.8),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                          vertical: FontScaling.getResponsiveSpacing(context, 12),
                         ),
                       ),
                     ),
@@ -666,10 +696,26 @@ class _ListViewScreenState extends State<ListViewScreen> {
         ),
         trailing: _isSelectionMode
             ? null
-            : Icon(
-                Icons.chevron_right,
-                color: Colors.white.withValues(alpha: 0.5),
-                size: FontScaling.getResponsiveIconSize(context, 24),
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Move button
+                  IconButton(
+                    icon: Icon(
+                      Icons.drive_file_move,
+                      color: AppTheme.primary.withValues(alpha: 0.8),
+                      size: FontScaling.getResponsiveIconSize(context, 20),
+                    ),
+                    onPressed: () => _showMoveDialog(context, star),
+                    tooltip: AppLocalizations.of(context)!.moveStar,
+                  ),
+                  // Chevron
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.white.withValues(alpha: 0.5),
+                    size: FontScaling.getResponsiveIconSize(context, 24),
+                  ),
+                ],
               ),
         onTap: _isSelectionMode
             ? () {
@@ -745,27 +791,51 @@ class _ListViewScreenState extends State<ListViewScreen> {
               ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _deleteSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
-                    icon: Icon(
-                      Icons.delete_outline,
+                // Move button
+                ElevatedButton.icon(
+                  onPressed: () => _moveSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
+                  icon: Icon(
+                    Icons.drive_file_move_outline,
+                    color: Colors.white,
+                    size: FontScaling.getResponsiveIconSize(context, 20),
+                  ),
+                  label: Text(
+                    AppLocalizations.of(context)!.moveSelected,
+                    style: FontScaling.getBodySmall(context).copyWith(
                       color: Colors.white,
-                      size: FontScaling.getResponsiveIconSize(context, 20),
                     ),
-                    label: Text(
-                      AppLocalizations.of(context)!.deleteSelected,
-                      style: FontScaling.getBodySmall(context).copyWith(
-                        color: Colors.white,
-                      ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.8),
+                    foregroundColor: Color(0xFF1A2238),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                      vertical: FontScaling.getResponsiveSpacing(context, 12),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.withValues(alpha: 0.8),
-                      padding: EdgeInsets.symmetric(
-                        vertical: FontScaling.getResponsiveSpacing(context, 12),
-                      ),
+                  ),
+                ),
+                SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
+                // Delete button
+                ElevatedButton.icon(
+                  onPressed: () => _deleteSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    color: Colors.white,
+                    size: FontScaling.getResponsiveIconSize(context, 20),
+                  ),
+                  label: Text(
+                    AppLocalizations.of(context)!.deleteSelected,
+                    style: FontScaling.getBodySmall(context).copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.withValues(alpha: 0.8),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                      vertical: FontScaling.getResponsiveSpacing(context, 12),
                     ),
                   ),
                 ),
@@ -890,5 +960,123 @@ class _ListViewScreenState extends State<ListViewScreen> {
         );
       }
     }
+  }
+
+  Future<void> _moveSelectedStars(BuildContext context, GratitudeProvider provider) async {
+    if (_selectedStarIds.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final textStyle = FontScaling.getBodySmall(context);
+
+    // Store the IDs for batch move
+    final idsToMove = _selectedStarIds.toList();
+
+    // Get the first selected star to determine current galaxy
+    final firstStar = provider.gratitudeStars
+        .firstWhere((star) => _selectedStarIds.contains(star.id));
+
+    await GalaxyPickerBottomSheet.show(
+      context: context,
+      currentGalaxyId: firstStar.galaxyId,
+      onGalaxySelected: (targetGalaxyId, targetGalaxyName) async {
+        try {
+          // Use batch move - single operation, single reload
+          final movedCount = await provider.moveGratitudes(idsToMove, targetGalaxyId);
+
+          if (mounted) {
+            setState(() {
+              _selectedStarIds.clear();
+              _isSelectionMode = false;
+            });
+
+            if (messenger.mounted && movedCount > 0) {
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.white),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.starsMovedSuccess(movedCount, targetGalaxyName),
+                          style: textStyle.copyWith(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                  backgroundColor: Color(0xFF1A2238),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          }
+        } catch (e) {
+          if (mounted && messenger.mounted) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  l10n.starMoveFailed(e.toString()),
+                  style: textStyle.copyWith(color: Colors.white),
+                ),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      },
+    );
+  }
+
+  Future<void> _showMoveDialog(BuildContext context, GratitudeStar star) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = Provider.of<GratitudeProvider>(context, listen: false);
+    final textStyle = FontScaling.getBodySmall(context);
+
+    await GalaxyPickerBottomSheet.show(
+      context: context,
+      currentGalaxyId: star.galaxyId,
+      onGalaxySelected: (targetGalaxyId, targetGalaxyName) async {
+        try {
+          await provider.moveGratitude(star, targetGalaxyId);
+
+          if (mounted && messenger.mounted) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.starMovedSuccess(targetGalaxyName),
+                        style: textStyle.copyWith(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: AppTheme.backgroundDark,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted && messenger.mounted) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  l10n.starMoveFailed(e.toString()),
+                  style: textStyle.copyWith(color: Colors.white),
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      },
+    );
   }
 }

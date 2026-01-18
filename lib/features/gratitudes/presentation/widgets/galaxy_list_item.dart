@@ -55,12 +55,14 @@ class GalaxyListItem extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Star icon
-              Icon(
-                Icons.auto_awesome,
-                color: Color(0xFFFFE135),
-                size: FontScaling.getResponsiveIconSize(context, 32) *
-                    UIConstants.universalUIScale,
+              // Star icon (decorative)
+              ExcludeSemantics(
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: Color(0xFFFFE135),
+                  size: FontScaling.getResponsiveIconSize(context, 32) *
+                      UIConstants.universalUIScale,
+                ),
               ),
               SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
 
@@ -119,12 +121,14 @@ class GalaxyListItem extends StatelessWidget {
                 ),
               ),
 
-              // Arrow icon
-              Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.white54,
-                size: FontScaling.getResponsiveIconSize(context, 16) *
-                    UIConstants.universalUIScale,
+              // Arrow icon (decorative)
+              ExcludeSemantics(
+                child: Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white54,
+                  size: FontScaling.getResponsiveIconSize(context, 16) *
+                      UIConstants.universalUIScale,
+                ),
               ),
             ],
           ),

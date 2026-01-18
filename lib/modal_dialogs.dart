@@ -503,7 +503,7 @@ class GratitudeDialogs {
   static Future<void> showAddGratitude({
     required BuildContext context,
     required TextEditingController controller,
-    required Function([int? colorIndex, Color? customColor]) onAdd,
+    required Function([int? colorIndex, Color? customColor, String? inspirationPrompt]) onAdd,
     required bool isAnimating,
   }) async {
     if (isAnimating) return;
@@ -532,6 +532,8 @@ class GratitudeDialogs {
         // Initialize paletteColors as a state variable
         List<Color> paletteColors =
             selectedPreset?.colors ?? StarColors.palette;
+        // Cache the current prompt to prevent regeneration on rebuilds
+        String currentPrompt = AppLocalizations.of(context)!.defaultCreateStarHint;
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -609,9 +611,7 @@ class GratitudeDialogs {
                                 keyboardType: TextInputType.multiline,
                                 textInputAction: TextInputAction.done,
                                 decoration: InputDecoration(
-                                  hintText: AppLocalizations.of(
-                                    context,
-                                  )!.getRandomCreateStarHint(),
+                                  hintText: currentPrompt,
                                   hintStyle: FontScaling.getInputHint(context),
                                   filled: true,
                                   fillColor: Colors.white.withValues(
@@ -677,12 +677,12 @@ class GratitudeDialogs {
                                       final starColorsIndex = StarColors.palette
                                           .indexOf(selectedColour);
                                       if (starColorsIndex >= 0) {
-                                        onAdd(starColorsIndex, null);
+                                        onAdd(starColorsIndex, null, currentPrompt);
                                       } else {
-                                        onAdd(null, selectedColour);
+                                        onAdd(null, selectedColour, currentPrompt);
                                       }
                                     } else {
-                                      onAdd(); // Random colour
+                                      onAdd(null, null, currentPrompt); // Random colour
                                     }
                                     if (context.mounted) {
                                       Navigator.of(context).pop();
@@ -693,10 +693,41 @@ class GratitudeDialogs {
                             ),
                           ),
 
+                          // Shuffle prompt button - centered under text field
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: FontScaling.getResponsiveSpacing(context, 4),
+                            ),
+                            child: TextButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  currentPrompt = AppLocalizations.of(context)!.getRandomCreateStarHint();
+                                });
+                              },
+                              icon: Icon(
+                                Icons.shuffle,
+                                size: FontScaling.getResponsiveIconSize(context, 16),
+                                color: AppTheme.textSecondary,
+                              ),
+                              label: Text(
+                                AppLocalizations.of(context)!.shufflePromptTooltip,
+                                style: FontScaling.getCaption(context).copyWith(
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: FontScaling.getResponsiveSpacing(context, 8),
+                                  vertical: FontScaling.getResponsiveSpacing(context, 4),
+                                ),
+                              ),
+                            ),
+                          ),
+
                           SizedBox(
                             height: FontScaling.getResponsiveSpacing(
                               context,
-                              16,
+                              8,
                             ),
                           ),
 
@@ -975,9 +1006,10 @@ class GratitudeDialogs {
                                           onAdd(
                                             selectedColorIndex,
                                             customColorPreview,
+                                            currentPrompt,
                                           );
                                         } else {
-                                          onAdd(); // Random color
+                                          onAdd(null, null, currentPrompt); // Random color
                                         }
                                         if (context.mounted) {
                                           Navigator.of(context).pop();

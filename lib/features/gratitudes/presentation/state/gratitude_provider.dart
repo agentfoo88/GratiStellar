@@ -19,6 +19,7 @@ import '../../domain/usecases/add_gratitude_use_case.dart';
 import '../../domain/usecases/delete_gratitude_use_case.dart';
 import '../../domain/usecases/get_deleted_gratitudes_use_case.dart';
 import '../../domain/usecases/load_gratitudes_use_case.dart';
+import '../../domain/usecases/move_gratitude_use_case.dart';
 import '../../domain/usecases/purge_old_deleted_use_case.dart';
 import '../../domain/usecases/restore_gratitude_use_case.dart';
 import '../../domain/usecases/sync_gratitudes_use_case.dart';
@@ -44,6 +45,7 @@ class GratitudeProvider extends ChangeNotifier {
   late final AddGratitudeUseCase _addGratitudeUseCase;
   late final DeleteGratitudeUseCase _deleteGratitudeUseCase;
   late final UpdateGratitudeUseCase _updateGratitudeUseCase;
+  late final MoveGratitudeUseCase _moveGratitudeUseCase;
   late final LoadGratitudesUseCase _loadGratitudesUseCase;
   late final SyncGratitudesUseCase _syncGratitudesUseCase;
   late final GetDeletedGratitudesUseCase _getDeletedGratitudesUseCase;
@@ -141,6 +143,7 @@ class GratitudeProvider extends ChangeNotifier {
     _addGratitudeUseCase = AddGratitudeUseCase(_random);
     _deleteGratitudeUseCase = DeleteGratitudeUseCase(_repository);
     _updateGratitudeUseCase = UpdateGratitudeUseCase(_repository);
+    _moveGratitudeUseCase = MoveGratitudeUseCase(_repository);
     _loadGratitudesUseCase = LoadGratitudesUseCase(
       repository: _repository,
       authService: _authService,
@@ -410,6 +413,7 @@ class GratitudeProvider extends ChangeNotifier {
       Size screenSize, {
         int? colorPresetIndex,
         Color? customColor,
+        String? inspirationPrompt,
       }) async {
     // Safety check: Ensure galaxy system is initialized
     // At this point, galaxy should always be initialized due to the initialization
@@ -429,6 +433,7 @@ class GratitudeProvider extends ChangeNotifier {
         galaxyId: _galaxyProvider.activeGalaxyId!,
         colorPresetIndex: colorPresetIndex,
         customColor: customColor,
+        inspirationPrompt: inspirationPrompt,
       ),
     );
     return star;
@@ -501,7 +506,7 @@ class GratitudeProvider extends ChangeNotifier {
 
     _gratitudeStars = updatedStars;
     notifyListeners();
-    
+
     // CRITICAL: Sync immediately for data safety
     if (_authService.hasEmailAccount) {
       AppLogger.sync('💾 Star updated - triggering immediate sync');
@@ -511,6 +516,78 @@ class GratitudeProvider extends ChangeNotifier {
         _scheduleSync(); // Fallback to debounced
       });
     }
+  }
+
+  /// Move a gratitude to a different galaxy
+  Future<void> moveGratitude(GratitudeStar star, String targetGalaxyId) async {
+    // Get all stars (UNFILTERED) for safe bulk operation
+    final allStarsIncludingDeleted = await _repository.getAllGratitudesUnfiltered();
+
+    final params = MoveGratitudeParams(
+      star: star,
+      targetGalaxyId: targetGalaxyId,
+      allStars: allStarsIncludingDeleted,
+    );
+
+    await _moveGratitudeUseCase(params);
+
+    // Reload to refresh UI with updated filter
+    await loadGratitudes();
+
+    notifyListeners();
+
+    // CRITICAL: Sync immediately for data safety
+    if (_authService.hasEmailAccount) {
+      AppLogger.sync('💾 Star moved - triggering immediate sync');
+      _markPendingChanges();
+      _performBackgroundSync().catchError((e) {
+        AppLogger.sync('⚠️ Immediate sync failed: $e');
+        _scheduleSync(); // Fallback to debounced
+      });
+    }
+  }
+
+  /// Move multiple gratitudes to a different galaxy (batch operation)
+  Future<int> moveGratitudes(List<String> starIds, String targetGalaxyId) async {
+    if (starIds.isEmpty) return 0;
+
+    // Get all stars (UNFILTERED) for safe bulk operation
+    final allStars = await _repository.getAllGratitudesUnfiltered();
+
+    int movedCount = 0;
+    final updatedStars = List<GratitudeStar>.from(allStars);
+
+    for (final starId in starIds) {
+      final index = updatedStars.indexWhere((s) => s.id == starId);
+      if (index != -1 && updatedStars[index].galaxyId != targetGalaxyId) {
+        updatedStars[index] = updatedStars[index].copyWith(
+          galaxyId: targetGalaxyId,
+          updatedAt: DateTime.now(),
+        );
+        movedCount++;
+      }
+    }
+
+    if (movedCount > 0) {
+      // Save all at once
+      await _repository.saveGratitudes(updatedStars);
+
+      // Single reload at the end
+      await loadGratitudes();
+      notifyListeners();
+
+      // CRITICAL: Sync immediately for data safety
+      if (_authService.hasEmailAccount) {
+        AppLogger.sync('💾 $movedCount stars moved - triggering immediate sync');
+        _markPendingChanges();
+        _performBackgroundSync().catchError((e) {
+          AppLogger.sync('⚠️ Immediate sync failed: $e');
+          _scheduleSync(); // Fallback to debounced
+        });
+      }
+    }
+
+    return movedCount;
   }
 
   /// Delete a gratitude

@@ -15,6 +15,7 @@ class AddGratitudeParams {
   final String galaxyId;
   final int? colorPresetIndex;
   final Color? customColor;
+  final String? inspirationPrompt;
 
   const AddGratitudeParams({
     required this.text,
@@ -23,6 +24,7 @@ class AddGratitudeParams {
     required this.galaxyId,
     this.colorPresetIndex,
     this.customColor,
+    this.inspirationPrompt,
   });
 }
 
@@ -62,6 +64,7 @@ class AddGratitudeUseCase extends UseCase<GratitudeStar, AddGratitudeParams> {
       galaxyId: params.galaxyId,
       colorPresetIndex: params.colorPresetIndex,
       customColor: params.customColor,
+      inspirationPrompt: params.inspirationPrompt,
     );
 
     return newStar;

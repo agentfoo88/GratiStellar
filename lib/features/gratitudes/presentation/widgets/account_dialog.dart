@@ -12,6 +12,7 @@ import '../../../../screens/sign_in_screen.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/user_profile_manager.dart';
 import '../../../../services/user_scoped_storage.dart';
+import '../../../../widgets/change_password_dialog.dart';
 import '../../../../widgets/scrollable_dialog_content.dart';
 import 'profile_switcher_dialog.dart';
 
@@ -472,6 +473,42 @@ class _AccountDialogState extends State<AccountDialog> {
                       ],
                     ),
                   ),
+                // Change Password button (only for email users)
+                if (widget.authService.hasEmailAccount) ...[
+                  SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        await showDialog<bool>(
+                          context: context,
+                          builder: (context) => ChangePasswordDialog(
+                            authService: widget.authService,
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.lock_reset,
+                        color: Color(0xFFFFE135),
+                      ),
+                      label: Text(
+                        l10n.changePassword,
+                        style: FontScaling.getButtonText(context),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: const Color(0xFFFFE135).withValues(alpha: 0.5),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          vertical: FontScaling.getResponsiveSpacing(context, 16),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 // Profile switching section (only for anonymous users)
                 if (!widget.authService.hasEmailAccount) ...[
                   SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),

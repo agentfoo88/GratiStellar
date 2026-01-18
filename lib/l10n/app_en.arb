@@ -10,6 +10,14 @@
   "loadingMessage": "Preparing your personal universe...",
   "createStarModalTitle": "Birth a New Star",
   "createStarHint": "What lights up your heart today?",
+  "defaultCreateStarHint": "What are you grateful for today?",
+  "@defaultCreateStarHint": {
+    "description": "Default gratitude prompt shown when creating a new star"
+  },
+  "shufflePromptTooltip": "Get a random prompt",
+  "@shufflePromptTooltip": {
+    "description": "Tooltip for the shuffle prompt button"
+  },
   "createStarHint1": "What's something that made you smile today?",
   "@createStarHint1": {
     "description": "Gratitude creation prompt #1 of 30"
@@ -497,7 +505,7 @@
   "@accountMenuItem": {
     "description": "Menu item for account settings"
   },
-  "signInWithEmailMenuItem": "Sign In with Email",
+  "signInWithEmailMenuItem": "Sign In",
   "@signInWithEmailMenuItem": {
     "description": "Menu item to sign in with email"
   },
@@ -1804,5 +1812,268 @@
         "seasonTrackingTitle": "Season Tracking",
         "@seasonTrackingTitle": {
           "description": "Title for season tracking feature"
+        },
+        "moveStar": "Move star",
+        "@moveStar": {
+          "description": "Tooltip for move star button"
+        },
+        "selectTargetGalaxy": "Select Target Galaxy",
+        "@selectTargetGalaxy": {
+          "description": "Title for galaxy picker bottom sheet"
+        },
+        "galaxyStarCount": "{count, plural, =1{1 star} other{{count} stars}}",
+        "@galaxyStarCount": {
+          "description": "Display count of stars in a galaxy",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "noOtherGalaxies": "No other galaxies available. Create a new galaxy to move stars.",
+        "@noOtherGalaxies": {
+          "description": "Message when no other galaxies available to move star"
+        },
+        "starMovedSuccess": "Star moved to {galaxyName}",
+        "@starMovedSuccess": {
+          "description": "Success message when star is moved",
+          "placeholders": {
+            "galaxyName": {
+              "type": "String"
+            }
+          }
+        },
+        "starsMovedSuccess": "{count} stars moved to {galaxyName}",
+        "@starsMovedSuccess": {
+          "description": "Success message when multiple stars are moved",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            },
+            "galaxyName": {
+              "type": "String"
+            }
+          }
+        },
+        "starMoveFailed": "Failed to move star: {error}",
+        "@starMoveFailed": {
+          "description": "Error message when star move fails",
+          "placeholders": {
+            "error": {
+              "type": "String"
+            }
+          }
+        },
+        "confirmPasswordLabel": "Confirm Password",
+        "@confirmPasswordLabel": {
+          "description": "Label for password confirmation field"
+        },
+        "confirmPasswordHint": "Re-enter your password",
+        "@confirmPasswordHint": {
+          "description": "Hint text for password confirmation field"
+        },
+        "errorPasswordsDoNotMatch": "Passwords do not match",
+        "@errorPasswordsDoNotMatch": {
+          "description": "Error message when passwords don't match"
+        },
+        "changePasswordTitle": "Change Password",
+        "@changePasswordTitle": {
+          "description": "Title for change password dialog"
+        },
+        "changePassword": "Change Password",
+        "@changePassword": {
+          "description": "Button text for change password action"
+        },
+        "changePasswordButton": "Change Password",
+        "@changePasswordButton": {
+          "description": "Button text for change password submit button"
+        },
+        "currentPasswordLabel": "Current Password",
+        "@currentPasswordLabel": {
+          "description": "Label for current password field"
+        },
+        "currentPasswordHint": "Enter your current password",
+        "@currentPasswordHint": {
+          "description": "Hint text for current password field"
+        },
+        "newPasswordLabel": "New Password",
+        "@newPasswordLabel": {
+          "description": "Label for new password field"
+        },
+        "newPasswordHint": "Enter new password (min 6 characters)",
+        "@newPasswordHint": {
+          "description": "Hint text for new password field"
+        },
+        "errorAllFieldsRequired": "All fields are required",
+        "@errorAllFieldsRequired": {
+          "description": "Error message when required fields are empty"
+        },
+        "errorSamePassword": "New password must be different from current password",
+        "@errorSamePassword": {
+          "description": "Error message when new password is same as current"
+        },
+        "errorCurrentPasswordIncorrect": "Current password is incorrect",
+        "@errorCurrentPasswordIncorrect": {
+          "description": "Error message when current password is incorrect"
+        },
+        "errorPasswordChangeFailed": "Failed to change password. Please try again.",
+        "@errorPasswordChangeFailed": {
+          "description": "Error message when password change fails"
+        },
+        "passwordChangedSuccess": "Password changed successfully!",
+        "@passwordChangedSuccess": {
+          "description": "Success message when password is changed"
+        },
+        "galaxySwitchedSuccess": "Switched to {galaxyName}",
+        "@galaxySwitchedSuccess": {
+          "description": "Success message when switching to a galaxy",
+          "placeholders": {
+            "galaxyName": {
+              "type": "String"
+            }
+          }
+        },
+        "galaxySwitchFailed": "Failed to switch galaxy: {error}",
+        "@galaxySwitchFailed": {
+          "description": "Error message when galaxy switch fails",
+          "placeholders": {
+            "error": {
+              "type": "String"
+            }
+          }
+        },
+        "galaxyCreatedSuccess": "Created new galaxy: {name}",
+        "@galaxyCreatedSuccess": {
+          "description": "Success message when new galaxy is created",
+          "placeholders": {
+            "name": {
+              "type": "String"
+            }
+          }
+        },
+        "galaxyCreateFailed": "Failed to create galaxy: {error}",
+        "@galaxyCreateFailed": {
+          "description": "Error message when galaxy creation fails",
+          "placeholders": {
+            "error": {
+              "type": "String"
+            }
+          }
+        },
+        "galaxyRenamedSuccess": "Renamed galaxy to: {name}",
+        "@galaxyRenamedSuccess": {
+          "description": "Success message when galaxy is renamed",
+          "placeholders": {
+            "name": {
+              "type": "String"
+            }
+          }
+        },
+        "galaxyRenameFailed": "Failed to rename galaxy: {error}",
+        "@galaxyRenameFailed": {
+          "description": "Error message when galaxy rename fails",
+          "placeholders": {
+            "error": {
+              "type": "String"
+            }
+          }
+        },
+        "deleteGalaxy": "Delete Galaxy",
+        "@deleteGalaxy": {
+          "description": "Title for delete galaxy dialog"
+        },
+        "deleteGalaxyConfirmation": "Delete \"{name}\" and all {starCount, plural, =1{1 star} other{{starCount} stars}}?",
+        "@deleteGalaxyConfirmation": {
+          "description": "Confirmation message for deleting a galaxy",
+          "placeholders": {
+            "name": {
+              "type": "String"
+            },
+            "starCount": {
+              "type": "int"
+            }
+          }
+        },
+        "galaxyDeletedSuccess": "Deleted galaxy: {name}",
+        "@galaxyDeletedSuccess": {
+          "description": "Success message when galaxy is deleted",
+          "placeholders": {
+            "name": {
+              "type": "String"
+            }
+          }
+        },
+        "galaxyDeleteFailed": "Failed to delete galaxy: {error}",
+        "@galaxyDeleteFailed": {
+          "description": "Error message when galaxy deletion fails",
+          "placeholders": {
+            "error": {
+              "type": "String"
+            }
+          }
+        },
+        "syncStatusOffline": "Offline - will sync when connected",
+        "@syncStatusOffline": {
+          "description": "Sync status message when device is offline"
+        },
+        "warningIconLabel": "Warning icon",
+        "@warningIconLabel": {
+          "description": "Semantic label for warning icons in dialogs"
+        },
+        "accountCreatedWithEmailVerification": "Account created! Please check your email to verify your account.",
+        "@accountCreatedWithEmailVerification": {
+          "description": "Success message when account is created and email verification is required"
+        },
+        "tapToSkipBranding": "Tap to skip",
+        "@tapToSkipBranding": {
+          "description": "Hint text on branding overlay to skip"
+        },
+        "retrySync": "Retry sync",
+        "@retrySync": {
+          "description": "Accessibility label for retry sync action on banner"
+        },
+        "backButton": "Go back",
+        "@backButton": {
+          "description": "Tooltip for back navigation button"
+        },
+        "syncStatusPendingTap": "Changes pending sync - Tap to sync now",
+        "@syncStatusPendingTap": {
+          "description": "Full sync status message when changes are pending with tap hint"
+        },
+        "syncStatusSyncingMessage": "Syncing...",
+        "@syncStatusSyncingMessage": {
+          "description": "Full sync status message while syncing in progress"
+        },
+        "syncStatusSyncedMessage": "All changes synced",
+        "@syncStatusSyncedMessage": {
+          "description": "Full sync status message when all synced"
+        },
+        "syncStatusErrorTap": "Sync failed - tap to retry",
+        "@syncStatusErrorTap": {
+          "description": "Full sync status message when sync failed with tap hint"
+        },
+        "syncStatusOfflineMessage": "Offline - will sync when connected",
+        "@syncStatusOfflineMessage": {
+          "description": "Full sync status message when device is offline"
+        },
+        "hintTapToSelect": "Tap to select this item",
+        "@hintTapToSelect": {
+          "description": "Accessibility hint for selecting an item in selection mode"
+        },
+        "hintTapToDeselect": "Tap to deselect this item",
+        "@hintTapToDeselect": {
+          "description": "Accessibility hint for deselecting an item in selection mode"
+        },
+        "hintDoubleTapToEdit": "Double tap to edit this gratitude",
+        "@hintDoubleTapToEdit": {
+          "description": "Accessibility hint for editing a gratitude item"
+        },
+        "hintCancelDelete": "Swipe right to cancel delete",
+        "@hintCancelDelete": {
+          "description": "Accessibility hint for canceling a swipe delete action"
+        },
+        "hintSwipeDelete": "Swipe left to delete",
+        "@hintSwipeDelete": {
+          "description": "Accessibility hint for swipe to delete action"
         }
     }

@@ -60,10 +60,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   ui.Image? _nebulaAssetImage;
   List<VanGoghStar> _animatedVanGoghStars = []; // The 12 twinkling stars
   List<VanGoghStar> _allVanGoghStars = [];
-  // List<OrganicNebulaRegion> _organicNebulaRegions = []; // ADD THIS
   late AnimationManager _animationManager;
   late CameraController _cameraController;
-  bool _showBranding = false; // Disabled - using enhanced splash screen instead
+  bool _showBranding = false;
   bool _isAppInBackground = false;
   Color? _previewColor;
   GratitudeStar? _lastMindfulnessStar;
@@ -381,7 +380,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
-  void _addGratitude([int? colorIndex, Color? customColor]) async {
+  void _addGratitude([int? colorIndex, Color? customColor, String? inspirationPrompt]) async {
     final provider = context.read<GratitudeProvider>();
 
     // Cancel modes via provider
@@ -396,12 +395,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     final screenSize = MediaQuery.of(context).size;
 
-    // Create star via provider - pass optional color parameters
+    // Create star via provider - pass optional color parameters and inspiration prompt
     final newStar = await provider.createGratitude(
       trimmedText,
       screenSize,
       colorPresetIndex: colorIndex,
       customColor: customColor,
+      inspirationPrompt: inspirationPrompt,
     );
 
     if (!mounted) return;
@@ -819,6 +819,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             _navigateToListView();
           },
           onGalaxiesTap: () {
+            Navigator.pop(context); // Close drawer first
             _showGalaxiesDialog();
           },
           onFeedbackTap: () {

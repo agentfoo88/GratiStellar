@@ -245,59 +245,55 @@ class _BackupDialogState extends State<BackupDialog> {
                 ),
               ),
               SizedBox(height: 8),
-              Column(
-                children: [
-                  RadioListTile<BackupFormat>(
-                    value: BackupFormat.encrypted,
-                    groupValue: _selectedFormat,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedFormat = value!;
-                      });
-                    },
-                    title: Text(
-                      l10n.backupFormatEncrypted,
-                      style: FontScaling.getBodySmall(context),
-                    ),
-                    subtitle: Text(
-                      l10n.backupFormatEncryptedDescription,
-                      style: FontScaling.getCaption(context),
-                    ),
-                    activeColor: AppTheme.primary,
-                  ),
-                  RadioListTile<BackupFormat>(
-                    value: BackupFormat.plaintext,
-                    groupValue: _selectedFormat,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedFormat = value!;
-                      });
-                    },
-                    title: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            l10n.backupFormatPlaintext,
-                            style: FontScaling.getBodySmall(context),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(
-                          Icons.warning_amber,
-                          color: Colors.orange,
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                    subtitle: Text(
-                      l10n.backupFormatPlaintextDescription,
-                      style: FontScaling.getCaption(context).copyWith(
-                        color: Colors.orange,
+              RadioGroup<BackupFormat>(
+                groupValue: _selectedFormat,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedFormat = value!;
+                  });
+                },
+                child: Column(
+                  children: [
+                    RadioListTile<BackupFormat>(
+                      value: BackupFormat.encrypted,
+                      title: Text(
+                        l10n.backupFormatEncrypted,
+                        style: FontScaling.getBodySmall(context),
                       ),
+                      subtitle: Text(
+                        l10n.backupFormatEncryptedDescription,
+                        style: FontScaling.getCaption(context),
+                      ),
+                      activeColor: AppTheme.primary,
                     ),
-                    activeColor: Colors.orange,
-                  ),
-                ],
+                    RadioListTile<BackupFormat>(
+                      value: BackupFormat.plaintext,
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.backupFormatPlaintext,
+                              style: FontScaling.getBodySmall(context),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.warning_amber,
+                            color: Colors.orange,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                      subtitle: Text(
+                        l10n.backupFormatPlaintextDescription,
+                        style: FontScaling.getCaption(context).copyWith(
+                          color: Colors.orange,
+                        ),
+                      ),
+                      activeColor: Colors.orange,
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: 16),
               if (_selectedFormat == BackupFormat.plaintext)

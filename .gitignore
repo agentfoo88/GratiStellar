@@ -3,6 +3,7 @@
 *.log
 *.pyc
 *.swp
+*.md
 .DS_Store
 .atom/
 .build/
@@ -54,9 +55,6 @@ app.*.map.json
 # Local environment files
 .env
 .env.local
-
-# macOS specific (if you're on Mac)
-.DS_Store
 
 # Windows specific (if you're on Windows)
 Thumbs.dbg

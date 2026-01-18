@@ -59,7 +59,7 @@ class DailyReminderService extends ChangeNotifier {
 
       // Initialize notification settings
       const AndroidInitializationSettings androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('@drawable/ic_notification');
 
       const DarwinInitializationSettings iOSSettings =
           DarwinInitializationSettings(
@@ -222,7 +222,7 @@ class DailyReminderService extends ChangeNotifier {
             channelDescription: 'Daily gratitude reminders',
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_notification',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -294,7 +294,7 @@ class DailyReminderService extends ChangeNotifier {
             channelDescription: 'Daily gratitude reminders',
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_notification',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -405,7 +405,7 @@ class DailyReminderService extends ChangeNotifier {
             channelDescription: 'Daily gratitude reminders',
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: '@drawable/ic_notification',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,

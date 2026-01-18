@@ -52,6 +52,9 @@ class GratitudeStar {
   final double pulseMinScaleH;
   final double pulseMinScaleV;
 
+  // The prompt that inspired this gratitude (if any)
+  final String? inspirationPrompt;
+
   // Getter for actual color (custom or palette)
   Color get color => customColor ?? StarColors.getColor(colorPresetIndex);
 
@@ -77,6 +80,7 @@ class GratitudeStar {
     required this.pulsePhaseV,
     required this.pulseMinScaleH,
     required this.pulseMinScaleV,
+    this.inspirationPrompt,
   })  : id = id ?? _generateId(),
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? createdAt ?? DateTime.now();
@@ -108,6 +112,7 @@ class GratitudeStar {
     double? pulsePhaseV,
     double? pulseMinScaleH,
     double? pulseMinScaleV,
+    String? inspirationPrompt,
   }) {
     return GratitudeStar(
       id: id,
@@ -131,6 +136,7 @@ class GratitudeStar {
       colorPresetIndex: colorPresetIndex ?? this.colorPresetIndex,
       customColor: clearCustomColor ? null : (customColor ?? this.customColor),
       size: size ?? this.size,
+      inspirationPrompt: inspirationPrompt ?? this.inspirationPrompt,
     );
   }
 
@@ -163,6 +169,8 @@ class GratitudeStar {
       'pulsePhaseV': pulsePhaseV,
       'pulseMinScaleH': pulseMinScaleH,
       'pulseMinScaleV': pulseMinScaleV,
+      // Inspiration prompt (null if not set)
+      if (inspirationPrompt != null) 'inspirationPrompt': inspirationPrompt,
     };
   }
 
@@ -227,6 +235,7 @@ class GratitudeStar {
           dummyRandom.nextDouble() * StarConfig.pulseMinScaleMax).toDouble(),
       pulseMinScaleV: (json['pulseMinScaleV'] ??
           dummyRandom.nextDouble() * StarConfig.pulseMinScaleMax).toDouble(),
+      inspirationPrompt: json['inspirationPrompt'] as String?,
     );
   }
 }
@@ -348,7 +357,7 @@ class StorageService {
       // No data found
       return [];
     } catch (e) {
-      debugPrint('❌ Error loading gratitude stars: $e');
+      AppLogger.error('❌ Error loading gratitude stars: $e');
       return [];
     }
   }
@@ -464,7 +473,7 @@ class StorageService {
         return true;
       }
     } catch (e) {
-      debugPrint('❌ Error saving gratitude stars: $e');
+      AppLogger.error('❌ Error saving gratitude stars: $e');
       return false;
     }
   }
@@ -514,7 +523,7 @@ class StorageService {
 
       AppLogger.data('🗑️ Cleared all local storage (device_id preserved)');
     } catch (e) {
-      debugPrint('⚠️ Error clearing storage: $e');
+      AppLogger.warning('⚠️ Error clearing storage: $e');
     }
   }
 
@@ -525,7 +534,7 @@ class StorageService {
       await prefs.setInt('last_synced_at', timestamp.millisecondsSinceEpoch);
       AppLogger.sync('💾 Saved last sync time: $timestamp');
     } catch (e) {
-      debugPrint('⚠️ Error saving last sync time: $e');
+      AppLogger.warning('⚠️ Error saving last sync time: $e');
     }
   }
 
@@ -539,7 +548,7 @@ class StorageService {
       }
       return null;
     } catch (e) {
-      debugPrint('⚠️ Error getting last sync time: $e');
+      AppLogger.warning('⚠️ Error getting last sync time: $e');
       return null;
     }
   }
@@ -551,7 +560,7 @@ class StorageService {
       await prefs.remove('last_synced_at');
       AppLogger.sync('🗑️ Cleared last sync time');
     } catch (e) {
-      debugPrint('⚠️ Error clearing last sync time: $e');
+      AppLogger.warning('⚠️ Error clearing last sync time: $e');
     }
   }
 
@@ -564,7 +573,7 @@ class StorageService {
       await prefs.setDouble(_fontScaleKey, scale);
       AppLogger.data('💾 Saved font scale: $scale');
     } catch (e) {
-      debugPrint('⚠️ Error saving font scale: $e');
+      AppLogger.warning('⚠️ Error saving font scale: $e');
     }
   }
 
@@ -573,7 +582,7 @@ class StorageService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getDouble(_fontScaleKey) ?? 1.0; // Default 100%
     } catch (e) {
-      debugPrint('⚠️ Error getting font scale: $e');
+      AppLogger.warning('⚠️ Error getting font scale: $e');
       return 1.0;
     }
   }
@@ -606,7 +615,7 @@ class StorageService {
       }
       return null; // No default set
     } catch (e) {
-      debugPrint('⚠️ Error getting default color: $e');
+      AppLogger.warning('⚠️ Error getting default color: $e');
       return null;
     }
   }
@@ -619,7 +628,7 @@ class StorageService {
       await prefs.remove(_defaultColorCustomKey); // Clear custom
       AppLogger.data('💾 Saved default preset color: $presetIndex');
     } catch (e) {
-      debugPrint('⚠️ Error saving default preset color: $e');
+      AppLogger.warning('⚠️ Error saving default preset color: $e');
     }
   }
 
@@ -631,7 +640,7 @@ class StorageService {
       await prefs.remove(_defaultColorPresetKey); // Clear preset
       AppLogger.data('💾 Saved default custom color: ${color.toARGB32()}');
     } catch (e) {
-      debugPrint('⚠️ Error saving default custom color: $e');
+      AppLogger.warning('⚠️ Error saving default custom color: $e');
     }
   }
 
@@ -643,7 +652,7 @@ class StorageService {
       await prefs.remove(_defaultColorCustomKey);
       AppLogger.data('🗑️ Cleared default color');
     } catch (e) {
-      debugPrint('⚠️ Error clearing default color: $e');
+      AppLogger.warning('⚠️ Error clearing default color: $e');
     }
   }
 
@@ -657,7 +666,7 @@ class StorageService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_selectedPalettePresetKey) ?? 'vibrant';
     } catch (e) {
-      debugPrint('⚠️ Error getting selected palette preset: $e');
+      AppLogger.warning('⚠️ Error getting selected palette preset: $e');
       return 'vibrant'; // Default fallback
     }
   }
@@ -669,7 +678,7 @@ class StorageService {
       await prefs.setString(_selectedPalettePresetKey, presetId);
       AppLogger.data('💾 Saved selected palette preset: $presetId');
     } catch (e) {
-      debugPrint('⚠️ Error saving selected palette preset: $e');
+      AppLogger.warning('⚠️ Error saving selected palette preset: $e');
     }
   }
 

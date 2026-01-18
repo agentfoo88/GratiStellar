@@ -40,12 +40,16 @@ class SyncStatusBanner extends StatelessWidget {
                        status == SyncStatus.error || 
                        status == SyncStatus.offline;
 
-    return GestureDetector(
-      onTap: isTappable ? () {
-        AppLogger.sync('👆 User tapped sync status banner to retry');
-        onRetry?.call();
-      } : null,
-      child: Container(
+    return Semantics(
+      label: _getStatusMessage(status, l10n),
+      button: isTappable,
+      hint: isTappable ? l10n?.retrySync : null,
+      child: GestureDetector(
+        onTap: isTappable ? () {
+          AppLogger.sync('👆 User tapped sync status banner to retry');
+          onRetry?.call();
+        } : null,
+        child: Container(
         width: double.infinity,
         padding: EdgeInsets.symmetric(
           horizontal: FontScaling.getResponsiveSpacing(context, 16),
@@ -86,6 +90,7 @@ class SyncStatusBanner extends StatelessWidget {
             ],
           ],
         ),
+      ),
       ),
     );
   }
@@ -142,13 +147,13 @@ class SyncStatusBanner extends StatelessWidget {
   String _getStatusMessage(SyncStatus status, AppLocalizations? l10n) {
     switch (status) {
       case SyncStatus.pending:
-        return 'Changes pending sync - Tap to sync now';
+        return l10n?.syncStatusPendingTap ?? 'Changes pending sync - Tap to sync now';
       case SyncStatus.syncing:
-        return 'Syncing...';
+        return l10n?.syncStatusSyncingMessage ?? 'Syncing...';
       case SyncStatus.offline:
-        return 'Offline - Tap to retry when connected';
+        return l10n?.syncStatusOfflineMessage ?? 'Offline - will sync when connected';
       case SyncStatus.error:
-        return 'Sync failed - Tap to retry';
+        return l10n?.syncStatusErrorTap ?? 'Sync failed - tap to retry';
       case SyncStatus.synced:
         return ''; // Shouldn't show
     }

@@ -16,9 +16,12 @@ class BrandingOverlayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: GestureDetector(
-        onTap: onSkip,
-        child: Container(
+      child: Semantics(
+        label: AppLocalizations.of(context)!.tapToSkipBranding,
+        button: true,
+        child: GestureDetector(
+          onTap: onSkip,
+          child: Container(
           color: Colors.black.withValues(alpha: 0.7),
           child: Center(
             child: Column(
@@ -47,7 +50,7 @@ class BrandingOverlayWidget extends StatelessWidget {
                       UIConstants.universalUIScale,
                 ),
                 Text(
-                  'Tap to skip',
+                  AppLocalizations.of(context)!.tapToSkipBranding,
                   style: FontScaling.getCaption(context).copyWith(
                     color: Colors.white.withValues(alpha: 0.5),
                   ),
@@ -55,6 +58,7 @@ class BrandingOverlayWidget extends StatelessWidget {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

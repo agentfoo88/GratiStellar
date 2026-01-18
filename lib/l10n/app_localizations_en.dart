@@ -24,6 +24,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createStarHint => 'What lights up your heart today?';
 
   @override
+  String get defaultCreateStarHint => 'What are you grateful for today?';
+
+  @override
+  String get shufflePromptTooltip => 'Get a random prompt';
+
+  @override
   String get createStarHint1 => 'What\'s something that made you smile today?';
 
   @override
@@ -547,7 +553,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountMenuItem => 'Account';
 
   @override
-  String get signInWithEmailMenuItem => 'Sign In with Email';
+  String get signInWithEmailMenuItem => 'Sign In';
 
   @override
   String get defaultUserName => 'Grateful User';
@@ -952,7 +958,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String deleteGalaxyConfirmation(String name, int starCount) {
-    return 'Delete \"$name\" and all $starCount stars?';
+    String _temp0 = intl.Intl.pluralLogic(
+      starCount,
+      locale: localeName,
+      other: '$starCount stars',
+      one: '1 star',
+    );
+    return 'Delete \"$name\" and all $_temp0?';
   }
 
   @override
@@ -1547,4 +1559,136 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seasonTrackingTitle => 'Season Tracking';
+
+  @override
+  String get moveStar => 'Move star';
+
+  @override
+  String get selectTargetGalaxy => 'Select Target Galaxy';
+
+  @override
+  String galaxyStarCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stars',
+      one: '1 star',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noOtherGalaxies =>
+      'No other galaxies available. Create a new galaxy to move stars.';
+
+  @override
+  String starMovedSuccess(String galaxyName) {
+    return 'Star moved to $galaxyName';
+  }
+
+  @override
+  String starsMovedSuccess(int count, String galaxyName) {
+    return '$count stars moved to $galaxyName';
+  }
+
+  @override
+  String starMoveFailed(String error) {
+    return 'Failed to move star: $error';
+  }
+
+  @override
+  String get confirmPasswordLabel => 'Confirm Password';
+
+  @override
+  String get confirmPasswordHint => 'Re-enter your password';
+
+  @override
+  String get errorPasswordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get changePasswordTitle => 'Change Password';
+
+  @override
+  String get changePassword => 'Change Password';
+
+  @override
+  String get changePasswordButton => 'Change Password';
+
+  @override
+  String get currentPasswordLabel => 'Current Password';
+
+  @override
+  String get currentPasswordHint => 'Enter your current password';
+
+  @override
+  String get newPasswordLabel => 'New Password';
+
+  @override
+  String get newPasswordHint => 'Enter new password (min 6 characters)';
+
+  @override
+  String get errorAllFieldsRequired => 'All fields are required';
+
+  @override
+  String get errorSamePassword =>
+      'New password must be different from current password';
+
+  @override
+  String get errorCurrentPasswordIncorrect => 'Current password is incorrect';
+
+  @override
+  String get errorPasswordChangeFailed =>
+      'Failed to change password. Please try again.';
+
+  @override
+  String get passwordChangedSuccess => 'Password changed successfully!';
+
+  @override
+  String get syncStatusOffline => 'Offline - will sync when connected';
+
+  @override
+  String get warningIconLabel => 'Warning icon';
+
+  @override
+  String get accountCreatedWithEmailVerification =>
+      'Account created! Please check your email to verify your account.';
+
+  @override
+  String get tapToSkipBranding => 'Tap to skip';
+
+  @override
+  String get retrySync => 'Retry sync';
+
+  @override
+  String get backButton => 'Go back';
+
+  @override
+  String get syncStatusPendingTap => 'Changes pending sync - Tap to sync now';
+
+  @override
+  String get syncStatusSyncingMessage => 'Syncing...';
+
+  @override
+  String get syncStatusSyncedMessage => 'All changes synced';
+
+  @override
+  String get syncStatusErrorTap => 'Sync failed - tap to retry';
+
+  @override
+  String get syncStatusOfflineMessage => 'Offline - will sync when connected';
+
+  @override
+  String get hintTapToSelect => 'Tap to select this item';
+
+  @override
+  String get hintTapToDeselect => 'Tap to deselect this item';
+
+  @override
+  String get hintDoubleTapToEdit => 'Double tap to edit this gratitude';
+
+  @override
+  String get hintCancelDelete => 'Swipe right to cancel delete';
+
+  @override
+  String get hintSwipeDelete => 'Swipe left to delete';
 }

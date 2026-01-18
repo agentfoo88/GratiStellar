@@ -2,7 +2,7 @@ name: gratistellar
 description: "Build a galaxy of gratitude with a peaceful gratitude tracker"
 publish_to: "none"
 
-version: 1.0.05+13
+version: 1.0.08+15
 
 environment:
   sdk: ^3.9.2
@@ -71,10 +71,10 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
   windows:
     generate: true
-    image_path: "assets/icon.png"
-  image_path: "assets/icon.png"
-  adaptive_icon_background: "#1A2238"
-  adaptive_icon_foreground: "assets/icon.png"
+    image_path: "assets/colour-icon.png"
+  image_path: "assets/colour-icon.png"
+  adaptive_icon_background: "#2E2466"
+  adaptive_icon_foreground: "assets/colour-icon.png"

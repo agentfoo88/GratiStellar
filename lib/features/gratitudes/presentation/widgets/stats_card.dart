@@ -98,10 +98,12 @@ class StatsCardWidget extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(
-          icon,
-          color: Color(0xFFFFE135),
-          size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
+        ExcludeSemantics(
+          child: Icon(
+            icon,
+            color: Color(0xFFFFE135),
+            size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
+          ),
         ),
         SizedBox(height: FontScaling.getResponsiveSpacing(context, 4) * UIConstants.universalUIScale),
         Text(
@@ -128,10 +130,12 @@ class StatsCardWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.brightness_2,
-          color: Color(0xFFFFE135),
-          size: FontScaling.getResponsiveIconSize(context, 18) * UIConstants.universalUIScale,
+        ExcludeSemantics(
+          child: Icon(
+            Icons.brightness_2,
+            color: Color(0xFFFFE135),
+            size: FontScaling.getResponsiveIconSize(context, 18) * UIConstants.universalUIScale,
+          ),
         ),
         SizedBox(width: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale),
         Text(

@@ -1286,137 +1286,142 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: Container(
-        constraints: BoxConstraints(maxWidth: 500, minWidth: 300),
-        padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
-        decoration: BoxDecoration(
-          color: Color(0xFF1A2238).withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Color(0xFFFFE135).withValues(alpha: 0.3),
-            width: 2,
+    return PopScope(
+      canPop: false,
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 500, minWidth: 300),
+          padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
+          decoration: BoxDecoration(
+            color: Color(0xFF1A2238).withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Color(0xFFFFE135).withValues(alpha: 0.3),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 20,
-              spreadRadius: 5,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.account_circle_outlined,
-              color: Color(0xFFFFE135).withValues(alpha: 0.8),
-              size: FontScaling.getResponsiveIconSize(context, 48),
-            ),
-            SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
-            Text(
-              widget.l10n.anonymousDataDetectedTitle,
-              style: FontScaling.getHeadingMedium(context).copyWith(
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-            Text(
-              widget.l10n.anonymousDataDetectedMessage(widget.starsCount, widget.galaxiesCount),
-              style: FontScaling.getBodySmall(context).copyWith(
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-            // Radio buttons for merge/delete
-            RadioGroup<bool>(
-              groupValue: _selectedChoice,
-              onChanged: (value) {
-                setState(() {
-                  _selectedChoice = value;
-                });
-              },
-              child: Column(
-                children: [
-                  RadioListTile<bool>(
-                    title: Text(
-                      widget.l10n.mergeAnonymousDataButton,
-                      style: FontScaling.getBodyMedium(context).copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                    subtitle: Text(
-                      widget.l10n.mergeAnonymousDataDescription,
-                      style: FontScaling.getBodySmall(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    value: true,
-                    activeColor: AppTheme.primary,
-                  ),
-                  RadioListTile<bool>(
-                    title: Text(
-                      widget.l10n.deleteAnonymousDataButton,
-                      style: FontScaling.getBodyMedium(context).copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                    subtitle: Text(
-                      widget.l10n.deleteAnonymousDataDescription,
-                      style: FontScaling.getBodySmall(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    value: false,
-                    activeColor: AppTheme.primary,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(null),
-                  child: Text(
-                    widget.l10n.cancel,
-                    style: FontScaling.getButtonText(context).copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
+                Icon(
+                  Icons.account_circle_outlined,
+                  color: Color(0xFFFFE135).withValues(alpha: 0.8),
+                  size: FontScaling.getResponsiveIconSize(context, 48),
+                ),
+                SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                Text(
+                  widget.l10n.anonymousDataDetectedTitle,
+                  style: FontScaling.getHeadingMedium(context).copyWith(
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+                Text(
+                  widget.l10n.anonymousDataDetectedMessage(widget.starsCount, widget.galaxiesCount),
+                  style: FontScaling.getBodySmall(context).copyWith(
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
+                // Radio buttons for merge/delete
+                RadioGroup<bool>(
+                  groupValue: _selectedChoice,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedChoice = value;
+                    });
+                  },
+                  child: Column(
+                    children: [
+                      RadioListTile<bool>(
+                        title: Text(
+                          widget.l10n.mergeAnonymousDataButton,
+                          style: FontScaling.getBodyMedium(context).copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                        subtitle: Text(
+                          widget.l10n.mergeAnonymousDataDescription,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        value: true,
+                        activeColor: AppTheme.primary,
+                      ),
+                      RadioListTile<bool>(
+                        title: Text(
+                          widget.l10n.deleteAnonymousDataButton,
+                          style: FontScaling.getBodyMedium(context).copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                        subtitle: Text(
+                          widget.l10n.deleteAnonymousDataDescription,
+                          style: FontScaling.getBodySmall(context).copyWith(
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        value: false,
+                        activeColor: AppTheme.primary,
+                      ),
+                    ],
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: _selectedChoice == null
-                      ? null
-                      : () => Navigator.of(context).pop(_selectedChoice),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFFFE135),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: FontScaling.getResponsiveSpacing(context, 20),
-                      vertical: FontScaling.getResponsiveSpacing(context, 12),
+                SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(null),
+                      child: Text(
+                        widget.l10n.cancel,
+                        style: FontScaling.getButtonText(context).copyWith(
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                    ElevatedButton(
+                      onPressed: _selectedChoice == null
+                          ? null
+                          : () => Navigator.of(context).pop(_selectedChoice),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFFFFE135),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: FontScaling.getResponsiveSpacing(context, 20),
+                          vertical: FontScaling.getResponsiveSpacing(context, 12),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: Text(
+                        _selectedChoice == true
+                            ? widget.l10n.mergeAnonymousDataButton
+                            : _selectedChoice == false
+                                ? widget.l10n.deleteAnonymousDataButton
+                                : widget.l10n.cancel,
+                        style: FontScaling.getButtonText(context).copyWith(
+                          color: Color(0xFF1A2238),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    _selectedChoice == true
-                        ? widget.l10n.mergeAnonymousDataButton
-                        : _selectedChoice == false
-                            ? widget.l10n.deleteAnonymousDataButton
-                            : widget.l10n.cancel,
-                    style: FontScaling.getButtonText(context).copyWith(
-                      color: Color(0xFF1A2238),
-                    ),
-                  ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

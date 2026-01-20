@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Centralized theme and color system for GratiStellar
 ///
@@ -134,6 +135,22 @@ class AppTheme {
   ///
   /// Use for: Light overlays, subtle backgrounds
   static Color overlayLight = primary.withValues(alpha: 0.2);
+
+  // ========================================
+  // SYSTEM UI OVERLAY STYLE
+  // ========================================
+
+  /// System UI overlay style for dark theme (white status bar icons)
+  ///
+  /// Use with `AnnotatedRegion<SystemUiOverlayStyle>` to ensure proper
+  /// status bar styling on screens without AppBars.
+  static const SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,  // White icons for Android
+    statusBarBrightness: Brightness.dark,       // For iOS (dark = light icons)
+    systemNavigationBarColor: Color(0xFF0A0E27),
+    systemNavigationBarIconBrightness: Brightness.light,
+  );
 
   // ========================================
   // DIALOG-SPECIFIC STYLES

@@ -140,6 +140,21 @@ class _SeasonDrawerState extends State<SeasonDrawer>
     }
   }
 
+  /// Get localized season name
+  String _getSeasonName(BuildContext context, Season season) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (season) {
+      case Season.spring:
+        return l10n.seasonSpring;
+      case Season.summer:
+        return l10n.seasonSummer;
+      case Season.autumn:
+        return l10n.seasonAutumn;
+      case Season.winter:
+        return l10n.seasonWinter;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<GalaxyProvider>(
@@ -192,8 +207,8 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                         children: [
                         // Toggle button (always visible)
                         SemanticHelper.label(
-                          label: _isExpanded ? 'Hide season controls' : 'Show season controls',
-                          hint: 'Toggle season drawer',
+                          label: _isExpanded ? AppLocalizations.of(context)!.seasonDrawerHide : AppLocalizations.of(context)!.seasonDrawerShow,
+                          hint: AppLocalizations.of(context)!.seasonDrawerToggleHint,
                           isButton: true,
                           child: InkWell(
                             onTap: _toggleDrawer,
@@ -251,7 +266,7 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                                       style: const TextStyle(fontSize: 18),
                                     ),
                                     label: Text(
-                                      currentSeason.displayName, // TODO: Use l10n after regeneration
+                                      _getSeasonName(context, currentSeason),
                                       style: FontScaling.getButtonText(context).copyWith(
                                         color: const Color(0xFF1A2238), // Dark text for WCAG contrast
                                       ),

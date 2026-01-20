@@ -2075,5 +2075,33 @@
         "hintSwipeDelete": "Swipe left to delete",
         "@hintSwipeDelete": {
           "description": "Accessibility hint for swipe to delete action"
+        },
+        "preparingUniverse": "Preparing your universe...",
+        "@preparingUniverse": {
+          "description": "Loading message shown during app initialization"
+        },
+        "initializationTimeoutTitle": "Initialization took too long",
+        "@initializationTimeoutTitle": {
+          "description": "Title shown when app initialization times out"
+        },
+        "initializationTimeoutMessage": "The app may be experiencing connectivity issues or running slowly.",
+        "@initializationTimeoutMessage": {
+          "description": "Message shown when app initialization times out"
+        },
+        "tryAgainButton": "Try Again",
+        "@tryAgainButton": {
+          "description": "Button text to retry an operation"
+        },
+        "initializationFailedTitle": "Failed to initialize app",
+        "@initializationFailedTitle": {
+          "description": "Title shown when app initialization fails"
+        },
+        "okButton": "OK",
+        "@okButton": {
+          "description": "Generic OK button text"
+        },
+        "seasonDrawerToggleHint": "Toggle season drawer",
+        "@seasonDrawerToggleHint": {
+          "description": "Accessibility hint for the season drawer toggle button"
         }
     }

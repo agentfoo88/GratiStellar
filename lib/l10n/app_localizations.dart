@@ -3123,6 +3123,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Swipe left to delete'**
   String get hintSwipeDelete;
+
+  /// Loading message shown during app initialization
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your universe...'**
+  String get preparingUniverse;
+
+  /// Title shown when app initialization times out
+  ///
+  /// In en, this message translates to:
+  /// **'Initialization took too long'**
+  String get initializationTimeoutTitle;
+
+  /// Message shown when app initialization times out
+  ///
+  /// In en, this message translates to:
+  /// **'The app may be experiencing connectivity issues or running slowly.'**
+  String get initializationTimeoutMessage;
+
+  /// Button text to retry an operation
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgainButton;
+
+  /// Title shown when app initialization fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to initialize app'**
+  String get initializationFailedTitle;
+
+  /// Generic OK button text
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get okButton;
+
+  /// Accessibility hint for the season drawer toggle button
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle season drawer'**
+  String get seasonDrawerToggleHint;
 }
 
 class _AppLocalizationsDelegate

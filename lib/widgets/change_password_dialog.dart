@@ -139,9 +139,11 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: Container(
+    return PopScope(
+      canPop: !_isLoading,
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
         constraints: const BoxConstraints(maxWidth: 500),
         padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
         decoration: BoxDecoration(
@@ -405,6 +407,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

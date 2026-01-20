@@ -348,48 +348,49 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Title
-            Text(
-              l10n.switchProfileTitle,
-              style: FontScaling.getHeadingMedium(context).copyWith(
-                color: AppTheme.primary,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Title
+              Text(
+                l10n.switchProfileTitle,
+                style: FontScaling.getHeadingMedium(context).copyWith(
+                  color: AppTheme.primary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Loading indicator
-            if (_isLoading)
-              const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
-                ),
-              )
-            else if (_userIds.isEmpty)
-              // Empty state
-              Padding(
-                padding: const EdgeInsets.all(32),
-                child: Text(
-                  'No profiles found',
-                  style: FontScaling.getBodyMedium(context),
-                  textAlign: TextAlign.center,
-                ),
-              )
-            else
-              // Profile list
-              Flexible(
-                child: ListView.builder(
+              const SizedBox(height: 16),
+
+              // Loading indicator
+              if (_isLoading)
+                const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                  ),
+                )
+              else if (_userIds.isEmpty)
+                // Empty state
+                Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Text(
+                    'No profiles found',
+                    style: FontScaling.getBodyMedium(context),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else
+                // Profile list
+                ListView.builder(
                   shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: _userIds.length,
                   itemBuilder: (context, index) {
                     final userId = _userIds[index];
                     final defaultName = l10n.defaultUserName;
                     final displayName = _displayNames[userId] ?? defaultName;
                     final isActive = userId == _activeUserId;
-                    
+
                     return InkWell(
                       onTap: !isActive ? () => _switchProfile(userId) : null,
                       borderRadius: BorderRadius.circular(12),
@@ -445,49 +446,49 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
                     );
                   },
                 ),
-              ),
-            
-            const SizedBox(height: 16),
-            
-            // Create new profile button
-            SemanticHelper.label(
-              label: l10n.createNewProfile,
-              hint: l10n.createNewProfile,
-              isButton: true,
-              child: ElevatedButton(
-                onPressed: _createNewProfile,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+
+              const SizedBox(height: 16),
+
+              // Create new profile button
+              SemanticHelper.label(
+                label: l10n.createNewProfile,
+                hint: l10n.createNewProfile,
+                isButton: true,
+                child: ElevatedButton(
+                  onPressed: _createNewProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.createNewProfile,
+                    style: FontScaling.getButtonText(context).copyWith(
+                      color: AppTheme.textOnPrimary,
+                    ),
                   ),
                 ),
-                child: Text(
-                  l10n.createNewProfile,
-                  style: FontScaling.getButtonText(context).copyWith(
-                    color: AppTheme.textOnPrimary,
+              ),
+
+              const SizedBox(height: 8),
+
+              // Close button
+              SemanticHelper.label(
+                label: l10n.closeButton,
+                hint: l10n.closeButton,
+                isButton: true,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    l10n.closeButton,
+                    style: FontScaling.getButtonText(context),
                   ),
                 ),
               ),
-            ),
-            
-            const SizedBox(height: 8),
-            
-            // Close button
-            SemanticHelper.label(
-              label: l10n.closeButton,
-              hint: l10n.closeButton,
-              isButton: true,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  l10n.closeButton,
-                  style: FontScaling.getButtonText(context),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

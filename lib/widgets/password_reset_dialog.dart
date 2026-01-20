@@ -111,15 +111,17 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return AlertDialog(
-      backgroundColor: AppTheme.backgroundDark,
-      title: Text(
-        l10n.passwordResetTitle,
-        style: FontScaling.getHeadingMedium(context).copyWith(
-          color: AppTheme.primary,
+    return PopScope(
+      canPop: !_isLoading,
+      child: AlertDialog(
+        backgroundColor: AppTheme.backgroundDark,
+        title: Text(
+          l10n.passwordResetTitle,
+          style: FontScaling.getHeadingMedium(context).copyWith(
+            color: AppTheme.primary,
+          ),
         ),
-      ),
-      content: SingleChildScrollView(
+        content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,40 +204,41 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
             ],
           ],
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: Text(
-            l10n.cancel,
-            style: FontScaling.getButtonText(context).copyWith(
-              color: Colors.white70,
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+            child: Text(
+              l10n.cancel,
+              style: FontScaling.getButtonText(context).copyWith(
+                color: Colors.white70,
+              ),
             ),
           ),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _handleReset,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primary,
-            foregroundColor: AppTheme.textOnPrimary,
+          ElevatedButton(
+            onPressed: _isLoading ? null : _handleReset,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: AppTheme.textOnPrimary,
+            ),
+            child: _isLoading
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.textOnPrimary),
+                    ),
+                  )
+                : Text(
+                    l10n.sendResetEmail,
+                    style: FontScaling.getButtonText(context).copyWith(
+                      color: AppTheme.textOnPrimary,
+                    ),
+                  ),
           ),
-          child: _isLoading
-              ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.textOnPrimary),
-                  ),
-                )
-              : Text(
-                  l10n.sendResetEmail,
-                  style: FontScaling.getButtonText(context).copyWith(
-                    color: AppTheme.textOnPrimary,
-                  ),
-                ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

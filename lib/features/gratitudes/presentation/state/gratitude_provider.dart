@@ -166,9 +166,29 @@ class GratitudeProvider extends ChangeNotifier {
         AppLogger.auth('👤 Auth state changed, reloading gratitudes...');
         loadGratitudes();
       }
-      
+
       _previousUser = user;
     });
+  }
+
+  /// Deduplicate stars by ID, removing duplicates and logging warnings
+  List<GratitudeStar> _deduplicateStars(List<GratitudeStar> stars) {
+    if (!_needsDeduplication) return stars;
+
+    final seenIds = <String>{};
+    final dedupedStars = <GratitudeStar>[];
+
+    for (final star in stars) {
+      if (!seenIds.contains(star.id)) {
+        seenIds.add(star.id);
+        dedupedStars.add(star);
+      } else {
+        AppLogger.warning('⚠️ Duplicate star detected and removed: ${star.id}');
+      }
+    }
+
+    _needsDeduplication = false;
+    return dedupedStars;
   }
 
   /// Set galaxy provider (called after construction)
@@ -201,26 +221,8 @@ class GratitudeProvider extends ChangeNotifier {
   Future<void> loadGratitudes({bool waitForSync = false}) async {
     final result = await _loadGratitudesUseCase(NoParams());
 
-    // Only deduplicate if we suspect duplicates (after merge operations)
-    List<GratitudeStar> dedupedStars;
-    if (_needsDeduplication) {
-      // Deduplicate by ID
-      final seenIds = <String>{};
-      dedupedStars = [];
-
-      for (final star in result.stars) {
-        if (!seenIds.contains(star.id)) {
-          seenIds.add(star.id);
-          dedupedStars.add(star);
-        } else {
-          AppLogger.warning('⚠️ Duplicate star detected and removed: ${star.id}');
-        }
-      }
-
-      _needsDeduplication = false;
-    } else {
-      dedupedStars = result.stars;
-    }
+    // Deduplicate stars if needed (after merge operations)
+    final dedupedStars = _deduplicateStars(result.stars);
 
     // Purge old deleted items (30+ days)
     final purgedStars = await _purgeOldDeletedUseCase(PurgeOldDeletedParams(dedupedStars));
@@ -333,29 +335,9 @@ class GratitudeProvider extends ChangeNotifier {
         },
       );
 
-      // Mark that deduplication is needed after merge
+      // Mark that deduplication is needed after merge and deduplicate
       _needsDeduplication = true;
-
-      // Only deduplicate if we suspect duplicates (after merge operations)
-      List<GratitudeStar> dedupedStars;
-      if (_needsDeduplication) {
-        // Deduplicate by ID
-        final seenIds = <String>{};
-        dedupedStars = [];
-
-        for (final star in result.mergedStars) {
-          if (!seenIds.contains(star.id)) {
-            seenIds.add(star.id);
-            dedupedStars.add(star);
-          } else {
-            AppLogger.warning('⚠️ Duplicate star detected and removed: ${star.id}');
-          }
-        }
-
-        _needsDeduplication = false;
-      } else {
-        dedupedStars = result.mergedStars;
-      }
+      final dedupedStars = _deduplicateStars(result.mergedStars);
 
       // Filter for UI display: only non-deleted stars from the current galaxy
       // Note: ALL stars (dedupedStars) are already saved to repository by the sync use case

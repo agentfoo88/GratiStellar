@@ -71,12 +71,6 @@ class SeasonConfig {
     }
   }
 
-  /// Get base color for a season (deprecated - use getTintColor instead)
-  @Deprecated('Use getTintColor instead')
-  static Color getBaseColor(Season season) {
-    return getTintColor(season);
-  }
-
   /// Convert hex color to RGB array [r, g, b]
   static List<int> hexToRgb(Color color) {
     return [

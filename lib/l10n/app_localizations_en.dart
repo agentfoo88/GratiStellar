@@ -1691,4 +1691,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hintSwipeDelete => 'Swipe left to delete';
+
+  @override
+  String get preparingUniverse => 'Preparing your universe...';
+
+  @override
+  String get initializationTimeoutTitle => 'Initialization took too long';
+
+  @override
+  String get initializationTimeoutMessage =>
+      'The app may be experiencing connectivity issues or running slowly.';
+
+  @override
+  String get tryAgainButton => 'Try Again';
+
+  @override
+  String get initializationFailedTitle => 'Failed to initialize app';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get seasonDrawerToggleHint => 'Toggle season drawer';
 }

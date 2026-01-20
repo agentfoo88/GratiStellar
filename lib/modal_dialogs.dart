@@ -24,11 +24,13 @@ class GratitudeDialogs {
   // ========================================
 
   static void showComingSoon(BuildContext context, String feature) {
+    final l10n = AppLocalizations.of(context)!;
     AppDialog.showInfo(
       context: context,
       title: feature,
-      message: AppLocalizations.of(context)!.comingSoonTitle,
+      message: l10n.comingSoonTitle,
       icon: Icons.info_outline,
+      buttonText: l10n.okButton,
     );
   }
 

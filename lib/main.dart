@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +37,17 @@ import 'services/user_profile_manager.dart';
 void main() async {
   AppLogger.start('🚀 App starting...');
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Configure system UI for dark theme (white status bar icons)
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,  // White icons for Android
+      statusBarBrightness: Brightness.dark,       // For iOS (dark = light icons)
+      systemNavigationBarColor: Color(0xFF0A0E27),
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
 
   // CRITICAL FIX: Set first run flag BEFORE initializing providers
   // This prevents the first run cleanup from deleting galaxies created during initialization
@@ -140,9 +152,11 @@ class GratiStellarApp extends StatelessWidget {
       authService: authService,
     );
 
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: syncStatusService),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: AppTheme.systemUiOverlayStyle,
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: syncStatusService),
         ChangeNotifierProvider.value(value: userProfileManager),
         ChangeNotifierProvider(
           create: (_) => DailyReminderService()..initialize(),
@@ -319,6 +333,7 @@ class GratiStellarApp extends StatelessWidget {
 
         // Always show splash first, then route based on state
         home: const _SplashWrapper(),
+        ),
       ),
     );
   }
@@ -378,6 +393,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
       builder: (context, initSnapshot) {
         // Show loading while initializing
         if (initSnapshot.connectionState == ConnectionState.waiting) {
+          final l10n = AppLocalizations.of(context)!;
           return Scaffold(
             body: Center(
               child: Column(
@@ -388,7 +404,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                   ),
                   SizedBox(height: 24),
                   Text(
-                    'Preparing your universe...',
+                    l10n.preparingUniverse,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 18,
@@ -408,6 +424,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
 
           // Handle timeout errors specifically
           if (error is TimeoutException) {
+            final l10n = AppLocalizations.of(context)!;
             return Scaffold(
               backgroundColor: AppTheme.backgroundDarker,
               body: Center(
@@ -419,7 +436,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                       Icon(Icons.timer_off, color: Colors.orange, size: 64),
                       SizedBox(height: 16),
                       Text(
-                        'Initialization took too long',
+                        l10n.initializationTimeoutTitle,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -429,7 +446,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                       ),
                       SizedBox(height: 12),
                       Text(
-                        'The app may be experiencing connectivity issues or running slowly.',
+                        l10n.initializationTimeoutMessage,
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 14,
@@ -448,7 +465,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                           padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                         ),
                         child: Text(
-                          'Try Again',
+                          l10n.tryAgainButton,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -463,6 +480,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
           }
 
           // Handle other errors
+          final l10n = AppLocalizations.of(context)!;
           return Scaffold(
             backgroundColor: AppTheme.backgroundDarker,
             body: Center(
@@ -474,7 +492,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                     Icon(Icons.error_outline, color: Colors.red, size: 64),
                     SizedBox(height: 16),
                     Text(
-                      'Failed to initialize app',
+                      l10n.initializationFailedTitle,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -499,7 +517,7 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                         backgroundColor: AppTheme.primary,
                         foregroundColor: AppTheme.backgroundDarker,
                       ),
-                      child: Text('Try Again'),
+                      child: Text(l10n.tryAgainButton),
                     ),
                   ],
                 ),

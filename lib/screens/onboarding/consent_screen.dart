@@ -47,65 +47,72 @@ class _ConsentScreenState extends State<ConsentScreen> {
   Future<void> _checkConsentStatus() async {
     try {
       final authService = AuthService();
-      
+
       // Get UserProfileManager from context
-      final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+      final userProfileManager = Provider.of<UserProfileManager>(
+        context,
+        listen: false,
+      );
       final userId = await userProfileManager.getOrCreateActiveUserId();
-      final onboardingService = OnboardingService(userProfileManager: userProfileManager);
-      
+      final onboardingService = OnboardingService(
+        userProfileManager: userProfileManager,
+      );
+
       // Check local onboarding completion first (user-scoped)
-      final localOnboardingComplete = await onboardingService.isOnboardingComplete(userId);
-      
+      final localOnboardingComplete = await onboardingService
+          .isOnboardingComplete(userId);
+
       // If user is signed in, check Firebase profile
       if (authService.isSignedIn && authService.hasEmailAccount) {
         final userId = authService.currentUser?.uid;
         if (userId != null) {
           // Sync and migrate profile from Firebase
           final migrationService = UserProfileMigrationService();
-          final migrationResult = await migrationService.loadAndMigrateProfile(userId);
-          
+          final migrationResult = await migrationService.loadAndMigrateProfile(
+            userId,
+          );
+
           if (migrationResult != null) {
-            // Check Firebase profile for privacyPolicyAccepted and onboardingCompleted
-            try {
-              final firestore = FirebaseFirestore.instance;
-              final doc = await firestore.collection('users').doc(userId).get();
-              final profileData = doc.data();
-              final firebasePrivacyAccepted = profileData?['privacyPolicyAccepted'] as bool? ?? false;
-              final firebaseOnboardingComplete = profileData?['onboardingCompleted'] as bool? ?? false;
-              
-              // If Firebase says consent accepted and onboarding complete, skip this screen
-              if (firebasePrivacyAccepted && firebaseOnboardingComplete) {
-                AppLogger.data('✅ Consent already accepted in Firebase, skipping screen');
-                if (!mounted) return;
-                // Mark locally as well (user-scoped)
-                await onboardingService.markOnboardingComplete(userId);
-                if (!mounted) return;
-                // Capture navigator after async gap
-                final navigator = Navigator.of(context);
-                navigator.pushReplacement(
-                  MaterialPageRoute(builder: (context) => GratitudeScreen()),
-                );
-                return;
-              } else if (firebasePrivacyAccepted) {
-                // Privacy accepted but onboarding not complete - pre-check the boxes
-                if (mounted) {
-                  setState(() {
-                    _privacyAccepted = true;
-                    _termsAccepted = true;
-                  });
-                }
+            // Use profile data from migration result to avoid redundant read
+            final profileData = migrationResult.profileData;
+            final firebasePrivacyAccepted =
+                profileData?['privacyPolicyAccepted'] as bool? ?? false;
+            final firebaseOnboardingComplete =
+                profileData?['onboardingCompleted'] as bool? ?? false;
+
+            // If Firebase says consent accepted and onboarding complete, skip this screen
+            if (firebasePrivacyAccepted && firebaseOnboardingComplete) {
+              AppLogger.data(
+                '✅ Consent already accepted in Firebase, skipping screen',
+              );
+              if (!mounted) return;
+              // Mark locally as well (user-scoped)
+              await onboardingService.markOnboardingComplete(userId);
+              if (!mounted) return;
+              // Capture navigator after async gap
+              final navigator = Navigator.of(context);
+              navigator.pushReplacement(
+                MaterialPageRoute(builder: (context) => GratitudeScreen()),
+              );
+              return;
+            } else if (firebasePrivacyAccepted) {
+              // Privacy accepted but onboarding not complete - pre-check the boxes
+              if (mounted) {
+                setState(() {
+                  _privacyAccepted = true;
+                  _termsAccepted = true;
+                });
               }
-            } catch (e) {
-              AppLogger.error('⚠️ Error checking Firebase consent status: $e');
-              // Continue with local check if Firebase check fails
             }
           }
         }
       }
-      
+
       // If local onboarding complete, skip this screen
       if (localOnboardingComplete) {
-        AppLogger.data('✅ Onboarding already complete locally, skipping screen');
+        AppLogger.data(
+          '✅ Onboarding already complete locally, skipping screen',
+        );
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -114,7 +121,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
           return;
         }
       }
-      
+
       // Show consent screen
       if (mounted) {
         setState(() {
@@ -189,7 +196,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
         content: Text(
           l10n.consentUrlCopied,
           style: FontScaling.getBodyMedium(context).copyWith(
-            color: Colors.white, // Explicit white for better contrast on blue background
+            color: Colors
+                .white, // Explicit white for better contrast on blue background
           ),
         ),
         duration: const Duration(seconds: 2),
@@ -209,44 +217,51 @@ class _ConsentScreenState extends State<ConsentScreen> {
   Future<void> _handleAccept() async {
     if (!_canContinue) return;
 
-    AppLogger.auth('Consent accepted, creating anonymous profile and navigating to main app...');
+    AppLogger.auth(
+      'Consent accepted, creating anonymous profile and navigating to main app...',
+    );
 
     try {
       final authService = AuthService();
-      
+
       // Get UserProfileManager from context
-      final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
-      
+      final userProfileManager = Provider.of<UserProfileManager>(
+        context,
+        listen: false,
+      );
+
       // Create device-scoped anonymous profile
       final userId = await userProfileManager.getOrCreateActiveUserId();
-      
+
       // Mark onboarding as complete locally (user-scoped)
-      final onboardingService = OnboardingService(userProfileManager: userProfileManager);
+      final onboardingService = OnboardingService(
+        userProfileManager: userProfileManager,
+      );
       await onboardingService.markOnboardingComplete(userId);
-      
-      // If user is signed in, save consent to Firebase
+
+      // OPTIMIZATION: Use batched profile update instead of direct write
       if (authService.isSignedIn && authService.hasEmailAccount) {
         final userId = authService.currentUser?.uid;
         if (userId != null) {
           try {
-            await FirebaseFirestore.instance.collection('users').doc(userId).set({
+            authService.scheduleProfileUpdate(userId, {
               'privacyPolicyAccepted': true,
               'privacyPolicyVersion': AppConfig.consentVersion,
               'onboardingCompleted': true,
               'onboardingCompletedAt': FieldValue.serverTimestamp(),
-            }, SetOptions(merge: true));
-            AppLogger.success('✅ Consent saved to Firebase');
+            });
+            AppLogger.success('✅ Consent scheduled for batched update');
           } catch (e) {
-            AppLogger.error('⚠️ Error saving consent to Firebase: $e');
+            AppLogger.error('⚠️ Error scheduling consent update: $e');
             // Continue anyway - local state is saved
           }
         }
       }
-      
+
       AppLogger.success('✅ Anonymous profile created, onboarding complete');
-      
+
       if (!mounted) return;
-      
+
       // Navigate directly to main app
       Navigator.pushReplacement(
         context,
@@ -260,11 +275,12 @@ class _ConsentScreenState extends State<ConsentScreen> {
           SnackBar(
             content: Text(
               l10n.errorGeneric,
-              style: FontScaling.getBodyMedium(context).copyWith(
-                color: Colors.white,
-              ),
+              style: FontScaling.getBodyMedium(
+                context,
+              ).copyWith(color: Colors.white),
             ),
-            backgroundColor: Colors.red.shade700, // Use darker red for better contrast
+            backgroundColor:
+                Colors.red.shade700, // Use darker red for better contrast
           ),
         );
       }
@@ -278,16 +294,11 @@ class _ConsentScreenState extends State<ConsentScreen> {
       children: [
         Text(
           '•  ',
-          style: FontScaling.getBodyMedium(context).copyWith(
-            color: const Color(0xFFFFE135),
-          ),
+          style: FontScaling.getBodyMedium(
+            context,
+          ).copyWith(color: const Color(0xFFFFE135)),
         ),
-        Expanded(
-          child: Text(
-            text,
-            style: FontScaling.getBodyMedium(context),
-          ),
-        ),
+        Expanded(child: Text(text, style: FontScaling.getBodyMedium(context))),
       ],
     );
   }
@@ -363,15 +374,16 @@ class _ConsentScreenState extends State<ConsentScreen> {
                     Center(
                       child: Text(
                         l10n.consentTitle,
-                        style: FontScaling.getHeadingMedium(context).copyWith(
-                          color: const Color(0xFFFFE135),
-                        ),
+                        style: FontScaling.getHeadingMedium(
+                          context,
+                        ).copyWith(color: const Color(0xFFFFE135)),
                         textAlign: TextAlign.center,
                       ),
                     ),
 
                     SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 24) *
+                      height:
+                          FontScaling.getResponsiveSpacing(context, 24) *
                           UIConstants.universalUIScale,
                     ),
 
@@ -396,7 +408,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                           SizedBox(
                             height:
                                 FontScaling.getResponsiveSpacing(context, 16) *
-                                    UIConstants.universalUIScale,
+                                UIConstants.universalUIScale,
                           ),
 
                           // Bullet points
@@ -404,13 +416,13 @@ class _ConsentScreenState extends State<ConsentScreen> {
                           SizedBox(
                             height:
                                 FontScaling.getResponsiveSpacing(context, 8) *
-                                    UIConstants.universalUIScale,
+                                UIConstants.universalUIScale,
                           ),
                           _buildBulletPoint(context, l10n.consentBullet2),
                           SizedBox(
                             height:
                                 FontScaling.getResponsiveSpacing(context, 8) *
-                                    UIConstants.universalUIScale,
+                                UIConstants.universalUIScale,
                           ),
                           _buildBulletPoint(context, l10n.consentBullet3),
                         ],
@@ -418,7 +430,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
                     ),
 
                     SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 32) *
+                      height:
+                          FontScaling.getResponsiveSpacing(context, 32) *
                           UIConstants.universalUIScale,
                     ),
 
@@ -448,10 +461,10 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                       _privacyAccepted = value ?? false;
                                     });
                                   },
-                                  fillColor: WidgetStateProperty.resolveWith(
-                                      (states) {
-                                    if (states
-                                        .contains(WidgetState.selected)) {
+                                  fillColor: WidgetStateProperty.resolveWith((
+                                    states,
+                                  ) {
+                                    if (states.contains(WidgetState.selected)) {
                                       return const Color(0xFFFFE135);
                                     }
                                     return Colors.white.withValues(alpha: 0.3);
@@ -470,17 +483,19 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                         TextSpan(
                                           text: l10n.consentPrivacyPart1,
                                           style: FontScaling.getBodyMedium(
-                                              context),
+                                            context,
+                                          ),
                                         ),
                                         TextSpan(
                                           text: l10n.consentPrivacyLink,
-                                          style: FontScaling.getBodyMedium(
-                                                  context)
-                                              .copyWith(
-                                            color: const Color(0xFFFFE135),
-                                            decoration:
-                                                TextDecoration.underline,
-                                          ),
+                                          style:
+                                              FontScaling.getBodyMedium(
+                                                context,
+                                              ).copyWith(
+                                                color: const Color(0xFFFFE135),
+                                                decoration:
+                                                    TextDecoration.underline,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -494,7 +509,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
                     ),
 
                     SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 16) *
+                      height:
+                          FontScaling.getResponsiveSpacing(context, 16) *
                           UIConstants.universalUIScale,
                     ),
 
@@ -524,10 +540,10 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                       _termsAccepted = value ?? false;
                                     });
                                   },
-                                  fillColor: WidgetStateProperty.resolveWith(
-                                      (states) {
-                                    if (states
-                                        .contains(WidgetState.selected)) {
+                                  fillColor: WidgetStateProperty.resolveWith((
+                                    states,
+                                  ) {
+                                    if (states.contains(WidgetState.selected)) {
                                       return const Color(0xFFFFE135);
                                     }
                                     return Colors.white.withValues(alpha: 0.3);
@@ -546,17 +562,19 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                         TextSpan(
                                           text: l10n.consentTermsPart1,
                                           style: FontScaling.getBodyMedium(
-                                              context),
+                                            context,
+                                          ),
                                         ),
                                         TextSpan(
                                           text: l10n.consentTermsLink,
-                                          style: FontScaling.getBodyMedium(
-                                                  context)
-                                              .copyWith(
-                                            color: const Color(0xFFFFE135),
-                                            decoration:
-                                                TextDecoration.underline,
-                                          ),
+                                          style:
+                                              FontScaling.getBodyMedium(
+                                                context,
+                                              ).copyWith(
+                                                color: const Color(0xFFFFE135),
+                                                decoration:
+                                                    TextDecoration.underline,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -572,7 +590,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
                     // Enhanced error message with actions
                     if (_errorMessage != null) ...[
                       SizedBox(
-                        height: FontScaling.getResponsiveSpacing(context, 16) *
+                        height:
+                            FontScaling.getResponsiveSpacing(context, 16) *
                             UIConstants.universalUIScale,
                       ),
                       Container(
@@ -602,9 +621,12 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                 Expanded(
                                   child: Text(
                                     _errorMessage!,
-                                    style: FontScaling.getBodySmall(context).copyWith(
-                                      color: Colors.red.withValues(alpha: 0.9),
-                                    ),
+                                    style: FontScaling.getBodySmall(context)
+                                        .copyWith(
+                                          color: Colors.red.withValues(
+                                            alpha: 0.9,
+                                          ),
+                                        ),
                                   ),
                                 ),
                               ],
@@ -613,7 +635,11 @@ class _ConsentScreenState extends State<ConsentScreen> {
                             // Action buttons
                             if (_failedUrl != null) ...[
                               SizedBox(
-                                height: FontScaling.getResponsiveSpacing(context, 12) *
+                                height:
+                                    FontScaling.getResponsiveSpacing(
+                                      context,
+                                      12,
+                                    ) *
                                     UIConstants.universalUIScale,
                               ),
                               Row(
@@ -621,7 +647,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                 children: [
                                   // Copy URL button (always show as fallback)
                                   TextButton.icon(
-                                    onPressed: () => _copyUrlToClipboard(_failedUrl!),
+                                    onPressed: () =>
+                                        _copyUrlToClipboard(_failedUrl!),
                                     icon: const Icon(Icons.copy, size: 16),
                                     label: Text(l10n.consentCopyUrlButton),
                                     style: TextButton.styleFrom(
@@ -641,7 +668,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                       icon: const Icon(Icons.refresh, size: 16),
                                       label: Text(l10n.consentRetryButton),
                                       style: TextButton.styleFrom(
-                                        foregroundColor: const Color(0xFFFFE135),
+                                        foregroundColor: const Color(
+                                          0xFFFFE135,
+                                        ),
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 12,
                                           vertical: 8,
@@ -658,7 +687,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
                     ],
 
                     SizedBox(
-                      height: FontScaling.getResponsiveSpacing(context, 32) *
+                      height:
+                          FontScaling.getResponsiveSpacing(context, 32) *
                           UIConstants.universalUIScale,
                     ),
 
@@ -675,11 +705,15 @@ class _ConsentScreenState extends State<ConsentScreen> {
                           onPressed: _canContinue ? _handleAccept : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFFE135),
-                            disabledBackgroundColor:
-                                Colors.grey.withValues(alpha: 0.3),
+                            disabledBackgroundColor: Colors.grey.withValues(
+                              alpha: 0.3,
+                            ),
                             padding: EdgeInsets.symmetric(
-                              vertical: FontScaling.getResponsiveSpacing(
-                                      context, 16) *
+                              vertical:
+                                  FontScaling.getResponsiveSpacing(
+                                    context,
+                                    16,
+                                  ) *
                                   UIConstants.universalUIScale,
                             ),
                             shape: RoundedRectangleBorder(

@@ -187,4 +187,68 @@ class GalaxyRemoteDataSource {
       rethrow;
     }
   }
+
+  /// Batch save multiple galaxies to Firestore (optimization to reduce writes)
+  /// Uses Firestore batch operations to write all galaxies in a single operation
+  /// Optionally includes activeGalaxyId in the batch to reduce writes
+  Future<void> batchSaveGalaxies(
+    List<GalaxyMetadata> galaxies, {
+    String? activeGalaxyId,
+  }) async {
+    if (galaxies.isEmpty && activeGalaxyId == null) return;
+
+    try {
+      final userId = _authService.currentUser?.uid;
+      if (userId == null) {
+        AppLogger.auth('⚠️ No user authenticated, cannot batch save galaxies to Firestore');
+        return;
+      }
+
+      final collection = _getGalaxyCollection();
+      if (collection == null) {
+        AppLogger.auth('⚠️ No user authenticated, cannot batch save galaxies to Firestore');
+        return;
+      }
+
+      // Firestore batch limit is 500 operations
+      const batchSize = 500;
+
+      for (var i = 0; i < galaxies.length; i += batchSize) {
+        final batch = _firestore.batch();
+        final end = (i + batchSize < galaxies.length) ? i + batchSize : galaxies.length;
+        final batchGalaxies = galaxies.sublist(i, end);
+
+        for (final galaxy in batchGalaxies) {
+          final docRef = collection.doc(galaxy.id);
+          batch.set(docRef, galaxy.toJson(), SetOptions(merge: true));
+        }
+
+        // OPTIMIZATION: Include activeGalaxyId in the first batch to reduce writes
+        // This batches the activeGalaxyId update with galaxy writes
+        if (activeGalaxyId != null && i == 0) {
+          final userDocRef = _firestore.collection('users').doc(userId);
+          batch.set(userDocRef, {'activeGalaxyId': activeGalaxyId}, SetOptions(merge: true));
+        }
+
+        await batch.commit();
+        if (activeGalaxyId != null && i == 0) {
+          AppLogger.data('☁️ Batch saved ${batchGalaxies.length} galaxies + activeGalaxyId to Firestore');
+        } else {
+          AppLogger.data('☁️ Batch saved ${batchGalaxies.length} galaxies to Firestore');
+        }
+      }
+    } on FirebaseException catch (e) {
+      if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        AppLogger.sync('! Network error batch saving galaxies: ${e.message}');
+      } else if (e.code == 'permission-denied') {
+        AppLogger.error('! Permission error batch saving galaxies: ${e.message}');
+      } else {
+        AppLogger.sync('! Firebase error batch saving galaxies: ${e.code} - ${e.message}');
+      }
+      rethrow;
+    } catch (e) {
+      AppLogger.error('! Error batch saving galaxies to Firestore: $e');
+      rethrow;
+    }
+  }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../core/accessibility/semantic_helper.dart';
 import '../../core/config/constants.dart';
@@ -58,30 +57,23 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
           final migrationResult = await migrationService.loadAndMigrateProfile(userId);
           
           if (migrationResult != null) {
-            // Check Firebase profile for ageGatePassed
-            try {
-              final firestore = FirebaseFirestore.instance;
-              final doc = await firestore.collection('users').doc(userId).get();
-              final profileData = doc.data();
-              final firebaseAgeGatePassed = profileData?['ageGatePassed'] as bool? ?? false;
-              
-              // If Firebase says age gate passed, skip this screen
-              if (firebaseAgeGatePassed) {
-                AppLogger.data('✅ Age gate already passed in Firebase, skipping screen');
-                if (!mounted) return;
-                // Mark locally as well (user-scoped)
-                await onboardingService.markAgeGatePassed(userId);
-                if (!mounted) return;
-                // Capture navigator after async gap
-                final navigator = Navigator.of(context);
-                navigator.pushReplacement(
-                  MaterialPageRoute(builder: (context) => const ConsentScreen()),
-                );
-                return;
-              }
-            } catch (e) {
-              AppLogger.error('⚠️ Error checking Firebase age gate status: $e');
-              // Continue with local check if Firebase check fails
+            // Use profile data from migration result to avoid redundant read
+            final profileData = migrationResult.profileData;
+            final firebaseAgeGatePassed = profileData?['ageGatePassed'] as bool? ?? false;
+            
+            // If Firebase says age gate passed, skip this screen
+            if (firebaseAgeGatePassed) {
+              AppLogger.data('✅ Age gate already passed in Firebase, skipping screen');
+              if (!mounted) return;
+              // Mark locally as well (user-scoped)
+              await onboardingService.markAgeGatePassed(userId);
+              if (!mounted) return;
+              // Capture navigator after async gap
+              final navigator = Navigator.of(context);
+              navigator.pushReplacement(
+                MaterialPageRoute(builder: (context) => const ConsentScreen()),
+              );
+              return;
             }
           }
         }
@@ -129,18 +121,18 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
       final onboardingService = OnboardingService(userProfileManager: userProfileManager);
       await onboardingService.markAgeGatePassed(userId);
       
-      // If user is signed in, save to Firebase
+      // OPTIMIZATION: Use batched profile update instead of direct write
       final authService = AuthService();
       if (authService.isSignedIn && authService.hasEmailAccount) {
         final userId = authService.currentUser?.uid;
         if (userId != null) {
           try {
-            await FirebaseFirestore.instance.collection('users').doc(userId).set({
+            authService.scheduleProfileUpdate(userId, {
               'ageGatePassed': true,
-            }, SetOptions(merge: true));
-            AppLogger.success('✅ Age gate passed saved to Firebase');
+            });
+            AppLogger.success('✅ Age gate passed scheduled for batched update');
           } catch (e) {
-            AppLogger.error('⚠️ Error saving age gate to Firebase: $e');
+            AppLogger.error('⚠️ Error scheduling age gate update: $e');
             // Continue anyway - local state is saved
           }
         }

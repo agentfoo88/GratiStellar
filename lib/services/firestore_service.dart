@@ -153,21 +153,6 @@ class FirestoreService {
       // Save sync timestamp
       await StorageService.saveLastSyncTime(DateTime.now());
       AppLogger.sync('✅ Delta upload complete: $totalUploaded stars');
-
-      // VERIFICATION: Check if all stars actually made it to Firebase
-      if (totalUploaded > 0 && totalUploaded <= 20) { // Only verify small syncs to avoid rate limits
-        try {
-          final snapshot = await _starsCollection!.limit(totalUploaded + 5).get();
-          final actualCount = snapshot.docs.length;
-          if (actualCount < totalUploaded) {
-            AppLogger.sync('⚠️ MISMATCH: Uploaded $totalUploaded but Firebase shows $actualCount documents!');
-          } else {
-            AppLogger.sync('✅ Verification: Firebase has at least $actualCount stars');
-          }
-        } catch (e) {
-          AppLogger.sync('⚠️ Could not verify upload: $e');
-        }
-      }
     }, 'upload');
   }
 
@@ -215,18 +200,27 @@ class FirestoreService {
     }, 'download');
   }
 
-  // Download all stars for a specific galaxy (used when switching galaxies)
+  // Download stars for a specific galaxy (uses delta sync when possible)
   Future<List<GratitudeStar>> downloadStarsForGalaxy(String galaxyId) async {
     if (_starsCollection == null) {
       throw Exception('No user signed in');
     }
 
     return _executeFirestoreOperation(() async {
-      AppLogger.sync('📥 Downloading all stars for galaxy: $galaxyId');
+      // Get last sync time for delta sync
+      final lastSyncTime = await StorageService.getLastSyncTime();
 
-      final query = _starsCollection!
+      Query query = _starsCollection!
           .where('galaxyId', isEqualTo: galaxyId)
           .where('deleted', isEqualTo: false);
+
+      if (lastSyncTime != null) {
+        // Delta sync - only get stars modified since last sync
+        AppLogger.sync('📥 Delta sync for galaxy $galaxyId since $lastSyncTime');
+        query = query.where('updatedAt', isGreaterThan: lastSyncTime.millisecondsSinceEpoch);
+      } else {
+        AppLogger.sync('📥 First sync - downloading all stars for galaxy: $galaxyId');
+      }
 
       final snapshot = await query.get();
 
@@ -283,6 +277,22 @@ class FirestoreService {
           now - lastCleanup < Duration(days: 1).inMilliseconds) {
         AppLogger.warning('ℹ️ Cleanup already ran today, skipping');
         return;
+      }
+
+      // Optimization: Check local state first to avoid unnecessary Firebase query
+      // If no deleted stars exist locally, skip the Firebase query
+      try {
+        final localStars = await StorageService.loadGratitudeStars();
+        final hasDeletedStars = localStars.any((star) => star.deleted);
+        
+        if (!hasDeletedStars) {
+          AppLogger.data('ℹ️ No deleted stars locally, skipping cleanup query');
+          await prefs.setInt('last_cleanup_at', now);
+          return;
+        }
+      } catch (e) {
+        AppLogger.warning('⚠️ Could not check local stars for cleanup optimization: $e');
+        // Continue with Firebase query if local check fails
       }
 
       // Find stars deleted >30 days ago
@@ -493,6 +503,12 @@ class FirestoreService {
   Future<void> addStar(GratitudeStar star) async {
     if (_starsCollection == null) return;
 
+    // Add rate limiting to prevent excessive writes
+    if (!RateLimiter.checkLimit('firestore_write')) {
+      final retryAfter = RateLimiter.getTimeUntilReset('firestore_write');
+      throw RateLimitException('firestore_write', retryAfter);
+    }
+
     try {
       await _starsCollection!.doc(star.id).set(star.toJson());
       AppLogger.data('➕ Star added to Firestore: ${star.id}');
@@ -505,6 +521,12 @@ class FirestoreService {
   // Update a star in Firestore
   Future<void> updateStar(GratitudeStar star) async {
     if (_starsCollection == null) return;
+
+    // Add rate limiting to prevent excessive writes
+    if (!RateLimiter.checkLimit('firestore_write')) {
+      final retryAfter = RateLimiter.getTimeUntilReset('firestore_write');
+      throw RateLimitException('firestore_write', retryAfter);
+    }
 
     try {
       await _starsCollection!.doc(star.id).update(star.toJson());

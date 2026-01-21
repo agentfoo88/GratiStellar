@@ -199,6 +199,20 @@ class GratitudeProvider extends ChangeNotifier {
   /// Clear all state (called on sign out)
   void clearState() {
     AppLogger.data('🗑️ Clearing provider state');
+
+    // Flush pending syncs before clearing state (don't lose data)
+    if (_hasPendingChanges && _authService.hasEmailAccount) {
+      _syncDebouncer?.cancel();
+      // Fire-and-forget sync attempt
+      _performBackgroundSync().catchError((e) {
+        AppLogger.sync('⚠️ Failed to flush pending syncs on clearState: $e');
+      });
+    }
+
+    _syncDebouncer?.cancel();
+    _syncDebouncer = null;
+    _hasPendingChanges = false;
+
     _gratitudeStars = [];
     _isLoading = true;
     _showAllGratitudes = false;
@@ -951,6 +965,16 @@ class GratitudeProvider extends ChangeNotifier {
   void dispose() {
     _authSubscription?.cancel();
     _mindfulnessTimer?.cancel();
+
+    // Flush pending syncs before disposal (don't lose data)
+    if (_hasPendingChanges && _authService.hasEmailAccount) {
+      _syncDebouncer?.cancel();
+      // Fire-and-forget sync attempt
+      _performBackgroundSync().catchError((e) {
+        AppLogger.sync('⚠️ Failed to flush pending syncs on dispose: $e');
+      });
+    }
+
     _syncDebouncer?.cancel();
     super.dispose();
   }

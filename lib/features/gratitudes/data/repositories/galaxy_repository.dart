@@ -21,10 +21,10 @@ class GalaxyRepository {
     required GalaxyRemoteDataSource remoteDataSource,
     required GratitudeRepository gratitudeRepository,
     required AuthService authService,
-  })  : _localDataSource = localDataSource,
-        _remoteDataSource = remoteDataSource,
-        _gratitudeRepository = gratitudeRepository,
-        _authService = authService;
+  }) : _localDataSource = localDataSource,
+       _remoteDataSource = remoteDataSource,
+       _gratitudeRepository = gratitudeRepository,
+       _authService = authService;
 
   /// Load all galaxies from local storage
   Future<List<GalaxyMetadata>> getGalaxies() async {
@@ -71,6 +71,9 @@ class GalaxyRepository {
   }
 
   /// Update an existing galaxy
+  ///
+  /// OPTIMIZATION: Only saves locally. Cloud sync is handled by GalaxyProvider's
+  /// debounced sync mechanism to batch multiple updates together.
   Future<void> updateGalaxy(GalaxyMetadata galaxy) async {
     final galaxies = await getGalaxies();
     final index = galaxies.indexWhere((g) => g.id == galaxy.id);
@@ -79,13 +82,9 @@ class GalaxyRepository {
       galaxies[index] = galaxy;
       await saveGalaxies(galaxies);
 
-      // Sync to cloud if authenticated (fire-and-forget to avoid blocking)
-      if (_authService.hasEmailAccount) {
-        // Don't await - sync in background to avoid blocking UI
-        _remoteDataSource.updateGalaxy(galaxy).catchError((e) {
-          AppLogger.sync('⚠️ Failed to update galaxy in cloud: $e');
-        });
-      }
+      // OPTIMIZATION: Don't sync immediately - let GalaxyProvider's debounced
+      // sync handle cloud updates to batch multiple changes together
+      // This reduces individual writes when star counts or metadata update frequently
 
       AppLogger.info('📝 Updated galaxy: ${galaxy.name}');
     }
@@ -146,7 +145,9 @@ class GalaxyRepository {
       }
     }
 
-    AppLogger.data('🗑️ Deleted galaxy and ${updatedStars.where((s) => s.galaxyId == galaxyId && s.deleted).length} stars');
+    AppLogger.data(
+      '🗑️ Deleted galaxy and ${updatedStars.where((s) => s.galaxyId == galaxyId && s.deleted).length} stars',
+    );
   }
 
   /// Restore a deleted galaxy (and its stars)
@@ -220,13 +221,10 @@ class GalaxyRepository {
       final galaxies = await getGalaxies();
       final activeGalaxy = galaxies.firstWhere(
         (g) => g.id == activeId,
-        orElse: () => GalaxyMetadata(
-          id: '',
-          name: '',
-          createdAt: DateTime.now(),
-        ),
+        orElse: () =>
+            GalaxyMetadata(id: '', name: '', createdAt: DateTime.now()),
       );
-      
+
       // If galaxy doesn't exist or is deleted, find a non-deleted galaxy
       if (activeGalaxy.id.isEmpty || activeGalaxy.deleted) {
         final nonDeletedGalaxies = galaxies.where((g) => !g.deleted).toList();
@@ -240,7 +238,9 @@ class GalaxyRepository {
           activeId = nonDeletedGalaxies.first.id;
           // Update stored active galaxy ID
           await _localDataSource.setActiveGalaxyId(activeId);
-          AppLogger.sync('🔄 Active galaxy was deleted, switched to: $activeId');
+          AppLogger.sync(
+            '🔄 Active galaxy was deleted, switched to: $activeId',
+          );
         } else {
           // No non-deleted galaxies, return null
           activeId = null;
@@ -290,7 +290,9 @@ class GalaxyRepository {
     // #region agent log
     if (kDebugMode) {
       final currentUser = _authService.currentUser;
-      AppLogger.auth('🔐 DEBUG: syncFromCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+      AppLogger.auth(
+        '🔐 DEBUG: syncFromCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}',
+      );
     }
     // #endregion
 
@@ -305,7 +307,9 @@ class GalaxyRepository {
       final localGalaxiesCount = localGalaxies.length;
       AppLogger.sync('📋 Local galaxies: $localGalaxiesCount');
       if (localGalaxiesCount > 0) {
-        AppLogger.sync('   📋 Local galaxy IDs: ${localGalaxies.map((g) => '${g.id}(${g.name})').join(', ')}');
+        AppLogger.sync(
+          '   📋 Local galaxy IDs: ${localGalaxies.map((g) => '${g.id}(${g.name})').join(', ')}',
+        );
       }
 
       // Load cloud galaxies
@@ -313,14 +317,18 @@ class GalaxyRepository {
       final cloudGalaxiesCount = cloudGalaxies.length;
       AppLogger.sync('☁️ Cloud galaxies: $cloudGalaxiesCount');
       if (cloudGalaxiesCount > 0) {
-        AppLogger.sync('   ☁️ Cloud galaxy IDs: ${cloudGalaxies.map((g) => '${g.id}(${g.name})').join(', ')}');
+        AppLogger.sync(
+          '   ☁️ Cloud galaxy IDs: ${cloudGalaxies.map((g) => '${g.id}(${g.name})').join(', ')}',
+        );
       }
 
       // Merge galaxies: combine local and cloud, keeping newer version for conflicts
       // Filter out deleted galaxies from local list before merging
-      final activeLocalGalaxies = localGalaxies.where((g) => !g.deleted).toList();
+      final activeLocalGalaxies = localGalaxies
+          .where((g) => !g.deleted)
+          .toList();
       final mergedGalaxies = <String, GalaxyMetadata>{};
-      
+
       // Add all active local galaxies first
       for (final galaxy in activeLocalGalaxies) {
         mergedGalaxies[galaxy.id] = galaxy;
@@ -329,11 +337,13 @@ class GalaxyRepository {
       // Merge cloud galaxies (already filtered to exclude deleted)
       for (final cloudGalaxy in cloudGalaxies) {
         final localGalaxy = mergedGalaxies[cloudGalaxy.id];
-        
+
         if (localGalaxy == null) {
           // New galaxy from cloud - add it
           mergedGalaxies[cloudGalaxy.id] = cloudGalaxy;
-          AppLogger.sync('   ➕ Added new cloud galaxy: ${cloudGalaxy.name} (${cloudGalaxy.id})');
+          AppLogger.sync(
+            '   ➕ Added new cloud galaxy: ${cloudGalaxy.name} (${cloudGalaxy.id})',
+          );
         } else {
           // Galaxy exists in both - merge metadata
           // Keep the one with more recent lastModifiedAt, falling back to createdAt
@@ -348,7 +358,9 @@ class GalaxyRepository {
                   : cloudGalaxy.starCount,
             );
             mergedGalaxies[cloudGalaxy.id] = mergedGalaxy;
-            AppLogger.sync('   🔀 Merged galaxy (cloud newer): ${cloudGalaxy.name} (${cloudGalaxy.id})');
+            AppLogger.sync(
+              '   🔀 Merged galaxy (cloud newer): ${cloudGalaxy.name} (${cloudGalaxy.id})',
+            );
           } else {
             // Local is newer - use local but preserve cloud star count if it's higher
             final mergedGalaxy = localGalaxy.copyWith(
@@ -357,7 +369,9 @@ class GalaxyRepository {
                   : localGalaxy.starCount,
             );
             mergedGalaxies[localGalaxy.id] = mergedGalaxy;
-            AppLogger.sync('   🔀 Merged galaxy (local newer): ${localGalaxy.name} (${localGalaxy.id})');
+            AppLogger.sync(
+              '   🔀 Merged galaxy (local newer): ${localGalaxy.name} (${localGalaxy.id})',
+            );
           }
         }
       }
@@ -375,7 +389,9 @@ class GalaxyRepository {
         await setActiveGalaxy(cloudActiveId);
       }
 
-      AppLogger.sync('✅ Merged galaxies: local=$localGalaxiesCount, cloud=$cloudGalaxiesCount, merged=${mergedList.length}');
+      AppLogger.sync(
+        '✅ Merged galaxies: local=$localGalaxiesCount, cloud=$cloudGalaxiesCount, merged=${mergedList.length}',
+      );
     } catch (e) {
       AppLogger.sync('⚠️ Failed to sync galaxies from cloud: $e');
       rethrow;
@@ -390,7 +406,9 @@ class GalaxyRepository {
     // #region agent log
     if (kDebugMode) {
       final currentUser = _authService.currentUser;
-      AppLogger.auth('🔐 DEBUG: syncToCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}');
+      AppLogger.auth(
+        '🔐 DEBUG: syncToCloud auth check - currentUser=${currentUser?.uid}, isAnonymous=${currentUser?.isAnonymous}, hasEmailAccount=${_authService.hasEmailAccount}',
+      );
     }
     // #endregion
 
@@ -401,47 +419,66 @@ class GalaxyRepository {
 
     try {
       final localGalaxies = await getGalaxies();
-      
-      AppLogger.sync('☁️ Syncing ${localGalaxies.length} galaxies to cloud...');
-      AppLogger.sync('   📋 Galaxy IDs: ${localGalaxies.map((g) => '${g.id}(${g.name})').join(', ')}');
-      
-      // Sync each galaxy individually with error handling
-      // Don't fail entire sync if one galaxy fails
-      int syncedCount = 0;
-      int failedCount = 0;
-      final List<String> failedGalaxyIds = [];
-      
-      for (final galaxy in localGalaxies) {
-        try {
-          await _remoteDataSource.saveGalaxy(galaxy);
-          syncedCount++;
-          AppLogger.sync('   ✅ Synced galaxy $syncedCount/${localGalaxies.length}: ${galaxy.name} (${galaxy.id}, ${galaxy.starCount} stars)');
-        } catch (e) {
-          failedCount++;
-          failedGalaxyIds.add(galaxy.id);
-          AppLogger.sync('   ❌ Failed to sync galaxy ${galaxy.name} (${galaxy.id}): $e');
-          // Continue with next galaxy
-        }
-      }
 
-      // Also sync active galaxy ID
+      AppLogger.sync('☁️ Syncing ${localGalaxies.length} galaxies to cloud...');
+      AppLogger.sync(
+        '   📋 Galaxy IDs: ${localGalaxies.map((g) => '${g.id}(${g.name})').join(', ')}',
+      );
+
+      // OPTIMIZATION: Batch write all galaxies + activeGalaxyId instead of individual writes
+      // This reduces N+1 writes to 1 write (or ceil(N/500) batches)
+      final activeId = await getActiveGalaxyId();
       try {
-        final activeId = await getActiveGalaxyId();
+        await _remoteDataSource.batchSaveGalaxies(
+          localGalaxies,
+          activeGalaxyId: activeId,
+        );
         if (activeId != null) {
-          await _remoteDataSource.setActiveGalaxyId(activeId);
-          AppLogger.sync('   ☁️ Synced active galaxy: $activeId');
+          AppLogger.sync(
+            '   ✅ Batch synced ${localGalaxies.length} galaxies + activeGalaxyId to cloud',
+          );
+        } else {
+          AppLogger.sync(
+            '   ✅ Batch synced ${localGalaxies.length} galaxies to cloud',
+          );
         }
       } catch (e) {
-        AppLogger.sync('   ⚠️ Failed to sync active galaxy ID: $e');
-        // Non-critical, continue
+        AppLogger.sync(
+          '   ❌ Batch sync failed, falling back to individual syncs: $e',
+        );
+        // Fallback to individual syncs if batch fails
+        int syncedCount = 0;
+        int failedCount = 0;
+        final List<String> failedGalaxyIds = [];
+
+        for (final galaxy in localGalaxies) {
+          try {
+            await _remoteDataSource.saveGalaxy(galaxy);
+            syncedCount++;
+          } catch (e) {
+            failedCount++;
+            failedGalaxyIds.add(galaxy.id);
+          }
+        }
+
+        // Also sync active galaxy ID individually if batch failed
+        if (activeId != null) {
+          try {
+            await _remoteDataSource.setActiveGalaxyId(activeId);
+            AppLogger.sync('   ☁️ Synced active galaxy: $activeId');
+          } catch (e) {
+            AppLogger.sync('   ⚠️ Failed to sync active galaxy ID: $e');
+          }
+        }
+
+        if (failedCount > 0) {
+          AppLogger.sync(
+            '⚠️ Synced $syncedCount/${localGalaxies.length} galaxies individually. Failed: ${failedGalaxyIds.join(', ')}',
+          );
+        }
       }
 
-      if (failedCount > 0) {
-        AppLogger.sync('⚠️ Synced $syncedCount/${localGalaxies.length} galaxies to cloud. Failed: ${failedGalaxyIds.join(', ')}');
-        // Don't throw - some galaxies synced successfully
-      } else {
-        AppLogger.sync('✅ Synced all ${localGalaxies.length} galaxies to cloud');
-      }
+      AppLogger.sync('✅ Synced all ${localGalaxies.length} galaxies to cloud');
     } catch (e) {
       AppLogger.sync('⚠️ Failed to sync galaxies to cloud: $e');
       rethrow;
@@ -504,9 +541,9 @@ class GalaxyRepository {
   /// Migrate existing stars to a galaxy
   Future<void> migrateExistingStarsToGalaxy(String galaxyId) async {
     final allStars = await _gratitudeRepository.getAllGratitudesUnfiltered();
-    final starsNeedingMigration = allStars.where((star) =>
-    star.galaxyId == 'default' || star.galaxyId.isEmpty
-    ).toList();
+    final starsNeedingMigration = allStars
+        .where((star) => star.galaxyId == 'default' || star.galaxyId.isEmpty)
+        .toList();
 
     if (starsNeedingMigration.isEmpty) {
       AppLogger.success('✅ No stars need migration');
@@ -521,6 +558,8 @@ class GalaxyRepository {
     }).toList();
 
     await _gratitudeRepository.saveGratitudes(updatedStars);
-    AppLogger.success('✅ Migrated ${starsNeedingMigration.length} stars to galaxy $galaxyId');
+    AppLogger.success(
+      '✅ Migrated ${starsNeedingMigration.length} stars to galaxy $galaxyId',
+    );
   }
 }

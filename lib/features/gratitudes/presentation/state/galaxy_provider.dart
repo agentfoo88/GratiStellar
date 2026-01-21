@@ -27,6 +27,10 @@ class GalaxyProvider extends ChangeNotifier {
   Timer? _starCountUpdateTimer;
   DateTime? _lastReconciliationTime;
 
+  // Debouncing for galaxy syncs to batch multiple updates
+  Timer? _galaxySyncTimer;
+  static const Duration _galaxySyncDebounce = Duration(seconds: 3);
+
   // Completer for tracking initialization status
   Completer<void>? _initializationCompleter;
 
@@ -293,12 +297,15 @@ class GalaxyProvider extends ChangeNotifier {
       }
 
       // Save corrected counts if any mismatches found
+      // OPTIMIZATION: Only save locally if counts changed, don't trigger cloud sync
+      // Cloud sync will happen via debounced sync if needed
       if (needsUpdate) {
         _galaxies = updatedGalaxies;
         await _galaxyRepository.saveGalaxies(_galaxies);
         AppLogger.success(
           '✅ Reconciled star counts for ${updatedGalaxies.length} galaxies',
         );
+        // Don't trigger immediate sync - let debounced sync handle it
       }
 
       // Update reconciliation timestamp to prevent repeated reconciliation
@@ -459,6 +466,9 @@ class GalaxyProvider extends ChangeNotifier {
       // Reload gratitudes to show stars from new galaxy (wait for sync)
       await _gratitudeProvider.loadGratitudes(waitForSync: true);
 
+      // OPTIMIZATION: Schedule debounced sync for lastViewedAt update
+      _scheduleGalaxySync();
+
       notifyListeners();
 
       // Get galaxy name for better logging
@@ -610,6 +620,9 @@ class GalaxyProvider extends ChangeNotifier {
         await _galaxyRepository.updateStarCount(_activeGalaxyId!, count);
         await loadGalaxies();
         notifyListeners();
+        
+        // OPTIMIZATION: Schedule debounced sync for star count update
+        _scheduleGalaxySync();
       } catch (e, stack) {
         AppLogger.error('Failed to update galaxy star count: $e');
         AppLogger.error('Stack trace: $stack');
@@ -624,10 +637,9 @@ class GalaxyProvider extends ChangeNotifier {
       await loadGalaxies();
       notifyListeners();
 
-      // Sync to cloud immediately if authenticated (don't wait)
-      syncToCloud().catchError((e) {
-        AppLogger.sync('⚠️ Failed to sync updated galaxy to cloud: $e');
-      });
+      // OPTIMIZATION: Debounce galaxy syncs to batch multiple updates
+      // This prevents syncing all galaxies multiple times when star counts update
+      _scheduleGalaxySync();
     } catch (e) {
       AppLogger.error('⚠️ Error updating galaxy: $e');
       rethrow;
@@ -659,7 +671,7 @@ class GalaxyProvider extends ChangeNotifier {
           '🔄 Attempting to upload local galaxies to cloud as fallback...',
         );
         try {
-          await syncToCloud();
+          await syncToCloud(force: true); // Force immediate sync for recovery
         } catch (uploadError) {
           AppLogger.sync('⚠️ Fallback upload also failed: $uploadError');
         }
@@ -670,13 +682,36 @@ class GalaxyProvider extends ChangeNotifier {
   }
 
   /// Sync galaxies to cloud
-  Future<void> syncToCloud() async {
+  /// Can be called directly for immediate sync (e.g., on sign-in)
+  /// Or scheduled via _scheduleGalaxySync() for debounced syncs
+  Future<void> syncToCloud({bool force = false}) async {
+    // Cancel pending sync if forcing immediate sync
+    if (force) {
+      _galaxySyncTimer?.cancel();
+      _galaxySyncTimer = null;
+    }
+
     try {
       await _galaxyRepository.syncToCloud();
     } catch (e) {
       AppLogger.sync('⚠️ Error syncing galaxies to cloud: $e');
       rethrow;
     }
+  }
+
+  /// Schedule a galaxy sync with debouncing to batch multiple updates
+  void _scheduleGalaxySync() {
+    // Cancel existing timer
+    _galaxySyncTimer?.cancel();
+
+    // Schedule new sync
+    _galaxySyncTimer = Timer(_galaxySyncDebounce, () async {
+      try {
+        await syncToCloud();
+      } catch (e) {
+        AppLogger.sync('⚠️ Scheduled galaxy sync failed: $e');
+      }
+    });
   }
 
   /// Reset initialization flag to allow reinitialization (e.g., after profile switch)
@@ -757,8 +792,8 @@ class GalaxyProvider extends ChangeNotifier {
     // Reconcile star counts after restore
     await _reconcileStarCounts();
 
-    // Sync to cloud (repository handles auth check internally)
-    syncToCloud().catchError((e) {
+    // Sync to cloud immediately after restore (force immediate sync)
+    syncToCloud(force: true).catchError((e) {
       AppLogger.sync('⚠️ Cloud sync after galaxy restore failed: $e');
       // Don't block restore on sync failure
     });

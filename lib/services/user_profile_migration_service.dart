@@ -20,12 +20,16 @@ class MigrationResult {
   /// Migration version applied
   final String? migrationVersion;
 
+  /// Profile data from Firebase (cached to avoid redundant reads)
+  final Map<String, dynamic>? profileData;
+
   MigrationResult({
     required this.shouldTriggerUI,
     this.shouldShowAgeGate = false,
     this.shouldShowConsent = false,
     this.fieldsAdded = const [],
     this.migrationVersion,
+    this.profileData,
   });
 }
 
@@ -153,6 +157,7 @@ class UserProfileMigrationService {
         shouldShowConsent: shouldShowConsent,
         fieldsAdded: fieldsAdded,
         migrationVersion: currentMigrationVersion,
+        profileData: updatedData, // Return profile data to avoid redundant reads
       );
     } catch (e) {
       AppLogger.error('❌ Error migrating user profile: $e');
@@ -170,6 +175,7 @@ class UserProfileMigrationService {
   /// Load user profile from Firebase and migrate if needed
   /// 
   /// Convenience method that loads profile, migrates, and returns result
+  /// Returns profile data in MigrationResult to avoid redundant reads
   Future<MigrationResult?> loadAndMigrateProfile(String? userId) async {
     if (userId == null) {
       return null;
@@ -179,10 +185,13 @@ class UserProfileMigrationService {
       final doc = await _firestore.collection('users').doc(userId).get();
       final profileData = doc.data();
       
-      return await migrateUserProfile(
+      final result = await migrateUserProfile(
         userId: userId,
         profileData: profileData,
       );
+      
+      // Ensure profileData is included in result (migrateUserProfile already includes it)
+      return result;
     } catch (e) {
       AppLogger.error('❌ Error loading user profile for migration: $e');
       // Return result indicating UI should be shown on error
@@ -191,6 +200,7 @@ class UserProfileMigrationService {
         shouldShowAgeGate: true,
         shouldShowConsent: true,
         fieldsAdded: [],
+        profileData: null,
       );
     }
   }

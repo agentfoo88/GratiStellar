@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -40,6 +41,17 @@ class AuthService {
   }
 
   final UserProfileMigrationService _migrationService = UserProfileMigrationService();
+
+  // Cache for user profile data to avoid redundant reads
+  Map<String, dynamic>? _cachedProfileData;
+  String? _cachedProfileUserId;
+  DateTime? _cachedProfileTimestamp;
+  static const Duration _profileCacheExpiry = Duration(minutes: 5);
+
+  // Debouncing for profile updates to batch multiple updates together
+  Timer? _profileUpdateTimer;
+  final Map<String, dynamic> _pendingProfileUpdates = {};
+  static const Duration _profileUpdateDebounce = Duration(seconds: 2);
 
   // Get current user (returns null if Firebase not initialized)
   User? get currentUser {
@@ -110,13 +122,25 @@ class AuthService {
         }
         // #endregion
 
-        // Update last seen
-        await _firestore.collection('users').doc(refreshedUser!.uid).set({
+        // Update last seen (batched with other profile updates)
+        scheduleProfileUpdate(refreshedUser!.uid, {
           'lastSeen': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        });
 
-        // Migrate user profile (add missing fields)
-        await _migrationService.loadAndMigrateProfile(refreshedUser.uid);
+        // Read profile once, then migrate with existing data (avoids double-read)
+        final doc = await _firestore.collection('users').doc(refreshedUser.uid).get();
+        final profileData = doc.data();
+
+        // Migrate user profile (add missing fields) using already-read data
+        final migrationResult = await _migrationService.migrateUserProfile(
+          userId: refreshedUser.uid,
+          profileData: profileData,
+        );
+        if (migrationResult?.profileData != null) {
+          _cachedProfileData = migrationResult!.profileData;
+          _cachedProfileUserId = refreshedUser.uid;
+          _cachedProfileTimestamp = DateTime.now();
+        }
 
         return refreshedUser;
       }
@@ -141,6 +165,22 @@ class AuthService {
         // This prevents next user from seeing previous user's data
         await _clearLocalUserData();
       }
+
+      // Flush any pending profile updates before signing out
+      final userId = _auth.currentUser?.uid;
+      if (userId != null) {
+        await _flushPendingProfileUpdates(userId);
+      }
+
+      // Clear profile cache on sign out
+      _cachedProfileData = null;
+      _cachedProfileUserId = null;
+      _cachedProfileTimestamp = null;
+
+      // Cancel any pending profile updates
+      _profileUpdateTimer?.cancel();
+      _profileUpdateTimer = null;
+      _pendingProfileUpdates.clear();
 
       // Sign out from Firebase
       await _auth.signOut();
@@ -187,16 +227,37 @@ class AuthService {
         return user.displayName;
       }
 
-      // Fallback to Firestore
+      // Check cache first to avoid redundant reads
+      if (_cachedProfileData != null &&
+          _cachedProfileUserId == user.uid &&
+          _cachedProfileTimestamp != null &&
+          DateTime.now().difference(_cachedProfileTimestamp!) < _profileCacheExpiry) {
+        final cachedDisplayName = _cachedProfileData!['displayName'] as String?;
+        if (cachedDisplayName != null && cachedDisplayName.isNotEmpty) {
+          return cachedDisplayName;
+        }
+      }
+
+      // Fallback to Firestore if cache miss or expired
       try {
         final doc = await _firestore.collection('users').doc(user.uid).get();
         final profileData = doc.data();
         
+        // Cache the profile data
+        _cachedProfileData = profileData;
+        _cachedProfileUserId = user.uid;
+        _cachedProfileTimestamp = DateTime.now();
+        
         // Migrate profile if needed (ensures fields are up to date)
-        await _migrationService.migrateUserProfile(
+        final migrationResult = await _migrationService.migrateUserProfile(
           userId: user.uid,
           profileData: profileData,
         );
+        
+        // Update cache with migrated data if available
+        if (migrationResult?.profileData != null) {
+          _cachedProfileData = migrationResult!.profileData;
+        }
         
         return profileData?['displayName'] as String?;
       } catch (e) {
@@ -343,22 +404,103 @@ class AuthService {
       }
 
       // Create Firestore profile
-      await _firestore.collection('users').doc(user.uid).set({
+      final profileData = {
         'email': email,
         'displayName': displayName ?? email,
         'isAnonymous': false,
         'emailVerified': false,
         'createdAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      };
+      await _firestore.collection('users').doc(user.uid).set(
+        profileData,
+        SetOptions(merge: true),
+      );
 
-      // Migrate user profile (add missing fields)
-      await _migrationService.loadAndMigrateProfile(user.uid);
+      // Migrate user profile with already-created data (avoids redundant read)
+      final migrationResult = await _migrationService.migrateUserProfile(
+        userId: user.uid,
+        profileData: profileData,
+      );
+      if (migrationResult?.profileData != null) {
+        _cachedProfileData = migrationResult!.profileData;
+        _cachedProfileUserId = user.uid;
+        _cachedProfileTimestamp = DateTime.now();
+      } else {
+        // Cache the initial profile data if migration didn't return data
+        _cachedProfileData = profileData;
+        _cachedProfileUserId = user.uid;
+        _cachedProfileTimestamp = DateTime.now();
+      }
 
       AppLogger.auth('✅ Account created successfully: ${user.uid}');
       return user;
     } catch (e) {
       AppLogger.auth('❌ Error creating account: $e');
       rethrow;
+    }
+  }
+
+  /// Schedule a profile update with debouncing to batch multiple updates
+  void scheduleProfileUpdate(String userId, Map<String, dynamic> updates) {
+    // Merge updates into pending map
+    _pendingProfileUpdates.addAll(updates);
+
+    // Cancel existing timer
+    _profileUpdateTimer?.cancel();
+
+    // Schedule new update
+    _profileUpdateTimer = Timer(_profileUpdateDebounce, () async {
+      if (_pendingProfileUpdates.isEmpty) return;
+
+      try {
+        final updatesToApply = Map<String, dynamic>.from(_pendingProfileUpdates);
+        _pendingProfileUpdates.clear();
+
+        await _firestore.collection('users').doc(userId).set(
+          updatesToApply,
+          SetOptions(merge: true),
+        );
+
+        AppLogger.data('✅ Batched profile update applied');
+      } catch (e) {
+        AppLogger.error('❌ Error applying batched profile update: $e');
+        // Retry individual updates if batch fails
+        final failedUpdates = Map<String, dynamic>.from(_pendingProfileUpdates);
+        _pendingProfileUpdates.clear();
+        for (final entry in failedUpdates.entries) {
+          try {
+            await _firestore.collection('users').doc(userId).set(
+              {entry.key: entry.value},
+              SetOptions(merge: true),
+            );
+          } catch (e2) {
+            AppLogger.error('❌ Error applying individual profile update ${entry.key}: $e2');
+          }
+        }
+      }
+    });
+  }
+
+  /// Force immediate application of pending profile updates (called on sign out or critical operations)
+  Future<void> _flushPendingProfileUpdates(String userId) async {
+    _profileUpdateTimer?.cancel();
+    _profileUpdateTimer = null;
+
+    if (_pendingProfileUpdates.isEmpty) return;
+
+    try {
+      final updatesToApply = Map<String, dynamic>.from(_pendingProfileUpdates);
+      _pendingProfileUpdates.clear();
+
+      await _firestore.collection('users').doc(userId).set(
+        updatesToApply,
+        SetOptions(merge: true),
+      );
+
+      AppLogger.data('✅ Flushed pending profile updates');
+    } catch (e) {
+      AppLogger.error('❌ Error flushing pending profile updates: $e');
+      _pendingProfileUpdates.clear();
     }
   }
 }

@@ -9,6 +9,8 @@ import '../../core/accessibility/semantic_helper.dart';
 import '../../core/config/app_colors.dart';
 import '../../font_scaling.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/holiday_greeting.dart';
+import '../../services/holiday_greeting_service.dart';
 
 /// Display mode for the enhanced splash screen
 enum SplashDisplayMode {
@@ -68,12 +70,18 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
   // Navigation flag to prevent double-navigation
   bool _isNavigating = false;
 
+  // Holiday greeting (if active)
+  HolidayGreeting? _holidayGreeting;
+
   @override
   void initState() {
     super.initState();
     _setupAnimations();
     _backgroundStars = _generateBackgroundStars();
     _generateParticles();
+    
+    // Get current holiday greeting (default to Northern Hemisphere)
+    _holidayGreeting = HolidayGreetingService.instance.getCurrentGreeting();
 
     if (widget.displayMode == SplashDisplayMode.onboarding) {
       _startAutoAdvanceTimer();
@@ -201,7 +209,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(
-            gradient: AppColors.backgroundGradient,
+            gradient: _getBackgroundGradient(),
           ),
           child: SafeArea(
             child: Stack(
@@ -241,11 +249,127 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
           painter: ParticlePainter(
             particles: _particles,
             progress: _particleController.value,
+            particleColor: _getParticleColor(),
           ),
           size: Size.infinite,
         );
       },
     );
+  }
+
+  /// Get background gradient based on holiday or default
+  LinearGradient _getBackgroundGradient() {
+    if (_holidayGreeting != null && _holidayGreeting!.style.gradient != null) {
+      // Use holiday gradient if available
+      final holidayGradient = _holidayGreeting!.style.gradient!;
+      // Blend with base gradient for better integration
+      return LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color.lerp(AppColors.gradientTop, holidayGradient.colors.first, 0.3) ?? holidayGradient.colors.first,
+          Color.lerp(AppColors.gradientUpperMid, holidayGradient.colors.first, 0.2) ?? holidayGradient.colors.first,
+          Color.lerp(AppColors.gradientLowerMid, holidayGradient.colors.last, 0.2) ?? holidayGradient.colors.last,
+          Color.lerp(AppColors.gradientBottom, holidayGradient.colors.last, 0.3) ?? holidayGradient.colors.last,
+        ],
+      );
+    }
+    return AppColors.backgroundGradient;
+  }
+
+  /// Get logo color based on holiday or default
+  Color _getLogoColor() {
+    return _holidayGreeting?.style.accentColor ?? AppColors.primary;
+  }
+
+  /// Get particle color based on holiday or default
+  Color _getParticleColor() {
+    return _holidayGreeting?.style.accentColor ?? AppColors.primary;
+  }
+
+  /// Get localized holiday greeting text by key
+  String _getHolidayGreetingText(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'greetingNewYear':
+        return l10n.greetingNewYear;
+      case 'greetingValentines':
+        return l10n.greetingValentines;
+      case 'greetingEaster':
+        return l10n.greetingEaster;
+      case 'greetingHalloween':
+        return l10n.greetingHalloween;
+      case 'greetingChristmas':
+        return l10n.greetingChristmas;
+      case 'greetingNewYearsEve':
+        return l10n.greetingNewYearsEve;
+      case 'greetingLunarNewYear':
+        return l10n.greetingLunarNewYear;
+      case 'greetingDiwali':
+        return l10n.greetingDiwali;
+      case 'greetingRamadan':
+        return l10n.greetingRamadan;
+      case 'greetingEidAlFitr':
+        return l10n.greetingEidAlFitr;
+      case 'greetingEidAlAdha':
+        return l10n.greetingEidAlAdha;
+      case 'greetingHanukkah':
+        return l10n.greetingHanukkah;
+      case 'greetingKwanzaa':
+        return l10n.greetingKwanzaa;
+      case 'greetingThanksgivingUS':
+        return l10n.greetingThanksgivingUS;
+      case 'greetingThanksgivingCA':
+        return l10n.greetingThanksgivingCA;
+      case 'greetingSpringEquinox':
+        return l10n.greetingSpringEquinox;
+      case 'greetingSummerSolstice':
+        return l10n.greetingSummerSolstice;
+      case 'greetingAutumnEquinox':
+        return l10n.greetingAutumnEquinox;
+      case 'greetingWinterSolstice':
+        return l10n.greetingWinterSolstice;
+      // Subtitles
+      case 'greetingNewYearSubtitle':
+        return l10n.greetingNewYearSubtitle;
+      case 'greetingValentinesSubtitle':
+        return l10n.greetingValentinesSubtitle;
+      case 'greetingEasterSubtitle':
+        return l10n.greetingEasterSubtitle;
+      case 'greetingHalloweenSubtitle':
+        return l10n.greetingHalloweenSubtitle;
+      case 'greetingChristmasSubtitle':
+        return l10n.greetingChristmasSubtitle;
+      case 'greetingNewYearsEveSubtitle':
+        return l10n.greetingNewYearsEveSubtitle;
+      case 'greetingLunarNewYearSubtitle':
+        return l10n.greetingLunarNewYearSubtitle;
+      case 'greetingDiwaliSubtitle':
+        return l10n.greetingDiwaliSubtitle;
+      case 'greetingRamadanSubtitle':
+        return l10n.greetingRamadanSubtitle;
+      case 'greetingEidAlFitrSubtitle':
+        return l10n.greetingEidAlFitrSubtitle;
+      case 'greetingEidAlAdhaSubtitle':
+        return l10n.greetingEidAlAdhaSubtitle;
+      case 'greetingHanukkahSubtitle':
+        return l10n.greetingHanukkahSubtitle;
+      case 'greetingKwanzaaSubtitle':
+        return l10n.greetingKwanzaaSubtitle;
+      case 'greetingThanksgivingUSSubtitle':
+        return l10n.greetingThanksgivingUSSubtitle;
+      case 'greetingThanksgivingCASubtitle':
+        return l10n.greetingThanksgivingCASubtitle;
+      case 'greetingSpringEquinoxSubtitle':
+        return l10n.greetingSpringEquinoxSubtitle;
+      case 'greetingSummerSolsticeSubtitle':
+        return l10n.greetingSummerSolsticeSubtitle;
+      case 'greetingAutumnEquinoxSubtitle':
+        return l10n.greetingAutumnEquinoxSubtitle;
+      case 'greetingWinterSolsticeSubtitle':
+        return l10n.greetingWinterSolsticeSubtitle;
+      default:
+        return '';
+    }
   }
 
   /// Build main content layout
@@ -265,8 +389,8 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
                 'assets/icon_star.svg',
                 width: FontScaling.getResponsiveIconSize(context, 180),
                 height: FontScaling.getResponsiveIconSize(context, 180),
-                colorFilter: const ColorFilter.mode(
-                  AppColors.primary,
+                colorFilter: ColorFilter.mode(
+                  _getLogoColor(),
                   BlendMode.srcIn,
                 ),
               ),
@@ -286,14 +410,46 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
 
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
 
-          // Subtitle
-          Text(
-            l10n.appSubtitle,
-            style: FontScaling.getSubtitle(context).copyWith(
-              fontStyle: FontStyle.normal,
+          // Holiday greeting or subtitle
+          if (_holidayGreeting != null) ...[
+            // Holiday emoji icon
+            Text(
+              _holidayGreeting!.style.iconEmoji,
+              style: TextStyle(
+                fontSize: FontScaling.getResponsiveIconSize(context, 48),
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
+            SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+            // Holiday greeting text
+            _buildShimmerText(
+              _getHolidayGreetingText(l10n, _holidayGreeting!.greetingKey),
+              FontScaling.getSubtitle(context).copyWith(
+                fontStyle: FontStyle.normal,
+                color: _holidayGreeting!.style.accentColor,
+                fontWeight: FontScaling.boldWeight,
+              ),
+            ),
+            if (_holidayGreeting!.subtitleKey != null) ...[
+              SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+              Text(
+                _getHolidayGreetingText(l10n, _holidayGreeting!.subtitleKey!),
+                style: FontScaling.getSubtitle(context).copyWith(
+                  fontStyle: FontStyle.normal,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ] else ...[
+            // Default subtitle
+            Text(
+              l10n.appSubtitle,
+              style: FontScaling.getSubtitle(context).copyWith(
+                fontStyle: FontStyle.normal,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
 
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
 
@@ -306,20 +462,21 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
 
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
 
-          // Tagline
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: FontScaling.getResponsiveSpacing(context, 40),
-            ),
-            child: Text(
-              l10n.appTagline,
-              style: FontScaling.getBodyMedium(context).copyWith(
-                fontSize: FontScaling.getBodyMedium(context).fontSize! * 0.9,
-                color: Colors.white.withValues(alpha: 0.9),
+          // Tagline (only show if no holiday greeting)
+          if (_holidayGreeting == null)
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: FontScaling.getResponsiveSpacing(context, 40),
               ),
-              textAlign: TextAlign.center,
+              child: Text(
+                l10n.appTagline,
+                style: FontScaling.getBodyMedium(context).copyWith(
+                  fontSize: FontScaling.getBodyMedium(context).fontSize! * 0.9,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-          ),
 
           const Spacer(flex: 1),
 
@@ -393,10 +550,10 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
             return LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: const [
-                AppColors.primary,
+              colors: [
+                _getLogoColor(),
                 Color(0xFFFFFFFF),
-                AppColors.primary,
+                _getLogoColor(),
               ],
               stops: [
                 (_shimmerController.value - 0.3).clamp(0.0, 1.0),
@@ -452,17 +609,19 @@ class BackgroundStar {
 class ParticlePainter extends CustomPainter {
   final List<ParticleData> particles;
   final double progress;
+  final Color particleColor;
 
   ParticlePainter({
     required this.particles,
     required this.progress,
+    this.particleColor = AppColors.primary,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     for (final particle in particles) {
       final paint = Paint()
-        ..color = AppColors.primary.withValues(alpha: particle.opacity)
+        ..color = particleColor.withValues(alpha: particle.opacity)
         ..style = PaintingStyle.fill;
 
       // Calculate drifting position (vertical scroll)

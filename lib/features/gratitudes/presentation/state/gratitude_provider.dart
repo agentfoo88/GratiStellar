@@ -80,6 +80,7 @@ class GratitudeProvider extends ChangeNotifier {
 
   // Getters
   List<GratitudeStar> get gratitudeStars => _gratitudeStars;
+  GratitudeRepository get repository => _repository;
   bool get isLoading => _isLoading;
   bool get showAllGratitudes => _showAllGratitudes;
   bool get mindfulnessMode => _mindfulnessMode;

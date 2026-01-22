@@ -24,6 +24,7 @@ import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/onboarding/age_gate_screen.dart';
 import 'screens/onboarding/enhanced_splash_screen.dart';
+import 'features/gratitudes/presentation/widgets/orphan_recovery_dialog.dart';
 import 'services/auth_service.dart';
 import 'services/crashlytics_service.dart';
 import 'services/daily_reminder_service.dart';
@@ -528,6 +529,17 @@ class _SplashWrapperState extends State<_SplashWrapper> {
 
         // After initialization, show the appropriate screen based on onboarding/auth state
         final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
+
+        // Check for orphaned stars after initialization
+        if (galaxyProvider.shouldShowOrphanRecoveryPrompt) {
+          galaxyProvider.markOrphanRecoveryPromptShown();
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              OrphanRecoveryDialog.show(context);
+            }
+          });
+        }
 
         return FutureBuilder<Widget>(
           future: OnboardingService(userProfileManager: userProfileManager).getInitialScreen(),

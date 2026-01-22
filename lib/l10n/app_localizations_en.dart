@@ -1588,7 +1588,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String starsMovedSuccess(int count, String galaxyName) {
-    return '$count stars moved to $galaxyName';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stars moved to $galaxyName',
+      one: '1 star moved to $galaxyName',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1713,4 +1719,209 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seasonDrawerToggleHint => 'Toggle season drawer';
+
+  @override
+  String get galaxyHasStars => 'Galaxy Has Stars';
+
+  @override
+  String galaxyHasStarsMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'This galaxy contains $count stars.',
+      one: 'This galaxy contains 1 star.',
+    );
+    return '$_temp0 What would you like to do with them?';
+  }
+
+  @override
+  String get moveStarsTo => 'Move stars to:';
+
+  @override
+  String get moveAndDelete => 'Move & Delete';
+
+  @override
+  String get deleteWithStars => 'Delete All';
+
+  @override
+  String get orphanedStarsTitle => 'Lost Stars Found';
+
+  @override
+  String orphanedStarsDescription(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stars were found that belong to deleted galaxies.',
+      one: '1 star was found that belongs to a deleted galaxy.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get selectDestinationGalaxy => 'Move to galaxy:';
+
+  @override
+  String get recoverStars => 'Recover';
+
+  @override
+  String get deleteAll => 'Delete All';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get confirmDeleteOrphans => 'Delete Lost Stars?';
+
+  @override
+  String confirmDeleteOrphansMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'This will permanently delete $count stars.',
+      one: 'This will permanently delete 1 star.',
+    );
+    return '$_temp0 This cannot be undone.';
+  }
+
+  @override
+  String get deletePermanently => 'Delete Permanently';
+
+  @override
+  String orphansDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stars deleted',
+      one: '1 star deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String orphansRecovered(int count, String galaxyName) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stars recovered to $galaxyName',
+      one: '1 star recovered to $galaxyName',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get greetingNewYear => 'Happy New Year! ✨';
+
+  @override
+  String get greetingNewYearSubtitle =>
+      'A fresh start for your gratitude journey';
+
+  @override
+  String get greetingValentines => 'Happy Valentine\'s Day! 💝';
+
+  @override
+  String get greetingValentinesSubtitle => 'Celebrate love and gratitude';
+
+  @override
+  String get greetingEaster => 'Happy Easter! 🌸';
+
+  @override
+  String get greetingEasterSubtitle => 'A time for renewal and reflection';
+
+  @override
+  String get greetingHalloween => 'Happy Halloween! 🎃';
+
+  @override
+  String get greetingHalloweenSubtitle => 'A spooky time for gratitude';
+
+  @override
+  String get greetingChristmas => 'Merry Christmas! 🎄';
+
+  @override
+  String get greetingChristmasSubtitle => 'Peace, joy, and gratitude';
+
+  @override
+  String get greetingNewYearsEve => 'Happy New Year\'s Eve! 🎆';
+
+  @override
+  String get greetingNewYearsEveSubtitle => 'Reflecting on a year of gratitude';
+
+  @override
+  String get greetingLunarNewYear => 'Happy Lunar New Year! 🐉';
+
+  @override
+  String get greetingLunarNewYearSubtitle =>
+      'Wishing you prosperity and gratitude';
+
+  @override
+  String get greetingThanksgivingUS => 'Happy Thanksgiving! 🦃';
+
+  @override
+  String get greetingThanksgivingUSSubtitle => 'A day dedicated to gratitude';
+
+  @override
+  String get greetingThanksgivingCA => 'Happy Thanksgiving! 🍁';
+
+  @override
+  String get greetingThanksgivingCASubtitle => 'A day dedicated to gratitude';
+
+  @override
+  String get greetingDiwali => 'Happy Diwali! 🪔';
+
+  @override
+  String get greetingDiwaliSubtitle => 'The festival of lights and gratitude';
+
+  @override
+  String get greetingRamadan => 'Ramadan Mubarak! 🌙';
+
+  @override
+  String get greetingRamadanSubtitle => 'A month of reflection and gratitude';
+
+  @override
+  String get greetingEidAlFitr => 'Eid Mubarak! 🌙';
+
+  @override
+  String get greetingEidAlFitrSubtitle => 'Celebrating gratitude and blessings';
+
+  @override
+  String get greetingEidAlAdha => 'Eid Mubarak! 🕌';
+
+  @override
+  String get greetingEidAlAdhaSubtitle => 'A time of sacrifice and gratitude';
+
+  @override
+  String get greetingHanukkah => 'Happy Hanukkah! 🕎';
+
+  @override
+  String get greetingHanukkahSubtitle => 'Eight nights of light and gratitude';
+
+  @override
+  String get greetingKwanzaa => 'Happy Kwanzaa! 🕯️';
+
+  @override
+  String get greetingKwanzaaSubtitle => 'Celebrating community and gratitude';
+
+  @override
+  String get greetingSpringEquinox => 'Happy Spring Equinox! 🌿';
+
+  @override
+  String get greetingSpringEquinoxSubtitle => 'A time of renewal and balance';
+
+  @override
+  String get greetingSummerSolstice => 'Happy Summer Solstice! ☀️';
+
+  @override
+  String get greetingSummerSolsticeSubtitle => 'Celebrating the longest day';
+
+  @override
+  String get greetingAutumnEquinox => 'Happy Autumn Equinox! 🍂';
+
+  @override
+  String get greetingAutumnEquinoxSubtitle =>
+      'A time of harvest and reflection';
+
+  @override
+  String get greetingWinterSolstice => 'Happy Winter Solstice! ❄️';
+
+  @override
+  String get greetingWinterSolsticeSubtitle => 'The return of light and hope';
 }

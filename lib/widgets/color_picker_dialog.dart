@@ -180,9 +180,20 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: Container(
+    return Theme(
+      data: Theme.of(context).copyWith(
+        highlightColor: Colors.white.withValues(alpha: 0.1),
+        splashColor: Colors.white.withValues(alpha: 0.05),
+        hoverColor: Colors.white.withValues(alpha: 0.08),
+        focusColor: Colors.white.withValues(alpha: 0.12),
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+          primary: Colors.white.withValues(alpha: 0.3),
+          onSurface: Colors.white,
+        ),
+      ),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
         padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
         decoration: BoxDecoration(
           color: AppTheme.backgroundDark.withValues(alpha:0.95),
@@ -233,14 +244,10 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                 ),
               ),
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
-              Theme(
-                data: Theme.of(context).copyWith(
-                  highlightColor: AppTheme.backgroundDark.withValues(alpha: 0.5),
-                  splashColor: AppTheme.backgroundDark.withValues(alpha: 0.3),
-                ),
-                child: DropdownButtonFormField<String>(
+              DropdownButtonFormField<String>(
                   key: ValueKey<String>('preset_$_selectedPresetId'), // Force rebuild when preset changes
                   initialValue: _selectedPresetId,
+                  focusColor: Colors.white.withValues(alpha: 0.12),
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.1),
@@ -305,8 +312,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                     ),
                   );
                 }).toList(),
-                  onChanged: _onPresetChanged,
-                ),
+                onChanged: _onPresetChanged,
               ),
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
 
@@ -551,6 +557,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
           ),
         ),
       ),
+    ),
     );
   }
 }

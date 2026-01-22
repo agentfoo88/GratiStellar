@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../../../galaxy_metadata.dart';
+import '../../../../storage.dart';
 import '../../../gratitudes/data/repositories/galaxy_repository.dart';
 import '../../../gratitudes/data/repositories/gratitude_repository.dart';
 import 'gratitude_provider.dart';
@@ -34,6 +35,10 @@ class GalaxyProvider extends ChangeNotifier {
   // Completer for tracking initialization status
   Completer<void>? _initializationCompleter;
 
+  // Orphaned stars state (stars belonging to deleted galaxies)
+  List<GratitudeStar> _orphanedStars = [];
+  bool _orphanRecoveryPromptShownThisSession = false;
+
   GalaxyProvider({
     required GalaxyRepository galaxyRepository,
     required GratitudeRepository gratitudeRepository,
@@ -50,6 +55,12 @@ class GalaxyProvider extends ChangeNotifier {
   String? get activeGalaxyId => _activeGalaxyId;
   bool get isLoading => _isLoading;
   bool get isSwitching => _isSwitching;
+
+  // Orphaned stars getters
+  List<GratitudeStar> get orphanedStars => _orphanedStars;
+  bool get hasOrphanedStars => _orphanedStars.isNotEmpty;
+  bool get shouldShowOrphanRecoveryPrompt =>
+      hasOrphanedStars && !_orphanRecoveryPromptShownThisSession;
 
   /// Get a Future that completes when initialization is done
   /// Returns immediately if already initialized
@@ -254,13 +265,15 @@ class GalaxyProvider extends ChangeNotifier {
       // Count stars per galaxy (excluding deleted)
       final Map<String, int> actualCounts = {};
       final Set<String> validGalaxyIds = _galaxies.map((g) => g.id).toSet();
-      int orphanedStars = 0;
+
+      // Clear and rebuild orphaned stars list
+      _orphanedStars = [];
 
       for (final star in allStars) {
         if (!star.deleted) {
           // Check for orphaned stars (pointing to non-existent galaxies)
           if (!validGalaxyIds.contains(star.galaxyId)) {
-            orphanedStars++;
+            _orphanedStars.add(star);  // Store for recovery
             AppLogger.warning(
               '⚠️ Found orphaned star "${star.text.substring(0, star.text.length > 30 ? 30 : star.text.length)}" pointing to deleted galaxy: ${star.galaxyId}',
             );
@@ -272,9 +285,9 @@ class GalaxyProvider extends ChangeNotifier {
         }
       }
 
-      if (orphanedStars > 0) {
+      if (_orphanedStars.isNotEmpty) {
         AppLogger.warning(
-          '⚠️ Found $orphanedStars orphaned stars - consider manual cleanup',
+          '⚠️ Found ${_orphanedStars.length} orphaned stars - recovery dialog will be shown',
         );
       }
 
@@ -609,6 +622,42 @@ class GalaxyProvider extends ChangeNotifier {
     }
   }
 
+  /// Mark that the orphan recovery prompt has been shown this session
+  void markOrphanRecoveryPromptShown() {
+    _orphanRecoveryPromptShownThisSession = true;
+  }
+
+  /// Recover orphaned stars by moving them to a target galaxy
+  Future<int> recoverOrphanedStars(String targetGalaxyId) async {
+    if (_orphanedStars.isEmpty) return 0;
+
+    final starIds = _orphanedStars.map((s) => s.id).toList();
+    final movedCount = await _gratitudeProvider.moveGratitudes(starIds, targetGalaxyId);
+
+    _orphanedStars = [];
+    await _reconcileStarCounts();
+    notifyListeners();
+
+    AppLogger.success('✅ Recovered $movedCount orphaned stars to galaxy $targetGalaxyId');
+    return movedCount;
+  }
+
+  /// Delete all orphaned stars permanently
+  Future<int> deleteOrphanedStars() async {
+    if (_orphanedStars.isEmpty) return 0;
+
+    final count = _orphanedStars.length;
+    for (final star in _orphanedStars) {
+      await _gratitudeProvider.permanentlyDeleteGratitude(star);
+    }
+
+    _orphanedStars = [];
+    notifyListeners();
+
+    AppLogger.success('✅ Permanently deleted $count orphaned stars');
+    return count;
+  }
+
   /// Update star count for active galaxy
   Future<void> updateActiveGalaxyStarCount(int count) async {
     if (_activeGalaxyId == null) return;
@@ -732,6 +781,8 @@ class GalaxyProvider extends ChangeNotifier {
       _galaxies = [];
       _activeGalaxyId = null;
       _isInitialized = false; // Reset initialization flag
+      _orphanedStars = [];
+      _orphanRecoveryPromptShownThisSession = false;
       notifyListeners();
     } catch (e) {
       AppLogger.error('⚠️ Error clearing galaxy data: $e');

@@ -10,6 +10,7 @@ import '../../../../font_scaling.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../state/galaxy_provider.dart';
+import '../state/gratitude_provider.dart';
 
 /// Full-screen dialog showing all galaxies with create/switch options
 class GalaxyListDialog extends StatefulWidget {
@@ -704,6 +705,39 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
     final isDeletingAllGalaxies =
         galaxiesToDelete.length == activeGalaxies.length;
 
+    // Check if any galaxy has stars
+    final totalStarCount = galaxiesToDelete.fold<int>(0, (sum, g) => sum + g.starCount);
+    final galaxiesWithStars = galaxiesToDelete.where((g) => g.starCount > 0).toList();
+    final otherGalaxies = activeGalaxies
+        .where((g) => !_selectedGalaxyIds.contains(g.id))
+        .toList();
+
+    // If galaxies have stars and there are other galaxies to migrate to, show migration dialog
+    if (galaxiesWithStars.isNotEmpty && otherGalaxies.isNotEmpty) {
+      final action = await _showBulkMigrationDialog(
+        context,
+        l10n,
+        totalStarCount,
+        galaxiesWithStars.length,
+        otherGalaxies,
+      );
+
+      if (action == null) return; // Cancelled
+
+      if (action.shouldMigrate && action.targetGalaxyId != null) {
+        // Migrate stars first, then delete
+        await _migrateAndDeleteSelectedGalaxies(
+          context,
+          galaxyProvider,
+          galaxiesToDelete,
+          action.targetGalaxyId!,
+          isDeletingAllGalaxies,
+        );
+        return;
+      }
+      // If not migrating, fall through to normal deletion
+    }
+
     // Show appropriate confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
@@ -808,6 +842,214 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
       }
     }
   }
+
+  Future<_BulkMigrationAction?> _showBulkMigrationDialog(
+    BuildContext context,
+    AppLocalizations l10n,
+    int totalStarCount,
+    int galaxiesWithStarsCount,
+    List<GalaxyMetadata> otherGalaxies,
+  ) async {
+    String? selectedGalaxyId = otherGalaxies.isNotEmpty ? otherGalaxies.first.id : null;
+
+    return showDialog<_BulkMigrationAction>(
+      context: context,
+      builder: (dialogContext) => Theme(
+        data: Theme.of(dialogContext).copyWith(
+          highlightColor: Colors.white.withValues(alpha: 0.1),
+          splashColor: Colors.white.withValues(alpha: 0.05),
+          hoverColor: Colors.white.withValues(alpha: 0.08),
+          focusColor: Colors.white.withValues(alpha: 0.12),
+          colorScheme: Theme.of(dialogContext).colorScheme.copyWith(
+            primary: Colors.white.withValues(alpha: 0.3),
+            onSurface: Colors.white,
+            surfaceTint: Colors.transparent,
+          ),
+          dropdownMenuTheme: DropdownMenuThemeData(
+            menuStyle: MenuStyle(
+              surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+            ),
+          ),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            backgroundColor: AppTheme.backgroundDark,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: AppTheme.borderSubtle),
+          ),
+          title: Semantics(
+            header: true,
+            child: Text(
+              l10n.galaxyHasStars,
+              style: FontScaling.getHeadingMedium(context, color: AppTheme.warning),
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.galaxyHasStarsMessage(totalStarCount),
+                  style: FontScaling.getBodyMedium(context),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.moveStarsTo,
+                  style: FontScaling.getBodySmall(context, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                Semantics(
+                  label: l10n.moveStarsTo,
+                  child: DropdownButtonFormField<String>(
+                    initialValue: selectedGalaxyId,
+                    focusColor: Colors.white.withValues(alpha: 0.12),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: AppTheme.backgroundDarker,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppTheme.borderSubtle),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppTheme.borderSubtle),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppTheme.primary),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    dropdownColor: AppTheme.backgroundDark,
+                    style: FontScaling.getBodyMedium(context),
+                    items: otherGalaxies.map((g) => DropdownMenuItem(
+                      value: g.id,
+                      child: Text(g.name),
+                    )).toList(),
+                    onChanged: (v) => setDialogState(() => selectedGalaxyId = v),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, null),
+              child: Text(
+                l10n.cancel,
+                style: FontScaling.getButtonText(context),
+              ),
+            ),
+            if (selectedGalaxyId != null)
+              TextButton(
+                onPressed: () => Navigator.pop(
+                  dialogContext,
+                  _BulkMigrationAction(shouldMigrate: true, targetGalaxyId: selectedGalaxyId),
+                ),
+                child: Text(
+                  l10n.moveAndDelete,
+                  style: FontScaling.getButtonText(context, color: AppTheme.primary),
+                ),
+              ),
+            TextButton(
+              onPressed: () => Navigator.pop(
+                dialogContext,
+                _BulkMigrationAction(shouldMigrate: false),
+              ),
+              child: Text(
+                l10n.deleteWithStars,
+                style: FontScaling.getButtonText(context, color: AppTheme.error),
+              ),
+            ),
+          ],
+        ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _migrateAndDeleteSelectedGalaxies(
+    BuildContext context,
+    GalaxyProvider galaxyProvider,
+    List<GalaxyMetadata> galaxiesToDelete,
+    String targetGalaxyId,
+    bool isDeletingAllGalaxies,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final textStyle = FontScaling.getBodyMedium(context);
+    final gratitudeProvider = Provider.of<GratitudeProvider>(context, listen: false);
+
+    try {
+      // Get all stars from galaxies to delete
+      final allStars = await gratitudeProvider.repository.getAllGratitudesUnfiltered();
+      final galaxyIdsToDelete = galaxiesToDelete.map((g) => g.id).toSet();
+      final starsToMove = allStars
+          .where((s) => galaxyIdsToDelete.contains(s.galaxyId) && !s.deleted)
+          .map((s) => s.id)
+          .toList();
+
+      // Move stars first
+      int movedCount = 0;
+      if (starsToMove.isNotEmpty) {
+        movedCount = await gratitudeProvider.moveGratitudes(starsToMove, targetGalaxyId);
+      }
+
+      // Now delete the galaxies
+      for (final galaxy in galaxiesToDelete) {
+        await galaxyProvider.deleteGalaxy(galaxy.id);
+      }
+
+      // Check if a new galaxy was auto-created
+      final remainingGalaxies = galaxyProvider.activeGalaxies;
+      final targetGalaxyName = remainingGalaxies
+          .firstWhere((g) => g.id == targetGalaxyId, orElse: () => remainingGalaxies.first)
+          .name;
+
+      if (mounted) {
+        setState(() {
+          _selectedGalaxyIds.clear();
+          _isSelectionMode = false;
+        });
+
+        if (messenger.mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.starsMovedSuccess(movedCount, targetGalaxyName),
+                style: textStyle.copyWith(color: Colors.white),
+              ),
+              backgroundColor: AppTheme.backgroundDark,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted && messenger.mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error: $e',
+              style: textStyle.copyWith(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+}
+
+/// Helper class for bulk migration dialog result
+class _BulkMigrationAction {
+  final bool shouldMigrate;
+  final String? targetGalaxyId;
+
+  _BulkMigrationAction({required this.shouldMigrate, this.targetGalaxyId});
 }
 
 /// Dialog for creating a new galaxy
@@ -1158,8 +1400,219 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
   }
 
   void _confirmDelete(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+    final starCount = widget.galaxy.starCount;
+
+    // If galaxy has stars, show migration dialog first
+    if (starCount > 0) {
+      _showStarMigrationDialog(context, galaxyProvider);
+      return;
+    }
+
+    // No stars - proceed with normal deletion confirmation
+    _showDeleteConfirmation(context, galaxyProvider);
+  }
+
+  void _showStarMigrationDialog(BuildContext context, GalaxyProvider galaxyProvider) {
+    final l10n = AppLocalizations.of(context)!;
+    final activeGalaxies = galaxyProvider.activeGalaxies
+        .where((g) => g.id != widget.galaxy.id)
+        .toList();
+
+    String? selectedGalaxyId = activeGalaxies.isNotEmpty ? activeGalaxies.first.id : null;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Theme(
+        data: Theme.of(dialogContext).copyWith(
+          highlightColor: Colors.white.withValues(alpha: 0.1),
+          splashColor: Colors.white.withValues(alpha: 0.05),
+          hoverColor: Colors.white.withValues(alpha: 0.08),
+          focusColor: Colors.white.withValues(alpha: 0.12),
+          colorScheme: Theme.of(dialogContext).colorScheme.copyWith(
+            primary: Colors.white.withValues(alpha: 0.3),
+            onSurface: Colors.white,
+            surfaceTint: Colors.transparent,
+          ),
+          dropdownMenuTheme: DropdownMenuThemeData(
+            menuStyle: MenuStyle(
+              surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+            ),
+          ),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            backgroundColor: AppTheme.backgroundDark,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: AppTheme.borderSubtle),
+            ),
+            title: Semantics(
+              header: true,
+              child: Text(
+                l10n.galaxyHasStars,
+                style: FontScaling.getHeadingMedium(context, color: AppTheme.warning),
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.galaxyHasStarsMessage(widget.galaxy.starCount),
+                    style: FontScaling.getBodyMedium(context),
+                  ),
+                  const SizedBox(height: 16),
+                  if (activeGalaxies.isNotEmpty) ...[
+                    Text(
+                      l10n.moveStarsTo,
+                      style: FontScaling.getBodySmall(context, color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    Semantics(
+                      label: l10n.moveStarsTo,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: selectedGalaxyId,
+                        focusColor: Colors.white.withValues(alpha: 0.12),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: AppTheme.backgroundDarker,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppTheme.borderSubtle),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppTheme.borderSubtle),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: AppTheme.primary),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        dropdownColor: AppTheme.backgroundDark,
+                        style: FontScaling.getBodyMedium(context),
+                        items: activeGalaxies.map((g) => DropdownMenuItem(
+                          value: g.id,
+                          child: Text(g.name),
+                        )).toList(),
+                        onChanged: (v) => setDialogState(() => selectedGalaxyId = v),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                l10n.cancel,
+                style: FontScaling.getButtonText(context),
+              ),
+            ),
+            if (activeGalaxies.isNotEmpty && selectedGalaxyId != null)
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  await _migrateStarsAndDelete(context, selectedGalaxyId!);
+                },
+                child: Text(
+                  l10n.moveAndDelete,
+                  style: FontScaling.getButtonText(context, color: AppTheme.primary),
+                ),
+              ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _showDeleteConfirmation(context, galaxyProvider);
+              },
+              child: Text(
+                l10n.deleteWithStars,
+                style: FontScaling.getButtonText(context, color: AppTheme.error),
+              ),
+            ),
+          ],
+        ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _migrateStarsAndDelete(BuildContext context, String targetGalaxyId) async {
+    setState(() => _isRenaming = true); // Reuse loading state
+
+    final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
+    final gratitudeProvider = Provider.of<GratitudeProvider>(context, listen: false);
+    final l10n = AppLocalizations.of(context)!;
+    final textStyle = FontScaling.getBodyMedium(context);
+
+    try {
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+
+      // Get all stars in this galaxy
+      final allStars = await gratitudeProvider.repository.getAllGratitudesUnfiltered();
+      final starsToMove = allStars
+          .where((s) => s.galaxyId == widget.galaxy.id && !s.deleted)
+          .map((s) => s.id)
+          .toList();
+
+      // Move stars first
+      if (starsToMove.isNotEmpty) {
+        await gratitudeProvider.moveGratitudes(starsToMove, targetGalaxyId);
+      }
+
+      // Now delete the empty galaxy
+      await galaxyProvider.deleteGalaxy(widget.galaxy.id);
+
+      if (navigator.mounted) {
+        navigator.pop(); // Close rename dialog
+
+        final targetGalaxyName = galaxyProvider.activeGalaxies
+            .firstWhere((g) => g.id == targetGalaxyId, orElse: () => galaxyProvider.activeGalaxies.first)
+            .name;
+
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.starsMovedSuccess(starsToMove.length, targetGalaxyName),
+              style: textStyle,
+            ),
+            backgroundColor: AppTheme.backgroundDark,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e, stack) {
+      final error = ErrorHandler.handle(
+        e,
+        stack,
+        context: ErrorContext.galaxy,
+        l10n: l10n,
+      );
+
+      final messenger = mounted ? ScaffoldMessenger.of(context) : null;
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.galaxyDeleteFailed(error.userMessage),
+            style: textStyle,
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isRenaming = false);
+      }
+    }
+  }
+
+  void _showDeleteConfirmation(BuildContext context, GalaxyProvider galaxyProvider) {
+    final l10n = AppLocalizations.of(context)!;
 
     // Check if this is the last galaxy
     final activeGalaxies = galaxyProvider.activeGalaxies;

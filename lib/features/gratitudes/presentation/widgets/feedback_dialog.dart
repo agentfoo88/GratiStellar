@@ -44,9 +44,20 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: Container(
+    return Theme(
+      data: Theme.of(context).copyWith(
+        highlightColor: Colors.white.withValues(alpha: 0.1),
+        splashColor: Colors.white.withValues(alpha: 0.05),
+        hoverColor: Colors.white.withValues(alpha: 0.08),
+        focusColor: Colors.white.withValues(alpha: 0.12),
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+          primary: Colors.white.withValues(alpha: 0.3),
+          onSurface: Colors.white,
+        ),
+      ),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
         constraints: BoxConstraints(maxWidth: 500),
         padding: EdgeInsets.all(
           FontScaling.getResponsiveSpacing(context, 24),
@@ -98,6 +109,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                 DropdownButtonFormField<String>(
                   initialValue: _selectedType,
                   dropdownColor: AppTheme.backgroundDark,
+                  focusColor: Colors.white.withValues(alpha: 0.12),
                   style: FontScaling.getInputText(context),
                   decoration: InputDecoration(
                     filled: true,
@@ -437,6 +449,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
           ),
         ),
       ),
+    ),
     );
   }
 }

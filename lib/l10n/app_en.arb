@@ -2103,5 +2103,261 @@
         "seasonDrawerToggleHint": "Toggle season drawer",
         "@seasonDrawerToggleHint": {
           "description": "Accessibility hint for the season drawer toggle button"
+        },
+        "galaxyHasStars": "Galaxy Has Stars",
+        "@galaxyHasStars": {
+          "description": "Title for dialog when deleting a galaxy that contains stars"
+        },
+        "galaxyHasStarsMessage": "{count, plural, =1{This galaxy contains 1 star.} other{This galaxy contains {count} stars.}} What would you like to do with them?",
+        "@galaxyHasStarsMessage": {
+          "description": "Message asking what to do with stars when deleting galaxy",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "moveStarsTo": "Move stars to:",
+        "@moveStarsTo": {
+          "description": "Label for dropdown to select destination galaxy for stars"
+        },
+        "moveAndDelete": "Move & Delete",
+        "@moveAndDelete": {
+          "description": "Button to move stars to another galaxy then delete the current galaxy"
+        },
+        "deleteWithStars": "Delete All",
+        "@deleteWithStars": {
+          "description": "Button to delete galaxy along with all its stars"
+        },
+        "orphanedStarsTitle": "Lost Stars Found",
+        "@orphanedStarsTitle": {
+          "description": "Title for orphan recovery dialog"
+        },
+        "orphanedStarsDescription": "{count, plural, =1{1 star was found that belongs to a deleted galaxy.} other{{count} stars were found that belong to deleted galaxies.}}",
+        "@orphanedStarsDescription": {
+          "description": "Description of orphaned stars found",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "selectDestinationGalaxy": "Move to galaxy:",
+        "@selectDestinationGalaxy": {
+          "description": "Label for dropdown to select destination galaxy for orphaned stars"
+        },
+        "recoverStars": "Recover",
+        "@recoverStars": {
+          "description": "Button to recover orphaned stars to selected galaxy"
+        },
+        "deleteAll": "Delete All",
+        "@deleteAll": {
+          "description": "Button to delete all orphaned stars"
+        },
+        "later": "Later",
+        "@later": {
+          "description": "Button to dismiss dialog and handle later"
+        },
+        "confirmDeleteOrphans": "Delete Lost Stars?",
+        "@confirmDeleteOrphans": {
+          "description": "Title for confirmation dialog when deleting orphaned stars"
+        },
+        "confirmDeleteOrphansMessage": "{count, plural, =1{This will permanently delete 1 star.} other{This will permanently delete {count} stars.}} This cannot be undone.",
+        "@confirmDeleteOrphansMessage": {
+          "description": "Confirmation message for deleting orphaned stars",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "deletePermanently": "Delete Permanently",
+        "@deletePermanently": {
+          "description": "Button to confirm permanent deletion"
+        },
+        "orphansDeleted": "{count, plural, =1{1 star deleted} other{{count} stars deleted}}",
+        "@orphansDeleted": {
+          "description": "Success message after deleting orphaned stars",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
+        },
+        "orphansRecovered": "{count, plural, =1{1 star recovered to {galaxyName}} other{{count} stars recovered to {galaxyName}}}",
+        "@orphansRecovered": {
+          "description": "Success message after recovering orphaned stars",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            },
+            "galaxyName": {
+              "type": "String"
+            }
+          }
+        },
+        "starsMovedSuccess": "{count, plural, =1{1 star moved to {galaxyName}} other{{count} stars moved to {galaxyName}}}",
+        "@starsMovedSuccess": {
+          "description": "Success message after moving stars to another galaxy during deletion",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            },
+            "galaxyName": {
+              "type": "String"
+            }
+          }
+        },
+        "greetingNewYear": "Happy New Year! ✨",
+        "@greetingNewYear": {
+          "description": "Holiday greeting for New Year's Day"
+        },
+        "greetingNewYearSubtitle": "A fresh start for your gratitude journey",
+        "@greetingNewYearSubtitle": {
+          "description": "Subtitle for New Year's Day greeting"
+        },
+        "greetingValentines": "Happy Valentine's Day! 💝",
+        "@greetingValentines": {
+          "description": "Holiday greeting for Valentine's Day"
+        },
+        "greetingValentinesSubtitle": "Celebrate love and gratitude",
+        "@greetingValentinesSubtitle": {
+          "description": "Subtitle for Valentine's Day greeting"
+        },
+        "greetingEaster": "Happy Easter! 🌸",
+        "@greetingEaster": {
+          "description": "Holiday greeting for Easter"
+        },
+        "greetingEasterSubtitle": "A time for renewal and reflection",
+        "@greetingEasterSubtitle": {
+          "description": "Subtitle for Easter greeting"
+        },
+        "greetingHalloween": "Happy Halloween! 🎃",
+        "@greetingHalloween": {
+          "description": "Holiday greeting for Halloween"
+        },
+        "greetingHalloweenSubtitle": "A spooky time for gratitude",
+        "@greetingHalloweenSubtitle": {
+          "description": "Subtitle for Halloween greeting"
+        },
+        "greetingChristmas": "Merry Christmas! 🎄",
+        "@greetingChristmas": {
+          "description": "Holiday greeting for Christmas"
+        },
+        "greetingChristmasSubtitle": "Peace, joy, and gratitude",
+        "@greetingChristmasSubtitle": {
+          "description": "Subtitle for Christmas greeting"
+        },
+        "greetingNewYearsEve": "Happy New Year's Eve! 🎆",
+        "@greetingNewYearsEve": {
+          "description": "Holiday greeting for New Year's Eve"
+        },
+        "greetingNewYearsEveSubtitle": "Reflecting on a year of gratitude",
+        "@greetingNewYearsEveSubtitle": {
+          "description": "Subtitle for New Year's Eve greeting"
+        },
+        "greetingLunarNewYear": "Happy Lunar New Year! 🐉",
+        "@greetingLunarNewYear": {
+          "description": "Holiday greeting for Lunar New Year"
+        },
+        "greetingLunarNewYearSubtitle": "Wishing you prosperity and gratitude",
+        "@greetingLunarNewYearSubtitle": {
+          "description": "Subtitle for Lunar New Year greeting"
+        },
+        "greetingThanksgivingUS": "Happy Thanksgiving! 🦃",
+        "@greetingThanksgivingUS": {
+          "description": "Holiday greeting for US Thanksgiving"
+        },
+        "greetingThanksgivingUSSubtitle": "A day dedicated to gratitude",
+        "@greetingThanksgivingUSSubtitle": {
+          "description": "Subtitle for US Thanksgiving greeting"
+        },
+        "greetingThanksgivingCA": "Happy Thanksgiving! 🍁",
+        "@greetingThanksgivingCA": {
+          "description": "Holiday greeting for Canadian Thanksgiving"
+        },
+        "greetingThanksgivingCASubtitle": "A day dedicated to gratitude",
+        "@greetingThanksgivingCASubtitle": {
+          "description": "Subtitle for Canadian Thanksgiving greeting"
+        },
+        "greetingDiwali": "Happy Diwali! 🪔",
+        "@greetingDiwali": {
+          "description": "Holiday greeting for Diwali"
+        },
+        "greetingDiwaliSubtitle": "The festival of lights and gratitude",
+        "@greetingDiwaliSubtitle": {
+          "description": "Subtitle for Diwali greeting"
+        },
+        "greetingRamadan": "Ramadan Mubarak! 🌙",
+        "@greetingRamadan": {
+          "description": "Holiday greeting for Ramadan"
+        },
+        "greetingRamadanSubtitle": "A month of reflection and gratitude",
+        "@greetingRamadanSubtitle": {
+          "description": "Subtitle for Ramadan greeting"
+        },
+        "greetingEidAlFitr": "Eid Mubarak! 🌙",
+        "@greetingEidAlFitr": {
+          "description": "Holiday greeting for Eid al-Fitr"
+        },
+        "greetingEidAlFitrSubtitle": "Celebrating gratitude and blessings",
+        "@greetingEidAlFitrSubtitle": {
+          "description": "Subtitle for Eid al-Fitr greeting"
+        },
+        "greetingEidAlAdha": "Eid Mubarak! 🕌",
+        "@greetingEidAlAdha": {
+          "description": "Holiday greeting for Eid al-Adha"
+        },
+        "greetingEidAlAdhaSubtitle": "A time of sacrifice and gratitude",
+        "@greetingEidAlAdhaSubtitle": {
+          "description": "Subtitle for Eid al-Adha greeting"
+        },
+        "greetingHanukkah": "Happy Hanukkah! 🕎",
+        "@greetingHanukkah": {
+          "description": "Holiday greeting for Hanukkah"
+        },
+        "greetingHanukkahSubtitle": "Eight nights of light and gratitude",
+        "@greetingHanukkahSubtitle": {
+          "description": "Subtitle for Hanukkah greeting"
+        },
+        "greetingKwanzaa": "Happy Kwanzaa! 🕯️",
+        "@greetingKwanzaa": {
+          "description": "Holiday greeting for Kwanzaa"
+        },
+        "greetingKwanzaaSubtitle": "Celebrating community and gratitude",
+        "@greetingKwanzaaSubtitle": {
+          "description": "Subtitle for Kwanzaa greeting"
+        },
+        "greetingSpringEquinox": "Happy Spring Equinox! 🌿",
+        "@greetingSpringEquinox": {
+          "description": "Holiday greeting for Spring Equinox"
+        },
+        "greetingSpringEquinoxSubtitle": "A time of renewal and balance",
+        "@greetingSpringEquinoxSubtitle": {
+          "description": "Subtitle for Spring Equinox greeting"
+        },
+        "greetingSummerSolstice": "Happy Summer Solstice! ☀️",
+        "@greetingSummerSolstice": {
+          "description": "Holiday greeting for Summer Solstice"
+        },
+        "greetingSummerSolsticeSubtitle": "Celebrating the longest day",
+        "@greetingSummerSolsticeSubtitle": {
+          "description": "Subtitle for Summer Solstice greeting"
+        },
+        "greetingAutumnEquinox": "Happy Autumn Equinox! 🍂",
+        "@greetingAutumnEquinox": {
+          "description": "Holiday greeting for Autumn Equinox"
+        },
+        "greetingAutumnEquinoxSubtitle": "A time of harvest and reflection",
+        "@greetingAutumnEquinoxSubtitle": {
+          "description": "Subtitle for Autumn Equinox greeting"
+        },
+        "greetingWinterSolstice": "Happy Winter Solstice! ❄️",
+        "@greetingWinterSolstice": {
+          "description": "Holiday greeting for Winter Solstice"
+        },
+        "greetingWinterSolsticeSubtitle": "The return of light and hope",
+        "@greetingWinterSolsticeSubtitle": {
+          "description": "Subtitle for Winter Solstice greeting"
         }
     }

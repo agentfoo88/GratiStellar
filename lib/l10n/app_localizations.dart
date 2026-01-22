@@ -2926,10 +2926,10 @@ abstract class AppLocalizations {
   /// **'Star moved to {galaxyName}'**
   String starMovedSuccess(String galaxyName);
 
-  /// Success message when multiple stars are moved
+  /// Success message after moving stars to another galaxy during deletion
   ///
   /// In en, this message translates to:
-  /// **'{count} stars moved to {galaxyName}'**
+  /// **'{count, plural, =1{1 star moved to {galaxyName}} other{{count} stars moved to {galaxyName}}}'**
   String starsMovedSuccess(int count, String galaxyName);
 
   /// Error message when star move fails
@@ -3165,6 +3165,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Toggle season drawer'**
   String get seasonDrawerToggleHint;
+
+  /// Title for dialog when deleting a galaxy that contains stars
+  ///
+  /// In en, this message translates to:
+  /// **'Galaxy Has Stars'**
+  String get galaxyHasStars;
+
+  /// Message asking what to do with stars when deleting galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{This galaxy contains 1 star.} other{This galaxy contains {count} stars.}} What would you like to do with them?'**
+  String galaxyHasStarsMessage(int count);
+
+  /// Label for dropdown to select destination galaxy for stars
+  ///
+  /// In en, this message translates to:
+  /// **'Move stars to:'**
+  String get moveStarsTo;
+
+  /// Button to move stars to another galaxy then delete the current galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Move & Delete'**
+  String get moveAndDelete;
+
+  /// Button to delete galaxy along with all its stars
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All'**
+  String get deleteWithStars;
+
+  /// Title for orphan recovery dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Lost Stars Found'**
+  String get orphanedStarsTitle;
+
+  /// Description of orphaned stars found
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 star was found that belongs to a deleted galaxy.} other{{count} stars were found that belong to deleted galaxies.}}'**
+  String orphanedStarsDescription(int count);
+
+  /// Label for dropdown to select destination galaxy for orphaned stars
+  ///
+  /// In en, this message translates to:
+  /// **'Move to galaxy:'**
+  String get selectDestinationGalaxy;
+
+  /// Button to recover orphaned stars to selected galaxy
+  ///
+  /// In en, this message translates to:
+  /// **'Recover'**
+  String get recoverStars;
+
+  /// Button to delete all orphaned stars
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All'**
+  String get deleteAll;
+
+  /// Button to dismiss dialog and handle later
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
+  /// Title for confirmation dialog when deleting orphaned stars
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Lost Stars?'**
+  String get confirmDeleteOrphans;
+
+  /// Confirmation message for deleting orphaned stars
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{This will permanently delete 1 star.} other{This will permanently delete {count} stars.}} This cannot be undone.'**
+  String confirmDeleteOrphansMessage(int count);
+
+  /// Button to confirm permanent deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Permanently'**
+  String get deletePermanently;
+
+  /// Success message after deleting orphaned stars
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 star deleted} other{{count} stars deleted}}'**
+  String orphansDeleted(int count);
+
+  /// Success message after recovering orphaned stars
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 star recovered to {galaxyName}} other{{count} stars recovered to {galaxyName}}}'**
+  String orphansRecovered(int count, String galaxyName);
+
+  /// Holiday greeting for New Year's Day
+  ///
+  /// In en, this message translates to:
+  /// **'Happy New Year! ✨'**
+  String get greetingNewYear;
+
+  /// Subtitle for New Year's Day greeting
+  ///
+  /// In en, this message translates to:
+  /// **'A fresh start for your gratitude journey'**
+  String get greetingNewYearSubtitle;
+
+  /// Holiday greeting for Valentine's Day
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Valentine\'s Day! 💝'**
+  String get greetingValentines;
+
+  /// Subtitle for Valentine's Day greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Celebrate love and gratitude'**
+  String get greetingValentinesSubtitle;
+
+  /// Holiday greeting for Easter
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Easter! 🌸'**
+  String get greetingEaster;
+
+  /// Subtitle for Easter greeting
+  ///
+  /// In en, this message translates to:
+  /// **'A time for renewal and reflection'**
+  String get greetingEasterSubtitle;
+
+  /// Holiday greeting for Halloween
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Halloween! 🎃'**
+  String get greetingHalloween;
+
+  /// Subtitle for Halloween greeting
+  ///
+  /// In en, this message translates to:
+  /// **'A spooky time for gratitude'**
+  String get greetingHalloweenSubtitle;
+
+  /// Holiday greeting for Christmas
+  ///
+  /// In en, this message translates to:
+  /// **'Merry Christmas! 🎄'**
+  String get greetingChristmas;
+
+  /// Subtitle for Christmas greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Peace, joy, and gratitude'**
+  String get greetingChristmasSubtitle;
+
+  /// Holiday greeting for New Year's Eve
+  ///
+  /// In en, this message translates to:
+  /// **'Happy New Year\'s Eve! 🎆'**
+  String get greetingNewYearsEve;
+
+  /// Subtitle for New Year's Eve greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Reflecting on a year of gratitude'**
+  String get greetingNewYearsEveSubtitle;
+
+  /// Holiday greeting for Lunar New Year
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Lunar New Year! 🐉'**
+  String get greetingLunarNewYear;
+
+  /// Subtitle for Lunar New Year greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Wishing you prosperity and gratitude'**
+  String get greetingLunarNewYearSubtitle;
+
+  /// Holiday greeting for US Thanksgiving
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Thanksgiving! 🦃'**
+  String get greetingThanksgivingUS;
+
+  /// Subtitle for US Thanksgiving greeting
+  ///
+  /// In en, this message translates to:
+  /// **'A day dedicated to gratitude'**
+  String get greetingThanksgivingUSSubtitle;
+
+  /// Holiday greeting for Canadian Thanksgiving
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Thanksgiving! 🍁'**
+  String get greetingThanksgivingCA;
+
+  /// Subtitle for Canadian Thanksgiving greeting
+  ///
+  /// In en, this message translates to:
+  /// **'A day dedicated to gratitude'**
+  String get greetingThanksgivingCASubtitle;
+
+  /// Holiday greeting for Diwali
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Diwali! 🪔'**
+  String get greetingDiwali;
+
+  /// Subtitle for Diwali greeting
+  ///
+  /// In en, this message translates to:
+  /// **'The festival of lights and gratitude'**
+  String get greetingDiwaliSubtitle;
+
+  /// Holiday greeting for Ramadan
+  ///
+  /// In en, this message translates to:
+  /// **'Ramadan Mubarak! 🌙'**
+  String get greetingRamadan;
+
+  /// Subtitle for Ramadan greeting
+  ///
+  /// In en, this message translates to:
+  /// **'A month of reflection and gratitude'**
+  String get greetingRamadanSubtitle;
+
+  /// Holiday greeting for Eid al-Fitr
+  ///
+  /// In en, this message translates to:
+  /// **'Eid Mubarak! 🌙'**
+  String get greetingEidAlFitr;
+
+  /// Subtitle for Eid al-Fitr greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Celebrating gratitude and blessings'**
+  String get greetingEidAlFitrSubtitle;
+
+  /// Holiday greeting for Eid al-Adha
+  ///
+  /// In en, this message translates to:
+  /// **'Eid Mubarak! 🕌'**
+  String get greetingEidAlAdha;
+
+  /// Subtitle for Eid al-Adha greeting
+  ///
+  /// In en, this message translates to:
+  /// **'A time of sacrifice and gratitude'**
+  String get greetingEidAlAdhaSubtitle;
+
+  /// Holiday greeting for Hanukkah
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Hanukkah! 🕎'**
+  String get greetingHanukkah;
+
+  /// Subtitle for Hanukkah greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Eight nights of light and gratitude'**
+  String get greetingHanukkahSubtitle;
+
+  /// Holiday greeting for Kwanzaa
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Kwanzaa! 🕯️'**
+  String get greetingKwanzaa;
+
+  /// Subtitle for Kwanzaa greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Celebrating community and gratitude'**
+  String get greetingKwanzaaSubtitle;
+
+  /// Holiday greeting for Spring Equinox
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Spring Equinox! 🌿'**
+  String get greetingSpringEquinox;
+
+  /// Subtitle for Spring Equinox greeting
+  ///
+  /// In en, this message translates to:
+  /// **'A time of renewal and balance'**
+  String get greetingSpringEquinoxSubtitle;
+
+  /// Holiday greeting for Summer Solstice
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Summer Solstice! ☀️'**
+  String get greetingSummerSolstice;
+
+  /// Subtitle for Summer Solstice greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Celebrating the longest day'**
+  String get greetingSummerSolsticeSubtitle;
+
+  /// Holiday greeting for Autumn Equinox
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Autumn Equinox! 🍂'**
+  String get greetingAutumnEquinox;
+
+  /// Subtitle for Autumn Equinox greeting
+  ///
+  /// In en, this message translates to:
+  /// **'A time of harvest and reflection'**
+  String get greetingAutumnEquinoxSubtitle;
+
+  /// Holiday greeting for Winter Solstice
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Winter Solstice! ❄️'**
+  String get greetingWinterSolstice;
+
+  /// Subtitle for Winter Solstice greeting
+  ///
+  /// In en, this message translates to:
+  /// **'The return of light and hope'**
+  String get greetingWinterSolsticeSubtitle;
 }
 
 class _AppLocalizationsDelegate

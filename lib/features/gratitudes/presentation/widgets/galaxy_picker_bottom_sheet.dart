@@ -45,7 +45,14 @@ class GalaxyPickerBottomSheet extends StatelessWidget {
             .toList();
 
         return SafeArea(
-          child: Container(
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              highlightColor: Colors.white.withValues(alpha: 0.1),
+              splashColor: Colors.white.withValues(alpha: 0.05),
+              hoverColor: Colors.white.withValues(alpha: 0.08),
+              focusColor: Colors.white.withValues(alpha: 0.12),
+            ),
+            child: Container(
             constraints: BoxConstraints(
               maxHeight: screenHeight * 0.6,
             ),
@@ -99,6 +106,7 @@ class GalaxyPickerBottomSheet extends StatelessWidget {
               ],
             ),
           ),
+        ),
         );
       },
     );

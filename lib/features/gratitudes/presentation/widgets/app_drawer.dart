@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -129,6 +130,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 isButton: true,
                 child: InkWell(
                   onTap: () async {
+                    HapticFeedback.selectionClick();
                     Navigator.pop(context); // Close drawer
                     await Navigator.push(
                       context,
@@ -241,7 +243,10 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                   fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
                 ),
               ),
-              onTap: widget.onListViewTap,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                widget.onListViewTap();
+              },
             ),
           ),
 
@@ -263,7 +268,10 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                   fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
                 ),
               ),
-              onTap: widget.onGalaxiesTap,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                widget.onGalaxiesTap();
+              },
             ),
           ),
 
@@ -310,7 +318,10 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                           ),
                         )
                       : null,
-                  onTap: widget.onTrashTap,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    widget.onTrashTap();
+                  },
                 ),
               );
             },
@@ -509,6 +520,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         value: reminderService.isEnabled,
                         activeTrackColor: AppColors.primary,
                         onChanged: (value) async {
+                          HapticFeedback.selectionClick();
                           try {
                             if (value) {
                               final granted = await reminderService.requestPermission();
@@ -579,6 +591,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                       ),
                       onTap: reminderService.isEnabled
                           ? () async {
+                              HapticFeedback.selectionClick();
                               try {
                                 final time = await showTimePicker(
                                   context: context,
@@ -652,6 +665,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 size: FontScaling.getResponsiveIconSize(context, 16) * UIConstants.universalUIScale,
               ),
               onTap: () {
+                HapticFeedback.selectionClick();
                 showDialog(
                   context: context,
                   builder: (context) => const BackupRestoreDialog(),
@@ -686,7 +700,10 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     displayName,
                     style: FontScaling.getCaption(context),
                   ),
-                  onTap: widget.onAccountTap,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    widget.onAccountTap();
+                  },
                 ),
               );
             },
@@ -731,6 +748,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     ),
                   ),
                   onTap: () {
+                    HapticFeedback.selectionClick();
                     Navigator.pop(context);
                     widget.onFeedbackTap();
                   },
@@ -754,6 +772,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     ),
                   ),
                   onTap: () async {
+                    HapticFeedback.selectionClick();
                     Navigator.pop(context);
                     await Navigator.push(
                       context,
@@ -784,6 +803,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     ),
                   ),
                   onTap: () async {
+                    HapticFeedback.selectionClick();
                     try {
                       await UrlLaunchService.launchUrlSafely(AppConfig.privacyPolicyUrl);
                     } catch (e) {
@@ -818,6 +838,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     ),
                   ),
                   onTap: () async {
+                    HapticFeedback.selectionClick();
                     try {
                       await UrlLaunchService.launchUrlSafely(AppConfig.termsOfServiceUrl);
                     } catch (e) {
@@ -861,6 +882,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 ),
               ),
               onTap: () async {
+                HapticFeedback.selectionClick();
                 Navigator.of(context).pop(); // Close drawer
 
                 // Show confirmation dialog
@@ -924,6 +946,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             title: Text(l10n.debugRecoverDataTitle),
             subtitle: Text(l10n.debugRecoverDataSubtitle),
             onTap: () async {
+              HapticFeedback.selectionClick();
               Navigator.pop(context);
 
               // Clear sync timestamp to force full download
@@ -967,7 +990,10 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                   color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
-              onTap: widget.onExitTap,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                widget.onExitTap();
+              },
             ),
           ),
 
@@ -1088,7 +1114,10 @@ class HamburgerButton extends StatelessWidget {
       hint: l10n.openNavigationMenu,
       isButton: true,
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
         child: Icon(
           Icons.menu,
           color: Colors.white.withValues(alpha: 0.8),

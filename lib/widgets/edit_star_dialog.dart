@@ -124,14 +124,16 @@ class _EditStarDialogState extends State<EditStarDialog> {
                     final remainingChars = maxCharacters - editTextController.text.length;
                     final isOverLimit = remainingChars < 0;
 
-                    return TextField(
-                      controller: editTextController,
-                      textCapitalization: TextCapitalization.sentences,
-                      autofocus: true,
-                      focusNode: _focusNode,
-                      maxLength: maxCharacters, // <--- ADD THIS LINE
-                      maxLines: null, // Allow unlimited lines visually, but limit characters
-                      keyboardType: TextInputType.multiline, // <--- ADD THIS LINE for better multi-line input
+                    return Scrollbar(
+                      child: TextField(
+                        controller: editTextController,
+                        textCapitalization: TextCapitalization.sentences,
+                        autofocus: true,
+                        focusNode: _focusNode,
+                        maxLength: maxCharacters,
+                        minLines: 3,
+                        maxLines: 5,
+                        keyboardType: TextInputType.multiline,
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context)!.editGratitudeHint,
                         hintStyle: FontScaling.getInputHint(context),
@@ -169,9 +171,10 @@ class _EditStarDialogState extends State<EditStarDialog> {
                         ),
                       ),
                       style: FontScaling.getInputText(context),
-                      onChanged: (value) {
-                        setState(() {}); // Rebuild to update counter and border color
-                      },
+                        onChanged: (value) {
+                          setState(() {}); // Rebuild to update counter and border color
+                        },
+                      ),
                     );
                   }
               ),

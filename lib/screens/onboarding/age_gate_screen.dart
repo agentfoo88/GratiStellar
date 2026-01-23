@@ -283,7 +283,10 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => _handleAgeConfirmation(context, true),
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          _handleAgeConfirmation(context, true);
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFFE135),
                           padding: EdgeInsets.symmetric(
@@ -319,8 +322,10 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
                     child: SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
-                        onPressed: () =>
-                            _handleAgeConfirmation(context, false),
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          _handleAgeConfirmation(context, false);
+                        },
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
                             color: const Color(0xFFFFE135).withValues(alpha: 0.5),

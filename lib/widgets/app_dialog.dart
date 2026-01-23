@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../font_scaling.dart';
 
 class AppDialog {
@@ -126,7 +127,10 @@ class AppDialog {
 
     if (isPrimary || isDestructive) {
       return ElevatedButton(
-        onPressed: action.onPressed,
+        onPressed: () {
+          HapticFeedback.selectionClick();
+          action.onPressed();
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: textColor,
@@ -148,7 +152,10 @@ class AppDialog {
       );
     } else {
       return TextButton(
-        onPressed: action.onPressed,
+        onPressed: () {
+          HapticFeedback.selectionClick();
+          action.onPressed();
+        },
         child: Text(
           action.text,
           style: FontScaling.getButtonText(context).copyWith(

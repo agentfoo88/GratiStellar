@@ -600,17 +600,16 @@ class GratitudeDialogs {
                           ),
 
                           // Scrollable text field with character counter
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 200),
-                            child: Scrollbar(
-                              child: TextField(
-                                controller: controller,
-                                textCapitalization:
-                                    TextCapitalization.sentences,
-                                autofocus: true,
-                                maxLength: maxCharacters,
-                                maxLines: null, // Allow unlimited lines
-                                keyboardType: TextInputType.multiline,
+                          Scrollbar(
+                            child: TextField(
+                              controller: controller,
+                              textCapitalization:
+                                  TextCapitalization.sentences,
+                              autofocus: true,
+                              maxLength: maxCharacters,
+                              minLines: 3,
+                              maxLines: 5,
+                              keyboardType: TextInputType.multiline,
                                 textInputAction: TextInputAction.done,
                                 decoration: InputDecoration(
                                   hintText: currentPrompt,
@@ -693,7 +692,6 @@ class GratitudeDialogs {
                                 },
                               ),
                             ),
-                          ),
 
                           // Shuffle prompt button - centered under text field
                           Padding(

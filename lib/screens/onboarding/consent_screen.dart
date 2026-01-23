@@ -441,6 +441,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                       isButton: false,
                       child: InkWell(
                         onTap: () {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             _privacyAccepted = !_privacyAccepted;
                           });
@@ -520,6 +521,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                       isButton: false,
                       child: InkWell(
                         onTap: () {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             _termsAccepted = !_termsAccepted;
                           });
@@ -702,7 +704,10 @@ class _ConsentScreenState extends State<ConsentScreen> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _canContinue ? _handleAccept : null,
+                          onPressed: _canContinue ? () {
+                            HapticFeedback.selectionClick();
+                            _handleAccept();
+                          } : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFFE135),
                             disabledBackgroundColor: Colors.grey.withValues(

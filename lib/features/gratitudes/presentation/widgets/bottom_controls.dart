@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/config/constants.dart';
@@ -139,7 +140,10 @@ class BottomControlsWidget extends StatelessWidget {
             isButton: true,
             onTap: isAnimating ? null : onAddStar,
             child: GestureDetector(
-              onTap: isAnimating ? null : onAddStar,
+              onTap: isAnimating ? null : () {
+                HapticFeedback.selectionClick();
+                onAddStar();
+              },
               child: Container(
                 width: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
                 height: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
@@ -284,7 +288,10 @@ class BottomControlsWidget extends StatelessWidget {
             toggleValue: isActive,
             onTap: isAnimating ? null : onTap,
             child: GestureDetector(
-              onTap: isAnimating ? null : onTap,
+              onTap: isAnimating ? null : () {
+                HapticFeedback.selectionClick();
+                onTap();
+              },
               child: Container(
                 width: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
                 height: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,

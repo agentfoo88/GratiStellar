@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../core/error/error_context.dart';
 import '../core/error/error_handler.dart';
@@ -1133,7 +1134,10 @@ class _SignInScreenState extends State<SignInScreen> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: _isLoading ? null : () => _showPasswordResetDialog(context),
+                                onPressed: _isLoading ? null : () {
+                                  HapticFeedback.selectionClick();
+                                  _showPasswordResetDialog(context);
+                                },
                                 child: Text(
                                   l10n.forgotPassword,
                                   style: FontScaling.getBodySmall(context).copyWith(
@@ -1180,7 +1184,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleSubmit,
+                              onPressed: _isLoading ? null : () {
+                                HapticFeedback.selectionClick();
+                                _handleSubmit();
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Color(0xFFFFE135),
                                 padding: EdgeInsets.symmetric(
@@ -1214,6 +1221,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                           TextButton(
                             onPressed: _isLoading ? null : () {
+                              HapticFeedback.selectionClick();
                               setState(() {
                                 _isSignUp = !_isSignUp;
                                 _errorMessage = null;

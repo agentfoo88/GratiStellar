@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../camera_controller.dart';
 import '../../../../storage.dart';
@@ -116,6 +117,7 @@ class CameraControlsOverlay extends StatelessWidget {
                                     controlSize / 2,
                                   ),
                                   onTap: () {
+                                    HapticFeedback.selectionClick();
                                     // Clear any active gesture state before button zoom
                                     onButtonZoom?.call();
                                     final screenCenter = Offset(
@@ -144,6 +146,7 @@ class CameraControlsOverlay extends StatelessWidget {
                                     controlSize / 2,
                                   ),
                                   onTap: () {
+                                    HapticFeedback.selectionClick();
                                     // Clear any active gesture state before button zoom
                                     onButtonZoom?.call();
                                     final screenCenter = Offset(
@@ -190,6 +193,7 @@ class CameraControlsOverlay extends StatelessWidget {
                               controlSize / 2,
                             ),
                             onTap: () {
+                              HapticFeedback.selectionClick();
                               // Clear any active gesture state before button zoom
                               onButtonZoom?.call();
                               final screenCenter = Offset(
@@ -238,6 +242,7 @@ class CameraControlsOverlay extends StatelessWidget {
                               controlSize / 2,
                             ),
                             onTap: () {
+                              HapticFeedback.selectionClick();
                               // Clear any active gesture state before button zoom
                               onButtonZoom?.call();
                               cameraController.fitAllStars(

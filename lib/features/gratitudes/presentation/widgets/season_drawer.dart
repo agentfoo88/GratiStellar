@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/config/season_config.dart';
 import '../../../../core/accessibility/semantic_helper.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -187,10 +188,10 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                   child: Container(
                       constraints: const BoxConstraints(maxWidth: 280),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.95),
+                        color: AppTheme.backgroundDark.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          color: AppTheme.primary.withValues(alpha: 0.3),
                           width: 2,
                         ),
                         boxShadow: [
@@ -244,7 +245,7 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                         if (_isExpanded) ...[
                           Divider(
                             height: 1,
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: AppTheme.textPrimary.withValues(alpha: 0.2),
                           ),
                           Padding(
                             padding: EdgeInsets.all(
@@ -268,12 +269,12 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                                     label: Text(
                                       _getSeasonName(context, currentSeason),
                                       style: FontScaling.getButtonText(context).copyWith(
-                                        color: const Color(0xFF1A2238), // Dark text for WCAG contrast
+                                        color: AppTheme.backgroundDark, // Dark text for WCAG contrast
                                       ),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white, // White background for better contrast
-                                      foregroundColor: const Color(0xFF1A2238), // Dark text
+                                      backgroundColor: AppTheme.textPrimary, // White background for better contrast
+                                      foregroundColor: AppTheme.backgroundDark, // Dark text
                                       padding: EdgeInsets.symmetric(
                                         horizontal: FontScaling.getResponsiveSpacing(context, 16),
                                         vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -299,15 +300,15 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                                     label: Text(
                                       AppLocalizations.of(context)!.nowLabel,
                                       style: FontScaling.getButtonText(context).copyWith(
-                                        color: Colors.white, // Full opacity for WCAG contrast
+                                        color: AppTheme.textPrimary, // Full opacity for WCAG contrast
                                       ),
                                     ),
                                     style: OutlinedButton.styleFrom(
                                       side: BorderSide(
-                                        color: Colors.white.withValues(alpha: 0.5), // Increased opacity
+                                        color: AppTheme.textPrimary.withValues(alpha: 0.5), // Increased opacity
                                         width: 1.5,
                                       ),
-                                      foregroundColor: Colors.white, // Full opacity for WCAG contrast
+                                      foregroundColor: AppTheme.textPrimary, // Full opacity for WCAG contrast
                                       padding: EdgeInsets.symmetric(
                                         horizontal: FontScaling.getResponsiveSpacing(context, 16),
                                         vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -332,7 +333,7 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                                     Switch(
                                       value: seasonTrackingEnabled,
                                       onChanged: (value) => _toggleSeasonTracking(galaxyProvider, value),
-                                      activeThumbColor: const Color(0xFFFFE135),
+                                      activeThumbColor: AppTheme.primary,
                                     ),
                                   ],
                                 ),

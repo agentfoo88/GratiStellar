@@ -138,7 +138,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
                         hintText: AppLocalizations.of(context)!.editGratitudeHint,
                         hintStyle: FontScaling.getInputHint(context),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha:0.1),
+                        fillColor: AppTheme.textPrimary.withValues(alpha:0.1),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide(

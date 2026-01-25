@@ -64,7 +64,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
       scaffoldMessenger.showSnackBar(SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle, color: Colors.white),
+            const Icon(Icons.check_circle, color: AppTheme.textPrimary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -224,7 +224,7 @@ class _ReminderPromptBottomSheetState extends State<ReminderPromptBottomSheet> {
                           l10n.enableReminderButton,
                           style: FontScaling.getButtonText(context).copyWith(
                             color: AppTheme.backgroundDark,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontScaling.mediumWeight,
                             fontSize: FontScaling.getButtonText(context)
                                     .fontSize! *
                                 1.0,

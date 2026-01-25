@@ -99,7 +99,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back,
-            color: Colors.white,
+            color: AppTheme.textPrimary,
             size: FontScaling.getResponsiveIconSize(context, 24),
           ),
           onPressed: () => Navigator.of(context).pop(),
@@ -153,7 +153,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
               child: IconButton(
                 icon: Icon(
                   Icons.close,
-                  color: Colors.white,
+                  color: AppTheme.textPrimary,
                   size: FontScaling.getResponsiveIconSize(context, 24),
                 ),
                 onPressed: () {
@@ -236,7 +236,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                 // WCAG FIX: Dark text on yellow background (14:1 contrast)
                                 color: _sortMethod == 'newest'
                                     ? AppTheme.textOnLight
-                                    : Colors.white.withValues(alpha: 0.9),
+                                    : AppTheme.textPrimary.withValues(alpha: 0.9),
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -272,7 +272,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               style: FontScaling.getBodySmall(context).copyWith(
                                 color: _sortMethod == 'oldest'
                                     ? AppTheme.textOnLight
-                                    : Colors.white.withValues(alpha: 0.9),
+                                    : AppTheme.textPrimary.withValues(alpha: 0.9),
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -308,7 +308,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               style: FontScaling.getBodySmall(context).copyWith(
                                 color: _sortMethod == 'by_month'
                                     ? AppTheme.textOnLight
-                                    : Colors.white.withValues(alpha: 0.9),
+                                    : AppTheme.textPrimary.withValues(alpha: 0.9),
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -344,7 +344,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               style: FontScaling.getBodySmall(context).copyWith(
                                 color: _sortMethod == 'by_year'
                                     ? AppTheme.textOnLight
-                                    : Colors.white.withValues(alpha: 0.9),
+                                    : AppTheme.textPrimary.withValues(alpha: 0.9),
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -380,7 +380,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               style: FontScaling.getBodySmall(context).copyWith(
                                 color: _sortMethod == 'alpha_az'
                                     ? AppTheme.textOnLight
-                                    : Colors.white.withValues(alpha: 0.9),
+                                    : AppTheme.textPrimary.withValues(alpha: 0.9),
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -416,7 +416,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               style: FontScaling.getBodySmall(context).copyWith(
                                 color: _sortMethod == 'alpha_za'
                                     ? AppTheme.textOnLight
-                                    : Colors.white.withValues(alpha: 0.9),
+                                    : AppTheme.textPrimary.withValues(alpha: 0.9),
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -452,7 +452,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               style: FontScaling.getBodySmall(context).copyWith(
                                 color: _sortMethod == 'color'
                                     ? AppTheme.textOnLight
-                                    : Colors.white.withValues(alpha: 0.9),
+                                    : AppTheme.textPrimary.withValues(alpha: 0.9),
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -488,7 +488,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 color: Color(0xFF0A0B1E).withValues(alpha: 0.8),
                 border: Border(
                   bottom: BorderSide(
-                    color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                    color: AppTheme.primary.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -505,18 +505,18 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       onPressed: () => _moveSelectedStars(context, provider),
                       icon: Icon(
                         Icons.drive_file_move_outline,
-                        color: Colors.white,
+                        color: AppTheme.textPrimary,
                         size: FontScaling.getResponsiveIconSize(context, 20),
                       ),
                       label: Text(
                         AppLocalizations.of(context)!.moveSelected,
                         style: FontScaling.getBodySmall(context).copyWith(
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.8),
-                        foregroundColor: Color(0xFF1A2238),
+                        backgroundColor: AppTheme.primary.withValues(alpha: 0.8),
+                        foregroundColor: AppTheme.textOnLight,
                         padding: EdgeInsets.symmetric(
                           horizontal: FontScaling.getResponsiveSpacing(context, 16),
                           vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -534,17 +534,17 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       onPressed: () => _deleteSelectedStars(context, provider),
                       icon: Icon(
                         Icons.delete_outline,
-                        color: Colors.white,
+                        color: AppTheme.textPrimary,
                         size: FontScaling.getResponsiveIconSize(context, 20),
                       ),
                       label: Text(
                         AppLocalizations.of(context)!.deleteSelected,
                         style: FontScaling.getBodySmall(context).copyWith(
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.withValues(alpha: 0.8),
+                        backgroundColor: AppTheme.error.withValues(alpha: 0.8),
                         padding: EdgeInsets.symmetric(
                           horizontal: FontScaling.getResponsiveSpacing(context, 16),
                           vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -589,7 +589,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
             'assets/icon_star.svg',
             width: FontScaling.getResponsiveIconSize(context, 64),
             height: FontScaling.getResponsiveIconSize(context, 64),
-            colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.3), BlendMode.srcIn),
+            colorFilter: ColorFilter.mode(AppTheme.textPrimary.withValues(alpha: 0.3), BlendMode.srcIn),
           ),
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
           Text(
@@ -615,12 +615,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
       ),
       decoration: BoxDecoration(
         color: isSelected
-            ? Color(0xFFFFE135).withValues(alpha: 0.1)
+            ? AppTheme.primary.withValues(alpha: 0.1)
             : Color(0xFF0A0B1E).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
-              ? Color(0xFFFFE135)
+              ? AppTheme.primary
               : star.color.withValues(alpha: 0.3),
           width: isSelected ? 2 : 1,
         ),
@@ -653,8 +653,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       }
                     });
                   },
-                  activeColor: Color(0xFFFFE135),
-                  checkColor: Color(0xFF1A2238),
+                  activeColor: AppTheme.primary,
+                  checkColor: AppTheme.textOnLight,
                 ),
               )
             : Container(
@@ -678,7 +678,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
         title: Text(
           _truncateText(star.text, 80),
           style: FontScaling.getBodySmall(context).copyWith(
-            color: Colors.white.withValues(alpha: 0.9),
+            color: AppTheme.textPrimary.withValues(alpha: 0.9),
           ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -690,7 +690,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
           child: Text(
             _formatDate(context, star.createdAt),
             style: FontScaling.getCaption(context).copyWith(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: AppTheme.textPrimary.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -712,7 +712,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                   // Chevron
                   Icon(
                     Icons.chevron_right,
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: AppTheme.textPrimary.withValues(alpha: 0.5),
                     size: FontScaling.getResponsiveIconSize(context, 24),
                   ),
                 ],
@@ -761,7 +761,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
             child: Text(
               currentGroup,
               style: FontScaling.getHeadingSmall(context).copyWith(
-                color: Color(0xFFFFE135),
+                color: AppTheme.primary,
               ),
             ),
           ),
@@ -785,7 +785,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
               color: Color(0xFF0A0B1E).withValues(alpha: 0.8),
               border: Border(
                 bottom: BorderSide(
-                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                  color: AppTheme.primary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -798,18 +798,18 @@ class _ListViewScreenState extends State<ListViewScreen> {
                   onPressed: () => _moveSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
                   icon: Icon(
                     Icons.drive_file_move_outline,
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                     size: FontScaling.getResponsiveIconSize(context, 20),
                   ),
                   label: Text(
                     AppLocalizations.of(context)!.moveSelected,
                     style: FontScaling.getBodySmall(context).copyWith(
-                      color: Colors.white,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.8),
-                    foregroundColor: Color(0xFF1A2238),
+                    backgroundColor: AppTheme.primary.withValues(alpha: 0.8),
+                    foregroundColor: AppTheme.textOnLight,
                     padding: EdgeInsets.symmetric(
                       horizontal: FontScaling.getResponsiveSpacing(context, 16),
                       vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -822,17 +822,17 @@ class _ListViewScreenState extends State<ListViewScreen> {
                   onPressed: () => _deleteSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
                   icon: Icon(
                     Icons.delete_outline,
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                     size: FontScaling.getResponsiveIconSize(context, 20),
                   ),
                   label: Text(
                     AppLocalizations.of(context)!.deleteSelected,
                     style: FontScaling.getBodySmall(context).copyWith(
-                      color: Colors.white,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.withValues(alpha: 0.8),
+                    backgroundColor: AppTheme.error.withValues(alpha: 0.8),
                     padding: EdgeInsets.symmetric(
                       horizontal: FontScaling.getResponsiveSpacing(context, 16),
                       vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -871,17 +871,17 @@ class _ListViewScreenState extends State<ListViewScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: Color(0xFF1A2238),
+        backgroundColor: AppTheme.backgroundDark,
         title: Text(
           l10n.deleteSelected,
           style: FontScaling.getHeadingMedium(dialogContext).copyWith(
-            color: Colors.red,
+            color: AppTheme.error,
           ),
         ),
         content: Text(
           l10n.deleteSelectedStars(count),
           style: FontScaling.getBodyMedium(dialogContext).copyWith(
-            color: Colors.white,
+            color: AppTheme.textPrimary,
           ),
         ),
         actions: [
@@ -890,20 +890,20 @@ class _ListViewScreenState extends State<ListViewScreen> {
             child: Text(
               l10n.cancelButton,
               style: FontScaling.getButtonText(dialogContext).copyWith(
-                color: Colors.white70,
+                color: AppTheme.textSecondary,
               ),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.error,
+              foregroundColor: AppTheme.textPrimary,
             ),
             child: Text(
               l10n.deleteButton,
               style: FontScaling.getButtonText(dialogContext).copyWith(
-                color: Colors.white,
+                color: AppTheme.textPrimary,
               ),
             ),
           ),
@@ -935,10 +935,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
               content: Text(
                 l10n.starsDeleted(count),
                 style: textStyle.copyWith(
-                  color: Colors.white,
+                  color: AppTheme.textPrimary,
                 ),
               ),
-              backgroundColor: Color(0xFF1A2238),
+              backgroundColor: AppTheme.backgroundDark,
               duration: Duration(seconds: 2),
             ),
           );
@@ -951,10 +951,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
             content: Text(
               'Error deleting stars: $e',
               style: textStyle.copyWith(
-                color: Colors.white,
+                color: AppTheme.textPrimary,
               ),
             ),
-            backgroundColor: Colors.red,
+                backgroundColor: AppTheme.error,
             duration: Duration(seconds: 3),
           ),
         );
@@ -995,17 +995,17 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 SnackBar(
                   content: Row(
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.white),
+                      const Icon(Icons.check_circle, color: AppTheme.textPrimary),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           l10n.starsMovedSuccess(movedCount, targetGalaxyName),
-                          style: textStyle.copyWith(color: Colors.white),
+                          style: textStyle.copyWith(color: AppTheme.textPrimary),
                         ),
                       ),
                     ],
                   ),
-                  backgroundColor: Color(0xFF1A2238),
+                  backgroundColor: AppTheme.backgroundDark,
                   duration: Duration(seconds: 2),
                 ),
               );
@@ -1017,9 +1017,9 @@ class _ListViewScreenState extends State<ListViewScreen> {
               SnackBar(
                 content: Text(
                   l10n.starMoveFailed(e.toString()),
-                  style: textStyle.copyWith(color: Colors.white),
+                  style: textStyle.copyWith(color: AppTheme.textPrimary),
                 ),
-                backgroundColor: Colors.red,
+                backgroundColor: AppTheme.error,
                 duration: Duration(seconds: 3),
               ),
             );
@@ -1047,12 +1047,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
               SnackBar(
                 content: Row(
                   children: [
-                    const Icon(Icons.check_circle, color: Colors.white),
+                    const Icon(Icons.check_circle, color: AppTheme.textPrimary),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         l10n.starMovedSuccess(targetGalaxyName),
-                        style: textStyle.copyWith(color: Colors.white),
+                        style: textStyle.copyWith(color: AppTheme.textPrimary),
                       ),
                     ),
                   ],
@@ -1068,9 +1068,9 @@ class _ListViewScreenState extends State<ListViewScreen> {
               SnackBar(
                 content: Text(
                   l10n.starMoveFailed(e.toString()),
-                  style: textStyle.copyWith(color: Colors.white),
+                  style: textStyle.copyWith(color: AppTheme.textPrimary),
                 ),
-                backgroundColor: Colors.red,
+                backgroundColor: AppTheme.error,
                 duration: const Duration(seconds: 3),
               ),
             );

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/config/constants.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../storage.dart';
 import '../../../../font_scaling.dart';
 
@@ -122,7 +123,7 @@ class FloatingGratitudeLabel extends StatelessWidget {
                   star.text,
                   style: _getAdaptiveTextStyle(context, star.text).copyWith(
                     // ← This name
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppTheme.textPrimary.withValues(alpha: 0.9),
                   ),
                   maxLines: null,
                   overflow: TextOverflow.fade,

@@ -222,14 +222,14 @@ class _BackupDialogState extends State<BackupDialog> {
             ] else if (_errorMessage != null) ...[
               Icon(
                 Icons.error,
-                color: Colors.red,
+                color: AppTheme.error,
                 size: 48,
               ),
               SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 style: FontScaling.getBodyMedium(context).copyWith(
-                  color: Colors.red,
+                  color: AppTheme.error,
                 ),
               ),
             ] else ...[
@@ -279,7 +279,7 @@ class _BackupDialogState extends State<BackupDialog> {
                           SizedBox(width: 8),
                           Icon(
                             Icons.warning_amber,
-                            color: Colors.orange,
+                            color: AppTheme.warning,
                             size: 16,
                           ),
                         ],
@@ -287,10 +287,10 @@ class _BackupDialogState extends State<BackupDialog> {
                       subtitle: Text(
                         l10n.backupFormatPlaintextDescription,
                         style: FontScaling.getCaption(context).copyWith(
-                          color: Colors.orange,
+                          color: AppTheme.warning,
                         ),
                       ),
-                      activeColor: Colors.orange,
+                      activeColor: AppTheme.warning,
                     ),
                   ],
                 ),
@@ -303,10 +303,10 @@ class _BackupDialogState extends State<BackupDialog> {
                   child: Container(
                     padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
+                      color: AppTheme.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.orange.withValues(alpha: 0.5),
+                        color: AppTheme.warning.withValues(alpha: 0.5),
                         width: 2,
                       ),
                     ),
@@ -315,7 +315,7 @@ class _BackupDialogState extends State<BackupDialog> {
                       children: [
                         Icon(
                           Icons.warning_amber_rounded,
-                          color: Colors.orange,
+                          color: AppTheme.warning,
                           size: 24,
                         ),
                         SizedBox(width: 12),
@@ -327,7 +327,7 @@ class _BackupDialogState extends State<BackupDialog> {
                                 l10n.backupPlaintextWarningTitle,
                                 style: FontScaling.getBodySmall(context).copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.orange,
+                                  color: AppTheme.warning,
                                 ),
                               ),
                               SizedBox(height: 4),

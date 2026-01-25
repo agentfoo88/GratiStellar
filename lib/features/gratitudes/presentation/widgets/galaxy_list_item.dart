@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/config/constants.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../galaxy_metadata.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -42,12 +43,12 @@ class GalaxyListItem extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: isActive
-                ? Color(0xFFFFE135).withValues(alpha: 0.1)
+                ? AppTheme.primary.withValues(alpha: 0.1)
                 : Colors.transparent,
             border: Border(
               left: BorderSide(
                 color: isActive
-                    ? Color(0xFFFFE135)
+                    ? AppTheme.primary
                     : Colors.transparent,
                 width: 4,
               ),
@@ -59,7 +60,7 @@ class GalaxyListItem extends StatelessWidget {
               ExcludeSemantics(
                 child: Icon(
                   Icons.auto_awesome,
-                  color: Color(0xFFFFE135),
+                  color: AppTheme.primary,
                   size: FontScaling.getResponsiveIconSize(context, 32) *
                       UIConstants.universalUIScale,
                 ),
@@ -81,7 +82,7 @@ class GalaxyListItem extends StatelessWidget {
                                   .fontSize! *
                                   UIConstants.universalUIScale,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppTheme.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -95,13 +96,13 @@ class GalaxyListItem extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Color(0xFFFFE135),
+                              color: AppTheme.primary,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               l10n.galaxyActiveBadge,
                               style: FontScaling.getCaption(context).copyWith(
-                                color: Color(0xFF1A2238),
+                                color: AppTheme.backgroundDark,
                                 fontWeight: FontWeight.bold,
                                 fontSize: FontScaling.mobileCaption * 0.75,
                               ),
@@ -114,7 +115,7 @@ class GalaxyListItem extends StatelessWidget {
                     Text(
                       '${galaxy.starCount} ${galaxy.starCount == 1 ? 'star' : 'stars'} • Created ${_formatDate(galaxy.createdAt)}',
                       style: FontScaling.getCaption(context).copyWith(
-                        color: Colors.white70,
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                   ],
@@ -125,7 +126,7 @@ class GalaxyListItem extends StatelessWidget {
               ExcludeSemantics(
                 child: Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.white54,
+                  color: AppTheme.textTertiary,
                   size: FontScaling.getResponsiveIconSize(context, 16) *
                       UIConstants.universalUIScale,
                 ),

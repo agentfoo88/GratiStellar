@@ -245,7 +245,7 @@ class HolidayGreetingService {
 
   /// Lookup table for accurate lunar holiday dates (2026-2036)
   /// 
-  /// Format: year -> Map<HolidayType, DateTime>
+  /// Format: year -> Map(HolidayType, DateTime)
   static final Map<int, Map<HolidayType, DateTime>> _lunarHolidayLookup = {
     2026: {
       HolidayType.lunarNewYear: DateTime(2026, 2, 17),

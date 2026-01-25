@@ -518,6 +518,10 @@ class StorageService {
       await prefs.remove(_defaultColorPresetKey);
       await prefs.remove(_defaultColorCustomKey);
 
+      // Clear tutorial preferences on sign-out
+      await prefs.remove(_tutorialStarButtonSeenKey);
+      await prefs.remove(_tutorialMindfulnessSeenKey);
+
       // NOTE: device_id is NOT cleared - it's persistent per device
       // This allows multiple anonymous profiles on the same device
 
@@ -679,6 +683,54 @@ class StorageService {
       AppLogger.data('💾 Saved selected palette preset: $presetId');
     } catch (e) {
       AppLogger.warning('⚠️ Error saving selected palette preset: $e');
+    }
+  }
+
+  // Tutorial state persistence
+  static const String _tutorialStarButtonSeenKey = 'tutorial_star_button_seen';
+  static const String _tutorialMindfulnessSeenKey = 'tutorial_mindfulness_seen';
+
+  /// Check if the star button tutorial has been seen
+  static Future<bool> hasTutorialStarButtonSeen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_tutorialStarButtonSeenKey) ?? false;
+    } catch (e) {
+      AppLogger.warning('⚠️ Error getting tutorial star button seen: $e');
+      return false;
+    }
+  }
+
+  /// Mark the star button tutorial as seen
+  static Future<void> markTutorialStarButtonSeen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_tutorialStarButtonSeenKey, true);
+      AppLogger.data('💾 Marked star button tutorial as seen');
+    } catch (e) {
+      AppLogger.warning('⚠️ Error marking star button tutorial seen: $e');
+    }
+  }
+
+  /// Check if the mindfulness tutorial has been seen
+  static Future<bool> hasTutorialMindfulnessSeen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_tutorialMindfulnessSeenKey) ?? false;
+    } catch (e) {
+      AppLogger.warning('⚠️ Error getting tutorial mindfulness seen: $e');
+      return false;
+    }
+  }
+
+  /// Mark the mindfulness tutorial as seen
+  static Future<void> markTutorialMindfulnessSeen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_tutorialMindfulnessSeenKey, true);
+      AppLogger.data('💾 Marked mindfulness tutorial as seen');
+    } catch (e) {
+      AppLogger.warning('⚠️ Error marking mindfulness tutorial seen: $e');
     }
   }
 

@@ -532,8 +532,11 @@ class GalaxyRepository {
   }
 
   /// Clear all galaxy data (called on sign out)
-  Future<void> clearAll() async {
-    await _localDataSource.clearAll();
+  ///
+  /// [userId] - Optional user ID to clear data for. Pass this if you have
+  /// the user ID from before sign-out to avoid race conditions.
+  Future<void> clearAll({String? userId}) async {
+    await _localDataSource.clearAll(userId: userId);
     _gratitudeRepository.setActiveGalaxyId(null);
     AppLogger.data('🗑️ Cleared all galaxy data');
   }

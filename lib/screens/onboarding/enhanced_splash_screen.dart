@@ -6,7 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/accessibility/semantic_helper.dart';
-import '../../core/config/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../font_scaling.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/holiday_greeting.dart';
@@ -267,24 +267,24 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Color.lerp(AppColors.gradientTop, holidayGradient.colors.first, 0.3) ?? holidayGradient.colors.first,
-          Color.lerp(AppColors.gradientUpperMid, holidayGradient.colors.first, 0.2) ?? holidayGradient.colors.first,
-          Color.lerp(AppColors.gradientLowerMid, holidayGradient.colors.last, 0.2) ?? holidayGradient.colors.last,
-          Color.lerp(AppColors.gradientBottom, holidayGradient.colors.last, 0.3) ?? holidayGradient.colors.last,
+          Color.lerp(AppTheme.gradientTop, holidayGradient.colors.first, 0.3) ?? holidayGradient.colors.first,
+          Color.lerp(AppTheme.gradientUpperMid, holidayGradient.colors.first, 0.2) ?? holidayGradient.colors.first,
+          Color.lerp(AppTheme.gradientLowerMid, holidayGradient.colors.last, 0.2) ?? holidayGradient.colors.last,
+          Color.lerp(AppTheme.gradientBottom, holidayGradient.colors.last, 0.3) ?? holidayGradient.colors.last,
         ],
       );
     }
-    return AppColors.backgroundGradient;
+    return AppTheme.backgroundGradient;
   }
 
   /// Get logo color based on holiday or default
   Color _getLogoColor() {
-    return _holidayGreeting?.style.accentColor ?? AppColors.primary;
+    return _holidayGreeting?.style.accentColor ?? AppTheme.primary;
   }
 
   /// Get particle color based on holiday or default
   Color _getParticleColor() {
-    return _holidayGreeting?.style.accentColor ?? AppColors.primary;
+    return _holidayGreeting?.style.accentColor ?? AppTheme.primary;
   }
 
   /// Get localized holiday greeting text by key
@@ -435,7 +435,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
                 _getHolidayGreetingText(l10n, _holidayGreeting!.subtitleKey!),
                 style: FontScaling.getSubtitle(context).copyWith(
                   fontStyle: FontStyle.normal,
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: AppTheme.textPrimary.withValues(alpha: 0.9),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -457,7 +457,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
           Container(
             width: FontScaling.getResponsiveIconSize(context, 100),
             height: 1,
-            color: Colors.white.withValues(alpha: 0.3),
+            color: AppTheme.textPrimary.withValues(alpha: 0.3),
           ),
 
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
@@ -472,7 +472,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
                 l10n.appTagline,
                 style: FontScaling.getBodyMedium(context).copyWith(
                   fontSize: FontScaling.getBodyMedium(context).fontSize! * 0.9,
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: AppTheme.textPrimary.withValues(alpha: 0.9),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -489,7 +489,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
               return Text(
                 l10n.version(info.version, info.buildNumber),
                 style: FontScaling.getCaption(context).copyWith(
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: AppTheme.textTertiary,
                 ),
               );
             },
@@ -502,7 +502,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
             Text(
               l10n.createdBy('AgentFoo'),
               style: FontScaling.getCaption(context).copyWith(
-                color: Colors.white.withValues(alpha: 0.7),
+                color: AppTheme.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -525,7 +525,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
                         ? l10n.tapToContinue
                         : l10n.tapToDismiss,
                     style: FontScaling.getCaption(context).copyWith(
-                      color: Colors.white,
+                      color: AppTheme.textPrimary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -564,7 +564,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
           },
           child: Text(
             text,
-            style: style.copyWith(color: Colors.white),
+            style: style.copyWith(color: AppTheme.textPrimary),
             textAlign: TextAlign.center,
           ),
         );
@@ -614,7 +614,7 @@ class ParticlePainter extends CustomPainter {
   ParticlePainter({
     required this.particles,
     required this.progress,
-    this.particleColor = AppColors.primary,
+    this.particleColor = AppTheme.primary,
   });
 
   @override
@@ -651,7 +651,7 @@ class BackgroundStarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final star in stars) {
       final paint = Paint()
-        ..color = Colors.white.withValues(alpha: star.opacity)
+        ..color = AppTheme.textPrimary.withValues(alpha: star.opacity)
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(

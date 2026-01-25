@@ -89,13 +89,13 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.white),
+                const Icon(Icons.check_circle, color: AppTheme.textPrimary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l10n.passwordChangedSuccess,
                     style: FontScaling.getBodySmall(context).copyWith(
-                      color: Colors.white,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                 ),
@@ -147,10 +147,10 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         constraints: const BoxConstraints(maxWidth: 500),
         padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A2238).withValues(alpha: 0.95),
+          color: AppTheme.backgroundDark.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+            color: AppTheme.primary.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
@@ -168,7 +168,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               // Icon
               Icon(
                 Icons.lock_reset,
-                color: const Color(0xFFFFE135),
+                color: AppTheme.primary,
                 size: FontScaling.getResponsiveIconSize(context, 48),
               ),
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
@@ -195,12 +195,12 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   hintText: l10n.currentPasswordHint,
                   hintStyle: FontScaling.getInputHint(context),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.1),
-                  prefixIcon: const Icon(Icons.lock, color: Color(0xFFFFE135)),
+                  fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+                  prefixIcon: const Icon(Icons.lock, color: AppTheme.primary),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _showCurrentPassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppTheme.textTertiary,
                     ),
                     onPressed: () {
                       setState(() {
@@ -211,19 +211,19 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: const BorderSide(
-                      color: Color(0xFFFFE135),
+                      color: AppTheme.primary,
                       width: 2,
                     ),
                   ),
@@ -243,12 +243,12 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   hintText: l10n.newPasswordHint,
                   hintStyle: FontScaling.getInputHint(context),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.1),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFFFE135)),
+                  fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+                  prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.primary),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _showNewPassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppTheme.textTertiary,
                     ),
                     onPressed: () {
                       setState(() {
@@ -259,19 +259,19 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: const BorderSide(
-                      color: Color(0xFFFFE135),
+                      color: AppTheme.primary,
                       width: 2,
                     ),
                   ),
@@ -291,12 +291,12 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   hintText: l10n.confirmPasswordHint,
                   hintStyle: FontScaling.getInputHint(context),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.1),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFFFE135)),
+                  fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+                  prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.primary),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _showConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppTheme.textTertiary,
                     ),
                     onPressed: () {
                       setState(() {
@@ -307,19 +307,19 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: const BorderSide(
-                      color: Color(0xFFFFE135),
+                      color: AppTheme.primary,
                       width: 2,
                     ),
                   ),
@@ -335,21 +335,21 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                     FontScaling.getResponsiveSpacing(context, 12),
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.2),
+                    color: AppTheme.error.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.red.withValues(alpha: 0.5),
+                      color: AppTheme.error.withValues(alpha: 0.5),
                     ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                      const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _errorMessage!,
                           style: FontScaling.getBodySmall(context).copyWith(
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: AppTheme.textPrimary.withValues(alpha: 0.9),
                           ),
                         ),
                       ),
@@ -369,14 +369,14 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                     child: Text(
                       l10n.cancel,
                       style: FontScaling.getButtonText(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                   ),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _handleChangePassword,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFE135),
+                      backgroundColor: AppTheme.primary,
                       padding: EdgeInsets.symmetric(
                         horizontal: FontScaling.getResponsiveSpacing(context, 24),
                         vertical: FontScaling.getResponsiveSpacing(context, 16),
@@ -392,14 +392,14 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xFF1A2238),
+                                AppTheme.backgroundDark,
                               ),
                             ),
                           )
                         : Text(
                             l10n.changePasswordButton,
                             style: FontScaling.getButtonText(context).copyWith(
-                              color: const Color(0xFF1A2238),
+                              color: AppTheme.backgroundDark,
                             ),
                           ),
                   ),

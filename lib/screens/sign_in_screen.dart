@@ -414,10 +414,10 @@ class _SignInScreenState extends State<SignInScreen> {
           constraints: BoxConstraints(maxWidth: 500, minWidth: 300),
           padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
           decoration: BoxDecoration(
-            color: Color(0xFF1A2238).withValues(alpha: 0.95),
+            color: AppTheme.backgroundDark.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Color(0xFFFFE135).withValues(alpha: 0.3),
+              color: AppTheme.primary.withValues(alpha: 0.3),
               width: 2,
             ),
             boxShadow: [
@@ -433,14 +433,14 @@ class _SignInScreenState extends State<SignInScreen> {
             children: [
               Icon(
                 Icons.delete_outline,
-                color: Colors.orange.withValues(alpha: 0.8),
+                color: AppTheme.warning.withValues(alpha: 0.8),
                 size: FontScaling.getResponsiveIconSize(context, 48),
               ),
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
               Text(
                 l10n.emptyGalaxyDetectedTitle,
                 style: FontScaling.getHeadingMedium(context).copyWith(
-                  color: Colors.white,
+                  color: AppTheme.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -448,7 +448,7 @@ class _SignInScreenState extends State<SignInScreen> {
               Text(
                 l10n.emptyGalaxyDetectedMessage,
                 style: FontScaling.getBodySmall(context).copyWith(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: AppTheme.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -461,14 +461,14 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: Text(
                       l10n.keepEmptyGalaxyButton,
                       style: FontScaling.getButtonText(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                   ),
                   ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(true),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: AppTheme.warning,
                       padding: EdgeInsets.symmetric(
                         horizontal: FontScaling.getResponsiveSpacing(context, 20),
                         vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -480,7 +480,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: Text(
                       l10n.deleteEmptyGalaxyButton,
                       style: FontScaling.getButtonText(context).copyWith(
-                        color: Colors.white,
+                        color: AppTheme.textPrimary,
                       ),
                     ),
                   ),
@@ -612,19 +612,19 @@ class _SignInScreenState extends State<SignInScreen> {
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.white),
+            Icon(Icons.check_circle, color: AppTheme.textPrimary),
             SizedBox(width: 12),
             Expanded(
               child: Text(
                 message,
                 style: FontScaling.getBodySmall(context).copyWith(
-                  color: Colors.white,
+                  color: AppTheme.textPrimary,
                 ),
               ),
             ),
           ],
         ),
-        backgroundColor: Color(0xFF4CAF50),
+        backgroundColor: AppTheme.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -708,20 +708,20 @@ class _SignInScreenState extends State<SignInScreen> {
                 child: Container(
                   padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
                   decoration: BoxDecoration(
-                    color: Color(0xFF1A2238).withValues(alpha: 0.95),
+                    color: AppTheme.backgroundDark.withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
                       ),
                       SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
                       Text(
                         'Syncing your data...',
                         style: FontScaling.getBodyMedium(context).copyWith(
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -794,20 +794,20 @@ class _SignInScreenState extends State<SignInScreen> {
                 child: Container(
                   padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
                   decoration: BoxDecoration(
-                    color: Color(0xFF1A2238).withValues(alpha: 0.95),
+                    color: AppTheme.backgroundDark.withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
                       ),
                       SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
                       Text(
                         'Syncing your data...',
                         style: FontScaling.getBodyMedium(context).copyWith(
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -938,7 +938,7 @@ class _SignInScreenState extends State<SignInScreen> {
               Align(
                 alignment: Alignment.topLeft,
                 child: IconButton(
-                  icon: Icon(Icons.arrow_back, color: Colors.white),
+                  icon: Icon(Icons.arrow_back, color: AppTheme.textPrimary),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
@@ -959,7 +959,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           Text(
                             _isSignUp ? l10n.signUpTitle : l10n.signInTitle,
                             style: FontScaling.getHeadingLarge(context).copyWith(
-                              color: Color(0xFFFFE135),
+                              color: AppTheme.primary,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -969,7 +969,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           Text(
                             _isSignUp ? l10n.signUpSubtitle : l10n.signInSubtitle,
                             style: FontScaling.getBodyMedium(context).copyWith(
-                              color: Colors.white.withValues(alpha: 0.7),
+                              color: AppTheme.textSecondary,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -989,24 +989,24 @@ class _SignInScreenState extends State<SignInScreen> {
                                 hintText: l10n.nameInputHint,
                                 hintStyle: FontScaling.getInputHint(context),
                                 filled: true,
-                                fillColor: Colors.white.withValues(alpha: 0.1),
-                                prefixIcon: Icon(Icons.person, color: Color(0xFFFFE135)),
+                                fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+                                prefixIcon: Icon(Icons.person, color: AppTheme.primary),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide(
-                                    color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                                    color: AppTheme.primary.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide(
-                                    color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                                    color: AppTheme.primary.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide(
-                                    color: Color(0xFFFFE135),
+                                    color: AppTheme.primary,
                                     width: 2,
                                   ),
                                 ),
@@ -1026,24 +1026,24 @@ class _SignInScreenState extends State<SignInScreen> {
                               hintText: l10n.emailHint,
                               hintStyle: FontScaling.getInputHint(context),
                               filled: true,
-                              fillColor: Colors.white.withValues(alpha: 0.1),
-                              prefixIcon: Icon(Icons.email, color: Color(0xFFFFE135)),
+                              fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+                              prefixIcon: Icon(Icons.email, color: AppTheme.primary),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide(
-                                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                                  color: AppTheme.primary.withValues(alpha: 0.3),
                                 ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide(
-                                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                                  color: AppTheme.primary.withValues(alpha: 0.3),
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide(
-                                  color: Color(0xFFFFE135),
+                                  color: AppTheme.primary,
                                   width: 2,
                                 ),
                               ),
@@ -1063,24 +1063,24 @@ class _SignInScreenState extends State<SignInScreen> {
                               hintText: l10n.passwordHint,
                               hintStyle: FontScaling.getInputHint(context),
                               filled: true,
-                              fillColor: Colors.white.withValues(alpha: 0.1),
-                              prefixIcon: Icon(Icons.lock, color: Color(0xFFFFE135)),
+                              fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+                              prefixIcon: Icon(Icons.lock, color: AppTheme.primary),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide(
-                                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                                  color: AppTheme.primary.withValues(alpha: 0.3),
                                 ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide(
-                                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                                  color: AppTheme.primary.withValues(alpha: 0.3),
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide(
-                                  color: Color(0xFFFFE135),
+                                  color: AppTheme.primary,
                                   width: 2,
                                 ),
                               ),
@@ -1102,24 +1102,24 @@ class _SignInScreenState extends State<SignInScreen> {
                                 hintText: l10n.confirmPasswordHint,
                                 hintStyle: FontScaling.getInputHint(context),
                                 filled: true,
-                                fillColor: Colors.white.withValues(alpha: 0.1),
-                                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFFFE135)),
+                                fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+                                prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.primary),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide(
-                                    color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                                    color: AppTheme.primary.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide(
-                                    color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                                    color: AppTheme.primary.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: const BorderSide(
-                                    color: Color(0xFFFFE135),
+                                    color: AppTheme.primary,
                                     width: 2,
                                   ),
                                 ),
@@ -1141,7 +1141,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 child: Text(
                                   l10n.forgotPassword,
                                   style: FontScaling.getBodySmall(context).copyWith(
-                                    color: Color(0xFFFFE135),
+                                    color: AppTheme.primary,
                                     decoration: TextDecoration.underline,
                                   ),
                                 ),
@@ -1156,21 +1156,21 @@ class _SignInScreenState extends State<SignInScreen> {
                                 FontScaling.getResponsiveSpacing(context, 12),
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.red.withValues(alpha: 0.2),
+                                color: AppTheme.error.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Colors.red.withValues(alpha: 0.5),
+                                  color: AppTheme.error.withValues(alpha: 0.5),
                                 ),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                  Icon(Icons.error_outline, color: AppTheme.error, size: 20),
                                   SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       _errorMessage!,
                                       style: FontScaling.getBodySmall(context).copyWith(
-                                        color: Colors.white.withValues(alpha: 0.9),
+                                        color: AppTheme.textPrimary.withValues(alpha: 0.9),
                                       ),
                                     ),
                                   ),
@@ -1189,7 +1189,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 _handleSubmit();
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFFFFE135),
+                                backgroundColor: AppTheme.primary,
                                 padding: EdgeInsets.symmetric(
                                   vertical: FontScaling.getResponsiveSpacing(context, 16),
                                 ),
@@ -1204,14 +1204,14 @@ class _SignInScreenState extends State<SignInScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFF1A2238),
+                                    AppTheme.backgroundDark,
                                   ),
                                 ),
                               )
                                   : Text(
                                 _isSignUp ? l10n.signUpButton : l10n.signInButton,
                                 style: FontScaling.getButtonText(context).copyWith(
-                                  color: Color(0xFF1A2238),
+                                  color: AppTheme.backgroundDark,
                                 ),
                               ),
                             ),
@@ -1243,15 +1243,15 @@ class _SignInScreenState extends State<SignInScreen> {
                                         ? '${l10n.alreadyHaveAccount}\n'
                                         : '${l10n.needToLinkAccount}\n',
                                     style: FontScaling.getBodySmall(context).copyWith(
-                                      color: Colors.white.withValues(alpha: 0.7),
+                                      color: AppTheme.textSecondary,
                                     ),
                                   ),
                                   TextSpan(
                                     text: _isSignUp ? l10n.signInToggle : l10n.signUpToggle,
                                     style: FontScaling.getBodySmall(context).copyWith(
-                                      color: Color(0xFFFFE135),
+                                      color: AppTheme.primary,
                                       decoration: TextDecoration.underline,
-                                      fontWeight: FontWeight.w900,
+                                      fontWeight: FontScaling.boldWeight,
                                     ),
                                   ),
                                 ],
@@ -1302,10 +1302,10 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
           constraints: BoxConstraints(maxWidth: 500, minWidth: 300),
           padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
           decoration: BoxDecoration(
-            color: Color(0xFF1A2238).withValues(alpha: 0.95),
+            color: AppTheme.backgroundDark.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Color(0xFFFFE135).withValues(alpha: 0.3),
+              color: AppTheme.primary.withValues(alpha: 0.3),
               width: 2,
             ),
             boxShadow: [
@@ -1322,14 +1322,14 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
               children: [
                 Icon(
                   Icons.account_circle_outlined,
-                  color: Color(0xFFFFE135).withValues(alpha: 0.8),
+                  color: AppTheme.primary.withValues(alpha: 0.8),
                   size: FontScaling.getResponsiveIconSize(context, 48),
                 ),
                 SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
                 Text(
                   widget.l10n.anonymousDataDetectedTitle,
                   style: FontScaling.getHeadingMedium(context).copyWith(
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1337,7 +1337,7 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
                 Text(
                   widget.l10n.anonymousDataDetectedMessage(widget.starsCount, widget.galaxiesCount),
                   style: FontScaling.getBodySmall(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: AppTheme.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1356,13 +1356,13 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
                         title: Text(
                           widget.l10n.mergeAnonymousDataButton,
                           style: FontScaling.getBodyMedium(context).copyWith(
-                            color: Colors.white,
+                            color: AppTheme.textPrimary,
                           ),
                         ),
                         subtitle: Text(
                           widget.l10n.mergeAnonymousDataDescription,
                           style: FontScaling.getBodySmall(context).copyWith(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: AppTheme.textTertiary,
                           ),
                         ),
                         value: true,
@@ -1372,13 +1372,13 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
                         title: Text(
                           widget.l10n.deleteAnonymousDataButton,
                           style: FontScaling.getBodyMedium(context).copyWith(
-                            color: Colors.white,
+                            color: AppTheme.textPrimary,
                           ),
                         ),
                         subtitle: Text(
                           widget.l10n.deleteAnonymousDataDescription,
                           style: FontScaling.getBodySmall(context).copyWith(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: AppTheme.textTertiary,
                           ),
                         ),
                         value: false,
@@ -1396,7 +1396,7 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
                       child: Text(
                         widget.l10n.cancel,
                         style: FontScaling.getButtonText(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: AppTheme.textSecondary,
                         ),
                       ),
                     ),
@@ -1405,7 +1405,7 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
                           ? null
                           : () => Navigator.of(context).pop(_selectedChoice),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFE135),
+                        backgroundColor: AppTheme.primary,
                         padding: EdgeInsets.symmetric(
                           horizontal: FontScaling.getResponsiveSpacing(context, 20),
                           vertical: FontScaling.getResponsiveSpacing(context, 12),
@@ -1421,7 +1421,7 @@ class _AnonymousDataMigrationDialogState extends State<_AnonymousDataMigrationDi
                                 ? widget.l10n.deleteAnonymousDataButton
                                 : widget.l10n.cancel,
                         style: FontScaling.getButtonText(context).copyWith(
-                          color: Color(0xFF1A2238),
+                          color: AppTheme.backgroundDark,
                         ),
                       ),
                     ),

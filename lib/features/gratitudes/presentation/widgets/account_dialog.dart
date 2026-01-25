@@ -172,10 +172,10 @@ class _AccountDialogState extends State<AccountDialog> {
         constraints: BoxConstraints(maxWidth: 500, minWidth: 300),
         padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
         decoration: BoxDecoration(
-          color: Color(0xFF1A2238).withValues(alpha: 0.95),
+          color: AppTheme.backgroundDark.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+            color: AppTheme.primary.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
@@ -193,7 +193,7 @@ class _AccountDialogState extends State<AccountDialog> {
               // Icon
               Icon(
                 Icons.account_circle,
-                color: Color(0xFFFFE135),
+                color: AppTheme.primary,
                 size: FontScaling.getResponsiveIconSize(context, 48),
               ),
               SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
@@ -214,7 +214,7 @@ class _AccountDialogState extends State<AccountDialog> {
                       FontScaling.getResponsiveSpacing(context, 16),
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: AppTheme.textPrimary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -222,11 +222,11 @@ class _AccountDialogState extends State<AccountDialog> {
                         // Avatar placeholder (for future)
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: Color(0xFFFFE135).withValues(alpha: 0.2),
+                          backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
                           child: Icon(
                             Icons.person,
                             size: 40,
-                            color: Color(0xFFFFE135),
+                            color: AppTheme.primary,
                           ),
                         ),
                         SizedBox(
@@ -254,30 +254,30 @@ class _AccountDialogState extends State<AccountDialog> {
                             hintText: l10n.displayNameLabel,
                             hintStyle: FontScaling.getInputHint(context),
                             filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.1),
+                            fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                                color: AppTheme.primary.withValues(alpha: 0.3),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                                color: AppTheme.primary.withValues(alpha: 0.3),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: Color(0xFFFFE135),
+                                color: AppTheme.primary,
                                 width: 2,
                               ),
                             ),
                             disabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: AppTheme.textPrimary.withValues(alpha: 0.1),
                               ),
                             ),
                           ),
@@ -301,10 +301,10 @@ class _AccountDialogState extends State<AccountDialog> {
                                   content: Text(
                                     l10n.errorNameRequired,
                                     style: FontScaling.getBodySmall(context).copyWith(
-                                      color: Colors.white,
+                                      color: AppTheme.textPrimary,
                                     ),
                                   ),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: AppTheme.error,
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -373,7 +373,7 @@ class _AccountDialogState extends State<AccountDialog> {
                                     children: [
                                       Icon(
                                         Icons.check_circle,
-                                        color: Colors.white,
+                                        color: AppTheme.textPrimary,
                                       ),
                                       SizedBox(width: 12),
                                       Expanded(
@@ -381,7 +381,7 @@ class _AccountDialogState extends State<AccountDialog> {
                                           l10n.displayNameUpdated,
                                           style: FontScaling.getBodySmall(
                                             context,
-                                          ).copyWith(color: Colors.white),
+                                          ).copyWith(color: AppTheme.textPrimary),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -407,10 +407,10 @@ class _AccountDialogState extends State<AccountDialog> {
                                   content: Text(
                                     l10n.errorNameUpdateFailed,
                                     style: FontScaling.getBodySmall(context).copyWith(
-                                      color: Colors.white,
+                                      color: AppTheme.textPrimary,
                                     ),
                                   ),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: AppTheme.error,
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -422,7 +422,7 @@ class _AccountDialogState extends State<AccountDialog> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFFFE135),
+                          backgroundColor: AppTheme.primary,
                           padding: EdgeInsets.symmetric(
                             vertical: FontScaling.getResponsiveSpacing(
                                     context, 16) *
@@ -435,7 +435,7 @@ class _AccountDialogState extends State<AccountDialog> {
                         child: Text(
                           l10n.updateButton,
                           style: FontScaling.getButtonText(context).copyWith(
-                            color: Color(0xFF1A2238),
+                            color: AppTheme.backgroundDark,
                           ),
                         ),
                       ),
@@ -451,14 +451,14 @@ class _AccountDialogState extends State<AccountDialog> {
                       FontScaling.getResponsiveSpacing(context, 12),
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: AppTheme.textPrimary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.email,
-                          color: Color(0xFFFFE135),
+                          color: AppTheme.primary,
                           size: FontScaling.getResponsiveIconSize(context, 20),
                         ),
                         SizedBox(width: 8),
@@ -467,7 +467,7 @@ class _AccountDialogState extends State<AccountDialog> {
                             widget.authService.currentUser?.email ?? '',
                             style: FontScaling.getBodySmall(
                               context,
-                            ).copyWith(color: Colors.white.withValues(alpha: 0.7)),
+                            ).copyWith(color: AppTheme.textPrimary.withValues(alpha: 0.7)),
                           ),
                         ),
                       ],
@@ -489,7 +489,7 @@ class _AccountDialogState extends State<AccountDialog> {
                       },
                       icon: const Icon(
                         Icons.lock_reset,
-                        color: Color(0xFFFFE135),
+                        color: AppTheme.primary,
                       ),
                       label: Text(
                         l10n.changePassword,
@@ -497,7 +497,7 @@ class _AccountDialogState extends State<AccountDialog> {
                       ),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.5),
+                          color: AppTheme.primary.withValues(alpha: 0.5),
                         ),
                         padding: EdgeInsets.symmetric(
                           vertical: FontScaling.getResponsiveSpacing(context, 16),
@@ -532,7 +532,7 @@ class _AccountDialogState extends State<AccountDialog> {
                         },
                         icon: Icon(
                           Icons.swap_horiz,
-                          color: Color(0xFFFFE135),
+                          color: AppTheme.primary,
                         ),
                         label: Text(
                           l10n.switchProfile,
@@ -540,7 +540,7 @@ class _AccountDialogState extends State<AccountDialog> {
                         ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
-                            color: Color(0xFFFFE135).withValues(alpha: 0.5),
+                            color: AppTheme.primary.withValues(alpha: 0.5),
                           ),
                           padding: EdgeInsets.symmetric(
                             vertical: FontScaling.getResponsiveSpacing(context, 16),

@@ -2359,5 +2359,13 @@
         "greetingWinterSolsticeSubtitle": "The return of light and hope",
         "@greetingWinterSolsticeSubtitle": {
           "description": "Subtitle for Winter Solstice greeting"
+        },
+        "tutorialTapToCreateStar": "Tap to create your first star!",
+        "@tutorialTapToCreateStar": {
+          "description": "Tutorial tooltip prompting user to tap star button"
+        },
+        "tutorialMindfulnessPrompt": "Try mindfulness mode. Take a moment to appreciate the things you're grateful for.",
+        "@tutorialMindfulnessPrompt": {
+          "description": "Tutorial tooltip introducing mindfulness mode after creating 3 stars"
         }
     }

@@ -2,6 +2,7 @@
 // Comprehensive font scaling system for GratiStellar
 
 import 'package:flutter/material.dart';
+import 'core/theme/app_theme.dart';
 
 class FontScaling {
   // Screen size breakpoints
@@ -52,8 +53,8 @@ class FontScaling {
     return TextStyle(
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
-      fontWeight: lightWeight,
-      color: color ?? Colors.white,
+      fontWeight: boldWeight,
+      color: color ?? AppTheme.textPrimary,
       letterSpacing: 2.0,
     );
   }
@@ -73,7 +74,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
-      color: color ?? Colors.white,
+      color: color ?? AppTheme.textPrimary,
     );
   }
 
@@ -92,7 +93,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
-      color: color ?? Colors.white,
+      color: color ?? AppTheme.textPrimary,
     );
   }
 
@@ -111,7 +112,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: color ?? Colors.white,
+      color: color ?? AppTheme.textPrimary,
     );
   }
 
@@ -130,7 +131,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: color ?? Colors.white,
+      color: color ?? AppTheme.textPrimary,
     );
   }
 
@@ -149,7 +150,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: color ?? Colors.white,
+      color: color ?? AppTheme.textPrimary,
     );
   }
 
@@ -168,7 +169,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: color ?? Colors.white.withValues(alpha: 0.7),
+      color: color ?? AppTheme.textSecondary,
     );
   }
 
@@ -187,7 +188,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
-      color: color ?? Colors.white,
+      color: color ?? AppTheme.textPrimary,
     );
   }
 
@@ -206,7 +207,27 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
-      color: color ?? Colors.white,
+      color: color ?? AppTheme.textPrimary,
+    );
+  }
+
+  static TextStyle getSectionHeader(BuildContext context, {Color? color}) {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final fontSize = screenWidth < mobileBreakpoint
+        ? mobileCaption
+        : screenWidth < tabletBreakpoint
+        ? tabletCaption
+        : desktopCaption;
+
+    return TextStyle(
+      fontFamily: 'JosefinSans',
+      fontSize: fontSize,
+      fontWeight: mediumWeight,
+      color: color ?? AppTheme.textTertiary,
+      letterSpacing: 0.5,
     );
   }
 
@@ -225,8 +246,8 @@ class FontScaling {
     return TextStyle(
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
-      fontWeight: lightWeight,
-      color: Color(0xFFFFE135),
+      fontWeight: mediumWeight,
+      color: AppTheme.primary,
       letterSpacing: 3.0,
     );
   }
@@ -246,7 +267,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: Colors.white.withValues(alpha: 0.8),
+      color: AppTheme.textSecondary,
       fontStyle: FontStyle.italic,
     );
   }
@@ -266,7 +287,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: mediumWeight,
-      color: Colors.white.withValues(alpha: 0.9),
+      color: AppTheme.textPrimary.withValues(alpha: 0.9),
     );
   }
 
@@ -285,7 +306,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: Colors.white.withValues(alpha: 0.6),
+      color: AppTheme.textTertiary,
     );
   }
 
@@ -303,8 +324,8 @@ class FontScaling {
     return TextStyle(
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
-      fontWeight: lightWeight,
-      color: Color(0xFFFFE135),
+      fontWeight: mediumWeight,
+      color: AppTheme.primary,
     );
   }
 
@@ -323,7 +344,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: Colors.white.withValues(alpha: 0.6),  // WCAG AA: improved contrast
+      color: AppTheme.textTertiary,  // WCAG AA: improved contrast
     );
   }
 
@@ -342,7 +363,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: Colors.white,
+      color: AppTheme.textPrimary,
     );
   }
 
@@ -361,7 +382,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: lightWeight,
-      color: Colors.white.withValues(alpha: 0.6),
+      color: AppTheme.textTertiary,
     );
   }
 
@@ -380,7 +401,7 @@ class FontScaling {
       fontFamily: 'JosefinSans',
       fontSize: fontSize,
       fontWeight: normalWeight,
-      color: Colors.white.withValues(alpha: 0.4),
+      color: AppTheme.textDisabled,
     );
   }
 

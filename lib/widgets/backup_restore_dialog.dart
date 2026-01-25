@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/accessibility/semantic_helper.dart';
-import '../core/config/app_colors.dart';
+import '../core/theme/app_theme.dart';
 import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
 import '../features/backup/presentation/widgets/backup_dialog.dart';
@@ -16,11 +16,11 @@ class BackupRestoreDialog extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return AlertDialog(
-      backgroundColor: AppColors.primaryDark,
+      backgroundColor: AppTheme.primaryDark,
       title: Text(
         l10n.backupRestoreTitle,
         style: FontScaling.getHeadingMedium(context).copyWith(
-          color: AppColors.primary,
+          color: AppTheme.primary,
         ),
       ),
       content: SingleChildScrollView(
@@ -56,10 +56,10 @@ class BackupRestoreDialog extends StatelessWidget {
                     FontScaling.getResponsiveSpacing(context, 16),
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: AppTheme.textPrimary.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -67,7 +67,7 @@ class BackupRestoreDialog extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.backup,
-                        color: AppColors.primary,
+                        color: AppTheme.primary,
                         size: FontScaling.getResponsiveIconSize(context, 28),
                       ),
                       SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
@@ -78,15 +78,15 @@ class BackupRestoreDialog extends StatelessWidget {
                             Text(
                               l10n.exportBackup,
                               style: FontScaling.getBodyLarge(context).copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontScaling.mediumWeight,
                               ),
                             ),
                             SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),
                             Text(
                               l10n.exportBackupSubtitle,
                               style: FontScaling.getCaption(context).copyWith(
-                                color: Colors.white70,
+                                color: AppTheme.textSecondary,
                               ),
                             ),
                           ],
@@ -94,7 +94,7 @@ class BackupRestoreDialog extends StatelessWidget {
                       ),
                       Icon(
                         Icons.arrow_forward_ios,
-                        color: Colors.white60,
+                        color: AppTheme.textTertiary,
                         size: FontScaling.getResponsiveIconSize(context, 16),
                       ),
                     ],
@@ -134,10 +134,10 @@ class BackupRestoreDialog extends StatelessWidget {
                     FontScaling.getResponsiveSpacing(context, 16),
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: AppTheme.textPrimary.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -145,7 +145,7 @@ class BackupRestoreDialog extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.restore,
-                        color: AppColors.primary,
+                        color: AppTheme.primary,
                         size: FontScaling.getResponsiveIconSize(context, 28),
                       ),
                       SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
@@ -156,15 +156,15 @@ class BackupRestoreDialog extends StatelessWidget {
                             Text(
                               l10n.restoreBackup,
                               style: FontScaling.getBodyLarge(context).copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontScaling.mediumWeight,
                               ),
                             ),
                             SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),
                             Text(
                               l10n.restoreBackupSubtitle,
                               style: FontScaling.getCaption(context).copyWith(
-                                color: Colors.white70,
+                                color: AppTheme.textSecondary,
                               ),
                             ),
                           ],
@@ -172,7 +172,7 @@ class BackupRestoreDialog extends StatelessWidget {
                       ),
                       Icon(
                         Icons.arrow_forward_ios,
-                        color: Colors.white60,
+                        color: AppTheme.textTertiary,
                         size: FontScaling.getResponsiveIconSize(context, 16),
                       ),
                     ],
@@ -189,7 +189,7 @@ class BackupRestoreDialog extends StatelessWidget {
           child: Text(
             l10n.closeButton,
             style: FontScaling.getButtonText(context).copyWith(
-              color: Colors.white70,
+              color: AppTheme.textSecondary,
             ),
           ),
         ),

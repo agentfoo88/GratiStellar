@@ -198,6 +198,10 @@ class GratitudeProvider extends ChangeNotifier {
   }
 
   /// Clear all state (called on sign out)
+  ///
+  /// NOTE: StorageService.clearAllData() is called BEFORE Firebase sign-out,
+  /// so the actual data clearing happens there with the correct user ID.
+  /// This method primarily clears in-memory state.
   void clearState() {
     AppLogger.data('🗑️ Clearing provider state');
 
@@ -224,7 +228,11 @@ class GratitudeProvider extends ChangeNotifier {
     _mindfulnessTimer?.cancel();
     _mindfulnessTimer = null;
 
-    _galaxyProvider.clearAll();
+    // Clear in-memory galaxy state
+    // NOTE: The actual storage clearing is done by StorageService.clearAllData()
+    // which is called BEFORE sign-out with the correct user ID.
+    // We call clearAllInMemoryOnly() to avoid double-clearing with potentially wrong user ID.
+    _galaxyProvider.clearAllInMemoryOnly();
 
     notifyListeners();
   }

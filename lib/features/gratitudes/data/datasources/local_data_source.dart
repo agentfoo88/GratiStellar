@@ -40,12 +40,15 @@ class LocalDataSource {
   }
 
   /// Clear all local data for current user
-  Future<void> clearAll() async {
+  ///
+  /// [userId] - Optional user ID to clear data for. If not provided,
+  /// will attempt to get the current user ID (which may fail after sign-out).
+  Future<void> clearAll({String? userId}) async {
     if (_userProfileManager != null) {
-      // Clear current user's data only
-      final userId = await _userProfileManager.getOrCreateActiveUserId();
-      await UserScopedStorage.clearUserData(userId);
-      await UserScopedStorage.untrackUser(userId);
+      // Get user ID if not provided
+      final targetUserId = userId ?? await _userProfileManager.getOrCreateActiveUserId();
+      await UserScopedStorage.clearUserData(targetUserId);
+      await UserScopedStorage.untrackUser(targetUserId);
     } else {
       // Fallback: clear all data (backward compatibility)
       await StorageService.clearAllData();

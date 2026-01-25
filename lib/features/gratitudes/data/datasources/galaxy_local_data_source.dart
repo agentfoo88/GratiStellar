@@ -138,22 +138,34 @@ class GalaxyLocalDataSource {
   }
 
   /// Clear all galaxy data (used during sign out)
-  Future<void> clearAll() async {
+  ///
+  /// [userId] - Optional user ID to clear data for. If not provided,
+  /// will attempt to get the current user ID (which may fail after sign-out).
+  Future<void> clearAll({String? userId}) async {
     try {
+      // Clear global storage (backward compatibility)
       await _secureStorage.delete(key: _galaxiesKey);
       final prefs = await SharedPreferences.getInstance();
-      
+
       if (_userProfileManager != null) {
+        // Get user ID if not provided
+        final targetUserId = userId ?? await _userProfileManager.getOrCreateActiveUserId();
+
         // Clear user-scoped active galaxy ID
-        final userId = await _userProfileManager.getOrCreateActiveUserId();
-        final userScopedKey = '${_activeGalaxyKey}_$userId';
+        final userScopedKey = '${_activeGalaxyKey}_$targetUserId';
         await prefs.remove(userScopedKey);
+
+        // CRITICAL: Also clear the user-scoped galaxy data from UserScopedStorage
+        // This was missing before, causing galaxies to persist after sign-out
+        final galaxiesKey = 'galaxies_metadata_$targetUserId';
+        await _secureStorage.delete(key: galaxiesKey);
+
+        AppLogger.data('🗑️ Cleared galaxy data for user: $targetUserId');
       } else {
         // Fallback to global storage (backward compatibility)
         await prefs.remove(_activeGalaxyKey);
+        AppLogger.data('🗑️ Cleared all galaxy data from global storage');
       }
-      
-      AppLogger.data('🗑️ Cleared all galaxy data from local storage');
     } catch (e) {
       AppLogger.error('⚠️ Error clearing galaxy data: $e');
     }

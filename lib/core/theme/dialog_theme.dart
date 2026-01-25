@@ -191,7 +191,7 @@ class DialogTheme {
     return TextButton.styleFrom(
       foregroundColor: AppTheme.primary,
       textStyle: FontScaling.getBodyMedium(context).copyWith(
-        fontWeight: FontWeight.w600,
+        fontWeight: FontScaling.mediumWeight,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
@@ -209,7 +209,7 @@ class DialogTheme {
     return TextButton.styleFrom(
       foregroundColor: AppTheme.error,
       textStyle: FontScaling.getBodyMedium(context).copyWith(
-        fontWeight: FontWeight.w600,
+        fontWeight: FontScaling.mediumWeight,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );

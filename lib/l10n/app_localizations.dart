@@ -3489,6 +3489,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The return of light and hope'**
   String get greetingWinterSolsticeSubtitle;
+
+  /// Tutorial tooltip prompting user to tap star button
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to create your first star!'**
+  String get tutorialTapToCreateStar;
+
+  /// Tutorial tooltip introducing mindfulness mode after creating 3 stars
+  ///
+  /// In en, this message translates to:
+  /// **'Try mindfulness mode. Take a moment to appreciate the things you\'re grateful for.'**
+  String get tutorialMindfulnessPrompt;
 }
 
 class _AppLocalizationsDelegate

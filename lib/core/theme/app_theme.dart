@@ -61,6 +61,11 @@ class AppTheme {
   /// Use for: Errors, destructive actions, failures
   static const Color error = Color(0xFFF44336);
 
+  /// Info blue
+  ///
+  /// Use for: Informational messages, info dialogs
+  static const Color info = Color(0xFF4A6FA5);
+
   // ========================================
   // TEXT COLORS - WCAG Compliant
   // ========================================
@@ -107,6 +112,13 @@ class AppTheme {
   /// Use for: Input hints, placeholder text, helper text
   static Color textHint = Colors.white.withValues(alpha: 0.65);
 
+  /// Quaternary text - 60% opacity
+  ///
+  /// Contrast ratio: 4.4:1 on [backgroundDark] (AA) ✓
+  ///
+  /// Use for: Very subtle labels, decorative text
+  static Color textQuaternary = Colors.white.withValues(alpha: 0.6);
+
   // ========================================
   // BORDER & OVERLAY COLORS
   // ========================================
@@ -135,6 +147,110 @@ class AppTheme {
   ///
   /// Use for: Light overlays, subtle backgrounds
   static Color overlayLight = primary.withValues(alpha: 0.2);
+
+  // ========================================
+  // BACKGROUND GRADIENTS
+  // ========================================
+
+  /// Bright blue - top of gradient (#4A6FA5)
+  static const Color gradientTop = Color(0xFF4A6FA5);
+
+  /// Dark blue - upper mid of gradient (#166088)
+  static const Color gradientUpperMid = Color(0xFF166088);
+
+  /// Deep navy - lower mid of gradient (#0B1426)
+  static const Color gradientLowerMid = Color(0xFF0B1426);
+
+  /// Dark blue-gray - bottom of gradient (#2C3E50)
+  static const Color gradientBottom = Color(0xFF2C3E50);
+
+  /// Standard background gradient used throughout the app
+  static LinearGradient get backgroundGradient => const LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [gradientTop, gradientUpperMid, gradientLowerMid, gradientBottom],
+  );
+
+  // ========================================
+  // COLOR ALIASES (for backward compatibility)
+  // ========================================
+
+  /// Alias for [backgroundDark] - Dark navy (#1A2238)
+  static Color get primaryDark => backgroundDark;
+
+  /// Alias for [backgroundDark] - Card background (#1A2238)
+  static Color get cardBackground => backgroundDark;
+
+  /// Alias for [backgroundDarker] - Dialog background (#0A0E27)
+  static Color get dialogBackground => backgroundDarker;
+
+  /// Alias for [primary] - Divider color (#FFE135)
+  static Color get divider => primary;
+
+  // ========================================
+  // COLOR VARIATIONS WITH ALPHA
+  // ========================================
+
+  /// Primary color with custom opacity
+  ///
+  /// [alpha] should be between 0.0 and 1.0
+  static Color primaryWithAlpha(double alpha) => primary.withValues(alpha: alpha);
+
+  /// Primary color - Light (50% opacity)
+  static Color primaryLight = primary.withValues(alpha: 0.5);
+
+  /// Primary color - Medium (50% opacity)
+  static Color primaryMedium = primary.withValues(alpha: 0.5);
+
+  /// Primary color - Subtle (20% opacity, decorative only)
+  static Color primarySubtle = primary.withValues(alpha: 0.2);
+
+  /// Primary color - Very subtle (10% opacity, decorative only)
+  static Color primaryVerySubtle = primary.withValues(alpha: 0.1);
+
+  /// Primary dark with custom opacity
+  ///
+  /// [alpha] should be between 0.0 and 1.0
+  static Color primaryDarkWithAlpha(double alpha) => backgroundDark.withValues(alpha: alpha);
+
+  /// Primary dark - Light (95% opacity)
+  static Color primaryDarkLight = backgroundDark.withValues(alpha: 0.95);
+
+  /// Primary dark - Medium (90% opacity)
+  static Color primaryDarkMedium = backgroundDark.withValues(alpha: 0.9);
+
+  // ========================================
+  // STAR COLORS
+  // ========================================
+
+  /// Star yellow color (alias for [primary])
+  static Color get starYellow => primary;
+
+  /// Star white color (alias for [textPrimary])
+  static Color get starWhite => textPrimary;
+
+  /// Star blue color
+  static const Color starBlue = Colors.blue;
+
+  /// Star color palette for gratitude stars
+  static const List<Color> starColorPalette = [
+    Color(0xFFFFF200), // Bright Van Gogh yellow
+    Color(0xFF00BFFF), // Bright sky blue
+    Color(0xFF6A5ACD), // Slate blue
+    Color(0xFFFFD700), // Gold
+    Color(0xFFDA70D6), // Orchid
+    Color(0xFFFF69B4), // Hot pink
+    Color(0xFF00CED1), // Dark turquoise
+    Color(0xFFFFA500), // Orange
+    Color(0xFF32CD32), // Lime green
+    Color(0xFFFF6347), // Tomato red
+    Color(0xFF8A2BE2), // Blue violet
+    Color(0xFFDC143C), // Crimson
+    Color(0xFF00FA9A), // Medium spring green
+    Color(0xFFFF1493), // Deep pink
+    Color(0xFF1E90FF), // Dodger blue
+    Color(0xFFFFB347), // Peach
+  ];
 
   // ========================================
   // SYSTEM UI OVERLAY STYLE

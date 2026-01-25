@@ -68,13 +68,13 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
+                Icon(Icons.check_circle, color: AppTheme.textPrimary),
                 SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l10n.passwordResetEmailSent,
                     style: FontScaling.getBodySmall(context).copyWith(
-                      color: Colors.white,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                 ),
@@ -129,7 +129,7 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
             Text(
               l10n.passwordResetMessage,
               style: FontScaling.getBodyMedium(context).copyWith(
-                color: Colors.white70,
+                color: AppTheme.textSecondary,
               ),
             ),
             SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
@@ -148,7 +148,7 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
                   hintText: l10n.emailHint,
                   hintStyle: FontScaling.getInputHint(context),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.1),
+                  fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
                   prefixIcon: Icon(Icons.email, color: AppTheme.primary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -180,21 +180,21 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
                   FontScaling.getResponsiveSpacing(context, 12),
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.2),
+                  color: AppTheme.error.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.red.withValues(alpha: 0.5),
+                    color: AppTheme.error.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red, size: 20),
+                    Icon(Icons.error_outline, color: AppTheme.error, size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _errorMessage!,
                         style: FontScaling.getBodySmall(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: AppTheme.textPrimary.withValues(alpha: 0.9),
                         ),
                       ),
                     ),
@@ -211,7 +211,7 @@ class _PasswordResetDialogState extends State<PasswordResetDialog> {
             child: Text(
               l10n.cancel,
               style: FontScaling.getButtonText(context).copyWith(
-                color: Colors.white70,
+                color: AppTheme.textSecondary,
               ),
             ),
           ),

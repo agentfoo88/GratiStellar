@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/auth_service.dart';
@@ -71,10 +72,10 @@ class _SignInPromptBannerState extends State<SignInPromptBanner> {
         vertical: FontScaling.getResponsiveSpacing(context, 12),
       ),
       decoration: BoxDecoration(
-        color: Color(0xFFFFE135).withValues(alpha: 0.15),
+        color: AppTheme.primary.withValues(alpha: 0.15),
         border: Border(
           bottom: BorderSide(
-            color: Color(0xFFFFE135).withValues(alpha: 0.3),
+            color: AppTheme.primary.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -84,7 +85,7 @@ class _SignInPromptBannerState extends State<SignInPromptBanner> {
           // Cloud icon
           Icon(
             Icons.cloud_upload,
-            color: Color(0xFFFFE135),
+            color: AppTheme.primary,
             size: FontScaling.getResponsiveIconSize(context, 24),
           ),
           SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
@@ -93,7 +94,7 @@ class _SignInPromptBannerState extends State<SignInPromptBanner> {
             child: Text(
               l10n.signInPromptMessage,
               style: FontScaling.getBodySmall(context).copyWith(
-                color: Colors.white,
+                color: AppTheme.textPrimary,
               ),
             ),
           ),
@@ -115,8 +116,8 @@ class _SignInPromptBannerState extends State<SignInPromptBanner> {
                   horizontal: FontScaling.getResponsiveSpacing(context, 12),
                   vertical: FontScaling.getResponsiveSpacing(context, 8),
                 ),
-                backgroundColor: Color(0xFFFFE135),
-                foregroundColor: Color(0xFF1A2238),
+                backgroundColor: AppTheme.primary,
+                foregroundColor: AppTheme.backgroundDark,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -125,7 +126,7 @@ class _SignInPromptBannerState extends State<SignInPromptBanner> {
                 l10n.signInPromptButton,
                 style: FontScaling.getBodySmall(context).copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A2238),
+                  color: AppTheme.backgroundDark,
                 ),
               ),
             ),
@@ -143,7 +144,7 @@ class _SignInPromptBannerState extends State<SignInPromptBanner> {
               },
               icon: Icon(
                 Icons.close,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: AppTheme.textPrimary.withValues(alpha: 0.7),
                 size: FontScaling.getResponsiveIconSize(context, 20),
               ),
               padding: EdgeInsets.zero,

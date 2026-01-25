@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../camera_controller.dart';
 import '../core/animation/animation_manager.dart';
+import '../core/theme/app_theme.dart';
 import '../features/gratitudes/presentation/widgets/camera_controls_overlay.dart';
 import '../features/gratitudes/presentation/state/gratitude_provider.dart';
 import '../features/gratitudes/presentation/widgets/account_dialog.dart';
@@ -37,10 +38,13 @@ import '../services/auth_service.dart';
 import '../services/daily_reminder_service.dart';
 import '../services/layer_cache_service.dart';
 import '../services/sync_status_service.dart';
+import '../services/tutorial_service.dart';
 import '../starfield.dart';
 import '../storage.dart';
 import 'trash_screen.dart';
 import '../core/utils/app_logger.dart';
+import '../features/gratitudes/presentation/widgets/tutorial_tooltip.dart';
+import '../core/accessibility/motion_helper.dart';
 
 class GratitudeScreen extends StatefulWidget {
   const GratitudeScreen({super.key});
@@ -70,6 +74,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   Size? _lastKnownSize;
   bool _isRegeneratingLayers = false;
   bool _allowRegeneration = false;
+  bool _hasCheckedStarButtonTutorial = false;
 
   // Birth animation completion handler (class-level method)
   void _completeBirthAnimation() async {
@@ -80,6 +85,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
       // Capture context-dependent values before async gap
       final reminderService = context.read<DailyReminderService>();
+      final tutorialService = context.read<TutorialService>();
       final screenSize = MediaQuery.of(context).size;
 
       await provider.completeBirthAnimation();
@@ -101,6 +107,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
       // Check if we should show reminder prompt
       _checkAndShowReminderPrompt();
+
+      // Check if we should show mindfulness tutorial (after 3 stars)
+      tutorialService.checkMindfulnessTutorial(provider.gratitudeStars.length);
     }
   }
 
@@ -111,6 +120,15 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       mounted: () => mounted,
     );
     await reminderController.checkAndShowReminderPrompt();
+  }
+
+  // Check if we should show the star button tutorial
+  void _checkAndShowStarButtonTutorial(int starCount) {
+    if (starCount == 0) {
+      final tutorialService = context.read<TutorialService>();
+      final reduceMotion = MotionHelper.shouldReduceMotion(context);
+      tutorialService.checkAndShowStarButtonTutorial(reduceMotion: reduceMotion);
+    }
   }
 
   Future<void> _regenerateLayersForNewSize(Size newSize) async {
@@ -529,6 +547,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   void _toggleMindfulness() {
     final provider = context.read<GratitudeProvider>();
 
+    // Dismiss mindfulness tutorial when user taps the mindfulness button
+    final tutorialService = context.read<TutorialService>();
+    tutorialService.dismissMindfulnessTutorial();
+
     // Check if there are fewer than 2 stars before toggling
     if (provider.gratitudeStars.length < 2 && !provider.mindfulnessMode) {
       GratitudeDialogs.showMindfulnessNoStars(context);
@@ -565,6 +587,10 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
   void _showAddGratitudeModal() {
     final provider = context.read<GratitudeProvider>();
+
+    // Dismiss star button tutorial when user taps the star button
+    final tutorialService = context.read<TutorialService>();
+    tutorialService.dismissStarButtonTutorial();
 
     GratitudeDialogs.showAddGratitude(
       context: context,
@@ -603,7 +629,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         return SizedBox.shrink();
       case SyncStatus.pending:
         icon = Icons.cloud_upload_outlined;
-        color = Colors.orange;
+        color = AppTheme.warning;
         tooltip = l10n.syncStatusPending;
         break;
       case SyncStatus.syncing:
@@ -618,7 +644,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
         break;
       case SyncStatus.error:
         icon = Icons.cloud_sync_outlined;
-        color = Colors.red;
+        color = AppTheme.error;
         tooltip = l10n.syncStatusError;
         break;
     }
@@ -736,7 +762,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
             style: FontScaling.getBodyMedium(context),
             overflow: TextOverflow.ellipsis,
           ),
-          backgroundColor: result ? Colors.green : Colors.red,
+          backgroundColor: result ? AppTheme.success : AppTheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -759,6 +785,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GratitudeProvider>();
+    final tutorialService = context.watch<TutorialService>();
     final l10n = AppLocalizations.of(context)!;
 
     // Get all state from provider
@@ -798,6 +825,25 @@ class _GratitudeScreenState extends State<GratitudeScreen>
           );
         }
       });
+    }
+
+    // Check for star button tutorial when loading completes with empty stars
+    // Only check once to prevent infinite loop from notifyListeners()
+    if (!isLoading && 
+        gratitudeStars.isEmpty && 
+        tutorialService.isInitialized && 
+        !_hasCheckedStarButtonTutorial) {
+      _hasCheckedStarButtonTutorial = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _checkAndShowStarButtonTutorial(gratitudeStars.length);
+        }
+      });
+    }
+    
+    // Reset flag if stars are added (so tutorial can show again if stars are deleted)
+    if (gratitudeStars.isNotEmpty && _hasCheckedStarButtonTutorial) {
+      _hasCheckedStarButtonTutorial = false;
     }
 
     final currentSize = MediaQuery.of(context).size;
@@ -972,6 +1018,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                       mindfulnessMode: mindfulnessMode,
                       isAnimating: isAnimating,
                       mindfulnessInterval: mindfulnessInterval,
+                      shouldPulse: tutorialService.showingStarButtonPulse,
                       onToggleShowAll: _toggleShowAll,
                       onToggleMindfulness: _toggleMindfulness,
                       onAddStar: _showAddGratitudeModal,
@@ -979,6 +1026,20 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                           _onMindfulnessIntervalChanged,
                     ),
                   ),
+                ),
+
+              // Tutorial: Star button tooltip
+              if (!_showBranding && tutorialService.showingStarButtonTooltip)
+                StarButtonTutorialTooltip(
+                  message: l10n.tutorialTapToCreateStar,
+                  onDismiss: () => tutorialService.dismissStarButtonTutorial(),
+                ),
+
+              // Tutorial: Mindfulness button tooltip
+              if (!_showBranding && tutorialService.showingMindfulnessTooltip)
+                MindfulnessTutorialTooltip(
+                  message: l10n.tutorialMindfulnessPrompt,
+                  onDismiss: () => tutorialService.dismissMindfulnessTutorial(),
                 ),
 
               // Empty state message
@@ -1004,7 +1065,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                         children: [
                           CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(0xFFFFE135),
+                              AppTheme.primary,
                             ),
                           ),
                           SizedBox(height: 16),
@@ -1012,7 +1073,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                             l10n.adjustingStarFieldMessage,
                             style: FontScaling.getBodyMedium(
                               context,
-                            ).copyWith(color: Colors.white),
+                            ).copyWith(color: AppTheme.textPrimary),
                           ),
                         ],
                       ),

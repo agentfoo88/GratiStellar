@@ -46,13 +46,13 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
 
     return Theme(
       data: Theme.of(context).copyWith(
-        highlightColor: Colors.white.withValues(alpha: 0.1),
-        splashColor: Colors.white.withValues(alpha: 0.05),
-        hoverColor: Colors.white.withValues(alpha: 0.08),
-        focusColor: Colors.white.withValues(alpha: 0.12),
+        highlightColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+        splashColor: AppTheme.textPrimary.withValues(alpha: 0.05),
+        hoverColor: AppTheme.textPrimary.withValues(alpha: 0.08),
+        focusColor: AppTheme.textPrimary.withValues(alpha: 0.12),
         colorScheme: Theme.of(context).colorScheme.copyWith(
-          primary: Colors.white.withValues(alpha: 0.3),
-          onSurface: Colors.white,
+          primary: AppTheme.textPrimary.withValues(alpha: 0.3),
+          onSurface: AppTheme.textPrimary,
         ),
       ),
       child: Dialog(
@@ -101,7 +101,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                   l10n.feedbackTypeLabel,
                   style: FontScaling.getBodyMedium(
                     context,
-                  ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                  ).copyWith(color: AppTheme.textPrimary.withValues(alpha: 0.9)),
                 ),
                 SizedBox(
                   height: FontScaling.getResponsiveSpacing(context, 8),
@@ -109,11 +109,11 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                 DropdownButtonFormField<String>(
                   initialValue: _selectedType,
                   dropdownColor: AppTheme.backgroundDark,
-                  focusColor: Colors.white.withValues(alpha: 0.12),
+                  focusColor: AppTheme.textPrimary.withValues(alpha: 0.12),
                   style: FontScaling.getInputText(context),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    fillColor: AppTheme.textPrimary.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
@@ -170,7 +170,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                   l10n.feedbackMessageLabel,
                   style: FontScaling.getBodyMedium(
                     context,
-                  ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                  ).copyWith(color: AppTheme.textPrimary.withValues(alpha: 0.9)),
                 ),
                 SizedBox(
                   height: FontScaling.getResponsiveSpacing(context, 8),
@@ -184,7 +184,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                       context,
                     ).copyWith(color: AppTheme.textHint),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    fillColor: AppTheme.textPrimary.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
@@ -238,7 +238,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                     l10n.feedbackEmailLabel,
                     style: FontScaling.getBodyMedium(
                       context,
-                    ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                    ).copyWith(color: AppTheme.textPrimary.withValues(alpha: 0.9)),
                   ),
                   SizedBox(
                     height: FontScaling.getResponsiveSpacing(context, 8),
@@ -258,7 +258,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                             color: AppTheme.textDisabled,
                           ),
                       filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.05),
+                      fillColor: AppTheme.textPrimary.withValues(alpha: 0.05),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(

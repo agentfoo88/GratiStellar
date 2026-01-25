@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/accessibility/semantic_helper.dart';
 import '../../core/config/constants.dart';
+import '../../core/theme/app_theme.dart';
 import '../../font_scaling.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/onboarding_service.dart';
@@ -152,17 +153,17 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1A2238),
+          backgroundColor: AppTheme.backgroundDark,
           title: Text(
             l10n.ageGateUnder13Title,
             style: FontScaling.getHeadingMedium(context).copyWith(
-              color: const Color(0xFFFFE135),
+              color: AppTheme.primary,
             ),
           ),
           content: Text(
             l10n.ageGateUnder13Message,
             style: FontScaling.getBodyMedium(context).copyWith(
-              color: Colors.white, // Explicit white for better contrast on dark background
+              color: AppTheme.textPrimary, // Explicit white for better contrast on dark background
             ),
           ),
           actions: [
@@ -177,7 +178,7 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
                 child: Text(
                   l10n.exitButton,
                   style: FontScaling.getButtonText(context).copyWith(
-                    color: const Color(0xFFFFE135),
+                    color: AppTheme.primary,
                   ),
                 ),
               ),
@@ -212,7 +213,7 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
           ),
           child: const Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
             ),
           ),
         ),
@@ -255,7 +256,7 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
                     Icons.cake_outlined,
                     size: FontScaling.getResponsiveIconSize(context, 80) *
                         UIConstants.universalUIScale,
-                    color: const Color(0xFFFFE135),
+                    color: AppTheme.primary,
                   ),
 
                   SizedBox(
@@ -288,7 +289,7 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
                           _handleAgeConfirmation(context, true);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFE135),
+                          backgroundColor: AppTheme.primary,
                           padding: EdgeInsets.symmetric(
                             vertical:
                                 FontScaling.getResponsiveSpacing(context, 16) *
@@ -302,7 +303,7 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
                         child: Text(
                           l10n.ageGateYesButton,
                           style: FontScaling.getButtonText(context).copyWith(
-                            color: const Color(0xFF1A2238),
+                            color: AppTheme.textOnLight,
                           ),
                         ),
                       ),
@@ -328,7 +329,7 @@ class _AgeGateScreenState extends State<AgeGateScreen> {
                         },
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
-                            color: const Color(0xFFFFE135).withValues(alpha: 0.5),
+                            color: AppTheme.primary.withValues(alpha: 0.5),
                           ),
                           padding: EdgeInsets.symmetric(
                             vertical:

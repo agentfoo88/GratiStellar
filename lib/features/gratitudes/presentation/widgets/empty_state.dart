@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/config/constants.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -23,7 +24,7 @@ class EmptyStateWidget extends StatelessWidget {
               'assets/icon_star.svg',
               width: FontScaling.getResponsiveIconSize(context, 64) * UIConstants.universalUIScale,
               height: FontScaling.getResponsiveIconSize(context, 64) * UIConstants.universalUIScale,
-              colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.3), BlendMode.srcIn),
+              colorFilter: ColorFilter.mode(AppTheme.textPrimary.withValues(alpha: 0.3), BlendMode.srcIn),
             ),
             SizedBox(height: FontScaling.getResponsiveSpacing(context, 24) * UIConstants.universalUIScale),
             Text(

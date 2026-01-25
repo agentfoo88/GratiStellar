@@ -47,10 +47,10 @@ class GalaxyPickerBottomSheet extends StatelessWidget {
         return SafeArea(
           child: Theme(
             data: Theme.of(context).copyWith(
-              highlightColor: Colors.white.withValues(alpha: 0.1),
-              splashColor: Colors.white.withValues(alpha: 0.05),
-              hoverColor: Colors.white.withValues(alpha: 0.08),
-              focusColor: Colors.white.withValues(alpha: 0.12),
+              highlightColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+              splashColor: AppTheme.textPrimary.withValues(alpha: 0.05),
+              hoverColor: AppTheme.textPrimary.withValues(alpha: 0.08),
+              focusColor: AppTheme.textPrimary.withValues(alpha: 0.12),
             ),
             child: Container(
             constraints: BoxConstraints(
@@ -150,7 +150,7 @@ class GalaxyPickerBottomSheet extends StatelessWidget {
                   Text(
                     galaxy.name,
                     style: FontScaling.getBodyLarge(context).copyWith(
-                      color: Colors.white,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),

@@ -56,7 +56,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               hint: l10n.closeAppHint,
               isButton: true,
               child: IconButton(
-                icon: Icon(Icons.close, color: Colors.white),
+                icon: Icon(Icons.close, color: AppTheme.textPrimary),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
@@ -119,7 +119,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                       child: IconButton(
                         icon: Icon(
                           Icons.close,
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                           size:
                               FontScaling.getResponsiveIconSize(context, 24) *
                               UIConstants.universalUIScale,
@@ -215,7 +215,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                           _deleteSelectedGalaxies(context, galaxyProvider),
                       icon: Icon(
                         Icons.delete_outline,
-                        color: Colors.white,
+                        color: AppTheme.textPrimary,
                         size:
                             FontScaling.getResponsiveIconSize(context, 20) *
                             UIConstants.universalUIScale,
@@ -223,7 +223,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                       label: Text(
                         l10n.deleteSelected,
                         style: FontScaling.getBodySmall(context).copyWith(
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                           fontSize:
                               FontScaling.getBodySmall(context).fontSize! *
                               UIConstants.universalUIScale,
@@ -231,7 +231,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.withValues(alpha: 0.8),
+                        backgroundColor: AppTheme.error.withValues(alpha: 0.8),
                         padding: EdgeInsets.symmetric(
                           vertical:
                               FontScaling.getResponsiveSpacing(context, 12) *
@@ -309,7 +309,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                 l10n.createNewGalaxy,
                 style: FontScaling.getBodyMedium(context).copyWith(
                   color: AppTheme.backgroundDark,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontScaling.mediumWeight,
                   fontSize:
                       FontScaling.getBodyMedium(context).fontSize! *
                       UIConstants.universalUIScale,
@@ -441,7 +441,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                     )
                   : Icon(
                       Icons.stars,
-                      color: isActive ? AppTheme.primary : Colors.white70,
+                      color: isActive ? AppTheme.primary : AppTheme.textSecondary,
                       size:
                           FontScaling.getResponsiveIconSize(context, 32) *
                           UIConstants.universalUIScale,
@@ -466,10 +466,10 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                             style: FontScaling.getBodyLarge(context).copyWith(
                               color: isActive
                                   ? AppTheme.primary
-                                  : Colors.white,
+                                  : AppTheme.textPrimary,
                               fontWeight: isActive
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
+                                  ? FontScaling.mediumWeight
+                                  : FontScaling.normalWeight,
                               fontSize:
                                   FontScaling.getBodyLarge(context).fontSize! *
                                   UIConstants.universalUIScale,
@@ -516,7 +516,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                     Text(
                       l10n.galaxyStats(galaxy.starCount, formattedDate),
                       style: FontScaling.getCaption(context).copyWith(
-                        color: isActive ? Colors.white70 : Colors.white60,
+                        color: isActive ? AppTheme.textSecondary : AppTheme.textTertiary,
                         fontSize:
                             FontScaling.getCaption(context).fontSize! *
                             UIConstants.universalUIScale,
@@ -536,7 +536,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   child: IconButton(
                     icon: Icon(
                       Icons.edit_outlined,
-                      color: isActive ? AppTheme.primary : Colors.white60,
+                      color: isActive ? AppTheme.primary : AppTheme.textTertiary,
                       size:
                           FontScaling.getResponsiveIconSize(context, 20) *
                           UIConstants.universalUIScale,
@@ -552,7 +552,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   SizedBox(width: FontScaling.getResponsiveSpacing(context, 4)),
                   Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.white60,
+                    color: AppTheme.textTertiary,
                     size:
                         FontScaling.getResponsiveIconSize(context, 16) *
                         UIConstants.universalUIScale,
@@ -587,7 +587,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
             Text(
               l10n.noGalaxiesYet,
               style: FontScaling.getHeadingMedium(context).copyWith(
-                color: Colors.white,
+                color: AppTheme.textPrimary,
                 fontSize:
                     FontScaling.getHeadingMedium(context).fontSize! *
                     UIConstants.universalUIScale,
@@ -598,7 +598,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
             Text(
               l10n.createYourFirstGalaxy,
               style: FontScaling.getBodyMedium(context).copyWith(
-                color: Colors.white70,
+                color: AppTheme.textSecondary,
                 fontSize:
                     FontScaling.getBodyMedium(context).fontSize! *
                     UIConstants.universalUIScale,
@@ -660,7 +660,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
             l10n.galaxySwitchFailed(error.userMessage),
             style: bodyMediumStyle,
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.error,
         ),
       );
     }
@@ -749,7 +749,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               : l10n.deleteSelected,
           style: FontScaling.getHeadingMedium(
             dialogContext,
-          ).copyWith(color: Colors.red),
+          ).copyWith(color: AppTheme.error),
         ),
         content: Text(
           isDeletingAllGalaxies
@@ -757,7 +757,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               : l10n.deleteSelectedGalaxies(count),
           style: FontScaling.getBodyMedium(
             dialogContext,
-          ).copyWith(color: Colors.white),
+          ).copyWith(color: AppTheme.textPrimary),
         ),
         actions: [
           TextButton(
@@ -766,14 +766,14 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
               l10n.cancelButton,
               style: FontScaling.getButtonText(
                 dialogContext,
-              ).copyWith(color: Colors.white70),
+              ).copyWith(color: AppTheme.textSecondary),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.error,
+              foregroundColor: AppTheme.textPrimary,
             ),
             child: Text(
               isDeletingAllGalaxies
@@ -781,7 +781,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   : l10n.deleteButton,
               style: FontScaling.getButtonText(
                 dialogContext,
-              ).copyWith(color: Colors.white),
+              ).copyWith(color: AppTheme.textPrimary),
             ),
           ),
         ],
@@ -819,7 +819,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
             SnackBar(
               content: Text(
                 successMessage,
-                style: textStyle.copyWith(color: Colors.white),
+                style: textStyle.copyWith(color: AppTheme.textPrimary),
               ),
               backgroundColor: AppTheme.backgroundDark,
               duration: Duration(seconds: 2),
@@ -833,9 +833,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
           SnackBar(
             content: Text(
               'Error deleting galaxies: $e',
-              style: textStyle.copyWith(color: Colors.white),
+              style: textStyle.copyWith(color: AppTheme.textPrimary),
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
             duration: Duration(seconds: 3),
           ),
         );
@@ -856,13 +856,13 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
       context: context,
       builder: (dialogContext) => Theme(
         data: Theme.of(dialogContext).copyWith(
-          highlightColor: Colors.white.withValues(alpha: 0.1),
-          splashColor: Colors.white.withValues(alpha: 0.05),
-          hoverColor: Colors.white.withValues(alpha: 0.08),
-          focusColor: Colors.white.withValues(alpha: 0.12),
+          highlightColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+          splashColor: AppTheme.textPrimary.withValues(alpha: 0.05),
+          hoverColor: AppTheme.textPrimary.withValues(alpha: 0.08),
+          focusColor: AppTheme.textPrimary.withValues(alpha: 0.12),
           colorScheme: Theme.of(dialogContext).colorScheme.copyWith(
-            primary: Colors.white.withValues(alpha: 0.3),
-            onSurface: Colors.white,
+            primary: AppTheme.textPrimary.withValues(alpha: 0.3),
+            onSurface: AppTheme.textPrimary,
             surfaceTint: Colors.transparent,
           ),
           dropdownMenuTheme: DropdownMenuThemeData(
@@ -904,7 +904,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                   label: l10n.moveStarsTo,
                   child: DropdownButtonFormField<String>(
                     initialValue: selectedGalaxyId,
-                    focusColor: Colors.white.withValues(alpha: 0.12),
+                    focusColor: AppTheme.textPrimary.withValues(alpha: 0.12),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: AppTheme.backgroundDarker,
@@ -1019,7 +1019,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
             SnackBar(
               content: Text(
                 l10n.starsMovedSuccess(movedCount, targetGalaxyName),
-                style: textStyle.copyWith(color: Colors.white),
+                style: textStyle.copyWith(color: AppTheme.textPrimary),
               ),
               backgroundColor: AppTheme.backgroundDark,
               duration: Duration(seconds: 2),
@@ -1033,9 +1033,9 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
           SnackBar(
             content: Text(
               'Error: $e',
-              style: textStyle.copyWith(color: Colors.white),
+              style: textStyle.copyWith(color: AppTheme.textPrimary),
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
             duration: Duration(seconds: 3),
           ),
         );
@@ -1103,7 +1103,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
               l10n.nameYourGalaxy,
               style: FontScaling.getBodyMedium(
                 context,
-              ).copyWith(color: Colors.white),
+              ).copyWith(color: AppTheme.textPrimary),
             ),
             SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
             SemanticHelper.label(
@@ -1113,12 +1113,12 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
                 controller: _controller,
                 style: FontScaling.getBodyMedium(
                   context,
-                ).copyWith(color: Colors.white),
+                ).copyWith(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   hintText: l10n.galaxyNameHint,
                   hintStyle: FontScaling.getBodyMedium(
                     context,
-                  ).copyWith(color: Colors.white60),
+                  ).copyWith(color: AppTheme.textTertiary),
                   border: OutlineInputBorder(
                     borderSide: BorderSide(color: AppTheme.primary),
                   ),
@@ -1141,7 +1141,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
               l10n.createGalaxyDescription,
               style: FontScaling.getCaption(
                 context,
-              ).copyWith(color: Colors.white70),
+              ).copyWith(color: AppTheme.textSecondary),
             ),
           ],
         ),
@@ -1153,7 +1153,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
             l10n.cancel,
             style: FontScaling.getButtonText(
               context,
-            ).copyWith(color: Colors.white70),
+            ).copyWith(color: AppTheme.textSecondary),
           ),
         ),
         ElevatedButton(
@@ -1230,7 +1230,7 @@ class _CreateGalaxyDialogState extends State<CreateGalaxyDialog> {
             l10n.galaxyCreateFailed(error.userMessage),
             style: textStyle,
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.error,
         ),
       );
     } finally {
@@ -1317,10 +1317,10 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
                   controller: _controller,
                   style: FontScaling.getBodyMedium(
                     context,
-                  ).copyWith(color: Colors.white),
+                  ).copyWith(color: AppTheme.textPrimary),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.1),
+                    fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: AppTheme.primary),
@@ -1355,7 +1355,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
                       l10n.deleteButton,
                       style: FontScaling.getButtonText(
                         context,
-                      ).copyWith(color: Colors.red.withValues(alpha: 0.8)),
+                      ).copyWith(color: AppTheme.error.withValues(alpha: 0.8)),
                     ),
                   ),
                   const Spacer(),
@@ -1367,7 +1367,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
                       l10n.cancel,
                       style: FontScaling.getButtonText(
                         context,
-                      ).copyWith(color: Colors.white70),
+                      ).copyWith(color: AppTheme.textSecondary),
                     ),
                   ),
                   SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
@@ -1425,13 +1425,13 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
       context: context,
       builder: (dialogContext) => Theme(
         data: Theme.of(dialogContext).copyWith(
-          highlightColor: Colors.white.withValues(alpha: 0.1),
-          splashColor: Colors.white.withValues(alpha: 0.05),
-          hoverColor: Colors.white.withValues(alpha: 0.08),
-          focusColor: Colors.white.withValues(alpha: 0.12),
+          highlightColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+          splashColor: AppTheme.textPrimary.withValues(alpha: 0.05),
+          hoverColor: AppTheme.textPrimary.withValues(alpha: 0.08),
+          focusColor: AppTheme.textPrimary.withValues(alpha: 0.12),
           colorScheme: Theme.of(dialogContext).colorScheme.copyWith(
-            primary: Colors.white.withValues(alpha: 0.3),
-            onSurface: Colors.white,
+            primary: AppTheme.textPrimary.withValues(alpha: 0.3),
+            onSurface: AppTheme.textPrimary,
             surfaceTint: Colors.transparent,
           ),
           dropdownMenuTheme: DropdownMenuThemeData(
@@ -1474,7 +1474,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
                       label: l10n.moveStarsTo,
                       child: DropdownButtonFormField<String>(
                         initialValue: selectedGalaxyId,
-                        focusColor: Colors.white.withValues(alpha: 0.12),
+                        focusColor: AppTheme.textPrimary.withValues(alpha: 0.12),
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: AppTheme.backgroundDarker,
@@ -1601,7 +1601,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
             l10n.galaxyDeleteFailed(error.userMessage),
             style: textStyle,
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.error,
         ),
       );
     } finally {
@@ -1626,7 +1626,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
           isLastGalaxy ? l10n.deleteLastGalaxyTitle : l10n.deleteGalaxy,
           style: FontScaling.getHeadingMedium(
             context,
-          ).copyWith(color: Colors.red),
+          ).copyWith(color: AppTheme.error),
         ),
         content: Text(
           isLastGalaxy
@@ -1637,7 +1637,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
                 ),
           style: FontScaling.getBodyMedium(
             context,
-          ).copyWith(color: Colors.white),
+          ).copyWith(color: AppTheme.textPrimary),
         ),
         actions: [
           TextButton(
@@ -1646,7 +1646,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
               l10n.cancel,
               style: FontScaling.getButtonText(
                 context,
-              ).copyWith(color: Colors.white70),
+              ).copyWith(color: AppTheme.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1655,8 +1655,8 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
               _deleteGalaxy();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.error,
+              foregroundColor: AppTheme.textPrimary,
             ),
             child: Text(
               isLastGalaxy ? l10n.deleteLastGalaxyButton : l10n.deleteButton,
@@ -1724,7 +1724,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
             l10n.galaxyDeleteFailed(error.userMessage),
             style: textStyle,
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.error,
         ),
       );
     } finally {
@@ -1787,7 +1787,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
             l10n.galaxyRenameFailed(error.userMessage),
             style: textStyle,
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.error,
         ),
       );
     } finally {

@@ -6,7 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/accessibility/semantic_helper.dart';
-import '../../../../core/config/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -106,7 +106,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
     return Drawer(
       width: _getResponsiveDrawerWidth(context),
-      backgroundColor: AppColors.primaryDark.withValues(alpha: 0.98),
+      backgroundColor: AppTheme.primaryDark.withValues(alpha: 0.98),
       child: Scrollbar(
         controller: _scrollController,
         thumbVisibility: false,
@@ -153,8 +153,8 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          AppColors.gradientTop.withValues(alpha: 0.3),
-                          AppColors.primaryDark,
+                          AppTheme.gradientTop.withValues(alpha: 0.3),
+                          AppTheme.primaryDark,
                         ],
                       ),
                     ),
@@ -168,7 +168,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                                 'assets/icon_star.svg',
                                 width: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
                                 height: FontScaling.getResponsiveIconSize(context, 48) * UIConstants.universalUIScale,
-                                colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
+                                colorFilter: ColorFilter.mode(AppTheme.primary, BlendMode.srcIn),
                               ),
                             ),
                             SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
@@ -177,7 +177,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                                 l10n.appTitle,
                                 style: FontScaling.getHeadingMedium(context).copyWith(
                                   fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
-                                  color: AppColors.primary,
+                                  color: AppTheme.primary,
                                 ),
                               ),
                             ),
@@ -187,7 +187,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         Text(
                           l10n.activeGalaxyLabel(galaxyName),
                           style: FontScaling.getBodySmall(context).copyWith(
-                            color: Colors.white70,
+                            color: AppTheme.textSecondary,
                           ),
                         ),
                         SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),
@@ -196,22 +196,22 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                             Text(
                               '$starCount ${starCount == 1 ? "star" : "stars"}',
                               style: FontScaling.getCaption(context).copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primary,
+                                fontWeight: FontScaling.mediumWeight,
                               ),
                             ),
                             SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
                             Text(
                               l10n.drawerStatsToday(todayCount),
                               style: FontScaling.getCaption(context).copyWith(
-                                color: Colors.white60,
+                                color: AppTheme.textTertiary,
                               ),
                             ),
                             SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
                             Text(
                               l10n.drawerStatsThisWeek(weekCount),
                               style: FontScaling.getCaption(context).copyWith(
-                                color: Colors.white60,
+                                color: AppTheme.textTertiary,
                               ),
                             ),
                           ],
@@ -234,7 +234,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             child: ListTile(
               leading: Icon(
                 Icons.list,
-                color: AppColors.primary,
+                color: AppTheme.primary,
                 size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
               ),
               title: Text(
@@ -259,7 +259,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             child: ListTile(
               leading: Icon(
                 Icons.stars,
-                color: AppColors.primary,
+                color: AppTheme.primary,
                 size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
               ),
               title: Text(
@@ -292,7 +292,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 child: ListTile(
                   leading: Icon(
                     Icons.delete_outline,
-                    color: AppColors.primary,
+                    color: AppTheme.primary,
                     size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
                   ),
                   title: Text(
@@ -305,13 +305,13 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                       ? Container(
                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.warning,
+                            color: AppTheme.warning,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             '$trashCount',
                             style: FontScaling.getCaption(context).copyWith(
-                              color: Colors.white,
+                              color: AppTheme.textPrimary,
                               fontWeight: FontWeight.bold,
                               fontSize: (FontScaling.getCaption(context).fontSize ?? 12) * 0.9,
                             ),
@@ -333,20 +333,20 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ExpansionTile(
             leading: Icon(
               Icons.settings,
-              color: AppColors.primary,
+              color: AppTheme.primary,
               size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
             ),
             title: Text(
               l10n.settingsSection,
               style: FontScaling.getBodyMedium(context).copyWith(
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
+                color: AppTheme.textPrimary,
+                fontWeight: FontScaling.mediumWeight,
               ),
             ),
-            iconColor: AppColors.primary,
-            collapsedIconColor: AppColors.primary.withValues(alpha: 0.7),
-            backgroundColor: Colors.white.withValues(alpha: 0.03),
+            iconColor: AppTheme.primary,
+            collapsedIconColor: AppTheme.primary.withValues(alpha: 0.7),
+            backgroundColor: AppTheme.textPrimary.withValues(alpha: 0.03),
             collapsedBackgroundColor: Colors.transparent,
             children: [
               // Font Size Setting
@@ -358,11 +358,11 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 ),
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.text_fields, color: Colors.white70),
+                  leading: Icon(Icons.text_fields, color: AppTheme.textSecondary),
                   title: Text(
                     l10n.fontSize,
                     style: FontScaling.getBodyMedium(context).copyWith(
-                      color: Colors.white,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   subtitle: StatefulBuilder(
@@ -374,7 +374,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                           Text(
                             '${(textScaleFactor * 100).round()}%',
                             style: FontScaling.getBodySmall(context).copyWith(
-                              color: Colors.white70,
+                              color: AppTheme.textSecondary,
                             ),
                           ),
                           SemanticHelper.label(
@@ -386,11 +386,11 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                               max: 1.75,
                               divisions: 4,
                               label: '${(textScaleFactor * 100).round()}%',
-                              activeColor: AppColors.primary,
-                              inactiveColor: Colors.white24,
-                              thumbColor: AppColors.primary,
+                              activeColor: AppTheme.primary,
+                              inactiveColor: AppTheme.textDisabled,
+                              thumbColor: AppTheme.primary,
                               overlayColor: WidgetStateProperty.all(
-                                AppColors.primary.withValues(alpha: 0.1),
+                                AppTheme.primary.withValues(alpha: 0.1),
                               ),
                               onChanged: (value) async {
                                 setSliderState(() {
@@ -407,7 +407,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                             l10n.fontPreviewText,
                             style: TextStyle(
                               fontSize: 16 * textScaleFactor,
-                              color: Colors.white70,
+                              color: AppTheme.textSecondary,
                             ),
                           ),
                           SizedBox(height: 4),
@@ -442,13 +442,13 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.palette, color: Colors.white70, size: FontScaling.getResponsiveIconSize(context, 24)),
+                        Icon(Icons.palette, color: AppTheme.textSecondary, size: FontScaling.getResponsiveIconSize(context, 24)),
                         SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
                         Flexible(
                           child: Text(
                             l10n.defaultStarColor,
                             style: FontScaling.getBodyMedium(context).copyWith(
-                              color: Colors.white,
+                              color: AppTheme.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -460,7 +460,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                           decoration: BoxDecoration(
                             color: displayColor,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white54, width: 2),
+                            border: Border.all(color: AppTheme.textTertiary, width: 2),
                           ),
                         ),
                         const Spacer(),
@@ -469,7 +469,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                             await StorageService.clearDefaultColor();
                             setState(() {}); // Refresh to hide
                           },
-                          icon: Icon(Icons.clear, size: 20, color: Colors.white54),
+                          icon: Icon(Icons.clear, size: 20, color: AppTheme.textTertiary),
                           tooltip: l10n.clearDefaultColor,
                           padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 8)),
                           constraints: const BoxConstraints(),
@@ -494,7 +494,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         reminderService.isEnabled
                             ? Icons.notifications_active
                             : Icons.notifications_none,
-                        color: AppColors.primary,
+                        color: AppTheme.primary,
                         size: FontScaling.getResponsiveIconSize(context, 24) *
                             UIConstants.universalUIScale,
                       ),
@@ -518,7 +518,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                           : null,
                       trailing: Switch(
                         value: reminderService.isEnabled,
-                        activeTrackColor: AppColors.primary,
+                        activeTrackColor: AppTheme.primary,
                         onChanged: (value) async {
                           HapticFeedback.selectionClick();
                           try {
@@ -532,7 +532,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                                         l10n.reminderPermissionDenied,
                                         style: FontScaling.getBodyMedium(context),
                                       ),
-                                      backgroundColor: Colors.red,
+                                      backgroundColor: AppTheme.error,
                                     ),
                                   );
                                 }
@@ -582,7 +582,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                                     l10n.errorReminderToggle,
                                     style: FontScaling.getBodyMedium(context),
                                   ),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: AppTheme.error,
                                 ),
                               );
                             }
@@ -620,7 +620,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                                         l10n.errorReminderTimeUpdate,
                                         style: FontScaling.getBodyMedium(context),
                                       ),
-                                      backgroundColor: Colors.red,
+                                      backgroundColor: AppTheme.error,
                                     ),
                                   );
                                 }
@@ -646,7 +646,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             child: ListTile(
               leading: Icon(
                 Icons.backup,
-                color: AppColors.primary,
+                color: AppTheme.primary,
                 size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
               ),
               title: Text(
@@ -661,7 +661,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
               ),
               trailing: Icon(
                 Icons.arrow_forward_ios,
-                color: Colors.white60,
+                color: AppTheme.textTertiary,
                 size: FontScaling.getResponsiveIconSize(context, 16) * UIConstants.universalUIScale,
               ),
               onTap: () {
@@ -689,7 +689,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 hint: l10n.manageAccountHint,
                 isButton: true,
                 child: ListTile(
-                  leading: Icon(Icons.account_circle, color: Colors.white70),
+                  leading: Icon(Icons.account_circle, color: AppTheme.textSecondary),
                   title: Text(
                     l10n.accountMenuItem,
                     style: FontScaling.getBodyMedium(context).copyWith(
@@ -715,20 +715,20 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
           ExpansionTile(
             leading: Icon(
               Icons.help_outline,
-              color: AppColors.primary,
+              color: AppTheme.primary,
               size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
             ),
             title: Text(
               l10n.helpLegalSection,
               style: FontScaling.getBodyMedium(context).copyWith(
                 fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
+                color: AppTheme.textPrimary,
+                fontWeight: FontScaling.mediumWeight,
               ),
             ),
-            iconColor: AppColors.primary,
-            collapsedIconColor: AppColors.primary.withValues(alpha: 0.7),
-            backgroundColor: Colors.white.withValues(alpha: 0.03),
+            iconColor: AppTheme.primary,
+            collapsedIconColor: AppTheme.primary.withValues(alpha: 0.7),
+            backgroundColor: AppTheme.textPrimary.withValues(alpha: 0.03),
             collapsedBackgroundColor: Colors.transparent,
             children: [
               SemanticHelper.label(
@@ -738,7 +738,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 child: ListTile(
                   leading: Icon(
                     Icons.feedback_outlined,
-                    color: Colors.white70,
+                    color: AppTheme.textSecondary,
                     size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
                   ),
                   title: Text(
@@ -762,7 +762,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 child: ListTile(
                   leading: Icon(
                     Icons.info_outline,
-                    color: Colors.white70,
+                    color: AppTheme.textSecondary,
                     size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
                   ),
                   title: Text(
@@ -793,7 +793,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 child: ListTile(
                   leading: Icon(
                     Icons.privacy_tip_outlined,
-                    color: Colors.white70,
+                    color: AppTheme.textSecondary,
                     size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
                   ),
                   title: Text(
@@ -812,7 +812,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(l10n.errorOpenUrl(l10n.privacyPolicyMenuItem), style: FontScaling.getBodyMedium(context)),
-                            backgroundColor: Colors.red,
+                            backgroundColor: AppTheme.error,
                           ),
                         );
                       }
@@ -828,7 +828,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 child: ListTile(
                   leading: Icon(
                     Icons.description_outlined,
-                    color: Colors.white70,
+                    color: AppTheme.textSecondary,
                     size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
                   ),
                   title: Text(
@@ -847,7 +847,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(l10n.errorOpenUrl(l10n.termsOfServiceMenuItem), style: FontScaling.getBodyMedium(context)),
-                            backgroundColor: Colors.red,
+                            backgroundColor: AppTheme.error,
                           ),
                         );
                       }
@@ -868,17 +868,17 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             hint: l10n.regenerateBackgroundHint,
             isButton: true,
             child: ListTile(
-              leading: Icon(Icons.cleaning_services, color: Colors.white70),
+              leading: Icon(Icons.cleaning_services, color: AppTheme.textSecondary),
               title: Text(
                 l10n.clearLayerCache,
                 style: FontScaling.getBodyMedium(context).copyWith(
-                  color: Colors.white,
+                  color: AppTheme.textPrimary,
                 ),
               ),
               subtitle: Text(
                 l10n.regenerateBackgroundLayers,
                 style: FontScaling.getCaption(context).copyWith(
-                  color: Colors.white60,
+                  color: AppTheme.textTertiary,
                 ),
               ),
               onTap: () async {
@@ -889,7 +889,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    backgroundColor: AppColors.primaryDark,
+                    backgroundColor: AppTheme.primaryDark,
                     title: Text(
                       l10n.clearCacheTitle,
                       style: FontScaling.getModalTitle(context),
@@ -897,7 +897,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     content: Text(
                       l10n.clearCacheMessage,
                       style: FontScaling.getBodyMedium(context).copyWith(
-                        color: Colors.white70,
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                     actions: [
@@ -906,7 +906,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         child: Text(
                           l10n.cancel,
                           style: FontScaling.getButtonText(context).copyWith(
-                            color: Colors.white70,
+                            color: AppTheme.textSecondary,
                           ),
                         ),
                       ),
@@ -915,7 +915,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         child: Text(
                           l10n.clearCache,
                           style: FontScaling.getButtonText(context).copyWith(
-                            color: AppColors.primary,
+                            color: AppTheme.primary,
                           ),
                         ),
                       ),
@@ -942,7 +942,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
           // TEMPORARY RECOVERY OPTION
           ListTile(
-            leading: Icon(Icons.cloud_download, color: Colors.red),
+            leading: Icon(Icons.cloud_download, color: AppTheme.error),
             title: Text(l10n.debugRecoverDataTitle),
             subtitle: Text(l10n.debugRecoverDataSubtitle),
             onTap: () async {
@@ -980,14 +980,14 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
             child: ListTile(
               leading: Icon(
                 Icons.close,
-                color: Colors.white.withValues(alpha: 0.6),
+                color: AppTheme.textTertiary,
                 size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
               ),
               title: Text(
                 l10n.exitButton,
                 style: FontScaling.getBodyMedium(context).copyWith(
                   fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: AppTheme.textSecondary,
                 ),
               ),
               onTap: () {
@@ -1005,7 +1005,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 child: Text(
                   l10n.version(_packageInfo!.version, _packageInfo!.buildNumber),
                   style: FontScaling.getCaption(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.4),
+                    color: AppTheme.textDisabled,
                   ),
                 ),
               ),
@@ -1071,10 +1071,8 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
       ),
       child: Text(
         title.toUpperCase(),
-        style: FontScaling.getCaption(context).copyWith(
-          color: AppColors.primary.withValues(alpha: 0.6),
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
+        style: FontScaling.getSectionHeader(context).copyWith(
+          color: AppTheme.primary.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -1082,7 +1080,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
   Widget _buildThickDivider() {
     return Divider(
-      color: AppColors.primary.withValues(alpha: 0.3),
+      color: AppTheme.primary.withValues(alpha: 0.3),
       thickness: 1,
       height: 1,
     );
@@ -1090,7 +1088,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
   Widget _buildThinDivider() {
     return Divider(
-      color: Colors.white.withValues(alpha: 0.1),
+      color: AppTheme.textPrimary.withValues(alpha: 0.1),
       height: 1,
     );
   }
@@ -1120,7 +1118,7 @@ class HamburgerButton extends StatelessWidget {
         },
         child: Icon(
           Icons.menu,
-          color: Colors.white.withValues(alpha: 0.8),
+          color: AppTheme.textSecondary,
           size: FontScaling.getResponsiveIconSize(context, 28) * UIConstants.universalUIScale,
         ),
       ),

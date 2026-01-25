@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../services/sync_status_service.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -74,8 +75,8 @@ class SyncStatusBanner extends StatelessWidget {
               child: Text(
                 _getStatusMessage(status, l10n),
                 style: FontScaling.getBodySmall(context).copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontScaling.mediumWeight,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -84,7 +85,7 @@ class SyncStatusBanner extends StatelessWidget {
               SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
               Icon(
                 Icons.touch_app,
-                color: Colors.white,
+                color: AppTheme.textPrimary,
                 size: FontScaling.getResponsiveIconSize(context, 18),
               ),
             ],
@@ -98,13 +99,13 @@ class SyncStatusBanner extends StatelessWidget {
   Color _getStatusColor(SyncStatus status) {
     switch (status) {
       case SyncStatus.pending:
-        return Colors.orange;
+        return AppTheme.warning;
       case SyncStatus.syncing:
         return Colors.blue;
       case SyncStatus.offline:
         return Colors.grey.shade700;
       case SyncStatus.error:
-        return Colors.red.shade700;
+        return AppTheme.error;
       case SyncStatus.synced:
         return Colors.transparent; // Shouldn't show
     }
@@ -115,7 +116,7 @@ class SyncStatusBanner extends StatelessWidget {
       case SyncStatus.pending:
         return const Icon(
           Icons.cloud_upload_outlined,
-          color: Colors.white,
+          color: AppTheme.textPrimary,
           size: 20,
         );
       case SyncStatus.syncing:
@@ -124,19 +125,19 @@ class SyncStatusBanner extends StatelessWidget {
           height: 20,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.textPrimary),
           ),
         );
       case SyncStatus.offline:
         return const Icon(
           Icons.cloud_off_outlined,
-          color: Colors.white,
+          color: AppTheme.textPrimary,
           size: 20,
         );
       case SyncStatus.error:
         return const Icon(
           Icons.error_outline,
-          color: Colors.white,
+          color: AppTheme.textPrimary,
           size: 20,
         );
       case SyncStatus.synced:

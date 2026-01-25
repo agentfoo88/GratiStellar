@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/config/constants.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../storage.dart';
@@ -32,10 +33,10 @@ class StatsCardWidget extends StatelessWidget {
                 vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
               ),
               decoration: BoxDecoration(
-                color: Color(0xFF1A2238).withValues(alpha: 0.8),
+                color: AppTheme.backgroundDark.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(20 * UIConstants.universalUIScale),
                 border: Border.all(
-                  color: Color(0xFFFFE135).withValues(alpha: 0.3),
+                  color: AppTheme.primary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -51,7 +52,7 @@ class StatsCardWidget extends StatelessWidget {
                   // Horizontal divider
                   Container(
                     height: 1,
-                    color: Color(0xFFFFE135).withValues(alpha: 0.2),
+                    color: AppTheme.primary.withValues(alpha: 0.2),
                   ),
 
                   SizedBox(height: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale),
@@ -101,7 +102,7 @@ class StatsCardWidget extends StatelessWidget {
         ExcludeSemantics(
           child: Icon(
             icon,
-            color: Color(0xFFFFE135),
+            color: AppTheme.primary,
             size: FontScaling.getResponsiveIconSize(context, 20) * UIConstants.universalUIScale,
           ),
         ),
@@ -133,7 +134,7 @@ class StatsCardWidget extends StatelessWidget {
         ExcludeSemantics(
           child: Icon(
             Icons.brightness_2,
-            color: Color(0xFFFFE135),
+            color: AppTheme.primary,
             size: FontScaling.getResponsiveIconSize(context, 18) * UIConstants.universalUIScale,
           ),
         ),
@@ -142,8 +143,8 @@ class StatsCardWidget extends StatelessWidget {
           galaxyName,
           style: FontScaling.getStatsLabel(context).copyWith(
             fontSize: FontScaling.getStatsLabel(context).fontSize! * UIConstants.universalUIScale,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFFFFE135),
+            fontWeight: FontScaling.mediumWeight,
+            color: AppTheme.primary,
           ),
         ),
       ],

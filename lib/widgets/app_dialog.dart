@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../core/theme/app_theme.dart';
 import '../font_scaling.dart';
 
 class AppDialog {
@@ -23,10 +24,10 @@ class AppDialog {
             constraints: BoxConstraints(maxWidth: 500, minWidth: 300),
             padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 24)),
             decoration: BoxDecoration(
-              color: Color(0xFF1A2238).withValues(alpha: 0.95),
+              color: AppTheme.backgroundDark.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: borderColor ?? Color(0xFFFFE135).withValues(alpha: 0.3),
+                color: borderColor ?? AppTheme.borderSubtle,
                 width: 2,
               ),
               boxShadow: [
@@ -45,7 +46,7 @@ class AppDialog {
                   if (icon != null) ...[
                     Icon(
                       icon,
-                      color: iconColor ?? Color(0xFFFFE135),
+                      color: iconColor ?? AppTheme.primary,
                       size: FontScaling.getResponsiveIconSize(context, 48),
                     ),
                     SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
@@ -67,7 +68,7 @@ class AppDialog {
                       Text(
                         message,
                         style: FontScaling.getBodyMedium(context).copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: AppTheme.textSecondary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -115,14 +116,14 @@ class AppDialog {
     Color textColor;
 
     if (isDestructive) {
-      backgroundColor = Colors.red;
-      textColor = Colors.white;
+      backgroundColor = AppTheme.error;
+      textColor = AppTheme.textPrimary;
     } else if (isPrimary) {
-      backgroundColor = Color(0xFFFFE135);
-      textColor = Color(0xFF1A2238);
+      backgroundColor = AppTheme.primary;
+      textColor = AppTheme.textOnLight;
     } else {
       backgroundColor = Colors.transparent;
-      textColor = Colors.white.withValues(alpha: 0.8);
+      textColor = AppTheme.textSecondary;
     }
 
     if (isPrimary || isDestructive) {
@@ -183,7 +184,7 @@ class AppDialog {
       message: message,
       icon: icon,
       iconColor: iconColor,
-      borderColor: isDestructive ? Colors.red.withValues(alpha: 0.5) : null,
+      borderColor: isDestructive ? AppTheme.error.withValues(alpha: 0.5) : null,
       actions: [
         AppDialogAction(
           text: cancelText,

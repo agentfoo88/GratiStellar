@@ -31,6 +31,7 @@ import 'services/daily_reminder_service.dart';
 import 'services/firestore_service.dart';
 import 'services/onboarding_service.dart';
 import 'services/sync_status_service.dart';
+import 'services/tutorial_service.dart';
 import 'services/user_profile_manager.dart';
 
 // UI SCALE and ANIMATION CONFIGURATION found in constants.dart
@@ -45,7 +46,7 @@ void main() async {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,  // White icons for Android
       statusBarBrightness: Brightness.dark,       // For iOS (dark = light icons)
-      systemNavigationBarColor: Color(0xFF0A0E27),
+      systemNavigationBarColor: AppTheme.backgroundDarker,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
@@ -162,6 +163,9 @@ class GratiStellarApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => DailyReminderService()..initialize(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => TutorialService()..initialize(),
+        ),
         // Galaxy Provider FIRST
         ChangeNotifierProvider(
           create: (_) => GalaxyProvider(
@@ -222,12 +226,12 @@ class GratiStellarApp extends StatelessWidget {
           Locale('fr'),
         ],
         theme: ThemeData(
-          primarySwatch: Colors.indigo,
+          primarySwatch: Colors.amber, // Using amber as closest Material swatch to yellow primary
           fontFamily: 'JosefinSans',
           textTheme: TextTheme(
             bodyMedium: TextStyle(
               fontSize: FontScaling.mobileBody,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontScaling.normalWeight,
             ),
           ),
           // Add focus theme
@@ -265,10 +269,10 @@ class GratiStellarApp extends StatelessWidget {
             backgroundColor: AppTheme.backgroundDark,
             dialBackgroundColor: AppTheme.backgroundDarker,
             dialHandColor: AppTheme.primary,
-            dialTextColor: Colors.white.withValues(alpha: 0.9),
+            dialTextColor: AppTheme.textPrimary.withValues(alpha: 0.9),
             hourMinuteTextColor: AppTheme.primary,
             hourMinuteColor: AppTheme.backgroundDark,
-            dayPeriodTextColor: Colors.white.withValues(alpha: 0.9),
+            dayPeriodTextColor: AppTheme.textPrimary.withValues(alpha: 0.9),
             dayPeriodColor: AppTheme.backgroundDark,
             dayPeriodBorderSide: BorderSide(
               color: AppTheme.primary,
@@ -276,17 +280,17 @@ class GratiStellarApp extends StatelessWidget {
             ),
             hourMinuteTextStyle: TextStyle(
               fontSize: 60,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontScaling.mediumWeight,
               color: AppTheme.primary,
             ),
-            dayPeriodTextStyle: const TextStyle(
+            dayPeriodTextStyle: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+              fontWeight: FontScaling.mediumWeight,
+              color: AppTheme.textPrimary,
             ),
             helpTextStyle: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontScaling.mediumWeight,
               color: AppTheme.primary,
             ),
             entryModeIconColor: AppTheme.primary,
@@ -304,13 +308,13 @@ class GratiStellarApp extends StatelessWidget {
             backgroundColor: AppTheme.backgroundDark,
             titleTextStyle: TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontScaling.mediumWeight,
               color: AppTheme.primary,
             ),
-            contentTextStyle: const TextStyle(
+            contentTextStyle: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+              fontWeight: FontScaling.mediumWeight,
+              color: AppTheme.textPrimary,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
@@ -324,9 +328,9 @@ class GratiStellarApp extends StatelessWidget {
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.primary,
-              textStyle: const TextStyle(
+              textStyle: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontScaling.mediumWeight,
               ),
             ),
           ),
@@ -407,9 +411,9 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                   Text(
                     l10n.preparingUniverse,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: AppTheme.textPrimary.withValues(alpha: 0.9),
                       fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontScaling.mediumWeight,
                     ),
                   ),
                 ],
@@ -434,12 +438,12 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.timer_off, color: Colors.orange, size: 64),
+                      Icon(Icons.timer_off, color: AppTheme.warning, size: 64),
                       SizedBox(height: 16),
                       Text(
                         l10n.initializationTimeoutTitle,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -490,12 +494,12 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red, size: 64),
+                    Icon(Icons.error_outline, color: AppTheme.error, size: 64),
                     SizedBox(height: 16),
                     Text(
                       l10n.initializationFailedTitle,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),

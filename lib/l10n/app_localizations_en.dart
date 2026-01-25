@@ -1924,4 +1924,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get greetingWinterSolsticeSubtitle => 'The return of light and hope';
+
+  @override
+  String get tutorialTapToCreateStar => 'Tap to create your first star!';
+
+  @override
+  String get tutorialMindfulnessPrompt =>
+      'Try mindfulness mode. Take a moment to appreciate the things you\'re grateful for.';
 }

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../camera_controller.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../font_scaling.dart';
 import '../../../../storage.dart';
 
 /// Camera control UI overlay with zoom buttons
@@ -70,19 +72,19 @@ class CameraControlsOverlay extends StatelessWidget {
                         vertical: padding * 0.7,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                        color: AppTheme.backgroundDark.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          color: AppTheme.primary.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
                       child: Text(
                         '${cameraController.zoomPercentage}%',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                           fontSize: fontSize,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontScaling.mediumWeight,
                         ),
                       ),
                     ),
@@ -95,10 +97,10 @@ class CameraControlsOverlay extends StatelessWidget {
                     color: Colors.transparent,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                        color: AppTheme.backgroundDark.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(controlSize / 2),
                         border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          color: AppTheme.primary.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -128,7 +130,7 @@ class CameraControlsOverlay extends StatelessWidget {
                                   },
                                   child: Icon(
                                     Icons.zoom_in,
-                                    color: Colors.white,
+                                    color: AppTheme.textPrimary,
                                     size: controlSize * 0.5,
                                   ),
                                 ),
@@ -157,7 +159,7 @@ class CameraControlsOverlay extends StatelessWidget {
                                   },
                                   child: Icon(
                                     Icons.zoom_out,
-                                    color: Colors.white,
+                                    color: AppTheme.textPrimary,
                                     size: controlSize * 0.5,
                                   ),
                                 ),
@@ -176,10 +178,10 @@ class CameraControlsOverlay extends StatelessWidget {
                     color: Colors.transparent,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                        color: AppTheme.backgroundDark.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(controlSize / 2),
                         border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          color: AppTheme.primary.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -206,9 +208,9 @@ class CameraControlsOverlay extends StatelessWidget {
                               child: Text(
                                 '100%',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: AppTheme.textPrimary,
                                   fontSize: fontSize * 0.75,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontScaling.mediumWeight,
                                 ),
                               ),
                             ),
@@ -225,10 +227,10 @@ class CameraControlsOverlay extends StatelessWidget {
                     color: Colors.transparent,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A2238).withValues(alpha: 0.9),
+                        color: AppTheme.backgroundDark.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(controlSize / 2),
                         border: Border.all(
-                          color: const Color(0xFFFFE135).withValues(alpha: 0.3),
+                          color: AppTheme.primary.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -253,7 +255,7 @@ class CameraControlsOverlay extends StatelessWidget {
                             },
                             child: Icon(
                               Icons.fit_screen,
-                              color: Colors.white,
+                              color: AppTheme.textPrimary,
                               size: controlSize * 0.5,
                             ),
                           ),

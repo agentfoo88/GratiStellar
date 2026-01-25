@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -38,7 +39,7 @@ class LoadingStateWidget extends StatelessWidget {
                 width: FontScaling.getResponsiveIconSize(context, 64),
                 height: FontScaling.getResponsiveIconSize(context, 64),
                 colorFilter: ColorFilter.mode(
-                  previewColor ?? Colors.white,
+                  previewColor ?? AppTheme.textPrimary,
                   BlendMode.srcIn,
                 ),
               ),
@@ -46,7 +47,7 @@ class LoadingStateWidget extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.loadingMessage,
                 style: FontScaling.getBodyMedium(context).copyWith(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: AppTheme.textPrimary.withValues(alpha: 0.8),
                 ),
               ),
             ],

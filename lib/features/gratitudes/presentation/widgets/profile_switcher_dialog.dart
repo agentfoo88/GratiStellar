@@ -397,7 +397,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
                       child: Card(
                         color: isActive
                             ? AppTheme.overlayLight
-                            : Colors.white.withValues(alpha: 0.05),
+                            : AppTheme.textPrimary.withValues(alpha: 0.05),
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           title: Row(

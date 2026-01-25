@@ -775,9 +775,12 @@ class GalaxyProvider extends ChangeNotifier {
   }
 
   /// Clear all galaxy data (called on sign out)
-  Future<void> clearAll() async {
+  ///
+  /// [userId] - Optional user ID to clear data for. Pass this if you have
+  /// the user ID from before sign-out to avoid race conditions.
+  Future<void> clearAll({String? userId}) async {
     try {
-      await _galaxyRepository.clearAll();
+      await _galaxyRepository.clearAll(userId: userId);
       _galaxies = [];
       _activeGalaxyId = null;
       _isInitialized = false; // Reset initialization flag
@@ -787,6 +790,20 @@ class GalaxyProvider extends ChangeNotifier {
     } catch (e) {
       AppLogger.error('⚠️ Error clearing galaxy data: $e');
     }
+  }
+
+  /// Clear in-memory state only (does NOT touch storage)
+  ///
+  /// Use this when storage is already cleared (e.g., by StorageService.clearAllData())
+  /// and you only need to reset in-memory state to avoid race conditions with user IDs.
+  void clearAllInMemoryOnly() {
+    AppLogger.data('🗑️ Clearing galaxy in-memory state only (storage already cleared)');
+    _galaxies = [];
+    _activeGalaxyId = null;
+    _isInitialized = false; // Reset initialization flag
+    _orphanedStars = [];
+    _orphanRecoveryPromptShownThisSession = false;
+    notifyListeners();
   }
 
   /// Restore galaxies from backup

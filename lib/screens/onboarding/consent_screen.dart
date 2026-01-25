@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/accessibility/semantic_helper.dart';
 import '../../core/config/app_config.dart';
 import '../../core/config/constants.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/error/error_handler.dart';
 import '../../core/error/error_context.dart';
 import '../../core/utils/app_logger.dart';
@@ -277,10 +278,10 @@ class _ConsentScreenState extends State<ConsentScreen> {
               l10n.errorGeneric,
               style: FontScaling.getBodyMedium(
                 context,
-              ).copyWith(color: Colors.white),
+              ).copyWith(color: AppTheme.textPrimary),
             ),
             backgroundColor:
-                Colors.red.shade700, // Use darker red for better contrast
+                AppTheme.error, // Use error color for better contrast
           ),
         );
       }
@@ -296,7 +297,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
           '•  ',
           style: FontScaling.getBodyMedium(
             context,
-          ).copyWith(color: const Color(0xFFFFE135)),
+          ).copyWith(color: AppTheme.primary),
         ),
         Expanded(child: Text(text, style: FontScaling.getBodyMedium(context))),
       ],
@@ -329,7 +330,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
           ),
           child: const Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE135)),
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
             ),
           ),
         ),
@@ -376,7 +377,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                         l10n.consentTitle,
                         style: FontScaling.getHeadingMedium(
                           context,
-                        ).copyWith(color: const Color(0xFFFFE135)),
+                        ).copyWith(color: AppTheme.primary),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -394,7 +395,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                             UIConstants.universalUIScale,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: AppTheme.textPrimary.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
@@ -466,11 +467,11 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                     states,
                                   ) {
                                     if (states.contains(WidgetState.selected)) {
-                                      return const Color(0xFFFFE135);
+                                      return AppTheme.primary;
                                     }
-                                    return Colors.white.withValues(alpha: 0.3);
+                                    return AppTheme.textPrimary.withValues(alpha: 0.3);
                                   }),
-                                  checkColor: const Color(0xFF1A2238),
+                                  checkColor: AppTheme.backgroundDark,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -493,7 +494,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                               FontScaling.getBodyMedium(
                                                 context,
                                               ).copyWith(
-                                                color: const Color(0xFFFFE135),
+                                                color: AppTheme.primary,
                                                 decoration:
                                                     TextDecoration.underline,
                                               ),
@@ -546,11 +547,11 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                     states,
                                   ) {
                                     if (states.contains(WidgetState.selected)) {
-                                      return const Color(0xFFFFE135);
+                                      return AppTheme.primary;
                                     }
-                                    return Colors.white.withValues(alpha: 0.3);
+                                    return AppTheme.textPrimary.withValues(alpha: 0.3);
                                   }),
-                                  checkColor: const Color(0xFF1A2238),
+                                  checkColor: AppTheme.backgroundDark,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -573,7 +574,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                               FontScaling.getBodyMedium(
                                                 context,
                                               ).copyWith(
-                                                color: const Color(0xFFFFE135),
+                                                color: AppTheme.primary,
                                                 decoration:
                                                     TextDecoration.underline,
                                               ),
@@ -602,10 +603,10 @@ class _ConsentScreenState extends State<ConsentScreen> {
                               UIConstants.universalUIScale,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
+                          color: AppTheme.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: Colors.red.withValues(alpha: 0.3),
+                            color: AppTheme.error.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Column(
@@ -616,7 +617,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                               children: [
                                 Icon(
                                   Icons.error_outline,
-                                  color: Colors.red.withValues(alpha: 0.9),
+                                  color: AppTheme.error.withValues(alpha: 0.9),
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -625,7 +626,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                     _errorMessage!,
                                     style: FontScaling.getBodySmall(context)
                                         .copyWith(
-                                          color: Colors.red.withValues(
+                                          color: AppTheme.error.withValues(
                                             alpha: 0.9,
                                           ),
                                         ),
@@ -654,7 +655,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                     icon: const Icon(Icons.copy, size: 16),
                                     label: Text(l10n.consentCopyUrlButton),
                                     style: TextButton.styleFrom(
-                                      foregroundColor: const Color(0xFFFFE135),
+                                      foregroundColor: AppTheme.primary,
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
                                         vertical: 8,
@@ -709,7 +710,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                             _handleAccept();
                           } : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFE135),
+                            backgroundColor: AppTheme.primary,
                             disabledBackgroundColor: Colors.grey.withValues(
                               alpha: 0.3,
                             ),
@@ -730,8 +731,8 @@ class _ConsentScreenState extends State<ConsentScreen> {
                             l10n.consentAcceptButton,
                             style: FontScaling.getButtonText(context).copyWith(
                               color: _canContinue
-                                  ? const Color(0xFF1A2238)
-                                  : Colors.white.withValues(alpha: 0.5),
+                                  ? AppTheme.backgroundDark
+                                  : AppTheme.textPrimary.withValues(alpha: 0.5),
                             ),
                           ),
                         ),

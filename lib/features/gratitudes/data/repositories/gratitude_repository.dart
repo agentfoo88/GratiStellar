@@ -192,8 +192,11 @@ class GratitudeRepository {
   }
 
   /// Clear all local data
-  Future<void> clearAllData() async {
-    await _localDataSource.clearAll();
+  ///
+  /// [userId] - Optional user ID to clear data for. Pass this if you have
+  /// the user ID from before sign-out to avoid race conditions.
+  Future<void> clearAllData({String? userId}) async {
+    await _localDataSource.clearAll(userId: userId);
   }
 
   /// Get deleted gratitudes (for trash view - filtered by active galaxy)

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/config/constants.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/accessibility/motion_helper.dart';
@@ -12,11 +13,12 @@ import '../../../../core/accessibility/motion_helper.dart';
 /// Bottom controls widget with add star, show all, and mindfulness buttons
 ///
 /// Includes integrated slider for mindfulness interval control
-class BottomControlsWidget extends StatelessWidget {
+class BottomControlsWidget extends StatefulWidget {
   final bool showAllGratitudes;
   final bool mindfulnessMode;
   final bool isAnimating;
   final int mindfulnessInterval;
+  final bool shouldPulse;
   final VoidCallback onToggleShowAll;
   final VoidCallback onToggleMindfulness;
   final VoidCallback onAddStar;
@@ -28,11 +30,54 @@ class BottomControlsWidget extends StatelessWidget {
     required this.mindfulnessMode,
     required this.isAnimating,
     required this.mindfulnessInterval,
+    this.shouldPulse = false,
     required this.onToggleShowAll,
     required this.onToggleMindfulness,
     required this.onAddStar,
     required this.onMindfulnessIntervalChanged,
   });
+
+  @override
+  State<BottomControlsWidget> createState() => _BottomControlsWidgetState();
+}
+
+class _BottomControlsWidgetState extends State<BottomControlsWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    if (widget.shouldPulse) {
+      _pulseController.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(BottomControlsWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.shouldPulse && !oldWidget.shouldPulse) {
+      _pulseController.repeat(reverse: true);
+    } else if (!widget.shouldPulse && oldWidget.shouldPulse) {
+      _pulseController.stop();
+      _pulseController.reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,16 +103,16 @@ class BottomControlsWidget extends StatelessWidget {
         AnimatedContainer(
           duration: MotionHelper.getEssentialDuration(context),
           curve: MotionHelper.getCurve(context, Curves.easeInOut),
-          height: mindfulnessMode ? null : 0,
+          height: widget.mindfulnessMode ? null : 0,
           child: AnimatedOpacity(
             duration: MotionHelper.getEssentialDuration(context),
-            opacity: mindfulnessMode ? 1.0 : 0.0,
-            child: mindfulnessMode ? _buildMindfulnessSlider(context) : SizedBox.shrink(),
+            opacity: widget.mindfulnessMode ? 1.0 : 0.0,
+            child: widget.mindfulnessMode ? _buildMindfulnessSlider(context) : SizedBox.shrink(),
           ),
         ),
 
         // Connector line from slider to mindfulness button
-        if (mindfulnessMode)
+        if (widget.mindfulnessMode)
           SizedBox(
             height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
             width: rowWidth,
@@ -78,7 +123,7 @@ class BottomControlsWidget extends StatelessWidget {
                   left: (rowWidth / 2) + connectorOffset - 1,
                   child: AnimatedOpacity(
                     duration: MotionHelper.getEssentialDuration(context),
-                    opacity: mindfulnessMode ? 1.0 : 0.0,
+                    opacity: widget.mindfulnessMode ? 1.0 : 0.0,
                     child: Container(
                       width: 2,
                       height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
@@ -87,8 +132,8 @@ class BottomControlsWidget extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Color(0xFFFFE135).withValues(alpha: 0.5),
-                            Color(0xFFFFE135).withValues(alpha: 0.2),
+                            AppTheme.primary.withValues(alpha: 0.5),
+                            AppTheme.primary.withValues(alpha: 0.2),
                           ],
                         ),
                       ),
@@ -106,8 +151,8 @@ class BottomControlsWidget extends StatelessWidget {
             _buildActionButton(
               context: context,
               icon: Icons.visibility,
-              isActive: showAllGratitudes,
-              onTap: onToggleShowAll,
+              isActive: widget.showAllGratitudes,
+              onTap: widget.onToggleShowAll,
             ),
             SizedBox(width: spacing),
             _buildAddStarButton(context),
@@ -115,8 +160,8 @@ class BottomControlsWidget extends StatelessWidget {
             _buildActionButton(
               context: context,
               icon: Icons.self_improvement,
-              isActive: mindfulnessMode,
-              onTap: onToggleMindfulness,
+              isActive: widget.mindfulnessMode,
+              onTap: widget.onToggleMindfulness,
             ),
           ],
         ),
@@ -133,43 +178,50 @@ class BottomControlsWidget extends StatelessWidget {
         builder: (context) {
           final isFocused = Focus.of(context).hasFocus;
           return SemanticHelper.label(
-            label: isAnimating
+            label: widget.isAnimating
                 ? l10n.creatingGratitudeStar
                 : l10n.addNewGratitudeStar,
             hint: l10n.addStarHint,
             isButton: true,
-            onTap: isAnimating ? null : onAddStar,
+            onTap: widget.isAnimating ? null : widget.onAddStar,
             child: GestureDetector(
-              onTap: isAnimating ? null : () {
+              onTap: widget.isAnimating ? null : () {
                 HapticFeedback.selectionClick();
-                onAddStar();
+                widget.onAddStar();
               },
-              child: Container(
-                width: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
-                height: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
-                decoration: BoxDecoration(
-                  color: isAnimating
-                      ? Color(0xFFFFE135).withValues(alpha: 0.5)
-                      : Color(0xFFFFE135),
-                  borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 35) * UIConstants.universalUIScale),
-                  border: isFocused ? Border.all(
-                    color: Colors.white,
-                    width: 3,
-                  ) : null,
-                  boxShadow: isAnimating ? [] : [
-                    BoxShadow(
-                      color: Color(0xFFFFE135).withValues(alpha: 0.4),
-                      blurRadius: 20 * UIConstants.universalUIScale,
-                      spreadRadius: 5 * UIConstants.universalUIScale,
+              child: AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  final glowIntensity = widget.shouldPulse ? _pulseAnimation.value : 0.0;
+                  return Container(
+                    width: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
+                    height: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
+                    decoration: BoxDecoration(
+                      color: widget.isAnimating
+                          ? AppTheme.primary.withValues(alpha: 0.5)
+                          : AppTheme.primary,
+                      borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 35) * UIConstants.universalUIScale),
+                      border: isFocused ? Border.all(
+                        color: AppTheme.textPrimary,
+                        width: 3,
+                      ) : null,
+                      boxShadow: widget.isAnimating ? [] : [
+                        BoxShadow(
+                          color: AppTheme.primary.withValues(alpha: 0.4 + (0.4 * glowIntensity)),
+                          blurRadius: (20 + (15 * glowIntensity)) * UIConstants.universalUIScale,
+                          spreadRadius: (5 + (8 * glowIntensity)) * UIConstants.universalUIScale,
+                        ),
+                        if (isFocused)
+                          BoxShadow(
+                            color: AppTheme.textPrimary.withValues(alpha: 0.5),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                      ],
                     ),
-                    if (isFocused)
-                      BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                  ],
-                ),
+                    child: child,
+                  );
+                },
                 child: Center(
                   child: SemanticHelper.decorative(
                     child: SvgPicture.asset(
@@ -204,10 +256,10 @@ class BottomControlsWidget extends StatelessWidget {
         vertical: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
       ),
       decoration: BoxDecoration(
-        color: Color(0xFF1A2238).withValues(alpha: 0.9),
+        color: AppTheme.backgroundDark.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20 * UIConstants.universalUIScale),
         border: Border.all(
-          color: Color(0xFFFFE135).withValues(alpha: 0.5),
+          color: AppTheme.primary.withValues(alpha: 0.5),
           width: 2,
         ),
       ),
@@ -215,7 +267,7 @@ class BottomControlsWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${l10n.mindfulnessIntervalLabel}: ${mindfulnessInterval}s',
+            '${l10n.mindfulnessIntervalLabel}: ${widget.mindfulnessInterval}s',
             style: FontScaling.getCaption(context).copyWith(
               fontSize: FontScaling.getBodySmall(context).fontSize! * UIConstants.universalUIScale,
             ),
@@ -226,10 +278,10 @@ class BottomControlsWidget extends StatelessWidget {
             hint: l10n.mindfulnessIntervalHint,
             child: SliderTheme(
               data: SliderThemeData(
-                activeTrackColor: Color(0xFFFFE135),
-                inactiveTrackColor: Color(0xFFFFE135).withValues(alpha: 0.4),
-                thumbColor: Color(0xFFFFE135),
-                overlayColor: Color(0xFFFFE135).withValues(alpha: 0.2),
+                activeTrackColor: AppTheme.primary,
+                inactiveTrackColor: AppTheme.primary.withValues(alpha: 0.4),
+                thumbColor: AppTheme.primary,
+                overlayColor: AppTheme.primary.withValues(alpha: 0.2),
                 trackHeight: 4 * UIConstants.universalUIScale,
                 thumbShape: RoundSliderThumbShape(
                   enabledThumbRadius: 12 * UIConstants.universalUIScale,
@@ -239,11 +291,11 @@ class BottomControlsWidget extends StatelessWidget {
                 ),
               ),
               child: Slider(
-                value: mindfulnessInterval.toDouble(),
+                value: widget.mindfulnessInterval.toDouble(),
                 min: 3.0,
                 max: 30.0,
                 divisions: 18,
-                onChanged: onMindfulnessIntervalChanged,
+                onChanged: widget.onMindfulnessIntervalChanged,
               ),
             ),
           ),
@@ -286,9 +338,9 @@ class BottomControlsWidget extends StatelessWidget {
             isButton: true,
             isToggle: true,
             toggleValue: isActive,
-            onTap: isAnimating ? null : onTap,
+            onTap: widget.isAnimating ? null : onTap,
             child: GestureDetector(
-              onTap: isAnimating ? null : () {
+              onTap: widget.isAnimating ? null : () {
                 HapticFeedback.selectionClick();
                 onTap();
               },
@@ -297,18 +349,18 @@ class BottomControlsWidget extends StatelessWidget {
                 height: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
                 decoration: BoxDecoration(
                   color: isActive
-                      ? Color(0xFFFFE135).withValues(alpha: 0.9)
-                      : Color(0xFF1A2238).withValues(alpha: 0.8),
+                      ? AppTheme.primary.withValues(alpha: 0.9)
+                      : AppTheme.backgroundDark.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 28) * UIConstants.universalUIScale),
                   border: Border.all(
-                    color: isFocused ? Colors.white :
-                    Color(0xFFFFE135).withValues(alpha: isActive ? 1.0 : 0.5),
+                    color: isFocused ? AppTheme.textPrimary :
+                    AppTheme.primary.withValues(alpha: isActive ? 1.0 : 0.5),
                     width: isFocused ? 3 : 2,
                   ),
                 ),
                 child: Icon(
                   icon,
-                  color: isActive ? Color(0xFF1A2238) : Colors.white.withValues(alpha: 0.8),
+                  color: isActive ? AppTheme.backgroundDark : AppTheme.textPrimary.withValues(alpha: 0.8),
                   size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
                 ),
               ),

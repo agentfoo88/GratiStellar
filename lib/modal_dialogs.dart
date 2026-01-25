@@ -88,7 +88,7 @@ class GratitudeDialogs {
                 children: [
                   Icon(
                     Icons.logout,
-                    color: Colors.red.withValues(alpha: 0.8),
+                    color: AppTheme.error.withValues(alpha: 0.8),
                     size: FontScaling.getResponsiveIconSize(context, 48),
                   ),
                   SizedBox(
@@ -98,7 +98,7 @@ class GratitudeDialogs {
                     l10n.signOutTitle,
                     style: FontScaling.getHeadingMedium(
                       context,
-                    ).copyWith(color: Colors.white),
+                    ).copyWith(color: AppTheme.textPrimary),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(
@@ -123,10 +123,10 @@ class GratitudeDialogs {
                         FontScaling.getResponsiveSpacing(context, 12),
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.1),
+                        color: AppTheme.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.red.withValues(alpha: 0.3),
+                          color: AppTheme.error.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -134,7 +134,7 @@ class GratitudeDialogs {
                         children: [
                           Icon(
                             Icons.warning_amber_rounded,
-                            color: Colors.red.withValues(alpha: 0.8),
+                            color: AppTheme.error.withValues(alpha: 0.8),
                             size: FontScaling.getResponsiveIconSize(
                               context,
                               20,
@@ -148,8 +148,8 @@ class GratitudeDialogs {
                             child: Text(
                               l10n.signOutClearDataWarning,
                               style: FontScaling.getBodySmall(context).copyWith(
-                                color: Colors.red.withValues(alpha: 0.9),
-                                fontWeight: FontWeight.w500,
+                                color: AppTheme.error.withValues(alpha: 0.9),
+                                fontWeight: FontScaling.normalWeight,
                               ),
                               textAlign: TextAlign.left,
                             ),
@@ -209,8 +209,8 @@ class GratitudeDialogs {
                           Navigator.pop(context, false); // false = clear data
                         },
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: BorderSide(color: Colors.red, width: 2),
+                          foregroundColor: AppTheme.error,
+                          side: BorderSide(color: AppTheme.error, width: 2),
                           padding: EdgeInsets.symmetric(
                             vertical: FontScaling.getResponsiveSpacing(
                               context,
@@ -225,7 +225,7 @@ class GratitudeDialogs {
                           l10n.signOutClearDataButton,
                           style: FontScaling.getButtonText(
                             context,
-                          ).copyWith(color: Colors.red),
+                          ).copyWith(color: AppTheme.error),
                         ),
                       ),
                     ),
@@ -261,7 +261,7 @@ class GratitudeDialogs {
         title: AppLocalizations.of(context)!.signOutTitle,
         message: AppLocalizations.of(context)!.signOutEmailMessage,
         icon: Icons.logout,
-        iconColor: Colors.red.withValues(alpha: 0.8),
+        iconColor: AppTheme.error.withValues(alpha: 0.8),
         confirmText: AppLocalizations.of(context)!.signOutButton,
         cancelText: AppLocalizations.of(context)!.cancelButton,
         isDestructive: true,
@@ -380,7 +380,7 @@ class GratitudeDialogs {
                 children: [
                   Icon(
                     Icons.warning_amber_rounded,
-                    color: Colors.red,
+                    color: AppTheme.error,
                     size: FontScaling.getResponsiveIconSize(context, 48),
                   ),
                   SizedBox(
@@ -390,7 +390,7 @@ class GratitudeDialogs {
                     AppLocalizations.of(context)!.deleteConfirmTitle,
                     style: FontScaling.getModalTitle(
                       context,
-                    ).copyWith(color: Colors.red),
+                    ).copyWith(color: AppTheme.error),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(
@@ -401,7 +401,7 @@ class GratitudeDialogs {
                       FontScaling.getResponsiveSpacing(context, 12),
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: AppTheme.textPrimary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -422,7 +422,7 @@ class GratitudeDialogs {
                     AppLocalizations.of(context)!.deleteWarning,
                     style: FontScaling.getBodySmall(
                       context,
-                    ).copyWith(color: Colors.red.withValues(alpha: 0.7)),
+                    ).copyWith(color: AppTheme.error.withValues(alpha: 0.7)),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(
@@ -464,7 +464,7 @@ class GratitudeDialogs {
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.error,
-                            foregroundColor: Colors.white,
+                            foregroundColor: AppTheme.textPrimary,
                           padding: EdgeInsets.symmetric(
                             horizontal: FontScaling.getResponsiveSpacing(
                               context,
@@ -615,7 +615,7 @@ class GratitudeDialogs {
                                   hintText: currentPrompt,
                                   hintStyle: FontScaling.getInputHint(context),
                                   filled: true,
-                                  fillColor: Colors.white.withValues(
+                                  fillColor: AppTheme.textPrimary.withValues(
                                     alpha: 0.1,
                                   ),
                                   border: OutlineInputBorder(
@@ -737,7 +737,7 @@ class GratitudeDialogs {
                               // Toggle button - Made more prominent with palette indicator
                               Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.1),
+                                  color: AppTheme.textPrimary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: AppTheme.borderNormal,
@@ -773,8 +773,8 @@ class GratitudeDialogs {
                                         : '${AppLocalizations.of(context)!.chooseColorButton} (Palette Options)',
                                     style: FontScaling.getButtonText(context)
                                         .copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.textPrimary,
+                                          fontWeight: FontScaling.mediumWeight,
                                         ),
                                   ),
                                   style: TextButton.styleFrom(
@@ -1131,7 +1131,7 @@ class GratitudeDialogs {
               label,
               style: FontScaling.getCaption(
                 context,
-              ).copyWith(color: Colors.white.withValues(alpha: 0.8)),
+              ).copyWith(color: AppTheme.textSecondary),
             ),
           ],
         ),

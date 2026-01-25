@@ -51,13 +51,13 @@ class _OrphanRecoveryDialogState extends State<OrphanRecoveryDialog> {
 
         return Theme(
           data: Theme.of(context).copyWith(
-            highlightColor: Colors.white.withValues(alpha: 0.1),
-            splashColor: Colors.white.withValues(alpha: 0.05),
-            hoverColor: Colors.white.withValues(alpha: 0.08),
-            focusColor: Colors.white.withValues(alpha: 0.12),
+            highlightColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+            splashColor: AppTheme.textPrimary.withValues(alpha: 0.05),
+            hoverColor: AppTheme.textPrimary.withValues(alpha: 0.08),
+            focusColor: AppTheme.textPrimary.withValues(alpha: 0.12),
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Colors.white.withValues(alpha: 0.3),
-              onSurface: Colors.white,
+              primary: AppTheme.textPrimary.withValues(alpha: 0.3),
+              onSurface: AppTheme.textPrimary,
             ),
           ),
           child: AlertDialog(
@@ -150,7 +150,7 @@ class _OrphanRecoveryDialogState extends State<OrphanRecoveryDialog> {
                     label: l10n.selectDestinationGalaxy,
                     child: DropdownButtonFormField<String>(
                       initialValue: _selectedGalaxyId,
-                      focusColor: Colors.white.withValues(alpha: 0.12),
+                      focusColor: AppTheme.textPrimary.withValues(alpha: 0.12),
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: AppTheme.backgroundDarker,

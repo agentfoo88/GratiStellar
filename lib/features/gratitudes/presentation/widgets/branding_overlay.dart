@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/config/constants.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -52,7 +53,7 @@ class BrandingOverlayWidget extends StatelessWidget {
                 Text(
                   AppLocalizations.of(context)!.tapToSkipBranding,
                   style: FontScaling.getCaption(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: AppTheme.textPrimary.withValues(alpha: 0.5),
                   ),
                 ),
               ],

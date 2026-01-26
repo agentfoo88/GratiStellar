@@ -165,6 +165,10 @@
   "@defaultStarColor": {
     "description": "Label for default star colour setting"
   },
+  "defaultColorNotSet": "Not set",
+  "@defaultColorNotSet": {
+    "description": "Text shown when no default star color is set"
+  },
   "usingDefaultColor": "Currently using default colour",
   "@usingDefaultColor": {
     "description": "Message shown when using default colour"

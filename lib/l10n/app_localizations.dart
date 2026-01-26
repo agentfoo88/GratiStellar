@@ -370,6 +370,12 @@ abstract class AppLocalizations {
   /// **'Default Star Colour'**
   String get defaultStarColor;
 
+  /// Text shown when no default star color is set
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get defaultColorNotSet;
+
   /// Message shown when using default colour
   ///
   /// In en, this message translates to:

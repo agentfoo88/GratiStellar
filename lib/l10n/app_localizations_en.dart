@@ -154,6 +154,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get defaultStarColor => 'Default Star Colour';
 
   @override
+  String get defaultColorNotSet => 'Not set';
+
+  @override
   String get usingDefaultColor => 'Currently using default colour';
 
   @override

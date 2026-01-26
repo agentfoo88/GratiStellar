@@ -22,6 +22,7 @@ import '../../../../services/user_scoped_storage.dart';
 import '../../../../storage.dart';
 import '../../../../gratitude_stars.dart';
 import '../../../../widgets/backup_restore_dialog.dart';
+import '../../../../widgets/color_picker_dialog.dart';
 import '../state/gratitude_provider.dart';
 import '../state/galaxy_provider.dart';
 
@@ -423,58 +424,86 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 future: StorageService.getDefaultColor(),
                 builder: (context, snapshot) {
                   final defaultColor = snapshot.data;
-                  if (defaultColor == null) {
-                    return const SizedBox.shrink(); // No default set
+                  final bool hasDefault = defaultColor != null;
+
+                  // Determine display color if set
+                  Color? displayColor;
+                  if (hasDefault) {
+                    if (defaultColor.$1 != null) {
+                      displayColor = StarColors.getColor(defaultColor.$1!);
+                    } else {
+                      displayColor = defaultColor.$2!;
+                    }
                   }
 
-                  // Determine display color
-                  final Color displayColor;
-                  if (defaultColor.$1 != null) {
-                    displayColor = StarColors.getColor(defaultColor.$1!);
-                  } else {
-                    displayColor = defaultColor.$2!;
-                  }
-
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: FontScaling.getResponsiveSpacing(context, 16),
-                      vertical: FontScaling.getResponsiveSpacing(context, 8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.palette, color: AppTheme.textSecondary, size: FontScaling.getResponsiveIconSize(context, 24)),
-                        SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
-                        Flexible(
-                          child: Text(
+                  return InkWell(
+                    onTap: () async {
+                      await showDialog<void>(
+                        context: context,
+                        builder: (dialogContext) => ColorPickerDialog(
+                          initialColorIndex: defaultColor?.$1,
+                          initialCustomColor: defaultColor?.$2,
+                          onColorSelected: (colorIndex, customColor) async {
+                            if (colorIndex != null) {
+                              await StorageService.saveDefaultPresetColor(colorIndex);
+                            } else if (customColor != null) {
+                              await StorageService.saveDefaultCustomColor(customColor);
+                            }
+                            if (context.mounted) {
+                              setState(() {}); // Refresh to show new color
+                            }
+                          },
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                        vertical: FontScaling.getResponsiveSpacing(context, 8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.palette, color: AppTheme.textSecondary, size: FontScaling.getResponsiveIconSize(context, 24)),
+                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
+                          Text(
                             l10n.defaultStarColor,
                             style: FontScaling.getBodyMedium(context).copyWith(
                               color: AppTheme.textPrimary,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: displayColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppTheme.textTertiary, width: 2),
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () async {
-                            await StorageService.clearDefaultColor();
-                            setState(() {}); // Refresh to hide
-                          },
-                          icon: Icon(Icons.clear, size: 20, color: AppTheme.textTertiary),
-                          tooltip: l10n.clearDefaultColor,
-                          padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 8)),
-                          constraints: const BoxConstraints(),
-                        ),
-                      ],
+                          const Spacer(),
+                          if (hasDefault && displayColor != null)
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: displayColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppTheme.textTertiary, width: 2),
+                              ),
+                            )
+                          else
+                            Text(
+                              l10n.defaultColorNotSet,
+                              style: FontScaling.getCaption(context).copyWith(
+                                color: AppTheme.textTertiary,
+                              ),
+                            ),
+                          if (hasDefault)
+                            SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                          if (hasDefault)
+                            IconButton(
+                              onPressed: () async {
+                                await StorageService.clearDefaultColor();
+                                setState(() {}); // Refresh to show "Not set"
+                              },
+                              icon: Icon(Icons.clear, size: 20, color: AppTheme.textTertiary),
+                              tooltip: l10n.clearDefaultColor,
+                              padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 8)),
+                              constraints: const BoxConstraints(),
+                            ),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -526,6 +555,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                               final granted = await reminderService.requestPermission();
                               if (!granted) {
                                 if (context.mounted) {
+                                  Navigator.pop(context); // Close drawer first
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
@@ -549,6 +579,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                               await reminderService.scheduleReminder(time);
                               await reminderService.setEnabled(true);
                               if (context.mounted) {
+                                Navigator.pop(context); // Close drawer first
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
@@ -563,6 +594,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                               await reminderService.cancelReminder();
                               await reminderService.setEnabled(false);
                               if (context.mounted) {
+                                Navigator.pop(context); // Close drawer first
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
@@ -576,6 +608,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                           } catch (e) {
                             AppLogger.error('❌ Error toggling reminder: $e');
                             if (context.mounted) {
+                              Navigator.pop(context); // Close drawer first
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(

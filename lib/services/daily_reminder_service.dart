@@ -140,9 +140,12 @@ class DailyReminderService extends ChangeNotifier {
 
       if (androidImplementation != null) {
         final bool? granted = await androidImplementation.requestNotificationsPermission();
-        if (granted != null && granted) {
+        if (granted == true) {
           AppLogger.success('✅ Android notification permission granted');
           return true;
+        } else {
+          AppLogger.warning('⚠️ Android notification permission not granted');
+          return false;
         }
       }
 

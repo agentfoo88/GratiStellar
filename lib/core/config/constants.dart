@@ -113,4 +113,59 @@ class Timeouts {
   
   /// Delay before showing sync status
   static const Duration syncStatusDelay = Duration(seconds: 2);
+
+  /// Tutorial tooltip show delay
+  static const Duration tutorialTooltipDelay = Duration(seconds: 3);
+}
+
+/// Bottom controls button sizing constants
+class BottomControlsConstants {
+  BottomControlsConstants._();
+
+  /// Action button size (visibility, mindfulness)
+  static const double actionButtonSize = 56.0;
+
+  /// Add star button size
+  static const double addStarButtonSize = 70.0;
+
+  /// Spacing between buttons
+  static const double buttonSpacing = 16.0;
+
+  /// Connector line height between slider and button
+  static const double connectorHeight = 12.0;
+
+  /// Star icon size inside add star button
+  static const double starIconSize = 56.0;
+
+  /// Icon size inside action buttons
+  static const double actionIconSize = 24.0;
+
+  /// Pulse animation duration in milliseconds
+  static const int pulseAnimationDuration = 1000;
+}
+
+/// Tutorial tooltip sizing constants
+class TooltipConstants {
+  TooltipConstants._();
+
+  /// Maximum width of tooltip container
+  static const double maxWidth = 280.0;
+
+  /// Minimum height for WCAG touch target compliance
+  static const double minHeight = 48.0;
+
+  /// Horizontal padding inside tooltip
+  static const double paddingHorizontal = 20.0;
+
+  /// Vertical padding inside tooltip
+  static const double paddingVertical = 14.0;
+
+  /// Offset from bottom of screen to tooltip
+  static const double bottomOffset = 140.0;
+
+  /// Arrow width
+  static const double arrowWidth = 20.0;
+
+  /// Arrow height
+  static const double arrowHeight = 10.0;
 }

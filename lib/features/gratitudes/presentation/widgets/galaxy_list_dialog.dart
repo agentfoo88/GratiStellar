@@ -725,6 +725,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
       if (action == null) return; // Cancelled
 
       if (action.shouldMigrate && action.targetGalaxyId != null) {
+        if (!context.mounted) return;
         // Migrate stars first, then delete
         await _migrateAndDeleteSelectedGalaxies(
           context,
@@ -737,6 +738,8 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
       }
       // If not migrating, fall through to normal deletion
     }
+
+    if (!context.mounted) return;
 
     // Show appropriate confirmation dialog
     final confirmed = await showDialog<bool>(
@@ -1548,10 +1551,10 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
     final gratitudeProvider = Provider.of<GratitudeProvider>(context, listen: false);
     final l10n = AppLocalizations.of(context)!;
     final textStyle = FontScaling.getBodyMedium(context);
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final navigator = Navigator.of(context);
-      final messenger = ScaffoldMessenger.of(context);
 
       // Get all stars in this galaxy
       final allStars = await gratitudeProvider.repository.getAllGratitudesUnfiltered();
@@ -1594,8 +1597,7 @@ class _RenameGalaxyDialogState extends State<RenameGalaxyDialog> {
         l10n: l10n,
       );
 
-      final messenger = mounted ? ScaffoldMessenger.of(context) : null;
-      messenger?.showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text(
             l10n.galaxyDeleteFailed(error.userMessage),

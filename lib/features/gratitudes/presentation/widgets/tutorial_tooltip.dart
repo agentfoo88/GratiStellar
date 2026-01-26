@@ -4,6 +4,7 @@ import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Positioned tooltip widget for onboarding tutorials
 ///
@@ -23,41 +24,32 @@ class TutorialTooltip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return SemanticHelper.label(
       label: message,
-      hint: 'Tap to dismiss',
+      hint: l10n.tapToDismiss,
       isButton: true,
       onTap: onDismiss,
       child: GestureDetector(
         onTap: onDismiss,
         child: Container(
           constraints: BoxConstraints(
-            maxWidth: 280 * UIConstants.universalUIScale,
-            minHeight: 48 * UIConstants.universalUIScale, // WCAG min touch target
+            maxWidth: TooltipConstants.maxWidth * UIConstants.universalUIScale,
+            minHeight: TooltipConstants.minHeight * UIConstants.universalUIScale,
           ),
           padding: EdgeInsets.symmetric(
-            horizontal: FontScaling.getResponsiveSpacing(context, 20) * UIConstants.universalUIScale,
-            vertical: FontScaling.getResponsiveSpacing(context, 14) * UIConstants.universalUIScale,
+            horizontal: FontScaling.getResponsiveSpacing(context, TooltipConstants.paddingHorizontal) * UIConstants.universalUIScale,
+            vertical: FontScaling.getResponsiveSpacing(context, TooltipConstants.paddingVertical) * UIConstants.universalUIScale,
           ),
           decoration: BoxDecoration(
             color: AppTheme.backgroundDark,
-            borderRadius: BorderRadius.circular(20 * UIConstants.universalUIScale),
+            borderRadius: BorderRadius.circular(AppTheme.standardBorderRadius * UIConstants.universalUIScale),
             border: Border.all(
               color: AppTheme.primary,
-              width: 2,
+              width: AppTheme.standardBorderWidth,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primary.withValues(alpha: 0.3),
-                blurRadius: 12,
-                spreadRadius: 2,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
-                blurRadius: 20,
-                spreadRadius: 4,
-              ),
-            ],
+            boxShadow: [AppTheme.glowPrimary, AppTheme.shadowStandard],
           ),
           child: Text(
             message,
@@ -77,19 +69,21 @@ class TutorialTooltip extends StatelessWidget {
 class StarButtonTutorialTooltip extends StatelessWidget {
   final String message;
   final VoidCallback onDismiss;
-  final double bottomOffset;
+  final double? bottomOffset;
 
   const StarButtonTutorialTooltip({
     super.key,
     required this.message,
     required this.onDismiss,
-    this.bottomOffset = 140,
+    this.bottomOffset,
   });
 
   @override
   Widget build(BuildContext context) {
+    final offset = bottomOffset ?? TooltipConstants.bottomOffset;
+
     return Positioned(
-      bottom: MediaQuery.of(context).padding.bottom + bottomOffset * UIConstants.universalUIScale,
+      bottom: MediaQuery.of(context).padding.bottom + offset * UIConstants.universalUIScale,
       left: 0,
       right: 0,
       child: Center(
@@ -102,7 +96,10 @@ class StarButtonTutorialTooltip extends StatelessWidget {
             ),
             // Arrow pointing down to button
             CustomPaint(
-              size: Size(20 * UIConstants.universalUIScale, 10 * UIConstants.universalUIScale),
+              size: Size(
+                TooltipConstants.arrowWidth * UIConstants.universalUIScale,
+                TooltipConstants.arrowHeight * UIConstants.universalUIScale,
+              ),
               painter: _TooltipArrowPainter(),
             ),
           ],
@@ -116,27 +113,29 @@ class StarButtonTutorialTooltip extends StatelessWidget {
 class MindfulnessTutorialTooltip extends StatelessWidget {
   final String message;
   final VoidCallback onDismiss;
-  final double bottomOffset;
+  final double? bottomOffset;
 
   const MindfulnessTutorialTooltip({
     super.key,
     required this.message,
     required this.onDismiss,
-    this.bottomOffset = 140,
+    this.bottomOffset,
   });
 
   @override
   Widget build(BuildContext context) {
+    final offset = bottomOffset ?? TooltipConstants.bottomOffset;
+
     // Calculate position to be above the mindfulness button (right side)
-    final buttonSize = FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale;
-    final spacing = FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale;
-    final addStarSize = FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale;
+    final buttonSize = FontScaling.getResponsiveSpacing(context, BottomControlsConstants.actionButtonSize) * UIConstants.universalUIScale;
+    final spacing = FontScaling.getResponsiveSpacing(context, BottomControlsConstants.buttonSpacing) * UIConstants.universalUIScale;
+    final addStarSize = FontScaling.getResponsiveSpacing(context, BottomControlsConstants.addStarButtonSize) * UIConstants.universalUIScale;
 
     // Calculate offset from center to mindfulness button center
     final mindfulnessButtonOffset = (addStarSize / 2) + spacing + (buttonSize / 2);
 
     return Positioned(
-      bottom: MediaQuery.of(context).padding.bottom + bottomOffset * UIConstants.universalUIScale,
+      bottom: MediaQuery.of(context).padding.bottom + offset * UIConstants.universalUIScale,
       left: 0,
       right: 0,
       child: Center(
@@ -154,7 +153,10 @@ class MindfulnessTutorialTooltip extends StatelessWidget {
               Transform.translate(
                 offset: Offset(mindfulnessButtonOffset * 0.4, 0),
                 child: CustomPaint(
-                  size: Size(20 * UIConstants.universalUIScale, 10 * UIConstants.universalUIScale),
+                  size: Size(
+                    TooltipConstants.arrowWidth * UIConstants.universalUIScale,
+                    TooltipConstants.arrowHeight * UIConstants.universalUIScale,
+                  ),
                   painter: _TooltipArrowPainter(),
                 ),
               ),

@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../storage.dart';
+import '../core/config/constants.dart';
 import '../core/utils/app_logger.dart';
+import '../storage.dart';
 
 /// Service for managing onboarding tutorial state
 ///
@@ -72,9 +73,9 @@ class TutorialService extends ChangeNotifier {
       _showingStarButtonTooltip = false;
       notifyListeners();
 
-      // Show tooltip after 3 seconds if user hasn't tapped
+      // Show tooltip after delay if user hasn't tapped
       _tooltipTimer?.cancel();
-      _tooltipTimer = Timer(const Duration(seconds: 3), () {
+      _tooltipTimer = Timer(Timeouts.tutorialTooltipDelay, () {
         if (_showingStarButtonPulse && !_starButtonTutorialSeen) {
           _showingStarButtonTooltip = true;
           notifyListeners();

@@ -50,7 +50,7 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
   void initState() {
     super.initState();
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: BottomControlsConstants.pulseAnimationDuration),
       vsync: this,
     );
     _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -82,9 +82,9 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
   @override
   Widget build(BuildContext context) {
     // Calculate button row dimensions
-    final buttonSize = FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale;
-    final spacing = FontScaling.getResponsiveSpacing(context, 16) * UIConstants.universalUIScale;
-    final addStarSize = FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale;
+    final buttonSize = FontScaling.getResponsiveSpacing(context, BottomControlsConstants.actionButtonSize) * UIConstants.universalUIScale;
+    final spacing = FontScaling.getResponsiveSpacing(context, BottomControlsConstants.buttonSpacing) * UIConstants.universalUIScale;
+    final addStarSize = FontScaling.getResponsiveSpacing(context, BottomControlsConstants.addStarButtonSize) * UIConstants.universalUIScale;
 
     // Debug touch targets (remove after verification)
     MotionHelper.debugTouchTarget(context, "Side Buttons", buttonSize);
@@ -114,7 +114,7 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
         // Connector line from slider to mindfulness button
         if (widget.mindfulnessMode)
           SizedBox(
-            height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
+            height: FontScaling.getResponsiveSpacing(context, BottomControlsConstants.connectorHeight) * UIConstants.universalUIScale,
             width: rowWidth,
             child: Stack(
               alignment: Alignment.center,
@@ -126,7 +126,7 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
                     opacity: widget.mindfulnessMode ? 1.0 : 0.0,
                     child: Container(
                       width: 2,
-                      height: FontScaling.getResponsiveSpacing(context, 12) * UIConstants.universalUIScale,
+                      height: FontScaling.getResponsiveSpacing(context, BottomControlsConstants.connectorHeight) * UIConstants.universalUIScale,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
@@ -194,22 +194,22 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
                 builder: (context, child) {
                   final glowIntensity = widget.shouldPulse ? _pulseAnimation.value : 0.0;
                   return Container(
-                    width: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
-                    height: FontScaling.getResponsiveSpacing(context, 70) * UIConstants.universalUIScale,
+                    width: FontScaling.getResponsiveSpacing(context, BottomControlsConstants.addStarButtonSize) * UIConstants.universalUIScale,
+                    height: FontScaling.getResponsiveSpacing(context, BottomControlsConstants.addStarButtonSize) * UIConstants.universalUIScale,
                     decoration: BoxDecoration(
                       color: widget.isAnimating
                           ? AppTheme.primary.withValues(alpha: 0.5)
                           : AppTheme.primary,
-                      borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 35) * UIConstants.universalUIScale),
+                      borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, BottomControlsConstants.addStarButtonSize / 2) * UIConstants.universalUIScale),
                       border: isFocused ? Border.all(
                         color: AppTheme.textPrimary,
                         width: 3,
                       ) : null,
                       boxShadow: widget.isAnimating ? [] : [
                         BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.4 + (0.4 * glowIntensity)),
-                          blurRadius: (20 + (15 * glowIntensity)) * UIConstants.universalUIScale,
-                          spreadRadius: (5 + (8 * glowIntensity)) * UIConstants.universalUIScale,
+                          color: AppTheme.primary.withValues(alpha: AppTheme.pulseGlowOpacityBase + (AppTheme.pulseGlowOpacityRange * glowIntensity)),
+                          blurRadius: (AppTheme.pulseGlowBlurBase + (AppTheme.pulseGlowBlurRange * glowIntensity)) * UIConstants.universalUIScale,
+                          spreadRadius: (AppTheme.pulseGlowSpreadBase + (AppTheme.pulseGlowSpreadRange * glowIntensity)) * UIConstants.universalUIScale,
                         ),
                         if (isFocused)
                           BoxShadow(
@@ -226,8 +226,8 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
                   child: SemanticHelper.decorative(
                     child: SvgPicture.asset(
                       'assets/icon_star.svg',
-                      width: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
-                      height: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
+                      width: FontScaling.getResponsiveSpacing(context, BottomControlsConstants.starIconSize) * UIConstants.universalUIScale,
+                      height: FontScaling.getResponsiveSpacing(context, BottomControlsConstants.starIconSize) * UIConstants.universalUIScale,
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -345,13 +345,13 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
                 onTap();
               },
               child: Container(
-                width: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
-                height: FontScaling.getResponsiveSpacing(context, 56) * UIConstants.universalUIScale,
+                width: FontScaling.getResponsiveSpacing(context, BottomControlsConstants.actionButtonSize) * UIConstants.universalUIScale,
+                height: FontScaling.getResponsiveSpacing(context, BottomControlsConstants.actionButtonSize) * UIConstants.universalUIScale,
                 decoration: BoxDecoration(
                   color: isActive
                       ? AppTheme.primary.withValues(alpha: 0.9)
                       : AppTheme.backgroundDark.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, 28) * UIConstants.universalUIScale),
+                  borderRadius: BorderRadius.circular(FontScaling.getResponsiveSpacing(context, BottomControlsConstants.actionButtonSize / 2) * UIConstants.universalUIScale),
                   border: Border.all(
                     color: isFocused ? AppTheme.textPrimary :
                     AppTheme.primary.withValues(alpha: isActive ? 1.0 : 0.5),
@@ -361,7 +361,7 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
                 child: Icon(
                   icon,
                   color: isActive ? AppTheme.backgroundDark : AppTheme.textPrimary.withValues(alpha: 0.8),
-                  size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+                  size: FontScaling.getResponsiveIconSize(context, BottomControlsConstants.actionIconSize) * UIConstants.universalUIScale,
                 ),
               ),
             ),

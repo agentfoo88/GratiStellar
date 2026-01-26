@@ -149,6 +149,45 @@ class AppTheme {
   static Color overlayLight = primary.withValues(alpha: 0.2);
 
   // ========================================
+  // SHARED STYLING VALUES
+  // ========================================
+
+  /// Standard border radius for UI containers (dialogs, tooltips, cards)
+  static const double standardBorderRadius = 20.0;
+
+  /// Standard border width for prominent borders
+  static const double standardBorderWidth = 2.0;
+
+  /// Subtle border width for default borders
+  static const double subtleBorderWidth = 1.0;
+
+  // ========================================
+  // GLOW & SHADOW EFFECTS
+  // ========================================
+
+  /// Standard glow effect for highlighted elements
+  static BoxShadow get glowPrimary => BoxShadow(
+    color: primary.withValues(alpha: 0.3),
+    blurRadius: 12,
+    spreadRadius: 2,
+  );
+
+  /// Standard shadow for elevated elements
+  static BoxShadow get shadowStandard => BoxShadow(
+    color: Colors.black.withValues(alpha: 0.4),
+    blurRadius: 20,
+    spreadRadius: 4,
+  );
+
+  /// Pulse glow configuration for animated elements
+  static const double pulseGlowBlurBase = 20.0;
+  static const double pulseGlowBlurRange = 15.0;
+  static const double pulseGlowSpreadBase = 5.0;
+  static const double pulseGlowSpreadRange = 8.0;
+  static const double pulseGlowOpacityBase = 0.4;
+  static const double pulseGlowOpacityRange = 0.4;
+
+  // ========================================
   // BACKGROUND GRADIENTS
   // ========================================
 
@@ -277,10 +316,10 @@ class AppTheme {
   /// Includes rounded corners, dark background, and subtle border
   static final BoxDecoration dialogDecoration = BoxDecoration(
     color: backgroundDark,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(standardBorderRadius),
     border: Border.all(
       color: borderSubtle,
-      width: 1,
+      width: subtleBorderWidth,
     ),
   );
 
@@ -289,11 +328,28 @@ class AppTheme {
   /// Used for accessibility focus indicators with stronger border
   static final BoxDecoration dialogDecorationFocused = BoxDecoration(
     color: backgroundDark,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(standardBorderRadius),
     border: Border.all(
       color: borderNormal,
-      width: 2,
+      width: standardBorderWidth,
     ),
+  );
+
+  // ========================================
+  // TOOLTIP DECORATION
+  // ========================================
+
+  /// Tooltip decoration with glow effect
+  ///
+  /// Used for tutorial tooltips and similar overlay elements
+  static BoxDecoration get tooltipDecoration => BoxDecoration(
+    color: backgroundDark,
+    borderRadius: BorderRadius.circular(standardBorderRadius),
+    border: Border.all(
+      color: primary,
+      width: standardBorderWidth,
+    ),
+    boxShadow: [glowPrimary, shadowStandard],
   );
 
   // ========================================

@@ -313,6 +313,7 @@ class _OrphanRecoveryDialogState extends State<OrphanRecoveryDialog> {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final textStyle = FontScaling.getBodyMedium(context);
 
     try {
       final count = await galaxyProvider.recoverOrphanedStars(_selectedGalaxyId!);
@@ -326,7 +327,7 @@ class _OrphanRecoveryDialogState extends State<OrphanRecoveryDialog> {
         SnackBar(
           content: Text(
             l10n.orphansRecovered(count, galaxyName),
-            style: FontScaling.getBodyMedium(context),
+            style: textStyle,
           ),
           backgroundColor: AppTheme.backgroundDark,
           duration: const Duration(seconds: 3),
@@ -401,6 +402,7 @@ class _OrphanRecoveryDialogState extends State<OrphanRecoveryDialog> {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final textStyle = FontScaling.getBodyMedium(context);
 
     try {
       final count = await galaxyProvider.deleteOrphanedStars();
@@ -411,7 +413,7 @@ class _OrphanRecoveryDialogState extends State<OrphanRecoveryDialog> {
         SnackBar(
           content: Text(
             l10n.orphansDeleted(count),
-            style: FontScaling.getBodyMedium(context),
+            style: textStyle,
           ),
           backgroundColor: AppTheme.backgroundDark,
           duration: const Duration(seconds: 3),

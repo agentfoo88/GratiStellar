@@ -636,8 +636,38 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
           _buildThickDivider(),
 
-          // Data Management Section
-          _buildSectionHeader(context, l10n.dataManagementSection),
+          // Account & Data Section
+          _buildSectionHeader(context, l10n.accountSettings),
+
+          FutureBuilder<String>(
+            future: _getAccountDisplayName(),
+            builder: (context, snapshot) {
+              final displayName = snapshot.data ?? l10n.defaultUserName;
+
+              return SemanticHelper.label(
+                label: l10n.accountSettings,
+                hint: l10n.manageAccountHint,
+                isButton: true,
+                child: ListTile(
+                  leading: Icon(Icons.account_circle, color: AppTheme.textSecondary),
+                  title: Text(
+                    l10n.accountMenuItem,
+                    style: FontScaling.getBodyMedium(context).copyWith(
+                      fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                    ),
+                  ),
+                  subtitle: Text(
+                    displayName,
+                    style: FontScaling.getCaption(context),
+                  ),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    widget.onAccountTap();
+                  },
+                ),
+              );
+            },
+          ),
 
           SemanticHelper.label(
             label: l10n.backupRestoreTitle,
@@ -672,41 +702,6 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 );
               },
             ),
-          ),
-
-          _buildThickDivider(),
-
-          // Account Section
-          _buildSectionHeader(context, l10n.accountSettings),
-
-          FutureBuilder<String>(
-            future: _getAccountDisplayName(),
-            builder: (context, snapshot) {
-              final displayName = snapshot.data ?? l10n.defaultUserName;
-              
-              return SemanticHelper.label(
-                label: l10n.accountSettings,
-                hint: l10n.manageAccountHint,
-                isButton: true,
-                child: ListTile(
-                  leading: Icon(Icons.account_circle, color: AppTheme.textSecondary),
-                  title: Text(
-                    l10n.accountMenuItem,
-                    style: FontScaling.getBodyMedium(context).copyWith(
-                      fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
-                    ),
-                  ),
-                  subtitle: Text(
-                    displayName,
-                    style: FontScaling.getCaption(context),
-                  ),
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    widget.onAccountTap();
-                  },
-                ),
-              );
-            },
           ),
 
           _buildThickDivider(),

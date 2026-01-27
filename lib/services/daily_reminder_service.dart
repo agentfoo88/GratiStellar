@@ -110,8 +110,15 @@ class DailyReminderService extends ChangeNotifier {
 
       // Reschedule notification if enabled (since we removed recurring)
       if (_isEnabled) {
-        await scheduleReminder(_reminderTime);
-        AppLogger.info('🔔 Rescheduled daily reminder at startup');
+        final hasPermission = await checkPermissionStatus();
+        if (hasPermission) {
+          await scheduleReminder(_reminderTime);
+          AppLogger.info('🔔 Rescheduled daily reminder at startup');
+        } else {
+          AppLogger.warning('⚠️ Reminders enabled but permission not granted - disabling');
+          _isEnabled = false;
+          await _prefs!.setBool(_keyEnabled, false);
+        }
       }
 
       AppLogger.success(
@@ -132,6 +139,13 @@ class DailyReminderService extends ChangeNotifier {
   Future<bool> requestPermission() async {
     try {
       AppLogger.info('🔔 Requesting notification permission...');
+
+      // Check if already granted to avoid unnecessary dialogs
+      final alreadyGranted = await checkPermissionStatus();
+      if (alreadyGranted) {
+        AppLogger.info('✅ Notification permission already granted');
+        return true;
+      }
 
       // Android
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
@@ -187,10 +201,38 @@ class DailyReminderService extends ChangeNotifier {
     }
   }
 
+  /// Check if notifications are currently enabled (without requesting)
+  Future<bool> checkPermissionStatus() async {
+    try {
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          _notifications.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+
+      if (androidImplementation != null) {
+        final bool? enabled = await androidImplementation.areNotificationsEnabled();
+        AppLogger.info('🔔 Notification permission status: $enabled');
+        return enabled ?? false;
+      }
+
+      // iOS/macOS - assume granted if we got here (permission requested at init)
+      return true;
+    } catch (e) {
+      AppLogger.error('❌ Error checking notification permission: $e');
+      return false;
+    }
+  }
+
   /// Schedule a daily reminder at the specified time
   Future<void> scheduleReminder(TimeOfDay time) async {
     try {
       AppLogger.info('🔔 Scheduling daily reminder for ${time.format24()}...');
+
+      // Verify permission before scheduling
+      final hasPermission = await checkPermissionStatus();
+      if (!hasPermission) {
+        AppLogger.error('❌ Cannot schedule reminder: notification permission not granted');
+        throw Exception('Notification permission not granted. Please enable notifications in Settings.');
+      }
 
       // Cancel any existing notification
       await _notifications.cancel(_notificationId);
@@ -266,6 +308,13 @@ class DailyReminderService extends ChangeNotifier {
   /// This prevents the reminder from firing today if already completed
   Future<void> rescheduleForTomorrow() async {
     if (!_isEnabled) return;
+
+    // Verify permission before rescheduling
+    final hasPermission = await checkPermissionStatus();
+    if (!hasPermission) {
+      AppLogger.warning('⚠️ Cannot reschedule: notification permission not granted');
+      return;
+    }
 
     try {
       AppLogger.info('🔔 Rescheduling reminder for tomorrow...');

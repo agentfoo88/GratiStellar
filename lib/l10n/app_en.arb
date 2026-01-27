@@ -1337,6 +1337,10 @@
         "@reminderPermissionDenied": {
           "description": "Error message when permission is denied"
         },
+        "reminderScheduleError": "Could not schedule reminder. Please try again.",
+        "@reminderScheduleError": {
+          "description": "Error message when scheduling a reminder fails"
+        },
         "dailyReminderTitle": "Daily Reminder",
         "@dailyReminderTitle": {
           "description": "Settings menu item title"

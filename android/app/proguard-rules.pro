@@ -16,6 +16,9 @@
 -keep class androidx.core.app.NotificationCompat** { *; }
 -keep class android.app.Notification** { *; }
 
+# Keep notification icon resources
+-keep class **.R$drawable { *; }
+
 # Firebase - Comprehensive rules for Firestore, Auth, Analytics, and Crashlytics
 -keep class com.google.firebase.** { *; }
 -keep class com.google.android.gms.** { *; }

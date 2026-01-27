@@ -1209,6 +1209,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderPermissionDenied => 'Notification permission denied';
 
   @override
+  String get reminderScheduleError =>
+      'Could not schedule reminder. Please try again.';
+
+  @override
   String get dailyReminderTitle => 'Daily Reminder';
 
   @override

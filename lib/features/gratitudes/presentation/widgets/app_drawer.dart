@@ -612,7 +612,9 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    l10n.errorReminderToggle,
+                                    e.toString().contains('permission')
+                                        ? l10n.reminderPermissionDenied
+                                        : l10n.reminderScheduleError,
                                     style: FontScaling.getBodyMedium(context),
                                   ),
                                   backgroundColor: AppTheme.error,

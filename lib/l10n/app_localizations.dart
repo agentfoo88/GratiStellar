@@ -2248,6 +2248,12 @@ abstract class AppLocalizations {
   /// **'Notification permission denied'**
   String get reminderPermissionDenied;
 
+  /// Error message when scheduling a reminder fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not schedule reminder. Please try again.'**
+  String get reminderScheduleError;
+
   /// Settings menu item title
   ///
   /// In en, this message translates to:

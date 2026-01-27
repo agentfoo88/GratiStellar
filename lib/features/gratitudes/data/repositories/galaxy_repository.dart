@@ -380,8 +380,7 @@ class GalaxyRepository {
       final mergedList = mergedGalaxies.values.toList();
       await saveGalaxies(mergedList);
 
-      // Recalculate star counts after merge
-      await recalculateAllStarCounts();
+      // Note: Star counts will be reconciled in loadGalaxies() after star sync completes
 
       // Also get active galaxy from cloud
       final cloudActiveId = await _remoteDataSource.getActiveGalaxyId();

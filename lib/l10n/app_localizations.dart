@@ -3513,6 +3513,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try mindfulness mode. Take a moment to appreciate the things you\'re grateful for.'**
   String get tutorialMindfulnessPrompt;
+
+  /// Label for sound effects toggle in settings
+  ///
+  /// In en, this message translates to:
+  /// **'Sound effects'**
+  String get soundEffects;
 }
 
 class _AppLocalizationsDelegate

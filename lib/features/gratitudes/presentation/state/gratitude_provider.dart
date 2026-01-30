@@ -60,7 +60,7 @@ class GratitudeProvider extends ChangeNotifier {
   bool _isAnimating = false;
   GratitudeStar? _animatingStar;
   GratitudeStar? _activeMindfulnessStar;
-  int _mindfulnessInterval = 3;
+  int _mindfulnessInterval = 2;
   Timer? _mindfulnessTimer;
   StreamSubscription<User?>? _authSubscription;
   Timer? _syncDebouncer;

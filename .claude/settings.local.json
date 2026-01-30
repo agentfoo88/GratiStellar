@@ -20,7 +20,9 @@
       "Bash(tree:*)",
       "Bash(python3:*)",
       "Bash(find:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "WebFetch(domain:pub.dev)",
+      "Bash(flutter build:*)"
     ],
     "deny": [],
     "ask": []

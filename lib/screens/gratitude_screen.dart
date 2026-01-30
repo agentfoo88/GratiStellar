@@ -37,6 +37,7 @@ import '../modal_dialogs.dart';
 import '../services/auth_service.dart';
 import '../services/daily_reminder_service.dart';
 import '../services/layer_cache_service.dart';
+import '../services/sound_service.dart';
 import '../services/sync_status_service.dart';
 import '../services/tutorial_service.dart';
 import '../starfield.dart';
@@ -531,6 +532,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   }
 
   Future<void> _navigateToMindfulnessStar(GratitudeStar star) async {
+    // Play chime when navigating to new mindfulness star
+    context.read<SoundService>().playChime();
+
     final navigationController = CameraNavigationController(
       cameraController: _cameraController,
       vsync: this,

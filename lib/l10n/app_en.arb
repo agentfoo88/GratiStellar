@@ -2375,5 +2375,9 @@
         "tutorialMindfulnessPrompt": "Try mindfulness mode. Take a moment to appreciate the things you're grateful for.",
         "@tutorialMindfulnessPrompt": {
           "description": "Tutorial tooltip introducing mindfulness mode after creating 3 stars"
+        },
+        "soundEffects": "Sound effects",
+        "@soundEffects": {
+          "description": "Label for sound effects toggle in settings"
         }
     }

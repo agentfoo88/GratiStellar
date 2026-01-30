@@ -30,6 +30,7 @@ import 'services/crashlytics_service.dart';
 import 'services/daily_reminder_service.dart';
 import 'services/firestore_service.dart';
 import 'services/onboarding_service.dart';
+import 'services/sound_service.dart';
 import 'services/sync_status_service.dart';
 import 'services/tutorial_service.dart';
 import 'services/user_profile_manager.dart';
@@ -165,6 +166,9 @@ class GratiStellarApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => TutorialService()..initialize(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SoundService()..initialize(),
         ),
         // Galaxy Provider FIRST
         ChangeNotifierProvider(

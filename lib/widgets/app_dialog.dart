@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../font_scaling.dart';
+import '../services/sound_service.dart';
 
 class AppDialog {
   static Future<T?> show<T>({
@@ -130,6 +132,7 @@ class AppDialog {
       return ElevatedButton(
         onPressed: () {
           HapticFeedback.selectionClick();
+          context.read<SoundService>().playChime();
           action.onPressed();
         },
         style: ElevatedButton.styleFrom(
@@ -155,6 +158,7 @@ class AppDialog {
       return TextButton(
         onPressed: () {
           HapticFeedback.selectionClick();
+          context.read<SoundService>().playChime();
           action.onPressed();
         },
         child: Text(

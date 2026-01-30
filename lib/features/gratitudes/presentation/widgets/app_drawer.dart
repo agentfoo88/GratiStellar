@@ -16,6 +16,7 @@ import '../../../../screens/onboarding/enhanced_splash_screen.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/daily_reminder_service.dart';
 import '../../../../services/layer_cache_service.dart';
+import '../../../../services/sound_service.dart';
 import '../../../../services/url_launch_service.dart';
 import '../../../../services/user_profile_manager.dart';
 import '../../../../services/user_scoped_storage.dart';
@@ -417,6 +418,35 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                     },
                   ),
                 ),
+              ),
+
+              // Sound Effects toggle
+              Consumer<SoundService>(
+                builder: (context, soundService, child) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                    ),
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.volume_up, color: AppTheme.textSecondary),
+                      title: Text(
+                        l10n.soundEffects,
+                        style: FontScaling.getBodyMedium(context).copyWith(
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      trailing: Switch(
+                        value: soundService.soundEnabled,
+                        activeTrackColor: AppTheme.primary,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          soundService.setSoundEnabled(value);
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
 
               // Default Star Color Setting

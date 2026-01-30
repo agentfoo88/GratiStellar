@@ -3,12 +3,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/accessibility/semantic_helper.dart';
 import '../../../../core/config/constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../font_scaling.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/accessibility/motion_helper.dart';
+import '../../../../services/sound_service.dart';
 
 /// Bottom controls widget with add star, show all, and mindfulness buttons
 ///
@@ -187,6 +189,7 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
             child: GestureDetector(
               onTap: widget.isAnimating ? null : () {
                 HapticFeedback.selectionClick();
+                context.read<SoundService>().playChime();
                 widget.onAddStar();
               },
               child: AnimatedBuilder(
@@ -292,9 +295,9 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
               ),
               child: Slider(
                 value: widget.mindfulnessInterval.toDouble(),
-                min: 3.0,
-                max: 30.0,
-                divisions: 18,
+                min: 2.0,
+                max: 15.0,
+                divisions: 13,
                 onChanged: widget.onMindfulnessIntervalChanged,
               ),
             ),
@@ -342,6 +345,7 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
             child: GestureDetector(
               onTap: widget.isAnimating ? null : () {
                 HapticFeedback.selectionClick();
+                context.read<SoundService>().playChime();
                 onTap();
               },
               child: Container(

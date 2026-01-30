@@ -1938,4 +1938,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tutorialMindfulnessPrompt =>
       'Try mindfulness mode. Take a moment to appreciate the things you\'re grateful for.';
+
+  @override
+  String get soundEffects => 'Sound effects';
 }

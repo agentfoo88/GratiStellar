@@ -24,6 +24,8 @@ import '../../../../storage.dart';
 import '../../../../gratitude_stars.dart';
 import '../../../../widgets/backup_restore_dialog.dart';
 import '../../../../widgets/color_picker_dialog.dart';
+import '../../../whats_new/presentation/services/whats_new_service.dart';
+import '../../../whats_new/presentation/widgets/whats_new_bottom_sheet.dart';
 import '../state/gratitude_provider.dart';
 import '../state/galaxy_provider.dart';
 
@@ -771,7 +773,50 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
           _buildThickDivider(),
 
-          // Help & Legal Section (Collapsible)
+          // App Info Section
+          _buildSectionHeader(context, l10n.appInfoSection),
+
+          // What's New menu item
+          Consumer<WhatsNewService>(
+            builder: (context, whatsNewService, child) {
+              return SemanticHelper.label(
+                label: l10n.whatsNewMenuItem,
+                hint: l10n.viewRecentUpdates,
+                isButton: true,
+                child: ListTile(
+                  leading: Icon(
+                    Icons.new_releases,
+                    color: AppTheme.primary,
+                    size: FontScaling.getResponsiveIconSize(context, 24) * UIConstants.universalUIScale,
+                  ),
+                  title: Text(
+                    l10n.whatsNewMenuItem,
+                    style: FontScaling.getBodyMedium(context).copyWith(
+                      fontSize: FontScaling.getBodyMedium(context).fontSize! * UIConstants.universalUIScale,
+                    ),
+                  ),
+                  trailing: whatsNewService.hasUnseenUpdates
+                      ? Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        )
+                      : null,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.pop(context);
+                    WhatsNewBottomSheet.show(context);
+                    whatsNewService.markAsSeen();
+                  },
+                ),
+              );
+            },
+          ),
+
+          // Help & Legal sub-menu (inside App Info section)
           ExpansionTile(
             leading: Icon(
               Icons.help_outline,
@@ -1167,21 +1212,42 @@ class HamburgerButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return SemanticHelper.label(
-      label: l10n.openMenu,
-      hint: l10n.openNavigationMenu,
-      isButton: true,
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onTap();
-        },
-        child: Icon(
-          Icons.menu,
-          color: AppTheme.textSecondary,
-          size: FontScaling.getResponsiveIconSize(context, 28) * UIConstants.universalUIScale,
-        ),
-      ),
+    return Consumer<WhatsNewService>(
+      builder: (context, whatsNewService, child) {
+        return SemanticHelper.label(
+          label: l10n.openMenu,
+          hint: l10n.openNavigationMenu,
+          isButton: true,
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onTap();
+            },
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Hamburger icon
+                Icon(
+                  Icons.menu,
+                  color: AppTheme.textSecondary,
+                  size: FontScaling.getResponsiveIconSize(context, 28) * UIConstants.universalUIScale,
+                ),
+                // Gold exclamation badge for unseen updates
+                if (whatsNewService.hasUnseenUpdates)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Icon(
+                      Icons.priority_high,
+                      color: AppTheme.primary,
+                      size: 16,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

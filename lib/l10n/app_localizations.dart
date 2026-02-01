@@ -3519,6 +3519,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sound effects'**
   String get soundEffects;
+
+  /// Section header for app info menu items
+  ///
+  /// In en, this message translates to:
+  /// **'App Info'**
+  String get appInfoSection;
+
+  /// Menu item for viewing release notes
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New'**
+  String get whatsNewMenuItem;
+
+  /// Title for what's new bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New'**
+  String get whatsNewTitle;
+
+  /// Badge text for most recent release
+  ///
+  /// In en, this message translates to:
+  /// **'Latest'**
+  String get whatsNewLatestBadge;
+
+  /// Button text to visit website
+  ///
+  /// In en, this message translates to:
+  /// **'Visit GratiStellar.com'**
+  String get whatsNewVisitWebsite;
+
+  /// Accessibility hint for website button
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the GratiStellar website'**
+  String get whatsNewVisitWebsiteHint;
+
+  /// Accessibility hint for what's new menu item
+  ///
+  /// In en, this message translates to:
+  /// **'View recent app updates'**
+  String get viewRecentUpdates;
+
+  /// Label for new feature type
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get whatsNewNewFeature;
+
+  /// Label for improvement type
+  ///
+  /// In en, this message translates to:
+  /// **'Improved'**
+  String get whatsNewImprovement;
+
+  /// Label for bug fix type
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get whatsNewBugFix;
+
+  /// Title for sound support feature
+  ///
+  /// In en, this message translates to:
+  /// **'Sound Effects'**
+  String get whatsNewSoundSupportTitle;
+
+  /// Description for sound support feature
+  ///
+  /// In en, this message translates to:
+  /// **'A peaceful tone now plays when viewing stars in mindfulness mode or tapping the main buttons.'**
+  String get whatsNewSoundSupportDesc;
+
+  /// Title for what's new feature
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New Panel'**
+  String get whatsNewWhatsNewFeatureTitle;
+
+  /// Description for what's new feature
+  ///
+  /// In en, this message translates to:
+  /// **'Stay informed about app updates with the new What\'s New panel in the menu.'**
+  String get whatsNewWhatsNewFeatureDesc;
+
+  /// Title for notifications fix
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Icon'**
+  String get whatsNewNotificationsFixTitle;
+
+  /// Description for notifications fix
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed an issue with the notification icon display.'**
+  String get whatsNewNotificationsFixDesc;
+
+  /// Title for tutorial prompts feature
+  ///
+  /// In en, this message translates to:
+  /// **'Tutorial Prompts'**
+  String get whatsNewTutorialPromptsTitle;
+
+  /// Description for tutorial prompts feature
+  ///
+  /// In en, this message translates to:
+  /// **'New guided prompts help first-time users discover app features.'**
+  String get whatsNewTutorialPromptsDesc;
+
+  /// Title for colour settings improvement
+  ///
+  /// In en, this message translates to:
+  /// **'Colour Settings'**
+  String get whatsNewColourSettingsTitle;
+
+  /// Description for colour settings improvement
+  ///
+  /// In en, this message translates to:
+  /// **'Refactored colour settings for a better experience.'**
+  String get whatsNewColourSettingsDesc;
+
+  /// Title for menu reorder improvement
+  ///
+  /// In en, this message translates to:
+  /// **'Menu Organisation'**
+  String get whatsNewMenuReorderTitle;
+
+  /// Description for menu reorder improvement
+  ///
+  /// In en, this message translates to:
+  /// **'Reordered menu items for easier navigation.'**
+  String get whatsNewMenuReorderDesc;
 }
 
 class _AppLocalizationsDelegate

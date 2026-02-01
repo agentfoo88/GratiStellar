@@ -734,6 +734,31 @@ class StorageService {
     }
   }
 
+  // What's New feature storage
+  static const String _lastSeenWhatsNewBuildKey = 'whats_new_last_seen_build';
+
+  /// Get the last seen build number for What's New feature
+  static Future<int?> getLastSeenWhatsNewBuild() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getInt(_lastSeenWhatsNewBuildKey);
+    } catch (e) {
+      AppLogger.warning('⚠️ Error getting last seen What\'s New build: $e');
+      return null;
+    }
+  }
+
+  /// Save the last seen build number for What's New feature
+  static Future<void> saveLastSeenWhatsNewBuild(int buildNumber) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_lastSeenWhatsNewBuildKey, buildNumber);
+      AppLogger.data('💾 Saved last seen What\'s New build: $buildNumber');
+    } catch (e) {
+      AppLogger.warning('⚠️ Error saving last seen What\'s New build: $e');
+    }
+  }
+
   // Calculate statistics (unchanged)
   static int getTotalStars(List<GratitudeStar> stars) => stars.length;
 

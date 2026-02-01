@@ -46,6 +46,8 @@ import 'trash_screen.dart';
 import '../core/utils/app_logger.dart';
 import '../features/gratitudes/presentation/widgets/tutorial_tooltip.dart';
 import '../core/accessibility/motion_helper.dart';
+import '../features/whats_new/presentation/services/whats_new_service.dart';
+import '../features/whats_new/presentation/widgets/whats_new_bottom_sheet.dart';
 
 class GratitudeScreen extends StatefulWidget {
   const GratitudeScreen({super.key});
@@ -76,6 +78,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
   bool _isRegeneratingLayers = false;
   bool _allowRegeneration = false;
   bool _hasCheckedStarButtonTutorial = false;
+  bool _hasCheckedWhatsNew = false;
 
   // Birth animation completion handler (class-level method)
   void _completeBirthAnimation() async {
@@ -848,6 +851,21 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     // Reset flag if stars are added (so tutorial can show again if stars are deleted)
     if (gratitudeStars.isNotEmpty && _hasCheckedStarButtonTutorial) {
       _hasCheckedStarButtonTutorial = false;
+    }
+
+    // Check for What's New auto-show after loading completes
+    if (!isLoading && !_hasCheckedWhatsNew) {
+      _hasCheckedWhatsNew = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final whatsNewService = context.read<WhatsNewService>();
+          if (whatsNewService.shouldAutoShow) {
+            whatsNewService.clearAutoShow();
+            WhatsNewBottomSheet.show(context);
+            whatsNewService.markAsSeen();
+          }
+        }
+      });
     }
 
     final currentSize = MediaQuery.of(context).size;

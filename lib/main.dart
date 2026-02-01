@@ -34,6 +34,7 @@ import 'services/sound_service.dart';
 import 'services/sync_status_service.dart';
 import 'services/tutorial_service.dart';
 import 'services/user_profile_manager.dart';
+import 'features/whats_new/presentation/services/whats_new_service.dart';
 
 // UI SCALE and ANIMATION CONFIGURATION found in constants.dart
 
@@ -169,6 +170,9 @@ class GratiStellarApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => SoundService()..initialize(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => WhatsNewService()..initialize(),
         ),
         // Galaxy Provider FIRST
         ChangeNotifierProvider(

@@ -1941,4 +1941,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get soundEffects => 'Sound effects';
+
+  @override
+  String get appInfoSection => 'App Info';
+
+  @override
+  String get whatsNewMenuItem => 'What\'s New';
+
+  @override
+  String get whatsNewTitle => 'What\'s New';
+
+  @override
+  String get whatsNewLatestBadge => 'Latest';
+
+  @override
+  String get whatsNewVisitWebsite => 'Visit GratiStellar.com';
+
+  @override
+  String get whatsNewVisitWebsiteHint => 'Opens the GratiStellar website';
+
+  @override
+  String get viewRecentUpdates => 'View recent app updates';
+
+  @override
+  String get whatsNewNewFeature => 'New';
+
+  @override
+  String get whatsNewImprovement => 'Improved';
+
+  @override
+  String get whatsNewBugFix => 'Fixed';
+
+  @override
+  String get whatsNewSoundSupportTitle => 'Sound Effects';
+
+  @override
+  String get whatsNewSoundSupportDesc =>
+      'A peaceful tone now plays when viewing stars in mindfulness mode or tapping the main buttons.';
+
+  @override
+  String get whatsNewWhatsNewFeatureTitle => 'What\'s New Panel';
+
+  @override
+  String get whatsNewWhatsNewFeatureDesc =>
+      'Stay informed about app updates with the new What\'s New panel in the menu.';
+
+  @override
+  String get whatsNewNotificationsFixTitle => 'Notification Icon';
+
+  @override
+  String get whatsNewNotificationsFixDesc =>
+      'Fixed an issue with the notification icon display.';
+
+  @override
+  String get whatsNewTutorialPromptsTitle => 'Tutorial Prompts';
+
+  @override
+  String get whatsNewTutorialPromptsDesc =>
+      'New guided prompts help first-time users discover app features.';
+
+  @override
+  String get whatsNewColourSettingsTitle => 'Colour Settings';
+
+  @override
+  String get whatsNewColourSettingsDesc =>
+      'Refactored colour settings for a better experience.';
+
+  @override
+  String get whatsNewMenuReorderTitle => 'Menu Organisation';
+
+  @override
+  String get whatsNewMenuReorderDesc =>
+      'Reordered menu items for easier navigation.';
 }

@@ -10,6 +10,18 @@ set(BINARY_NAME "gratistellar")
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
 
+# Workaround for Firebase C++ SDK using old cmake_minimum_required
+# This allows CMake 3.30+ to process old CMakeLists.txt files
+if(POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW)
+endif()
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
+# Allow older cmake_minimum_required in subdirectories
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
+  cmake_policy(SET CMP0148 OLD)
+endif()
+
 # Define build configuration option.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(IS_MULTICONFIG)

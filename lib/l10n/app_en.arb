@@ -795,7 +795,7 @@
     },
     "openMenu": "Open menu",
       "openNavigationMenu": "Open navigation menu",
-      "shareTemplate": "{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your personal universe of gratitude",
+      "shareTemplate": "{userName} shared their gratitude with you:\n{gratitudeText}\n\n- www.GratiStellar.com - your personal universe of gratitude",
         "@shareTemplate": {
           "description": "Template for sharing gratitude",
           "placeholders": {
@@ -2379,5 +2379,93 @@
         "soundEffects": "Sound effects",
         "@soundEffects": {
           "description": "Label for sound effects toggle in settings"
+        },
+        "appInfoSection": "App Info",
+        "@appInfoSection": {
+          "description": "Section header for app info menu items"
+        },
+        "whatsNewMenuItem": "What's New",
+        "@whatsNewMenuItem": {
+          "description": "Menu item for viewing release notes"
+        },
+        "whatsNewTitle": "What's New",
+        "@whatsNewTitle": {
+          "description": "Title for what's new bottom sheet"
+        },
+        "whatsNewLatestBadge": "Latest",
+        "@whatsNewLatestBadge": {
+          "description": "Badge text for most recent release"
+        },
+        "whatsNewVisitWebsite": "Visit GratiStellar.com",
+        "@whatsNewVisitWebsite": {
+          "description": "Button text to visit website"
+        },
+        "whatsNewVisitWebsiteHint": "Opens the GratiStellar website",
+        "@whatsNewVisitWebsiteHint": {
+          "description": "Accessibility hint for website button"
+        },
+        "viewRecentUpdates": "View recent app updates",
+        "@viewRecentUpdates": {
+          "description": "Accessibility hint for what's new menu item"
+        },
+        "whatsNewNewFeature": "New",
+        "@whatsNewNewFeature": {
+          "description": "Label for new feature type"
+        },
+        "whatsNewImprovement": "Improved",
+        "@whatsNewImprovement": {
+          "description": "Label for improvement type"
+        },
+        "whatsNewBugFix": "Fixed",
+        "@whatsNewBugFix": {
+          "description": "Label for bug fix type"
+        },
+        "whatsNewSoundSupportTitle": "Sound Effects",
+        "@whatsNewSoundSupportTitle": {
+          "description": "Title for sound support feature"
+        },
+        "whatsNewSoundSupportDesc": "A peaceful tone now plays when viewing stars in mindfulness mode or tapping the main buttons.",
+        "@whatsNewSoundSupportDesc": {
+          "description": "Description for sound support feature"
+        },
+        "whatsNewWhatsNewFeatureTitle": "What's New Panel",
+        "@whatsNewWhatsNewFeatureTitle": {
+          "description": "Title for what's new feature"
+        },
+        "whatsNewWhatsNewFeatureDesc": "Stay informed about app updates with the new What's New panel in the menu.",
+        "@whatsNewWhatsNewFeatureDesc": {
+          "description": "Description for what's new feature"
+        },
+        "whatsNewNotificationsFixTitle": "Notification Icon",
+        "@whatsNewNotificationsFixTitle": {
+          "description": "Title for notifications fix"
+        },
+        "whatsNewNotificationsFixDesc": "Fixed an issue with the notification icon display.",
+        "@whatsNewNotificationsFixDesc": {
+          "description": "Description for notifications fix"
+        },
+        "whatsNewTutorialPromptsTitle": "Tutorial Prompts",
+        "@whatsNewTutorialPromptsTitle": {
+          "description": "Title for tutorial prompts feature"
+        },
+        "whatsNewTutorialPromptsDesc": "New guided prompts help first-time users discover app features.",
+        "@whatsNewTutorialPromptsDesc": {
+          "description": "Description for tutorial prompts feature"
+        },
+        "whatsNewColourSettingsTitle": "Colour Settings",
+        "@whatsNewColourSettingsTitle": {
+          "description": "Title for colour settings improvement"
+        },
+        "whatsNewColourSettingsDesc": "Refactored colour settings for a better experience.",
+        "@whatsNewColourSettingsDesc": {
+          "description": "Description for colour settings improvement"
+        },
+        "whatsNewMenuReorderTitle": "Menu Organisation",
+        "@whatsNewMenuReorderTitle": {
+          "description": "Title for menu reorder improvement"
+        },
+        "whatsNewMenuReorderDesc": "Reordered menu items for easier navigation.",
+        "@whatsNewMenuReorderDesc": {
+          "description": "Description for menu reorder improvement"
         }
     }

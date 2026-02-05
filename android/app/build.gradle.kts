@@ -73,4 +73,5 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
 }

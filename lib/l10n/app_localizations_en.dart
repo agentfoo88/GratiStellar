@@ -857,7 +857,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shareTemplate(String userName, String gratitudeText) {
-    return '$userName shared their gratitude with you:\n$gratitudeText\n\n- GratiStellar - your personal universe of gratitude';
+    return '$userName shared their gratitude with you:\n$gratitudeText\n\n- www.GratiStellar.com - your personal universe of gratitude';
   }
 
   @override

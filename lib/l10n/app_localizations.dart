@@ -1663,7 +1663,7 @@ abstract class AppLocalizations {
   /// Template for sharing gratitude
   ///
   /// In en, this message translates to:
-  /// **'{userName} shared their gratitude with you:\n{gratitudeText}\n\n- GratiStellar - your personal universe of gratitude'**
+  /// **'{userName} shared their gratitude with you:\n{gratitudeText}\n\n- www.GratiStellar.com - your personal universe of gratitude'**
   String shareTemplate(String userName, String gratitudeText);
 
   /// Menu item for galaxy management

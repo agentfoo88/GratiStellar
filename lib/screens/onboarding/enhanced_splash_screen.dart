@@ -6,11 +6,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/accessibility/semantic_helper.dart';
+import '../../core/config/app_config.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/app_logger.dart';
 import '../../font_scaling.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/holiday_greeting.dart';
 import '../../services/holiday_greeting_service.dart';
+import '../../services/url_launch_service.dart';
 
 /// Display mode for the enhanced splash screen
 enum SplashDisplayMode {
@@ -462,21 +465,23 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
 
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
 
-          // Tagline (only show if no holiday greeting)
+          // Tagline or Support chip (only when no holiday greeting)
           if (_holidayGreeting == null)
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: FontScaling.getResponsiveSpacing(context, 40),
-              ),
-              child: Text(
-                l10n.appTagline,
-                style: FontScaling.getBodyMedium(context).copyWith(
-                  fontSize: FontScaling.getBodyMedium(context).fontSize! * 0.9,
-                  color: AppTheme.textPrimary.withValues(alpha: 0.9),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
+            widget.displayMode == SplashDisplayMode.about
+                ? _buildSupportChip(context, l10n)
+                : Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 40),
+                    ),
+                    child: Text(
+                      l10n.appTagline,
+                      style: FontScaling.getBodyMedium(context).copyWith(
+                        fontSize: FontScaling.getBodyMedium(context).fontSize! * 0.9,
+                        color: AppTheme.textPrimary.withValues(alpha: 0.9),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
 
           const Spacer(flex: 1),
 
@@ -536,6 +541,72 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
 
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 32)),
         ],
+      ),
+    );
+  }
+
+  /// Support GratiStellar chip (About mode): opens Ko-fi in browser
+  static const Color _supportChipColor = Color(0xFF5493FF);
+
+  Widget _buildSupportChip(BuildContext context, AppLocalizations l10n) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: FontScaling.getResponsiveSpacing(context, 40),
+      ),
+      child: SemanticHelper.label(
+        label: l10n.supportGratiStellarCta,
+        hint: l10n.supportGratiStellarHint,
+        isButton: true,
+        child: Material(
+          color: _supportChipColor,
+          borderRadius: BorderRadius.circular(24),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: () async {
+              try {
+                await UrlLaunchService.launchUrlSafely(AppConfig.supportGratiStellarUrl);
+              } catch (e) {
+                AppLogger.error('Failed to open support URL: $e');
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        l10n.errorOpenUrl(l10n.supportGratiStellarCta),
+                        style: FontScaling.getBodyMedium(context),
+                      ),
+                      backgroundColor: AppTheme.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: FontScaling.getResponsiveSpacing(context, 20),
+                vertical: FontScaling.getResponsiveSpacing(context, 12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.volunteer_activism,
+                    color: Colors.white,
+                    size: FontScaling.getResponsiveIconSize(context, 20),
+                  ),
+                  SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                  Text(
+                    l10n.supportGratiStellarCta,
+                    style: FontScaling.getBodyMedium(context).copyWith(
+                      color: Colors.white,
+                      fontWeight: FontScaling.mediumWeight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

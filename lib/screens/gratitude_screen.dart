@@ -36,6 +36,7 @@ import '../list_view_screen.dart';
 import '../modal_dialogs.dart';
 import '../services/auth_service.dart';
 import '../services/daily_reminder_service.dart';
+import '../services/in_app_review_service.dart';
 import '../services/layer_cache_service.dart';
 import '../services/sound_service.dart';
 import '../services/sync_status_service.dart';
@@ -237,6 +238,13 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     _loadFontScale();
     _startSplashTimer();
+
+    // Consider asking for a store review after user has used the app (delayed so not on first paint)
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) {
+        InAppReviewService.instance.maybeRequestReview();
+      }
+    });
   }
 
   @override

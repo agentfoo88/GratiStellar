@@ -1072,6 +1072,42 @@ abstract class AppLocalizations {
   /// **'Unable to open {name}. Please check your connection.'**
   String errorOpenUrl(String name);
 
+  /// Support link text on about screen
+  ///
+  /// In en, this message translates to:
+  /// **'Support GratiStellar'**
+  String get supportGratiStellarCta;
+
+  /// Accessibility hint for support link
+  ///
+  /// In en, this message translates to:
+  /// **'Optional way to support ongoing development'**
+  String get supportGratiStellarHint;
+
+  /// Title for in-app review prompt dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying GratiStellar?'**
+  String get reviewPromptTitle;
+
+  /// Message for in-app review prompt
+  ///
+  /// In en, this message translates to:
+  /// **'A quick review helps others discover the app.'**
+  String get reviewPromptMessage;
+
+  /// Button to open store review
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get reviewPromptButton;
+
+  /// Button to dismiss review prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get reviewPromptLater;
+
   /// Button to sign out
   ///
   /// In en, this message translates to:

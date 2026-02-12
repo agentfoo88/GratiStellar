@@ -493,6 +493,30 @@
       }
     }
   },
+  "supportGratiStellarCta": "Support GratiStellar",
+  "@supportGratiStellarCta": {
+    "description": "Support link text on about screen"
+  },
+  "supportGratiStellarHint": "Optional way to support ongoing development",
+  "@supportGratiStellarHint": {
+    "description": "Accessibility hint for support link"
+  },
+  "reviewPromptTitle": "Enjoying GratiStellar?",
+  "@reviewPromptTitle": {
+    "description": "Title for in-app review prompt dialog"
+  },
+  "reviewPromptMessage": "A quick review helps others discover the app.",
+  "@reviewPromptMessage": {
+    "description": "Message for in-app review prompt"
+  },
+  "reviewPromptButton": "Review",
+  "@reviewPromptButton": {
+    "description": "Button to open store review"
+  },
+  "reviewPromptLater": "Maybe later",
+  "@reviewPromptLater": {
+    "description": "Button to dismiss review prompt"
+  },
   "signOutButton": "Sign Out",
   "@signOutButton": {
     "description": "Button to sign out"

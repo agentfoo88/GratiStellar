@@ -17,6 +17,9 @@ class AppConfig {
   static const String termsOfServiceUrl =
       'https://gratistellar.com/terms_of_service.html';
 
+  /// Ko-fi support page (optional support / sustainment)
+  static const String supportGratiStellarUrl = 'https://ko-fi.com/gratistellar';
+
   // ============================================================================
   // CONSENT TRACKING
   // ============================================================================
@@ -39,4 +42,17 @@ class AppConfig {
   ///
   /// Users under this age will be shown an exit dialog and cannot proceed.
   static const int minimumAge = 13;
+
+  // ============================================================================
+  // REVIEW PROMPT
+  // ============================================================================
+
+  /// Minimum app launches before we may ask for a store review
+  static const int reviewMinLaunchCount = 8;
+
+  /// Minimum days since first launch before we may ask for a store review
+  static const int reviewMinDaysSinceFirstLaunch = 7;
+
+  /// Minimum days since last review request (or dismiss) before asking again
+  static const int reviewCooldownDays = 90;
 }

@@ -543,6 +543,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get supportGratiStellarCta => 'Support GratiStellar';
+
+  @override
+  String get supportGratiStellarHint =>
+      'Optional way to support ongoing development';
+
+  @override
+  String get reviewPromptTitle => 'Enjoying GratiStellar?';
+
+  @override
+  String get reviewPromptMessage =>
+      'A quick review helps others discover the app.';
+
+  @override
+  String get reviewPromptButton => 'Review';
+
+  @override
+  String get reviewPromptLater => 'Maybe later';
+
+  @override
   String get signOutButton => 'Sign Out';
 
   @override

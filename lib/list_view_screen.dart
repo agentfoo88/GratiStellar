@@ -30,6 +30,32 @@ class _ListViewScreenState extends State<ListViewScreen> {
   bool _isSelectionMode = false;
   final Set<String> _selectedStarIds = {};
 
+  // Search state
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  List<GratitudeStar> _getFilteredStars(List<GratitudeStar> stars) {
+    if (_searchQuery.isEmpty) return stars;
+
+    final query = _searchQuery.toLowerCase();
+    return stars.where((star) {
+      // Content match
+      if (star.text.toLowerCase().contains(query)) return true;
+      // Tag match (substring)
+      if (star.tags.any((tag) => tag.toLowerCase().contains(query))) return true;
+      return false;
+    }).toList();
+  }
+
   List<GratitudeStar> _getSortedStars(List<GratitudeStar> stars) {
     final sortedStars = List<GratitudeStar>.from(stars);
 
@@ -84,48 +110,106 @@ class _ListViewScreenState extends State<ListViewScreen> {
     return '${text.substring(0, maxLength)}...';
   }
 
+  void _startSearch() {
+    setState(() {
+      _isSearching = true;
+    });
+    _searchFocusNode.requestFocus();
+  }
+
+  void _stopSearch() {
+    setState(() {
+      _isSearching = false;
+      _searchQuery = '';
+      _searchController.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<GratitudeProvider>(
       builder: (context, provider, child) {
         final stars = provider.gratitudeStars;
-        final sortedStars = _getSortedStars(stars);
+        // Apply filter first, then sort
+        final filteredStars = _getFilteredStars(stars);
+        final sortedStars = _getSortedStars(filteredStars);
 
         return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: AppTheme.textPrimary,
-            size: FontScaling.getResponsiveIconSize(context, 24),
+        leading: Semantics(
+          label: _isSearching
+              ? AppLocalizations.of(context)!.closeSearchLabel
+              : AppLocalizations.of(context)!.closeButton,
+          button: true,
+          child: IconButton(
+            icon: Icon(
+              _isSearching ? Icons.close : Icons.arrow_back,
+              color: AppTheme.textPrimary,
+              size: FontScaling.getResponsiveIconSize(context, 24),
+            ),
+            tooltip: _isSearching
+                ? AppLocalizations.of(context)!.closeSearchLabel
+                : AppLocalizations.of(context)!.closeButton,
+            onPressed: () {
+              if (_isSearching) {
+                _stopSearch();
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
           ),
-          onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          _isSelectionMode && _selectedStarIds.isNotEmpty
-              ? AppLocalizations.of(context)!.selectedCount(_selectedStarIds.length)
-              : AppLocalizations.of(context)!.listViewTitle,
-          style: FontScaling.getHeadingMedium(context).copyWith(
-            color: AppTheme.primary,
-          ),
-        ),
+        title: _isSearching
+            ? Semantics(
+                label: AppLocalizations.of(context)!.searchHint,
+                textField: true,
+                child: TextField(
+                  controller: _searchController,
+                  focusNode: _searchFocusNode,
+                  style: FontScaling.getBodyMedium(context).copyWith(
+                    color: AppTheme.textPrimary,
+                  ),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.searchHint,
+                    hintStyle: FontScaling.getBodyMedium(context).copyWith(
+                      color: AppTheme.textTertiary,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
+              )
+            : Text(
+                _isSelectionMode && _selectedStarIds.isNotEmpty
+                    ? AppLocalizations.of(context)!.selectedCount(_selectedStarIds.length)
+                    : AppLocalizations.of(context)!.listViewTitle,
+                style: FontScaling.getHeadingMedium(context).copyWith(
+                  color: AppTheme.primary,
+                ),
+              ),
         actions: [
           if (_isSelectionMode) ...[
             // Select All / Deselect All button
             SemanticHelper.label(
-              label: _selectedStarIds.length == _getSortedStars(stars).length
+              label: _selectedStarIds.length == sortedStars.length
                   ? AppLocalizations.of(context)!.deselectAll
                   : AppLocalizations.of(context)!.selectAll,
-              hint: _selectedStarIds.length == _getSortedStars(stars).length
+              hint: _selectedStarIds.length == sortedStars.length
                   ? AppLocalizations.of(context)!.deselectAllStars
                   : AppLocalizations.of(context)!.selectAllStars,
               isButton: true,
               child: IconButton(
                 icon: Icon(
-                  _selectedStarIds.length == _getSortedStars(stars).length
+                  _selectedStarIds.length == sortedStars.length
                       ? Icons.deselect
                       : Icons.select_all,
                   color: AppTheme.primary,
@@ -133,14 +217,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 ),
                 onPressed: () {
                   setState(() {
-                    if (_selectedStarIds.length == _getSortedStars(stars).length) {
+                    if (_selectedStarIds.length == sortedStars.length) {
                       _selectedStarIds.clear();
                     } else {
-                      _selectedStarIds.addAll(_getSortedStars(stars).map((s) => s.id));
+                      _selectedStarIds.addAll(sortedStars.map((s) => s.id));
                     }
                   });
                 },
-                tooltip: _selectedStarIds.length == _getSortedStars(stars).length
+                tooltip: _selectedStarIds.length == sortedStars.length
                     ? AppLocalizations.of(context)!.deselectAll
                     : AppLocalizations.of(context)!.selectAll,
               ),
@@ -165,7 +249,22 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 tooltip: AppLocalizations.of(context)!.cancelSelection,
               ),
             ),
-          ] else ...[
+          ] else if (!_isSearching) ...[
+            // Search button (only when not in selection mode or searching)
+            SemanticHelper.label(
+              label: AppLocalizations.of(context)!.searchLabel,
+              hint: AppLocalizations.of(context)!.searchStarsHint,
+              isButton: true,
+              child: IconButton(
+                icon: Icon(
+                  Icons.search,
+                  color: AppTheme.primary,
+                  size: FontScaling.getResponsiveIconSize(context, 24),
+                ),
+                onPressed: _startSearch,
+                tooltip: AppLocalizations.of(context)!.searchLabel,
+              ),
+            ),
             // Enter selection mode button
             SemanticHelper.label(
               label: AppLocalizations.of(context)!.selectMode,
@@ -581,26 +680,31 @@ class _ListViewScreenState extends State<ListViewScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final isSearchEmpty = _searchQuery.isNotEmpty;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SvgPicture.asset(
-            'assets/icon_star.svg',
+            isSearchEmpty ? 'assets/icon_star.svg' : 'assets/icon_star.svg',
             width: FontScaling.getResponsiveIconSize(context, 64),
             height: FontScaling.getResponsiveIconSize(context, 64),
             colorFilter: ColorFilter.mode(AppTheme.textPrimary.withValues(alpha: 0.3), BlendMode.srcIn),
           ),
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
           Text(
-            AppLocalizations.of(context)!.emptyStateTitle,
+            isSearchEmpty
+                ? AppLocalizations.of(context)!.noSearchResults
+                : AppLocalizations.of(context)!.emptyStateTitle,
             style: FontScaling.getEmptyStateTitle(context),
           ),
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
-          Text(
-            AppLocalizations.of(context)!.emptyStateSubtitle,
-            style: FontScaling.getEmptyStateSubtitle(context),
-          ),
+          if (!isSearchEmpty)
+            Text(
+              AppLocalizations.of(context)!.emptyStateSubtitle,
+              style: FontScaling.getEmptyStateSubtitle(context),
+            ),
         ],
       ),
     );
@@ -687,11 +791,73 @@ class _ListViewScreenState extends State<ListViewScreen> {
           padding: EdgeInsets.only(
             top: FontScaling.getResponsiveSpacing(context, 4),
           ),
-          child: Text(
-            _formatDate(context, star.createdAt),
-            style: FontScaling.getCaption(context).copyWith(
-              color: AppTheme.textPrimary.withValues(alpha: 0.5),
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _formatDate(context, star.createdAt),
+                style: FontScaling.getCaption(context).copyWith(
+                  color: AppTheme.textPrimary.withValues(alpha: 0.5),
+                ),
+              ),
+              if (star.tags.isNotEmpty) ...[
+                SizedBox(height: FontScaling.getResponsiveSpacing(context, 6)),
+                Semantics(
+                  label: AppLocalizations.of(context)!.tagsAccessibilityLabel(star.tags.join(", ")),
+                  child: Wrap(
+                    spacing: FontScaling.getResponsiveSpacing(context, 6),
+                    runSpacing: FontScaling.getResponsiveSpacing(context, 4),
+                    children: [
+                      ...star.tags.take(3).map((tag) {
+                        return Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: FontScaling.getResponsiveSpacing(context, 8),
+                            vertical: FontScaling.getResponsiveSpacing(context, 4),
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.backgroundDarker,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.primary.withValues(alpha: 0.4),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            tag,
+                            style: FontScaling.getCaption(context).copyWith(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        );
+                      }),
+                      if (star.tags.length > 3)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: FontScaling.getResponsiveSpacing(context, 8),
+                            vertical: FontScaling.getResponsiveSpacing(context, 4),
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.backgroundDarker,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            '+${star.tags.length - 3}',
+                            style: FontScaling.getCaption(context).copyWith(
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         trailing: _isSelectionMode

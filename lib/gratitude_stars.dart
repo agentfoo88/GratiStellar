@@ -226,6 +226,7 @@ class GratitudeStarService {
         int? colorPresetIndex,
         Color? customColor,
         String? inspirationPrompt,
+        List<String>? tags,
       }) async {
     // Calculate current universe size based on star count
     final universeSize = UniverseManager.calculateUniverseSize(existingStars.length);
@@ -332,6 +333,8 @@ class GratitudeStarService {
       pulseMinScaleV: pulseMinScaleV,
       // Pass the inspiration prompt that inspired this gratitude
       inspirationPrompt: inspirationPrompt,
+      // Pass tags for categorization
+      tags: tags,
     );
   }
 }

@@ -80,7 +80,7 @@ class StatsCardWidget extends StatelessWidget {
                         context,
                         StorageService.getAddedToday(stars) ? Icons.check_circle : Icons.radio_button_unchecked,
                         AppLocalizations.of(context)!.statsToday,
-                        '',
+                        StorageService.getTodayStars(stars).toString(),
                       ),
                     ],
                   ),

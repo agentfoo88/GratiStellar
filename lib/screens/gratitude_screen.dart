@@ -410,7 +410,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     }
   }
 
-  void _addGratitude([int? colorIndex, Color? customColor, String? inspirationPrompt]) async {
+  void _addGratitude([int? colorIndex, Color? customColor, String? inspirationPrompt, List<String>? tags]) async {
     final provider = context.read<GratitudeProvider>();
 
     // Cancel modes via provider
@@ -425,16 +425,20 @@ class _GratitudeScreenState extends State<GratitudeScreen>
 
     final screenSize = MediaQuery.of(context).size;
 
-    // Create star via provider - pass optional color parameters and inspiration prompt
+    // Create star via provider - pass optional color parameters, inspiration prompt, and tags
     final newStar = await provider.createGratitude(
       trimmedText,
       screenSize,
       colorPresetIndex: colorIndex,
       customColor: customColor,
       inspirationPrompt: inspirationPrompt,
+      tags: tags,
     );
 
     if (!mounted) return;
+
+    // Play celebratory sound for new star
+    context.read<SoundService>().playStarCreation();
 
     _gratitudeController.clear();
 
@@ -612,6 +616,7 @@ class _GratitudeScreenState extends State<GratitudeScreen>
       controller: _gratitudeController,
       onAdd: _addGratitude,
       isAnimating: provider.isAnimating,
+      allStars: provider.gratitudeStars,
     );
   }
 

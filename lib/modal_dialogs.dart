@@ -502,11 +502,237 @@ class GratitudeDialogs {
     return ScrollableDialogContent(child: child);
   }
 
+  /// Helper widget to build tags section for create/edit dialogs
+  static Widget _buildTagsSection({
+    required BuildContext context,
+    required List<String> editingTags,
+    required TextEditingController tagController,
+    required List<GratitudeStar> allStars,
+    required int maxTags,
+    required int maxTagLength,
+    required Function(List<String>) onTagsChanged,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+
+    // Get all unique tags from all stars for autocomplete
+    final allTags = <String>{};
+    for (final star in allStars) {
+      allTags.addAll(star.tags);
+    }
+    // Remove tags already on this star
+    allTags.removeAll(editingTags);
+    final availableTags = allTags.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+    void addTag(String tag) {
+      final trimmedTag = tag.trim();
+      if (trimmedTag.isEmpty) return;
+      if (trimmedTag.length > maxTagLength) return;
+      if (editingTags.length >= maxTags) return;
+
+      // Case-insensitive deduplication
+      final lowerTag = trimmedTag.toLowerCase();
+      if (editingTags.any((t) => t.toLowerCase() == lowerTag)) return;
+
+      final newTags = List<String>.from(editingTags)..add(trimmedTag);
+      onTagsChanged(newTags);
+      tagController.clear();
+    }
+
+    void removeTag(String tag) {
+      final newTags = List<String>.from(editingTags)..remove(tag);
+      onTagsChanged(newTags);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Tags label
+        Padding(
+          padding: EdgeInsets.only(
+            bottom: FontScaling.getResponsiveSpacing(context, 8),
+          ),
+          child: Text(
+            l10n.tagsLabel,
+            style: FontScaling.getBodySmall(context).copyWith(
+              color: AppTheme.textSecondary,
+            ),
+          ),
+        ),
+
+        // Current tags as chips
+        if (editingTags.isNotEmpty) ...[
+          Semantics(
+            label: l10n.currentTagsLabel(editingTags.join(", ")),
+            child: Wrap(
+              spacing: FontScaling.getResponsiveSpacing(context, 8),
+              runSpacing: FontScaling.getResponsiveSpacing(context, 8),
+              children: editingTags.map((tag) {
+                return Semantics(
+                  label: l10n.tagRemoveHint(tag),
+                  button: true,
+                  child: Chip(
+                    label: Text(
+                      tag,
+                      style: FontScaling.getBodySmall(context).copyWith(
+                        color: AppTheme.textOnLight,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    deleteIcon: Icon(
+                      Icons.close,
+                      size: FontScaling.getResponsiveIconSize(context, 18),
+                      color: AppTheme.textOnLight,
+                    ),
+                    onDeleted: () => removeTag(tag),
+                    backgroundColor: AppTheme.primary,
+                    side: BorderSide.none,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 4),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+        ],
+
+        // Add tag input with autocomplete
+        if (editingTags.length < maxTags)
+          Autocomplete<String>(
+            optionsBuilder: (TextEditingValue textEditingValue) {
+              if (textEditingValue.text.isEmpty) {
+                return availableTags.take(5);
+              }
+              final query = textEditingValue.text.toLowerCase();
+              return availableTags
+                  .where((tag) => tag.toLowerCase().contains(query))
+                  .take(5);
+            },
+            onSelected: (String selection) {
+              addTag(selection);
+            },
+            fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+              return Semantics(
+                label: l10n.tagInputLabel,
+                textField: true,
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  style: FontScaling.getInputText(context),
+                  maxLength: maxTagLength,
+                  decoration: InputDecoration(
+                    hintText: l10n.addTagHint,
+                    hintStyle: FontScaling.getInputHint(context),
+                    counterText: '',
+                    filled: true,
+                    fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 12),
+                      vertical: FontScaling.getResponsiveSpacing(context, 10),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.borderSubtle),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.borderSubtle),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.borderFocused),
+                    ),
+                    suffixIcon: Semantics(
+                      label: l10n.addTagLabel,
+                      button: true,
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.add_circle,
+                          size: FontScaling.getResponsiveIconSize(context, 24),
+                          color: AppTheme.primary,
+                        ),
+                        tooltip: l10n.addTagHint,
+                        onPressed: () {
+                          addTag(controller.text);
+                          controller.clear();
+                        },
+                      ),
+                    ),
+                  ),
+                  onSubmitted: (value) {
+                    addTag(value);
+                    controller.clear();
+                  },
+                ),
+              );
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  elevation: 8,
+                  color: AppTheme.backgroundDark,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppTheme.borderSubtle),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    constraints: BoxConstraints(
+                      maxHeight: 200,
+                      maxWidth: 300,
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      itemCount: options.length,
+                      itemBuilder: (context, index) {
+                        final option = options.elementAt(index);
+                        return Semantics(
+                          label: AppLocalizations.of(context)!
+                              .suggestedTagLabel(option),
+                          button: true,
+                          child: ListTile(
+                            dense: true,
+                            title: Text(
+                              option,
+                              style: FontScaling.getBodyMedium(context).copyWith(
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            onTap: () => onSelected(option),
+                            hoverColor: AppTheme.primary.withValues(alpha: 0.1),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
+          )
+        else
+          Text(
+            l10n.tagLimitReached,
+            style: FontScaling.getCaption(context).copyWith(
+              color: AppTheme.textTertiary,
+            ),
+          ),
+      ],
+    );
+  }
+
   static Future<void> showAddGratitude({
     required BuildContext context,
     required TextEditingController controller,
-    required Function([int? colorIndex, Color? customColor, String? inspirationPrompt]) onAdd,
+    required Function([int? colorIndex, Color? customColor, String? inspirationPrompt, List<String>? tags]) onAdd,
     required bool isAnimating,
+    List<GratitudeStar>? allStars,
   }) async {
     if (isAnimating) return;
 
@@ -536,6 +762,11 @@ class GratitudeDialogs {
             selectedPreset?.colors ?? StarColors.palette;
         // Cache the current prompt to prevent regeneration on rebuilds
         String currentPrompt = AppLocalizations.of(context)!.defaultCreateStarHint;
+        // Tags state
+        List<String> editingTags = [];
+        final tagController = TextEditingController();
+        const int maxTags = 20;
+        const int maxTagLength = 30;
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -678,12 +909,12 @@ class GratitudeDialogs {
                                       final starColorsIndex = StarColors.palette
                                           .indexOf(selectedColour);
                                       if (starColorsIndex >= 0) {
-                                        onAdd(starColorsIndex, null, currentPrompt);
+                                        onAdd(starColorsIndex, null, currentPrompt, editingTags.isNotEmpty ? editingTags : null);
                                       } else {
-                                        onAdd(null, selectedColour, currentPrompt);
+                                        onAdd(null, selectedColour, currentPrompt, editingTags.isNotEmpty ? editingTags : null);
                                       }
                                     } else {
-                                      onAdd(null, null, currentPrompt); // Random colour
+                                      onAdd(null, null, currentPrompt, editingTags.isNotEmpty ? editingTags : null); // Random colour
                                     }
                                     if (context.mounted) {
                                       Navigator.of(context).pop();
@@ -960,6 +1191,28 @@ class GratitudeDialogs {
                               16,
                             ),
                           ),
+
+                          // Tags section
+                          _buildTagsSection(
+                            context: context,
+                            editingTags: editingTags,
+                            tagController: tagController,
+                            allStars: allStars ?? [],
+                            maxTags: maxTags,
+                            maxTagLength: maxTagLength,
+                            onTagsChanged: (newTags) {
+                              setState(() {
+                                editingTags = newTags;
+                              });
+                            },
+                          ),
+
+                          SizedBox(
+                            height: FontScaling.getResponsiveSpacing(
+                              context,
+                              16,
+                            ),
+                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -1007,9 +1260,10 @@ class GratitudeDialogs {
                                             selectedColorIndex,
                                             customColorPreview,
                                             currentPrompt,
+                                            editingTags.isNotEmpty ? editingTags : null,
                                           );
                                         } else {
-                                          onAdd(null, null, currentPrompt); // Random color
+                                          onAdd(null, null, currentPrompt, editingTags.isNotEmpty ? editingTags : null); // Random color
                                         }
                                         if (context.mounted) {
                                           Navigator.of(context).pop();

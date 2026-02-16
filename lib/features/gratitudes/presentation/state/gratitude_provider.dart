@@ -419,6 +419,7 @@ class GratitudeProvider extends ChangeNotifier {
         int? colorPresetIndex,
         Color? customColor,
         String? inspirationPrompt,
+        List<String>? tags,
       }) async {
     // Safety check: Ensure galaxy system is initialized
     // At this point, galaxy should always be initialized due to the initialization
@@ -439,6 +440,7 @@ class GratitudeProvider extends ChangeNotifier {
         colorPresetIndex: colorPresetIndex,
         customColor: customColor,
         inspirationPrompt: inspirationPrompt,
+        tags: tags,
       ),
     );
     return star;

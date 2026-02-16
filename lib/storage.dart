@@ -55,6 +55,9 @@ class GratitudeStar {
   // The prompt that inspired this gratitude (if any)
   final String? inspirationPrompt;
 
+  // Tags for categorization and search
+  final List<String> tags;
+
   // Getter for actual color (custom or palette)
   Color get color => customColor ?? StarColors.getColor(colorPresetIndex);
 
@@ -81,9 +84,11 @@ class GratitudeStar {
     required this.pulseMinScaleH,
     required this.pulseMinScaleV,
     this.inspirationPrompt,
+    List<String>? tags,
   })  : id = id ?? _generateId(),
         createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? createdAt ?? DateTime.now();
+        updatedAt = updatedAt ?? createdAt ?? DateTime.now(),
+        tags = tags ?? [];
 
   // Generate a unique ID (simple implementation)
   static String _generateId() {
@@ -113,6 +118,7 @@ class GratitudeStar {
     double? pulseMinScaleH,
     double? pulseMinScaleV,
     String? inspirationPrompt,
+    List<String>? tags,
   }) {
     return GratitudeStar(
       id: id,
@@ -137,6 +143,7 @@ class GratitudeStar {
       customColor: clearCustomColor ? null : (customColor ?? this.customColor),
       size: size ?? this.size,
       inspirationPrompt: inspirationPrompt ?? this.inspirationPrompt,
+      tags: tags ?? this.tags,
     );
   }
 
@@ -171,6 +178,8 @@ class GratitudeStar {
       'pulseMinScaleV': pulseMinScaleV,
       // Inspiration prompt (null if not set)
       if (inspirationPrompt != null) 'inspirationPrompt': inspirationPrompt,
+      // Tags for categorization
+      'tags': tags,
     };
   }
 
@@ -236,6 +245,7 @@ class GratitudeStar {
       pulseMinScaleV: (json['pulseMinScaleV'] ??
           dummyRandom.nextDouble() * StarConfig.pulseMinScaleMax).toDouble(),
       inspirationPrompt: json['inspirationPrompt'] as String?,
+      tags: (json['tags'] as List<dynamic>?)?.cast<String>() ?? [],
     );
   }
 }
@@ -775,6 +785,15 @@ class StorageService {
     star.createdAt.isAfter(today) &&
         star.createdAt.isBefore(today.add(Duration(days: 1)))
     );
+  }
+
+  static int getTodayStars(List<GratitudeStar> stars) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return stars.where((star) =>
+    star.createdAt.isAfter(today) &&
+        star.createdAt.isBefore(today.add(Duration(days: 1)))
+    ).length;
   }
 }
 

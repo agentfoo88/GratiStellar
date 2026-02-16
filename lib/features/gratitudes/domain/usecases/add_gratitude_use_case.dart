@@ -16,6 +16,7 @@ class AddGratitudeParams {
   final int? colorPresetIndex;
   final Color? customColor;
   final String? inspirationPrompt;
+  final List<String>? tags;
 
   const AddGratitudeParams({
     required this.text,
@@ -25,6 +26,7 @@ class AddGratitudeParams {
     this.colorPresetIndex,
     this.customColor,
     this.inspirationPrompt,
+    this.tags,
   });
 }
 
@@ -65,6 +67,7 @@ class AddGratitudeUseCase extends UseCase<GratitudeStar, AddGratitudeParams> {
       colorPresetIndex: params.colorPresetIndex,
       customColor: params.customColor,
       inspirationPrompt: params.inspirationPrompt,
+      tags: params.tags,
     );
 
     return newStar;

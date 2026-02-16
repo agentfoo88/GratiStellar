@@ -41,6 +41,13 @@ class _EditStarDialogState extends State<EditStarDialog> {
   Color? tempColorPreview;
   int? tempColorIndexPreview;
   static const int maxCharacters = 300;
+  static const int maxTags = 20;
+  static const int maxTagLength = 30;
+
+  // Tags editing state
+  late List<String> _editingTags;
+  final TextEditingController _tagController = TextEditingController();
+  final FocusNode _tagFocusNode = FocusNode();
 
   // Dialog owns its controllers (disposed when dialog closes)
   late final TextEditingController editTextController;
@@ -51,13 +58,235 @@ class _EditStarDialogState extends State<EditStarDialog> {
     super.initState();
     editTextController = TextEditingController(text: widget.star.text);
     _focusNode = FocusNode();
+    _editingTags = List<String>.from(widget.star.tags);
   }
 
   @override
   void dispose() {
     editTextController.dispose();
     _focusNode.dispose();
+    _tagController.dispose();
+    _tagFocusNode.dispose();
     super.dispose();
+  }
+
+  // Get all unique tags from all stars for autocomplete
+  List<String> _getAllUniqueTags() {
+    final allTags = <String>{};
+    for (final star in widget.allStars) {
+      allTags.addAll(star.tags);
+    }
+    // Remove tags already on this star
+    allTags.removeAll(_editingTags);
+    return allTags.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  }
+
+  void _addTag(String tag) {
+    final trimmedTag = tag.trim();
+    if (trimmedTag.isEmpty) return;
+    if (trimmedTag.length > maxTagLength) return;
+    if (_editingTags.length >= maxTags) return;
+
+    // Case-insensitive deduplication
+    final lowerTag = trimmedTag.toLowerCase();
+    if (_editingTags.any((t) => t.toLowerCase() == lowerTag)) return;
+
+    setState(() {
+      _editingTags.add(trimmedTag);
+      _tagController.clear();
+    });
+  }
+
+  void _removeTag(String tag) {
+    setState(() {
+      _editingTags.remove(tag);
+    });
+  }
+
+  Widget _buildTagsSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final availableTags = _getAllUniqueTags();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Tags label
+        Padding(
+          padding: EdgeInsets.only(bottom: FontScaling.getResponsiveSpacing(context, 8)),
+          child: Text(
+            l10n.tagsLabel,
+            style: FontScaling.getBodySmall(context).copyWith(
+              color: AppTheme.textSecondary,
+            ),
+          ),
+        ),
+
+        // Current tags as chips
+        if (_editingTags.isNotEmpty) ...[
+          Semantics(
+            label: l10n.currentTagsLabel(_editingTags.join(", ")),
+            child: Wrap(
+              spacing: FontScaling.getResponsiveSpacing(context, 8),
+              runSpacing: FontScaling.getResponsiveSpacing(context, 8),
+              children: _editingTags.map((tag) {
+                return Semantics(
+                  label: l10n.tagRemoveHint(tag),
+                  button: true,
+                  child: Chip(
+                    label: Text(
+                      tag,
+                      style: FontScaling.getBodySmall(context).copyWith(
+                        color: AppTheme.textOnLight,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    deleteIcon: Icon(
+                      Icons.close,
+                      size: FontScaling.getResponsiveIconSize(context, 18),
+                      color: AppTheme.textOnLight,
+                    ),
+                    onDeleted: () => _removeTag(tag),
+                    backgroundColor: AppTheme.primary,
+                    side: BorderSide.none,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: FontScaling.getResponsiveSpacing(context, 4),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          SizedBox(height: FontScaling.getResponsiveSpacing(context, 12)),
+        ],
+
+        // Add tag input with autocomplete
+        if (_editingTags.length < maxTags)
+          Autocomplete<String>(
+            optionsBuilder: (TextEditingValue textEditingValue) {
+              if (textEditingValue.text.isEmpty) {
+                return availableTags.take(5);
+              }
+              final query = textEditingValue.text.toLowerCase();
+              return availableTags.where((tag) =>
+                tag.toLowerCase().contains(query)
+              ).take(5);
+            },
+            onSelected: (String selection) {
+              _addTag(selection);
+            },
+            fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+              // Sync the controller
+              _tagController.text = controller.text;
+              return Semantics(
+                label: l10n.tagInputLabel,
+                textField: true,
+                child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                style: FontScaling.getInputText(context),
+                maxLength: maxTagLength,
+                decoration: InputDecoration(
+                  hintText: l10n.addTagHint,
+                  hintStyle: FontScaling.getInputHint(context),
+                  counterText: '',
+                  filled: true,
+                  fillColor: AppTheme.textPrimary.withValues(alpha: 0.1),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: FontScaling.getResponsiveSpacing(context, 12),
+                    vertical: FontScaling.getResponsiveSpacing(context, 10),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppTheme.borderSubtle),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppTheme.borderSubtle),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppTheme.borderFocused),
+                  ),
+                  suffixIcon: Semantics(
+                    label: l10n.addTagLabel,
+                    button: true,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.add_circle,
+                        size: FontScaling.getResponsiveIconSize(context, 24),
+                        color: AppTheme.primary,
+                      ),
+                      tooltip: l10n.addTagHint,
+                      onPressed: () {
+                        _addTag(controller.text);
+                        controller.clear();
+                      },
+                    ),
+                  ),
+                ),
+                onSubmitted: (value) {
+                  _addTag(value);
+                  controller.clear();
+                },
+              ),
+              );
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  elevation: 8,
+                  color: AppTheme.backgroundDark,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppTheme.borderSubtle),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    constraints: BoxConstraints(
+                      maxHeight: 200,
+                      maxWidth: 300,
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      itemCount: options.length,
+                      itemBuilder: (context, index) {
+                        final option = options.elementAt(index);
+                        return Semantics(
+                          label: l10n.suggestedTagLabel(option),
+                          button: true,
+                          child: ListTile(
+                            dense: true,
+                            title: Text(
+                              option,
+                              style: FontScaling.getBodyMedium(context).copyWith(
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            onTap: () => onSelected(option),
+                            hoverColor: AppTheme.primary.withValues(alpha: 0.1),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
+          )
+        else
+          Text(
+            l10n.tagLimitReached,
+            style: FontScaling.getCaption(context).copyWith(
+              color: AppTheme.textTertiary,
+            ),
+          ),
+      ],
+    );
   }
 
   @override
@@ -180,6 +409,12 @@ class _EditStarDialogState extends State<EditStarDialog> {
               ),
 
             SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+
+            // Tags section (only in edit mode)
+            if (isEditMode) ...[
+              _buildTagsSection(context),
+              SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+            ],
 
             // View mode buttons
             if (!isEditMode)
@@ -326,6 +561,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
                             editTextController.text = currentStar.text;
                             tempColorPreview = null;
                             tempColorIndexPreview = null;
+                            _editingTags = List<String>.from(widget.star.tags);
                           });
                         },
                         child: Text(
@@ -337,10 +573,11 @@ class _EditStarDialogState extends State<EditStarDialog> {
                       ),
                       SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
                       ElevatedButton(
-                        onPressed: editTextController.text.length > maxCharacters ? null : () { // <--- UPDATED LOGIC
+                        onPressed: editTextController.text.length > maxCharacters ? null : () {
                           // Build updated star with all changes
                           var updatedStar = currentStar.copyWith(
                             text: editTextController.text,
+                            tags: _editingTags,
                           );
 
                           // Apply color changes if any
@@ -356,7 +593,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
                           }
 
                           widget.onSave(updatedStar);
-                          Navigator.of(context).pop('saved'); // ← Pass result
+                          Navigator.of(context).pop('saved');
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primary,

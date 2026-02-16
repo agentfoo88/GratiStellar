@@ -2491,5 +2491,85 @@
         "whatsNewMenuReorderDesc": "Reordered menu items for easier navigation.",
         "@whatsNewMenuReorderDesc": {
           "description": "Description for menu reorder improvement"
+        },
+        "searchHint": "Search by content or tags",
+        "@searchHint": {
+          "description": "Hint text for the search field in list view"
+        },
+        "tagsLabel": "Tags",
+        "@tagsLabel": {
+          "description": "Label for tags section in edit dialog"
+        },
+        "addTagHint": "Add tag",
+        "@addTagHint": {
+          "description": "Hint text for adding a new tag"
+        },
+        "noSearchResults": "No stars match your search",
+        "@noSearchResults": {
+          "description": "Empty state message when search returns no results"
+        },
+        "tagLimitReached": "Maximum 20 tags per star",
+        "@tagLimitReached": {
+          "description": "Message shown when tag limit is reached"
+        },
+        "tagTooLong": "Tag must be 30 characters or less",
+        "@tagTooLong": {
+          "description": "Error message when tag is too long"
+        },
+        "searchLabel": "Search",
+        "@searchLabel": {
+          "description": "Label for search button"
+        },
+        "searchStarsHint": "Search gratitude stars",
+        "@searchStarsHint": {
+          "description": "Accessibility hint for search button"
+        },
+        "closeSearchLabel": "Close search",
+        "@closeSearchLabel": {
+          "description": "Label for close search button"
+        },
+        "tagsAccessibilityLabel": "Tags: {tags}",
+        "@tagsAccessibilityLabel": {
+          "description": "Accessibility label for tags list",
+          "placeholders": {
+            "tags": {
+              "type": "String"
+            }
+          }
+        },
+        "currentTagsLabel": "Current tags: {tags}",
+        "@currentTagsLabel": {
+          "description": "Accessibility label for current tags in edit mode",
+          "placeholders": {
+            "tags": {
+              "type": "String"
+            }
+          }
+        },
+        "tagRemoveHint": "Tag: {tag}. Double tap to remove.",
+        "@tagRemoveHint": {
+          "description": "Accessibility hint for removing a tag",
+          "placeholders": {
+            "tag": {
+              "type": "String"
+            }
+          }
+        },
+        "suggestedTagLabel": "Suggested tag: {tag}",
+        "@suggestedTagLabel": {
+          "description": "Accessibility label for suggested tag in autocomplete",
+          "placeholders": {
+            "tag": {
+              "type": "String"
+            }
+          }
+        },
+        "addTagLabel": "Add tag",
+        "@addTagLabel": {
+          "description": "Accessibility label for add tag button"
+        },
+        "tagInputLabel": "Enter a tag name",
+        "@tagInputLabel": {
+          "description": "Accessibility label for tag input field"
         }
     }

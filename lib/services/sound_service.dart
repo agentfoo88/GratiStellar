@@ -75,6 +75,43 @@ class SoundService extends ChangeNotifier {
     }
   }
 
+  Future<void> playStarCreation() async {
+    if (!_soundEnabled || !_initialized || _waveform == null) return;
+
+    try {
+      // Play ascending pentatonic sequence
+      for (int i = 0; i < _frequencies.length; i++) {
+        final freq = _frequencies[i];
+        final isLast = i == _frequencies.length - 1;
+
+        await Future.delayed(Duration(milliseconds: i * 80));
+
+        SoLoud.instance.setWaveformFreq(_waveform!, freq);
+        final handle = await SoLoud.instance.play(
+          _waveform!,
+          volume: isLast ? 0.35 : 0.2, // Final note louder
+        );
+
+        // Final note rings longer
+        final holdTime = isLast ? 600 : 150;
+        Future.delayed(Duration(milliseconds: holdTime), () {
+          if (SoLoud.instance.isInitialized) {
+            SoLoud.instance.fadeVolume(
+              handle,
+              0,
+              Duration(milliseconds: isLast ? 200 : 80),
+            );
+            Future.delayed(Duration(milliseconds: isLast ? 300 : 100), () {
+              SoLoud.instance.stop(handle);
+            });
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('SoundService playStarCreation failed: $e');
+    }
+  }
+
   @override
   void dispose() {
     if (_waveform != null) {

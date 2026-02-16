@@ -465,23 +465,8 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
 
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
 
-          // Tagline or Support chip (only when no holiday greeting)
-          if (_holidayGreeting == null)
-            widget.displayMode == SplashDisplayMode.about
-                ? _buildSupportChip(context, l10n)
-                : Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: FontScaling.getResponsiveSpacing(context, 40),
-                    ),
-                    child: Text(
-                      l10n.appTagline,
-                      style: FontScaling.getBodyMedium(context).copyWith(
-                        fontSize: FontScaling.getBodyMedium(context).fontSize! * 0.9,
-                        color: AppTheme.textPrimary.withValues(alpha: 0.9),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+          // Support chip (only when no holiday greeting); tagline removed in favour of support link
+          if (_holidayGreeting == null) _buildSupportChip(context, l10n),
 
           const Spacer(flex: 1),
 
@@ -545,8 +530,8 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
     );
   }
 
-  /// Support GratiStellar chip (About mode): opens Ko-fi in browser
-  static const Color _supportChipColor = Color(0xFF5493FF);
+  /// Support GratiStellar chip: opens Ko-fi in browser
+  static const Color _supportChipColor = Color(0x124666);
 
   Widget _buildSupportChip(BuildContext context, AppLocalizations l10n) {
     return Padding(

@@ -2033,4 +2033,57 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get whatsNewMenuReorderDesc =>
       'Reordered menu items for easier navigation.';
+
+  @override
+  String get searchHint => 'Search by content or tags';
+
+  @override
+  String get tagsLabel => 'Tags';
+
+  @override
+  String get addTagHint => 'Add tag';
+
+  @override
+  String get noSearchResults => 'No stars match your search';
+
+  @override
+  String get tagLimitReached => 'Maximum 20 tags per star';
+
+  @override
+  String get tagTooLong => 'Tag must be 30 characters or less';
+
+  @override
+  String get searchLabel => 'Search';
+
+  @override
+  String get searchStarsHint => 'Search gratitude stars';
+
+  @override
+  String get closeSearchLabel => 'Close search';
+
+  @override
+  String tagsAccessibilityLabel(String tags) {
+    return 'Tags: $tags';
+  }
+
+  @override
+  String currentTagsLabel(String tags) {
+    return 'Current tags: $tags';
+  }
+
+  @override
+  String tagRemoveHint(String tag) {
+    return 'Tag: $tag. Double tap to remove.';
+  }
+
+  @override
+  String suggestedTagLabel(String tag) {
+    return 'Suggested tag: $tag';
+  }
+
+  @override
+  String get addTagLabel => 'Add tag';
+
+  @override
+  String get tagInputLabel => 'Enter a tag name';
 }

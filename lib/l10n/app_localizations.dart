@@ -3687,6 +3687,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reordered menu items for easier navigation.'**
   String get whatsNewMenuReorderDesc;
+
+  /// Hint text for the search field in list view
+  ///
+  /// In en, this message translates to:
+  /// **'Search by content or tags'**
+  String get searchHint;
+
+  /// Label for tags section in edit dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tagsLabel;
+
+  /// Hint text for adding a new tag
+  ///
+  /// In en, this message translates to:
+  /// **'Add tag'**
+  String get addTagHint;
+
+  /// Empty state message when search returns no results
+  ///
+  /// In en, this message translates to:
+  /// **'No stars match your search'**
+  String get noSearchResults;
+
+  /// Message shown when tag limit is reached
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum 20 tags per star'**
+  String get tagLimitReached;
+
+  /// Error message when tag is too long
+  ///
+  /// In en, this message translates to:
+  /// **'Tag must be 30 characters or less'**
+  String get tagTooLong;
+
+  /// Label for search button
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchLabel;
+
+  /// Accessibility hint for search button
+  ///
+  /// In en, this message translates to:
+  /// **'Search gratitude stars'**
+  String get searchStarsHint;
+
+  /// Label for close search button
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get closeSearchLabel;
+
+  /// Accessibility label for tags list
+  ///
+  /// In en, this message translates to:
+  /// **'Tags: {tags}'**
+  String tagsAccessibilityLabel(String tags);
+
+  /// Accessibility label for current tags in edit mode
+  ///
+  /// In en, this message translates to:
+  /// **'Current tags: {tags}'**
+  String currentTagsLabel(String tags);
+
+  /// Accessibility hint for removing a tag
+  ///
+  /// In en, this message translates to:
+  /// **'Tag: {tag}. Double tap to remove.'**
+  String tagRemoveHint(String tag);
+
+  /// Accessibility label for suggested tag in autocomplete
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested tag: {tag}'**
+  String suggestedTagLabel(String tag);
+
+  /// Accessibility label for add tag button
+  ///
+  /// In en, this message translates to:
+  /// **'Add tag'**
+  String get addTagLabel;
+
+  /// Accessibility label for tag input field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a tag name'**
+  String get tagInputLabel;
 }
 
 class _AppLocalizationsDelegate

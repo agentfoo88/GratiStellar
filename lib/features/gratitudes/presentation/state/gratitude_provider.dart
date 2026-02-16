@@ -652,9 +652,15 @@ class GratitudeProvider extends ChangeNotifier {
   }
 
   /// Start mindfulness mode
-  void startMindfulness() {
+  Future<void> startMindfulness() async {
     // Require at least 2 stars for mindfulness mode
     if (_gratitudeStars.length < 2) return;
+
+    // Load default mindfulness delay if set
+    final defaultDelay = await StorageService.getDefaultMindfulnessDelay();
+    if (defaultDelay != null) {
+      _mindfulnessInterval = defaultDelay;
+    }
 
     // Cancel show all if active
     _showAllGratitudes = false;

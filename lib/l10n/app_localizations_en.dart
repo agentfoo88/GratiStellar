@@ -769,10 +769,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewGratitudesAsList => 'View your gratitudes as a text list';
 
   @override
-  String get fontSize => 'Font Size';
+  String get fontSize => 'UI Size';
 
   @override
-  String get fontSizeSlider => 'Font size slider';
+  String get fontSizeSlider => 'UI size slider';
 
   @override
   String get adjustTextSize => 'Adjust text size from 75% to 175%';
@@ -2035,25 +2035,47 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reordered menu items for easier navigation.';
 
   @override
-  String get whatsNewSearchTaggingTitle => 'Search & Tagging';
+  String get whatsNewSearchFunctionTitle => 'Search Function';
 
   @override
-  String get whatsNewSearchTaggingDesc =>
-      'Search your stars by content or tags. Add tags when creating or editing stars to organise your gratitudes.';
+  String get whatsNewSearchFunctionDesc =>
+      'Search your stars by content or tags to quickly find your gratitudes.';
 
   @override
-  String get whatsNewStarCreationSoundTitle => 'Star Creation Sound';
+  String get whatsNewTaggingStarsTitle => 'Tagging Stars';
 
   @override
-  String get whatsNewStarCreationSoundDesc =>
-      'A peaceful sound now plays when you create a new star.';
+  String get whatsNewTaggingStarsDesc =>
+      'Add tags when creating or editing stars to organise your gratitudes.';
 
   @override
-  String get whatsNewAccessibilityCleanupTitle => 'Accessibility Improvements';
+  String get whatsNewMindfulnessDelayTitle => 'Default Mindfulness Delay';
 
   @override
-  String get whatsNewAccessibilityCleanupDesc =>
-      'Cleaned up localisation strings and improved screen reader support.';
+  String get whatsNewMindfulnessDelayDesc =>
+      'Set a default delay for mindfulness mode in Settings.';
+
+  @override
+  String get whatsNewCreationSoundTitle => 'Creation Sound Effect';
+
+  @override
+  String get whatsNewCreationSoundDesc =>
+      'Updated the sound effect when creating new stars.';
+
+  @override
+  String get whatsNewL10nAccessibilityFixTitle =>
+      'Localisation & Accessibility';
+
+  @override
+  String get whatsNewL10nAccessibilityFixDesc =>
+      'Cleaned up localisation strings and accessibility issues.';
+
+  @override
+  String get whatsNewBannersWrappingFixTitle => 'Banners & Wrapping';
+
+  @override
+  String get whatsNewBannersWrappingFixDesc =>
+      'Fixed banner positioning and text wrapping at large UI scales.';
 
   @override
   String get searchHint => 'Search by content or tags';
@@ -2107,4 +2129,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tagInputLabel => 'Enter a tag name';
+
+  @override
+  String get defaultMindfulnessDelay => 'Default mindfulness delay';
+
+  @override
+  String get defaultMindfulnessDelayDescription =>
+      'When you start mindfulness mode, this delay will be used.';
+
+  @override
+  String get defaultDelayNotSet => 'Not set';
+
+  @override
+  String get clearDefaultDelay => 'Clear default delay';
+
+  @override
+  String secondsFormat(int count) {
+    return '${count}s';
+  }
 }

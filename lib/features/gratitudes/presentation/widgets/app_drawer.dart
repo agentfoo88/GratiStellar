@@ -95,13 +95,20 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
 
   double _getResponsiveDrawerWidth(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final maxWidth = screenWidth * 0.9; // Never exceed 90% of screen
+
+    double baseWidth;
     if (screenWidth < 500) {
-      return screenWidth * 0.85;
+      baseWidth = screenWidth * 0.85;
     } else if (screenWidth < 900) {
-      return 320;
+      baseWidth = 320;
     } else {
-      return 360;
+      baseWidth = 360;
     }
+
+    // Scale drawer width with UI scale, but cap at 90% of screen
+    final scaledWidth = baseWidth * UIConstants.universalUIScale;
+    return scaledWidth.clamp(baseWidth, maxWidth);
   }
 
   @override
@@ -193,9 +200,14 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                           style: FontScaling.getBodySmall(context).copyWith(
                             color: AppTheme.textSecondary,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                         SizedBox(height: FontScaling.getResponsiveSpacing(context, 4)),
-                        Row(
+                        // Wrap stats row to handle overflow at large font scales
+                        Wrap(
+                          spacing: FontScaling.getResponsiveSpacing(context, 12),
+                          runSpacing: FontScaling.getResponsiveSpacing(context, 4),
                           children: [
                             Text(
                               '$starCount ${starCount == 1 ? "star" : "stars"}',
@@ -204,14 +216,12 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                                 fontWeight: FontScaling.mediumWeight,
                               ),
                             ),
-                            SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
                             Text(
                               l10n.drawerStatsToday(todayCount),
                               style: FontScaling.getCaption(context).copyWith(
                                 color: AppTheme.textTertiary,
                               ),
                             ),
-                            SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
                             Text(
                               l10n.drawerStatsThisWeek(weekCount),
                               style: FontScaling.getCaption(context).copyWith(
@@ -451,6 +461,109 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                 },
               ),
 
+              // Default Mindfulness Delay Setting
+              FutureBuilder<int?>(
+                future: StorageService.getDefaultMindfulnessDelay(),
+                builder: (context, snapshot) {
+                  final currentDelay = snapshot.data;
+                  final hasDefault = currentDelay != null;
+
+                  return StatefulBuilder(
+                    builder: (context, setDelayState) {
+                      // Track local slider value for real-time updates
+                      int sliderValue = currentDelay ?? 2;
+
+                      return Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                          vertical: FontScaling.getResponsiveSpacing(context, 8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.self_improvement, color: AppTheme.textSecondary, size: FontScaling.getResponsiveIconSize(context, 24)),
+                                SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
+                                Expanded(
+                                  child: Text(
+                                    l10n.defaultMindfulnessDelay,
+                                    style: FontScaling.getBodyMedium(context).copyWith(
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
+                                if (hasDefault)
+                                  Text(
+                                    l10n.secondsFormat(currentDelay),
+                                    style: FontScaling.getCaption(context).copyWith(
+                                      color: AppTheme.primary,
+                                      fontWeight: FontScaling.mediumWeight,
+                                    ),
+                                  )
+                                else
+                                  Text(
+                                    l10n.defaultDelayNotSet,
+                                    style: FontScaling.getCaption(context).copyWith(
+                                      color: AppTheme.textTertiary,
+                                    ),
+                                  ),
+                                if (hasDefault)
+                                  IconButton(
+                                    onPressed: () async {
+                                      await StorageService.clearDefaultMindfulnessDelay();
+                                      setState(() {}); // Refresh parent to rebuild FutureBuilder
+                                    },
+                                    icon: Icon(Icons.clear, size: 20, color: AppTheme.textTertiary),
+                                    tooltip: l10n.clearDefaultDelay,
+                                    padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 8)),
+                                    constraints: const BoxConstraints(),
+                                  ),
+                              ],
+                            ),
+                            SizedBox(height: FontScaling.getResponsiveSpacing(context, 8)),
+                            SemanticHelper.label(
+                              label: l10n.defaultMindfulnessDelay,
+                              hint: l10n.defaultMindfulnessDelayDescription,
+                              child: Slider(
+                                value: sliderValue.toDouble(),
+                                min: 2,
+                                max: 15,
+                                divisions: 13,
+                                label: l10n.secondsFormat(sliderValue),
+                                activeColor: AppTheme.primary,
+                                inactiveColor: AppTheme.textDisabled,
+                                thumbColor: AppTheme.primary,
+                                overlayColor: WidgetStateProperty.all(
+                                  AppTheme.primary.withValues(alpha: 0.1),
+                                ),
+                                onChanged: (value) {
+                                  setDelayState(() {
+                                    sliderValue = value.round();
+                                  });
+                                },
+                                onChangeEnd: (value) async {
+                                  await StorageService.saveDefaultMindfulnessDelay(value.round());
+                                  setState(() {}); // Refresh to show new value
+                                },
+                              ),
+                            ),
+                            Text(
+                              l10n.defaultMindfulnessDelayDescription,
+                              style: FontScaling.getCaption(context).copyWith(
+                                color: AppTheme.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+
               // Default Star Color Setting
               FutureBuilder<(int?, Color?)?>(
                 future: StorageService.getDefaultColor(),
@@ -497,13 +610,16 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                         children: [
                           Icon(Icons.palette, color: AppTheme.textSecondary, size: FontScaling.getResponsiveIconSize(context, 24)),
                           SizedBox(width: FontScaling.getResponsiveSpacing(context, 16)),
-                          Text(
-                            l10n.defaultStarColor,
-                            style: FontScaling.getBodyMedium(context).copyWith(
-                              color: AppTheme.textPrimary,
+                          Expanded(
+                            child: Text(
+                              l10n.defaultStarColor,
+                              style: FontScaling.getBodyMedium(context).copyWith(
+                                color: AppTheme.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const Spacer(),
+                          SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
                           if (hasDefault && displayColor != null)
                             Container(
                               width: 24,

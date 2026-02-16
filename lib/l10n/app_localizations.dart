@@ -1507,13 +1507,13 @@ abstract class AppLocalizations {
   /// No description provided for @fontSize.
   ///
   /// In en, this message translates to:
-  /// **'Font Size'**
+  /// **'UI Size'**
   String get fontSize;
 
   /// No description provided for @fontSizeSlider.
   ///
   /// In en, this message translates to:
-  /// **'Font size slider'**
+  /// **'UI size slider'**
   String get fontSizeSlider;
 
   /// No description provided for @adjustTextSize.
@@ -3688,41 +3688,77 @@ abstract class AppLocalizations {
   /// **'Reordered menu items for easier navigation.'**
   String get whatsNewMenuReorderDesc;
 
-  /// Title for search and tagging feature
+  /// Title for search function feature
   ///
   /// In en, this message translates to:
-  /// **'Search & Tagging'**
-  String get whatsNewSearchTaggingTitle;
+  /// **'Search Function'**
+  String get whatsNewSearchFunctionTitle;
 
-  /// Description for search and tagging feature
+  /// Description for search function feature
   ///
   /// In en, this message translates to:
-  /// **'Search your stars by content or tags. Add tags when creating or editing stars to organise your gratitudes.'**
-  String get whatsNewSearchTaggingDesc;
+  /// **'Search your stars by content or tags to quickly find your gratitudes.'**
+  String get whatsNewSearchFunctionDesc;
 
-  /// Title for star creation sound feature
+  /// Title for tagging stars feature
   ///
   /// In en, this message translates to:
-  /// **'Star Creation Sound'**
-  String get whatsNewStarCreationSoundTitle;
+  /// **'Tagging Stars'**
+  String get whatsNewTaggingStarsTitle;
 
-  /// Description for star creation sound feature
+  /// Description for tagging stars feature
   ///
   /// In en, this message translates to:
-  /// **'A peaceful sound now plays when you create a new star.'**
-  String get whatsNewStarCreationSoundDesc;
+  /// **'Add tags when creating or editing stars to organise your gratitudes.'**
+  String get whatsNewTaggingStarsDesc;
 
-  /// Title for accessibility cleanup
+  /// Title for mindfulness delay setting feature
   ///
   /// In en, this message translates to:
-  /// **'Accessibility Improvements'**
-  String get whatsNewAccessibilityCleanupTitle;
+  /// **'Default Mindfulness Delay'**
+  String get whatsNewMindfulnessDelayTitle;
 
-  /// Description for accessibility cleanup
+  /// Description for mindfulness delay setting feature
   ///
   /// In en, this message translates to:
-  /// **'Cleaned up localisation strings and improved screen reader support.'**
-  String get whatsNewAccessibilityCleanupDesc;
+  /// **'Set a default delay for mindfulness mode in Settings.'**
+  String get whatsNewMindfulnessDelayDesc;
+
+  /// Title for creation sound update
+  ///
+  /// In en, this message translates to:
+  /// **'Creation Sound Effect'**
+  String get whatsNewCreationSoundTitle;
+
+  /// Description for creation sound update
+  ///
+  /// In en, this message translates to:
+  /// **'Updated the sound effect when creating new stars.'**
+  String get whatsNewCreationSoundDesc;
+
+  /// Title for l10n and accessibility fixes
+  ///
+  /// In en, this message translates to:
+  /// **'Localisation & Accessibility'**
+  String get whatsNewL10nAccessibilityFixTitle;
+
+  /// Description for l10n and accessibility fixes
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaned up localisation strings and accessibility issues.'**
+  String get whatsNewL10nAccessibilityFixDesc;
+
+  /// Title for banners and wrapping bug fix
+  ///
+  /// In en, this message translates to:
+  /// **'Banners & Wrapping'**
+  String get whatsNewBannersWrappingFixTitle;
+
+  /// Description for banners and wrapping bug fix
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed banner positioning and text wrapping at large UI scales.'**
+  String get whatsNewBannersWrappingFixDesc;
 
   /// Hint text for the search field in list view
   ///
@@ -3813,6 +3849,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a tag name'**
   String get tagInputLabel;
+
+  /// Label for default mindfulness delay setting
+  ///
+  /// In en, this message translates to:
+  /// **'Default mindfulness delay'**
+  String get defaultMindfulnessDelay;
+
+  /// Description for default mindfulness delay setting
+  ///
+  /// In en, this message translates to:
+  /// **'When you start mindfulness mode, this delay will be used.'**
+  String get defaultMindfulnessDelayDescription;
+
+  /// Text shown when no default mindfulness delay is set
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get defaultDelayNotSet;
+
+  /// Tooltip for clearing default mindfulness delay
+  ///
+  /// In en, this message translates to:
+  /// **'Clear default delay'**
+  String get clearDefaultDelay;
+
+  /// Format for displaying seconds
+  ///
+  /// In en, this message translates to:
+  /// **'{count}s'**
+  String secondsFormat(int count);
 }
 
 class _AppLocalizationsDelegate

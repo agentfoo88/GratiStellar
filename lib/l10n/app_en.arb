@@ -726,8 +726,8 @@
   "accountSettings": "Account settings",
   "manageAccountHint": "Manage your account and authentication",
   "viewGratitudesAsList": "View your gratitudes as a text list",
-  "fontSize": "Font Size",
-  "fontSizeSlider": "Font size slider",
+  "fontSize": "UI Size",
+  "fontSizeSlider": "UI size slider",
   "adjustTextSize": "Adjust text size from 75% to 175%",
   "fontPreviewText": "Preview: The quick brown fox jumps",
   "trashWithCount": "Trash, {count} deleted items",
@@ -2492,29 +2492,53 @@
         "@whatsNewMenuReorderDesc": {
           "description": "Description for menu reorder improvement"
         },
-        "whatsNewSearchTaggingTitle": "Search & Tagging",
-        "@whatsNewSearchTaggingTitle": {
-          "description": "Title for search and tagging feature"
+        "whatsNewSearchFunctionTitle": "Search Function",
+        "@whatsNewSearchFunctionTitle": {
+          "description": "Title for search function feature"
         },
-        "whatsNewSearchTaggingDesc": "Search your stars by content or tags. Add tags when creating or editing stars to organise your gratitudes.",
-        "@whatsNewSearchTaggingDesc": {
-          "description": "Description for search and tagging feature"
+        "whatsNewSearchFunctionDesc": "Search your stars by content or tags to quickly find your gratitudes.",
+        "@whatsNewSearchFunctionDesc": {
+          "description": "Description for search function feature"
         },
-        "whatsNewStarCreationSoundTitle": "Star Creation Sound",
-        "@whatsNewStarCreationSoundTitle": {
-          "description": "Title for star creation sound feature"
+        "whatsNewTaggingStarsTitle": "Tagging Stars",
+        "@whatsNewTaggingStarsTitle": {
+          "description": "Title for tagging stars feature"
         },
-        "whatsNewStarCreationSoundDesc": "A peaceful sound now plays when you create a new star.",
-        "@whatsNewStarCreationSoundDesc": {
-          "description": "Description for star creation sound feature"
+        "whatsNewTaggingStarsDesc": "Add tags when creating or editing stars to organise your gratitudes.",
+        "@whatsNewTaggingStarsDesc": {
+          "description": "Description for tagging stars feature"
         },
-        "whatsNewAccessibilityCleanupTitle": "Accessibility Improvements",
-        "@whatsNewAccessibilityCleanupTitle": {
-          "description": "Title for accessibility cleanup"
+        "whatsNewMindfulnessDelayTitle": "Default Mindfulness Delay",
+        "@whatsNewMindfulnessDelayTitle": {
+          "description": "Title for mindfulness delay setting feature"
         },
-        "whatsNewAccessibilityCleanupDesc": "Cleaned up localisation strings and improved screen reader support.",
-        "@whatsNewAccessibilityCleanupDesc": {
-          "description": "Description for accessibility cleanup"
+        "whatsNewMindfulnessDelayDesc": "Set a default delay for mindfulness mode in Settings.",
+        "@whatsNewMindfulnessDelayDesc": {
+          "description": "Description for mindfulness delay setting feature"
+        },
+        "whatsNewCreationSoundTitle": "Creation Sound Effect",
+        "@whatsNewCreationSoundTitle": {
+          "description": "Title for creation sound update"
+        },
+        "whatsNewCreationSoundDesc": "Updated the sound effect when creating new stars.",
+        "@whatsNewCreationSoundDesc": {
+          "description": "Description for creation sound update"
+        },
+        "whatsNewL10nAccessibilityFixTitle": "Localisation & Accessibility",
+        "@whatsNewL10nAccessibilityFixTitle": {
+          "description": "Title for l10n and accessibility fixes"
+        },
+        "whatsNewL10nAccessibilityFixDesc": "Cleaned up localisation strings and accessibility issues.",
+        "@whatsNewL10nAccessibilityFixDesc": {
+          "description": "Description for l10n and accessibility fixes"
+        },
+        "whatsNewBannersWrappingFixTitle": "Banners & Wrapping",
+        "@whatsNewBannersWrappingFixTitle": {
+          "description": "Title for banners and wrapping bug fix"
+        },
+        "whatsNewBannersWrappingFixDesc": "Fixed banner positioning and text wrapping at large UI scales.",
+        "@whatsNewBannersWrappingFixDesc": {
+          "description": "Description for banners and wrapping bug fix"
         },
         "searchHint": "Search by content or tags",
         "@searchHint": {
@@ -2595,5 +2619,30 @@
         "tagInputLabel": "Enter a tag name",
         "@tagInputLabel": {
           "description": "Accessibility label for tag input field"
+        },
+        "defaultMindfulnessDelay": "Default mindfulness delay",
+        "@defaultMindfulnessDelay": {
+          "description": "Label for default mindfulness delay setting"
+        },
+        "defaultMindfulnessDelayDescription": "When you start mindfulness mode, this delay will be used.",
+        "@defaultMindfulnessDelayDescription": {
+          "description": "Description for default mindfulness delay setting"
+        },
+        "defaultDelayNotSet": "Not set",
+        "@defaultDelayNotSet": {
+          "description": "Text shown when no default mindfulness delay is set"
+        },
+        "clearDefaultDelay": "Clear default delay",
+        "@clearDefaultDelay": {
+          "description": "Tooltip for clearing default mindfulness delay"
+        },
+        "secondsFormat": "{count}s",
+        "@secondsFormat": {
+          "description": "Format for displaying seconds",
+          "placeholders": {
+            "count": {
+              "type": "int"
+            }
+          }
         }
     }

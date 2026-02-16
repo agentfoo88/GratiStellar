@@ -532,6 +532,9 @@ class StorageService {
       await prefs.remove(_tutorialStarButtonSeenKey);
       await prefs.remove(_tutorialMindfulnessSeenKey);
 
+      // Clear mindfulness delay preference on sign-out
+      await prefs.remove(_defaultMindfulnessDelayKey);
+
       // NOTE: device_id is NOT cleared - it's persistent per device
       // This allows multiple anonymous profiles on the same device
 
@@ -766,6 +769,47 @@ class StorageService {
       AppLogger.data('💾 Saved last seen What\'s New build: $buildNumber');
     } catch (e) {
       AppLogger.warning('⚠️ Error saving last seen What\'s New build: $e');
+    }
+  }
+
+  // Default mindfulness delay preference
+  static const String _defaultMindfulnessDelayKey = 'default_mindfulness_delay';
+
+  /// Get default mindfulness delay in seconds (2-15), null if not set
+  static Future<int?> getDefaultMindfulnessDelay() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final delay = prefs.getInt(_defaultMindfulnessDelayKey);
+      if (delay != null && delay >= 2 && delay <= 15) {
+        return delay;
+      }
+      return null;
+    } catch (e) {
+      AppLogger.warning('⚠️ Error getting default mindfulness delay: $e');
+      return null;
+    }
+  }
+
+  /// Save default mindfulness delay in seconds
+  static Future<void> saveDefaultMindfulnessDelay(int seconds) async {
+    try {
+      final clamped = seconds.clamp(2, 15);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_defaultMindfulnessDelayKey, clamped);
+      AppLogger.data('💾 Saved default mindfulness delay: $clamped seconds');
+    } catch (e) {
+      AppLogger.warning('⚠️ Error saving default mindfulness delay: $e');
+    }
+  }
+
+  /// Clear default mindfulness delay
+  static Future<void> clearDefaultMindfulnessDelay() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_defaultMindfulnessDelayKey);
+      AppLogger.data('🗑️ Cleared default mindfulness delay');
+    } catch (e) {
+      AppLogger.warning('⚠️ Error clearing default mindfulness delay: $e');
     }
   }
 

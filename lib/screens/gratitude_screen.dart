@@ -992,32 +992,23 @@ class _GratitudeScreenState extends State<GratitudeScreen>
                   },
                 ),
 
-              // Stats card - positioned at top center, below banners
+              // Stats card - positioned at top center, below sync banner only
+              // Sign-in prompt banner overlays on top (doesn't push stats down)
               if (!_showBranding)
                 Consumer<GratitudeProvider>(
                   builder: (context, gratitudeProvider, child) {
-                    // Calculate top position based on banners
-                    // Stats card should be at top, accounting for safe area and banners
+                    // Calculate top position based on sync banner only
                     double topOffset = MediaQuery.of(context).padding.top + 16;
-                    if (_authService.hasEmailAccount && 
+                    if (_authService.hasEmailAccount &&
                         gratitudeProvider.syncStatus.status != SyncStatus.synced) {
                       topOffset += 60; // Sync banner height
                     }
-                    // Check if sign-in prompt is showing
-                    return FutureBuilder<bool>(
-                      future: gratitudeProvider.shouldShowSignInPrompt(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData && snapshot.data! && !_authService.hasEmailAccount) {
-                          topOffset += 60; // Sign-in prompt banner height
-                        }
-                        // Stats card at top center - season drawer is at top-right, so no overlap
-                        return Positioned(
-                          top: topOffset,
-                          left: 0,
-                          right: 0,
-                          child: Center(child: StatsCardWidget(stars: gratitudeStars)),
-                        );
-                      },
+                    // Stats card at top center - season drawer is at top-right, so no overlap
+                    return Positioned(
+                      top: topOffset,
+                      left: 0,
+                      right: 0,
+                      child: Center(child: StatsCardWidget(stars: gratitudeStars)),
                     );
                   },
                 ),

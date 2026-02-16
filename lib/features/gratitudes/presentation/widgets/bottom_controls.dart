@@ -164,6 +164,7 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
               icon: Icons.self_improvement,
               isActive: widget.mindfulnessMode,
               onTap: widget.onToggleMindfulness,
+              playChime: false, // Chime plays when navigating to star instead
             ),
           ],
         ),
@@ -269,10 +270,13 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '${l10n.mindfulnessIntervalLabel}: ${widget.mindfulnessInterval}s',
-            style: FontScaling.getCaption(context).copyWith(
-              fontSize: FontScaling.getBodySmall(context).fontSize! * UIConstants.universalUIScale,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '${l10n.mindfulnessIntervalLabel}: ${widget.mindfulnessInterval}s',
+              style: FontScaling.getCaption(context).copyWith(
+                fontSize: FontScaling.getBodySmall(context).fontSize! * UIConstants.universalUIScale,
+              ),
             ),
           ),
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 8) * UIConstants.universalUIScale),
@@ -312,6 +316,7 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
     required IconData icon,
     required bool isActive,
     required VoidCallback onTap,
+    bool playChime = true,
   }) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -345,7 +350,9 @@ class _BottomControlsWidgetState extends State<BottomControlsWidget>
             child: GestureDetector(
               onTap: widget.isAnimating ? null : () {
                 HapticFeedback.selectionClick();
-                context.read<SoundService>().playChime();
+                if (playChime) {
+                  context.read<SoundService>().playChime();
+                }
                 onTap();
               },
               child: Container(

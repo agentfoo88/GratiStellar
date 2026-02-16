@@ -88,6 +88,9 @@ class _GratitudeScreenState extends State<GratitudeScreen>
     if (provider.animatingStar != null) {
       HapticFeedback.mediumImpact();
 
+      // Play completion ding when star appears
+      context.read<SoundService>().playChime();
+
       // Capture context-dependent values before async gap
       final reminderService = context.read<DailyReminderService>();
       final tutorialService = context.read<TutorialService>();

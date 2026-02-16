@@ -2035,6 +2035,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reordered menu items for easier navigation.';
 
   @override
+  String get whatsNewSearchTaggingTitle => 'Search & Tagging';
+
+  @override
+  String get whatsNewSearchTaggingDesc =>
+      'Search your stars by content or tags. Add tags when creating or editing stars to organise your gratitudes.';
+
+  @override
+  String get whatsNewStarCreationSoundTitle => 'Star Creation Sound';
+
+  @override
+  String get whatsNewStarCreationSoundDesc =>
+      'A peaceful sound now plays when you create a new star.';
+
+  @override
+  String get whatsNewAccessibilityCleanupTitle => 'Accessibility Improvements';
+
+  @override
+  String get whatsNewAccessibilityCleanupDesc =>
+      'Cleaned up localisation strings and improved screen reader support.';
+
+  @override
   String get searchHint => 'Search by content or tags';
 
   @override

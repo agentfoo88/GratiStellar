@@ -9,6 +9,32 @@ class ReleaseNotesData {
 
   /// All release notes, ordered from newest to oldest
   static final List<ReleaseNote> releaseNotes = [
+    // Version 1.1.0 (Build 28)
+    ReleaseNote(
+      version: '1.1.0',
+      buildNumber: 28,
+      releaseDate: DateTime(2025, 2, 16),
+      items: const [
+        ReleaseItem(
+          type: ReleaseItemType.newFeature,
+          titleKey: 'whatsNewSearchTaggingTitle',
+          descriptionKey: 'whatsNewSearchTaggingDesc',
+          icon: Icons.search,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.newFeature,
+          titleKey: 'whatsNewStarCreationSoundTitle',
+          descriptionKey: 'whatsNewStarCreationSoundDesc',
+          icon: Icons.music_note,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.improvement,
+          titleKey: 'whatsNewAccessibilityCleanupTitle',
+          descriptionKey: 'whatsNewAccessibilityCleanupDesc',
+          icon: Icons.accessibility_new,
+        ),
+      ],
+    ),
     // Version 1.0.10 (Build 24)
     ReleaseNote(
       version: '1.0.10',

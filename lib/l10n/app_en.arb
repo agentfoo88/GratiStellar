@@ -2492,6 +2492,30 @@
         "@whatsNewMenuReorderDesc": {
           "description": "Description for menu reorder improvement"
         },
+        "whatsNewSearchTaggingTitle": "Search & Tagging",
+        "@whatsNewSearchTaggingTitle": {
+          "description": "Title for search and tagging feature"
+        },
+        "whatsNewSearchTaggingDesc": "Search your stars by content or tags. Add tags when creating or editing stars to organise your gratitudes.",
+        "@whatsNewSearchTaggingDesc": {
+          "description": "Description for search and tagging feature"
+        },
+        "whatsNewStarCreationSoundTitle": "Star Creation Sound",
+        "@whatsNewStarCreationSoundTitle": {
+          "description": "Title for star creation sound feature"
+        },
+        "whatsNewStarCreationSoundDesc": "A peaceful sound now plays when you create a new star.",
+        "@whatsNewStarCreationSoundDesc": {
+          "description": "Description for star creation sound feature"
+        },
+        "whatsNewAccessibilityCleanupTitle": "Accessibility Improvements",
+        "@whatsNewAccessibilityCleanupTitle": {
+          "description": "Title for accessibility cleanup"
+        },
+        "whatsNewAccessibilityCleanupDesc": "Cleaned up localisation strings and improved screen reader support.",
+        "@whatsNewAccessibilityCleanupDesc": {
+          "description": "Description for accessibility cleanup"
+        },
         "searchHint": "Search by content or tags",
         "@searchHint": {
           "description": "Hint text for the search field in list view"

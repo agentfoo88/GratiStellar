@@ -3688,6 +3688,42 @@ abstract class AppLocalizations {
   /// **'Reordered menu items for easier navigation.'**
   String get whatsNewMenuReorderDesc;
 
+  /// Title for search and tagging feature
+  ///
+  /// In en, this message translates to:
+  /// **'Search & Tagging'**
+  String get whatsNewSearchTaggingTitle;
+
+  /// Description for search and tagging feature
+  ///
+  /// In en, this message translates to:
+  /// **'Search your stars by content or tags. Add tags when creating or editing stars to organise your gratitudes.'**
+  String get whatsNewSearchTaggingDesc;
+
+  /// Title for star creation sound feature
+  ///
+  /// In en, this message translates to:
+  /// **'Star Creation Sound'**
+  String get whatsNewStarCreationSoundTitle;
+
+  /// Description for star creation sound feature
+  ///
+  /// In en, this message translates to:
+  /// **'A peaceful sound now plays when you create a new star.'**
+  String get whatsNewStarCreationSoundDesc;
+
+  /// Title for accessibility cleanup
+  ///
+  /// In en, this message translates to:
+  /// **'Accessibility Improvements'**
+  String get whatsNewAccessibilityCleanupTitle;
+
+  /// Description for accessibility cleanup
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaned up localisation strings and improved screen reader support.'**
+  String get whatsNewAccessibilityCleanupDesc;
+
   /// Hint text for the search field in list view
   ///
   /// In en, this message translates to:

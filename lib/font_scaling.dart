@@ -13,14 +13,14 @@ class FontScaling {
 // Font sizes per Material Design (+2px)
 // Mobile (< 500px)
   static const double mobileHeadline = 34.0;  // 32 + 2
-  static const double mobileTitle = 24.0;     // 22 + 2
+  static const double mobileTitle = 20.0;
   static const double mobileBody = 18.0;      // 16 + 2
   static const double mobileCaption = 16.0;   // 14 + 2
   static const double mobileButton = 16.0;    // 14 + 2
 
 // Tablet (500-900px) - Larger for better readability
   static const double tabletHeadline = 40.0;  // Increased from 30.0
-  static const double tabletTitle = 28.0;     // Increased from 22.0
+  static const double tabletTitle = 24.0;
   static const double tabletBody = 20.0;      // Increased from 16.0
   static const double tabletCaption = 18.0;   // Increased from 14.0
   static const double tabletButton = 18.0;    // Increased from 14.0
@@ -29,14 +29,14 @@ class FontScaling {
   static const double desktopHeadline = 26.0; // 24 + 2
   static const double desktopTitle = 20.0;    // 18 + 2
   static const double desktopBody = 16.0;     // 14 + 2
-  static const double desktopCaption = 13.0;  // 11 + 2
-  static const double desktopButton = 13.0;   // 11 + 2
+  static const double desktopCaption = 14.0;
+  static const double desktopButton = 14.0;
 
   // Font weight constants
-  static const FontWeight lightWeight = FontWeight.w600;     // Semi-bold (was w500)
-  static const FontWeight normalWeight = FontWeight.w700;    // Bold (was w600)
-  static const FontWeight mediumWeight = FontWeight.w800;    // Extra-bold (was w700)
-  static const FontWeight boldWeight = FontWeight.w900;      // Black (was w800)
+  static const FontWeight lightWeight = FontWeight.w200;     // Fine
+  static const FontWeight normalWeight = FontWeight.w300;    // Normal
+  static const FontWeight mediumWeight = FontWeight.w500;    // Medium-bold
+  static const FontWeight boldWeight = FontWeight.w700;      // Black
 
   // Predefined text styles with responsive sizing
   static TextStyle getHeadingLarge(BuildContext context, {Color? color}) {

@@ -189,6 +189,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                                 style: FontScaling.getHeadingMedium(context).copyWith(
                                   fontSize: FontScaling.getHeadingMedium(context).fontSize! * UIConstants.universalUIScale,
                                   color: AppTheme.primary,
+                                  fontWeight: FontScaling.normalWeight,
                                 ),
                               ),
                             ),
@@ -199,6 +200,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                           l10n.activeGalaxyLabel(galaxyName),
                           style: FontScaling.getBodySmall(context).copyWith(
                             color: AppTheme.textSecondary,
+                            fontWeight: FontScaling.mediumWeight,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -220,12 +222,14 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                               l10n.drawerStatsToday(todayCount),
                               style: FontScaling.getCaption(context).copyWith(
                                 color: AppTheme.textTertiary,
+                                fontWeight: FontScaling.mediumWeight,
                               ),
                             ),
                             Text(
                               l10n.drawerStatsThisWeek(weekCount),
                               style: FontScaling.getCaption(context).copyWith(
                                 color: AppTheme.textTertiary,
+                                fontWeight: FontScaling.mediumWeight,
                               ),
                             ),
                           ],
@@ -326,7 +330,7 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                             '$trashCount',
                             style: FontScaling.getCaption(context).copyWith(
                               color: AppTheme.textPrimary,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontScaling.mediumWeight,
                               fontSize: (FontScaling.getCaption(context).fontSize ?? 12) * 0.9,
                             ),
                           ),
@@ -397,8 +401,8 @@ class _AppDrawerWidgetState extends State<AppDrawerWidget> {
                             child: Slider(
                               value: textScaleFactor,
                               min: 0.75,
-                              max: 1.75,
-                              divisions: 4,
+                              max: 2.0,
+                              divisions: 5,
                               label: '${(textScaleFactor * 100).round()}%',
                               activeColor: AppTheme.primary,
                               inactiveColor: AppTheme.textDisabled,

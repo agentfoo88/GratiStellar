@@ -407,7 +407,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
             l10n.appTitle,
             FontScaling.getAppTitle(context).copyWith(
               fontSize: FontScaling.getAppTitle(context).fontSize! * 2,
-              fontWeight: FontScaling.boldWeight,
+              fontWeight: FontScaling.normalWeight,
             ),
           ),
 
@@ -429,7 +429,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
               FontScaling.getSubtitle(context).copyWith(
                 fontStyle: FontStyle.normal,
                 color: _holidayGreeting!.style.accentColor,
-                fontWeight: FontScaling.boldWeight,
+                fontWeight: FontScaling.normalWeight,
               ),
             ),
             if (_holidayGreeting!.subtitleKey != null) ...[
@@ -466,7 +466,10 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
           SizedBox(height: FontScaling.getResponsiveSpacing(context, 24)),
 
           // Support chip (only when no holiday greeting); tagline removed in favour of support link
-          if (_holidayGreeting == null) _buildSupportChip(context, l10n),
+          if (_holidayGreeting == null) ...[
+            SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+            _buildSupportChip(context, l10n),
+          ],
 
           const Spacer(flex: 1),
 
@@ -531,7 +534,7 @@ class _EnhancedSplashScreenState extends State<EnhancedSplashScreen>
   }
 
   /// Support GratiStellar chip: opens Ko-fi in browser
-  static const Color _supportChipColor = Color(0x124666);
+  static const Color _supportChipColor = Color(0x00124666);
 
   Widget _buildSupportChip(BuildContext context, AppLocalizations l10n) {
     return Padding(
@@ -675,6 +678,7 @@ class ParticlePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
     for (final particle in particles) {
       final paint = Paint()
         ..color = particleColor.withValues(alpha: particle.opacity)
@@ -705,6 +709,7 @@ class BackgroundStarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
     for (final star in stars) {
       final paint = Paint()
         ..color = AppTheme.textPrimary.withValues(alpha: star.opacity)

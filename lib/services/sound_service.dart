@@ -59,7 +59,7 @@ class SoundService extends ChangeNotifier {
 
       // Set frequency on the waveform source, then play
       SoLoud.instance.setWaveformFreq(_waveform!, freq);
-      final handle = await SoLoud.instance.play(_waveform!, volume: 0.25);
+      final handle = SoLoud.instance.play(_waveform!, volume: 0.25);
 
       // Longer duration with gradual fade for reverb tail
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -87,7 +87,7 @@ class SoundService extends ChangeNotifier {
         await Future.delayed(Duration(milliseconds: i * 80));
 
         SoLoud.instance.setWaveformFreq(_waveform!, freq);
-        final handle = await SoLoud.instance.play(
+        final handle = SoLoud.instance.play(
           _waveform!,
           volume: isLast ? 0.35 : 0.2, // Final note louder
         );

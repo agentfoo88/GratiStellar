@@ -223,7 +223,7 @@
   "mindfulnessNoStarsTitle": "Not enough stars",
   "mindfulnessNoStarsMessage": "Mindfulness mode gives you time to consider the things you're grateful for. Take a moment to reflect once you have multiple stars.",
   "syncingData": "Syncing your data...",
-  "listViewTitle": "Your Gratitude Stars",
+  "listViewTitle": "My Stars",
   "jumpToStarButton": "Jump to Star",
   "todayLabel": "Today",
   "yesterdayLabel": "Yesterday",
@@ -628,6 +628,40 @@
   "sortByYear": "By Year",
   "@sortByYear": {
     "description": "Sort option to display gratitude stars grouped by year"
+  },
+  "sortByTag": "By Tag",
+  "@sortByTag": {
+    "description": "Sort option to display gratitude stars grouped by tag"
+  },
+  "untaggedGroupLabel": "Untagged",
+  "@untaggedGroupLabel": {
+    "description": "Group header label for stars with no tags when sorting by tag"
+  },
+  "addTagsButton": "Add Tags",
+  "@addTagsButton": {
+    "description": "Button to add tags to selected stars in bulk"
+  },
+  "addTagsDialogTitle": "Add Tags to {count} Star(s)",
+  "@addTagsDialogTitle": {
+    "description": "Title of the bulk-add tags dialog",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addTagsDialogSubtitle": "Tags will be added to all selected stars.",
+  "@addTagsDialogSubtitle": {
+    "description": "Subtitle in the bulk-add tags dialog explaining the action"
+  },
+  "tagsAdded": "Tags added to {count} star(s)",
+  "@tagsAdded": {
+    "description": "Snackbar message after bulk-adding tags",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "feedbackMenuItem": "Send Feedback",
   "@feedbackMenuItem": {
@@ -2539,6 +2573,54 @@
         "whatsNewBannersWrappingFixDesc": "Fixed banner positioning and text wrapping at large UI scales.",
         "@whatsNewBannersWrappingFixDesc": {
           "description": "Description for banners and wrapping bug fix"
+        },
+        "whatsNewTagSuggestionsFixTitle": "Tag Suggestions",
+        "@whatsNewTagSuggestionsFixTitle": {
+          "description": "Title for tag autocomplete suggestions fix"
+        },
+        "whatsNewTagSuggestionsFixDesc": "Tapping the tag field now shows your existing tags as quick suggestions.",
+        "@whatsNewTagSuggestionsFixDesc": {
+          "description": "Description for tag autocomplete suggestions fix"
+        },
+        "whatsNewScrollbarGutterFixTitle": "Scrollbar Overlap",
+        "@whatsNewScrollbarGutterFixTitle": {
+          "description": "Title for scrollbar gutter fix"
+        },
+        "whatsNewScrollbarGutterFixDesc": "Fixed scrollbar overlapping dialog content on longer screens.",
+        "@whatsNewScrollbarGutterFixDesc": {
+          "description": "Description for scrollbar overlap fix"
+        },
+        "whatsNewWiderDialogTitle": "Wider Add Dialog",
+        "@whatsNewWiderDialogTitle": {
+          "description": "Title for wider add-star dialog improvement"
+        },
+        "whatsNewWiderDialogDesc": "The add-star dialog is now wider for a more comfortable writing experience.",
+        "@whatsNewWiderDialogDesc": {
+          "description": "Description for wider add-star dialog improvement"
+        },
+        "whatsNewSortByTagTitle": "Sort by Tag",
+        "@whatsNewSortByTagTitle": {
+          "description": "Title for sort-by-tag feature in What's New"
+        },
+        "whatsNewSortByTagDesc": "Group your stars by tag using the new \"By Tag\" sort option in List View.",
+        "@whatsNewSortByTagDesc": {
+          "description": "Description for sort-by-tag feature in What's New"
+        },
+        "whatsNewBulkAddTagsTitle": "Bulk-Add Tags",
+        "@whatsNewBulkAddTagsTitle": {
+          "description": "Title for bulk-add tags feature in What's New"
+        },
+        "whatsNewBulkAddTagsDesc": "Select multiple stars and tap \"Add Tags\" to apply tags to all of them at once.",
+        "@whatsNewBulkAddTagsDesc": {
+          "description": "Description for bulk-add tags feature in What's New"
+        },
+        "whatsNewReminderTimezoneFixTitle": "Reminder Time Fix",
+        "@whatsNewReminderTimezoneFixTitle": {
+          "description": "Title for reminder timezone bug fix in What's New"
+        },
+        "whatsNewReminderTimezoneFixDesc": "Fixed a bug where daily reminders could fire at the wrong time due to an incorrect timezone.",
+        "@whatsNewReminderTimezoneFixDesc": {
+          "description": "Description for reminder timezone bug fix in What's New"
         },
         "searchHint": "Search by content or tags",
         "@searchHint": {

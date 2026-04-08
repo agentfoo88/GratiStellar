@@ -9,6 +9,7 @@ import 'features/gratitudes/presentation/state/gratitude_provider.dart';
 import 'features/gratitudes/presentation/widgets/galaxy_picker_bottom_sheet.dart';
 import 'font_scaling.dart';
 import 'l10n/app_localizations.dart';
+import 'modal_dialogs.dart';
 import 'storage.dart';
 
 class ListViewScreen extends StatefulWidget {
@@ -83,6 +84,16 @@ class _ListViewScreenState extends State<ListViewScreen> {
       case 'by_month':
       case 'by_year':
         sortedStars.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Newest first
+        break;
+      case 'by_tag':
+        sortedStars.sort((a, b) {
+          if (a.tags.isEmpty && b.tags.isEmpty) return b.createdAt.compareTo(a.createdAt);
+          if (a.tags.isEmpty) return 1;   // untagged sinks to bottom
+          if (b.tags.isEmpty) return -1;
+          final tagCompare = a.tags.first.toLowerCase().compareTo(b.tags.first.toLowerCase());
+          if (tagCompare != 0) return tagCompare;
+          return b.createdAt.compareTo(a.createdAt); // newest within same first-tag group
+        });
         break;
     }
 
@@ -561,6 +572,42 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       ),
                     ),
                   ),
+                  PopupMenuItem(
+                    value: 'by_tag',
+                    child: Container(
+                      decoration: _sortMethod == 'by_tag'
+                          ? BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            )
+                          : null,
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.label_outline,
+                            color: _sortMethod == 'by_tag'
+                                ? AppTheme.textOnLight
+                                : AppTheme.textSecondary,
+                            size: FontScaling.getResponsiveIconSize(context, 20),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.sortByTag,
+                              style: FontScaling.getBodySmall(context).copyWith(
+                                color: _sortMethod == 'by_tag'
+                                    ? AppTheme.textOnLight
+                                    : AppTheme.textPrimary.withValues(alpha: 0.9),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -592,8 +639,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
                   ),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: FontScaling.getResponsiveSpacing(context, 8),
+                runSpacing: FontScaling.getResponsiveSpacing(context, 8),
                 children: [
                   // Move button
                   SemanticHelper.label(
@@ -623,7 +672,34 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
+                  // Add Tags button
+                  SemanticHelper.label(
+                    label: AppLocalizations.of(context)!.addTagsButton,
+                    hint: 'Add tags to ${_selectedStarIds.length} selected star(s)',
+                    isButton: true,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _tagSelectedStars(context, provider),
+                      icon: Icon(
+                        Icons.label_outline,
+                        color: AppTheme.textPrimary,
+                        size: FontScaling.getResponsiveIconSize(context, 20),
+                      ),
+                      label: Text(
+                        AppLocalizations.of(context)!.addTagsButton,
+                        style: FontScaling.getBodySmall(context).copyWith(
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.overlayLight,
+                        foregroundColor: AppTheme.primary,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                          vertical: FontScaling.getResponsiveSpacing(context, 12),
+                        ),
+                      ),
+                    ),
+                  ),
                   // Delete button
                   SemanticHelper.label(
                     label: AppLocalizations.of(context)!.deleteSelected,
@@ -658,7 +734,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
           Expanded(
             child: sortedStars.isEmpty
                 ? _buildEmptyState(context)
-                : (_sortMethod == 'by_month' || _sortMethod == 'by_year')
+                : (_sortMethod == 'by_month' || _sortMethod == 'by_year' || _sortMethod == 'by_tag')
                     ? _buildGroupedList(sortedStars)
                     : ListView.builder(
                         padding: EdgeInsets.symmetric(
@@ -826,7 +902,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                             tag,
                             style: FontScaling.getCaption(context).copyWith(
                               color: AppTheme.primary,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontScaling.boldWeight,
                             ),
                           ),
                         );
@@ -849,7 +925,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                             '+${star.tags.length - 3}',
                             style: FontScaling.getCaption(context).copyWith(
                               color: AppTheme.textSecondary,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontScaling.mediumWeight,
                             ),
                           ),
                         ),
@@ -911,8 +987,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
       if (_sortMethod == 'by_month') {
         final month = star.createdAt;
         currentGroup = '${_getMonthName(month.month)} ${month.year}';
-      } else {
+      } else if (_sortMethod == 'by_year') {
         currentGroup = '${star.createdAt.year}';
+      } else { // by_tag
+        currentGroup = star.tags.isNotEmpty
+            ? star.tags.first
+            : AppLocalizations.of(context)!.untaggedGroupLabel;
       }
 
       if (currentGroup != lastGroup) {
@@ -956,52 +1036,91 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 ),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: FontScaling.getResponsiveSpacing(context, 8),
+              runSpacing: FontScaling.getResponsiveSpacing(context, 8),
               children: [
                 // Move button
-                ElevatedButton.icon(
-                  onPressed: () => _moveSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
-                  icon: Icon(
-                    Icons.drive_file_move_outline,
-                    color: AppTheme.textPrimary,
-                    size: FontScaling.getResponsiveIconSize(context, 20),
-                  ),
-                  label: Text(
-                    AppLocalizations.of(context)!.moveSelected,
-                    style: FontScaling.getBodySmall(context).copyWith(
+                SemanticHelper.label(
+                  label: AppLocalizations.of(context)!.moveSelected,
+                  hint: 'Move ${_selectedStarIds.length} selected star(s)',
+                  isButton: true,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _moveSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
+                    icon: Icon(
+                      Icons.drive_file_move_outline,
                       color: AppTheme.textPrimary,
+                      size: FontScaling.getResponsiveIconSize(context, 20),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary.withValues(alpha: 0.8),
-                    foregroundColor: AppTheme.textOnLight,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: FontScaling.getResponsiveSpacing(context, 16),
-                      vertical: FontScaling.getResponsiveSpacing(context, 12),
+                    label: Text(
+                      AppLocalizations.of(context)!.moveSelected,
+                      style: FontScaling.getBodySmall(context).copyWith(
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary.withValues(alpha: 0.8),
+                      foregroundColor: AppTheme.textOnLight,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                        vertical: FontScaling.getResponsiveSpacing(context, 12),
+                      ),
                     ),
                   ),
                 ),
-                SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
-                // Delete button
-                ElevatedButton.icon(
-                  onPressed: () => _deleteSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
-                  icon: Icon(
-                    Icons.delete_outline,
-                    color: AppTheme.textPrimary,
-                    size: FontScaling.getResponsiveIconSize(context, 20),
-                  ),
-                  label: Text(
-                    AppLocalizations.of(context)!.deleteSelected,
-                    style: FontScaling.getBodySmall(context).copyWith(
+                // Add Tags button
+                SemanticHelper.label(
+                  label: AppLocalizations.of(context)!.addTagsButton,
+                  hint: 'Add tags to ${_selectedStarIds.length} selected star(s)',
+                  isButton: true,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _tagSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
+                    icon: Icon(
+                      Icons.label_outline,
                       color: AppTheme.textPrimary,
+                      size: FontScaling.getResponsiveIconSize(context, 20),
+                    ),
+                    label: Text(
+                      AppLocalizations.of(context)!.addTagsButton,
+                      style: FontScaling.getBodySmall(context).copyWith(
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.overlayLight,
+                      foregroundColor: AppTheme.primary,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                        vertical: FontScaling.getResponsiveSpacing(context, 12),
+                      ),
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.error.withValues(alpha: 0.8),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: FontScaling.getResponsiveSpacing(context, 16),
-                      vertical: FontScaling.getResponsiveSpacing(context, 12),
+                ),
+                // Delete button
+                SemanticHelper.label(
+                  label: AppLocalizations.of(context)!.deleteSelected,
+                  hint: 'Delete ${_selectedStarIds.length} selected star(s)',
+                  isButton: true,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _deleteSelectedStars(context, Provider.of<GratitudeProvider>(context, listen: false)),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: AppTheme.textPrimary,
+                      size: FontScaling.getResponsiveIconSize(context, 20),
+                    ),
+                    label: Text(
+                      AppLocalizations.of(context)!.deleteSelected,
+                      style: FontScaling.getBodySmall(context).copyWith(
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.error.withValues(alpha: 0.8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: FontScaling.getResponsiveSpacing(context, 16),
+                        vertical: FontScaling.getResponsiveSpacing(context, 12),
+                      ),
                     ),
                   ),
                 ),
@@ -1125,6 +1244,36 @@ class _ListViewScreenState extends State<ListViewScreen> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _tagSelectedStars(BuildContext context, GratitudeProvider provider) async {
+    if (_selectedStarIds.isEmpty) return;
+
+    final tagsToAdd = await GratitudeDialogs.showBulkTagDialog(
+      context: context,
+      allStars: provider.gratitudeStars,
+      selectedCount: _selectedStarIds.length,
+    );
+
+    if (tagsToAdd == null || tagsToAdd.isEmpty) return;
+
+    try {
+      final updatedCount = await provider.addTagsToGratitudes(
+        _selectedStarIds.toList(),
+        tagsToAdd,
+      );
+      if (!context.mounted) return;
+      setState(() {
+        _selectedStarIds.clear();
+        _isSelectionMode = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.tagsAdded(updatedCount)), duration: const Duration(seconds: 2)),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
   }
 

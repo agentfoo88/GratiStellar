@@ -27,6 +27,7 @@ import '../../domain/usecases/update_gratitude_use_case.dart';
 import '../../domain/usecases/use_case.dart';
 import 'galaxy_provider.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/tag_canonicalization.dart';
 
 /// Provider for gratitude state management
 ///
@@ -77,6 +78,7 @@ class GratitudeProvider extends ChangeNotifier {
   static const String _signInPromptDismissedKey = 'sign_in_prompt_dismissed';
   static const String _signInPromptStarThresholdKey = 'sign_in_prompt_star_threshold';
   static const int _defaultStarThreshold = 3; // Show prompt after 3 stars
+  static const String _tagsCanonicalMigrationKey = 'tags_canonical_v1';
 
   // Getters
   List<GratitudeStar> get gratitudeStars => _gratitudeStars;
@@ -237,11 +239,48 @@ class GratitudeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _migrateTagsCanonicalIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_tagsCanonicalMigrationKey) ?? false) return;
+
+    try {
+      final allStars = await _repository.getAllGratitudesUnfiltered();
+      if (allStars.isEmpty) {
+        await prefs.setBool(_tagsCanonicalMigrationKey, true);
+        return;
+      }
+      final map = buildCanonicalTagMap(allStars);
+      final updated = <GratitudeStar>[];
+      var changed = false;
+      for (final star in allStars) {
+        final n = normalizeStarTags(star.tags, map);
+        if (!tagsListEquals(star.tags, n)) {
+          changed = true;
+          updated.add(star.copyWith(tags: n, updatedAt: DateTime.now()));
+        } else {
+          updated.add(star);
+        }
+      }
+      if (changed) {
+        await _repository.saveGratitudes(updated);
+        AppLogger.data('🏷️ Tag canonicalization migration applied');
+        if (_authService.hasEmailAccount) {
+          _markPendingChanges();
+          _performBackgroundSync().catchError((_) => _scheduleSync());
+        }
+      }
+      await prefs.setBool(_tagsCanonicalMigrationKey, true);
+    } catch (e) {
+      AppLogger.error('⚠️ Tag canonicalization migration failed: $e');
+    }
+  }
+
   /// Load gratitudes from storage
   /// 
   /// If [waitForSync] is true, this method will wait for cloud sync to complete
   /// before returning. This is important for galaxy switching to ensure fresh data.
   Future<void> loadGratitudes({bool waitForSync = false}) async {
+    await _migrateTagsCanonicalIfNeeded();
     final result = await _loadGratitudesUseCase(NoParams());
 
     // Deduplicate stars if needed (after merge operations)
@@ -431,6 +470,13 @@ class GratitudeProvider extends ChangeNotifier {
       );
     }
 
+    List<String>? normalizedTags = tags;
+    if (tags != null && tags.isNotEmpty) {
+      final allStars = await _repository.getAllGratitudesUnfiltered();
+      final map = buildCanonicalTagMap(allStars);
+      normalizedTags = normalizeStarTags(tags, map);
+    }
+
     final star = await _addGratitudeUseCase(
       AddGratitudeParams(
         text: text,
@@ -440,7 +486,7 @@ class GratitudeProvider extends ChangeNotifier {
         colorPresetIndex: colorPresetIndex,
         customColor: customColor,
         inspirationPrompt: inspirationPrompt,
-        tags: tags,
+        tags: normalizedTags,
       ),
     );
     return star;
@@ -504,9 +550,18 @@ class GratitudeProvider extends ChangeNotifier {
 
   /// Update an existing gratitude
   Future<void> updateGratitude(GratitudeStar updatedStar) async {
+    final allUnfiltered = await _repository.getAllGratitudesUnfiltered();
+    final map = buildCanonicalTagMap(
+      allUnfiltered.map((s) => s.id == updatedStar.id ? updatedStar : s).toList(),
+    );
+    final normalizedTags = normalizeStarTags(updatedStar.tags, map);
+    final starToSave = tagsListEquals(updatedStar.tags, normalizedTags)
+        ? updatedStar
+        : updatedStar.copyWith(tags: normalizedTags);
+
     final updatedStars = await _updateGratitudeUseCase(
       UpdateGratitudeParams(
-        updatedStar: updatedStar,
+        updatedStar: starToSave,
         allStars: _gratitudeStars,
       ),
     );
@@ -595,6 +650,51 @@ class GratitudeProvider extends ChangeNotifier {
     }
 
     return movedCount;
+  }
+
+  /// Bulk-add tags to multiple gratitudes (batch operation)
+  Future<int> addTagsToGratitudes(List<String> starIds, List<String> tagsToAdd) async {
+    if (starIds.isEmpty || tagsToAdd.isEmpty) return 0;
+
+    final allStars = await _repository.getAllGratitudesUnfiltered();
+    final canonicalMap = buildCanonicalTagMap(allStars);
+    int updatedCount = 0;
+    final updatedStars = List<GratitudeStar>.from(allStars);
+
+    for (final starId in starIds) {
+      final index = updatedStars.indexWhere((s) => s.id == starId);
+      if (index != -1) {
+        final star = updatedStars[index];
+        final existingKeys = star.tags.map(tagComparisonKey).toSet();
+        final newTags = List<String>.from(star.tags);
+        for (final raw in tagsToAdd) {
+          final t = raw.trim();
+          if (t.isEmpty) continue;
+          final resolved = canonicalMap[tagComparisonKey(t)] ?? t;
+          final key = tagComparisonKey(resolved);
+          if (!existingKeys.contains(key) && newTags.length < 20) {
+            newTags.add(resolved);
+            existingKeys.add(key);
+          }
+        }
+        if (newTags.length != star.tags.length) {
+          updatedStars[index] = star.copyWith(tags: newTags, updatedAt: DateTime.now());
+          updatedCount++;
+        }
+      }
+    }
+
+    if (updatedCount > 0) {
+      await _repository.saveGratitudes(updatedStars);
+      await loadGratitudes();
+      notifyListeners();
+      if (_authService.hasEmailAccount) {
+        _markPendingChanges();
+        _performBackgroundSync().catchError((_) => _scheduleSync());
+      }
+    }
+
+    return updatedCount;
   }
 
   /// Delete a gratitude

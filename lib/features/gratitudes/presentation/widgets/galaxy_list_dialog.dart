@@ -500,7 +500,7 @@ class _GalaxyListDialogState extends State<GalaxyListDialog> {
                               l10n.active.toUpperCase(),
                               style: FontScaling.getCaption(context).copyWith(
                                 color: AppTheme.primary,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontScaling.boldWeight,
                                 fontSize:
                                     FontScaling.getCaption(context).fontSize! *
                                     UIConstants.universalUIScale,

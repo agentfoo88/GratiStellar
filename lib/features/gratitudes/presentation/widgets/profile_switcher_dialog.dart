@@ -192,16 +192,16 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
     try {
       final userProfileManager = Provider.of<UserProfileManager>(context, listen: false);
       final newUserId = await userProfileManager.createAnonymousProfile();
-      
+
       AppLogger.data('✨ Created new profile: $newUserId');
-      
+
       if (!mounted) return;
-      
+
       // Switch to new profile first (before reloading list)
       await userProfileManager.switchUser(newUserId);
-      
+
       if (!mounted) return;
-      
+
       // Reload data for the new profile
       final galaxyProvider = Provider.of<GalaxyProvider>(context, listen: false);
       final gratitudeProvider = Provider.of<GratitudeProvider>(context, listen: false);
@@ -406,7 +406,7 @@ class _ProfileSwitcherDialogState extends State<ProfileSwitcherDialog> {
                                 child: Text(
                                   displayName,
                                   style: FontScaling.getBodyMedium(context).copyWith(
-                                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: isActive ? FontScaling.boldWeight : FontScaling.normalWeight,
                                   ),
                                 ),
                               ),

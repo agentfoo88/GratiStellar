@@ -643,7 +643,7 @@ abstract class AppLocalizations {
   /// No description provided for @listViewTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your Gratitude Stars'**
+  /// **'My Stars'**
   String get listViewTitle;
 
   /// No description provided for @jumpToStarButton.
@@ -1275,6 +1275,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By Year'**
   String get sortByYear;
+
+  /// Sort option to display gratitude stars grouped by tag
+  ///
+  /// In en, this message translates to:
+  /// **'By Tag'**
+  String get sortByTag;
+
+  /// Group header label for stars with no tags when sorting by tag
+  ///
+  /// In en, this message translates to:
+  /// **'Untagged'**
+  String get untaggedGroupLabel;
+
+  /// Button to add tags to selected stars in bulk
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tags'**
+  String get addTagsButton;
+
+  /// Title of the bulk-add tags dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tags to {count} Star(s)'**
+  String addTagsDialogTitle(int count);
+
+  /// Subtitle in the bulk-add tags dialog explaining the action
+  ///
+  /// In en, this message translates to:
+  /// **'Tags will be added to all selected stars.'**
+  String get addTagsDialogSubtitle;
+
+  /// Snackbar message after bulk-adding tags
+  ///
+  /// In en, this message translates to:
+  /// **'Tags added to {count} star(s)'**
+  String tagsAdded(int count);
 
   /// Menu item for sending feedback
   ///
@@ -3759,6 +3795,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fixed banner positioning and text wrapping at large UI scales.'**
   String get whatsNewBannersWrappingFixDesc;
+
+  /// Title for tag autocomplete suggestions fix
+  ///
+  /// In en, this message translates to:
+  /// **'Tag Suggestions'**
+  String get whatsNewTagSuggestionsFixTitle;
+
+  /// Description for tag autocomplete suggestions fix
+  ///
+  /// In en, this message translates to:
+  /// **'Tapping the tag field now shows your existing tags as quick suggestions.'**
+  String get whatsNewTagSuggestionsFixDesc;
+
+  /// Title for scrollbar gutter fix
+  ///
+  /// In en, this message translates to:
+  /// **'Scrollbar Overlap'**
+  String get whatsNewScrollbarGutterFixTitle;
+
+  /// Description for scrollbar overlap fix
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed scrollbar overlapping dialog content on longer screens.'**
+  String get whatsNewScrollbarGutterFixDesc;
+
+  /// Title for wider add-star dialog improvement
+  ///
+  /// In en, this message translates to:
+  /// **'Wider Add Dialog'**
+  String get whatsNewWiderDialogTitle;
+
+  /// Description for wider add-star dialog improvement
+  ///
+  /// In en, this message translates to:
+  /// **'The add-star dialog is now wider for a more comfortable writing experience.'**
+  String get whatsNewWiderDialogDesc;
+
+  /// Title for sort-by-tag feature in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by Tag'**
+  String get whatsNewSortByTagTitle;
+
+  /// Description for sort-by-tag feature in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Group your stars by tag using the new \"By Tag\" sort option in List View.'**
+  String get whatsNewSortByTagDesc;
+
+  /// Title for bulk-add tags feature in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Bulk-Add Tags'**
+  String get whatsNewBulkAddTagsTitle;
+
+  /// Description for bulk-add tags feature in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Select multiple stars and tap \"Add Tags\" to apply tags to all of them at once.'**
+  String get whatsNewBulkAddTagsDesc;
+
+  /// Title for reminder timezone bug fix in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Time Fix'**
+  String get whatsNewReminderTimezoneFixTitle;
+
+  /// Description for reminder timezone bug fix in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed a bug where daily reminders could fire at the wrong time due to an incorrect timezone.'**
+  String get whatsNewReminderTimezoneFixDesc;
 
   /// Hint text for the search field in list view
   ///

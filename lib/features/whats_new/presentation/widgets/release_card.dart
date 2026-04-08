@@ -125,8 +125,17 @@ class _ReleaseItemRow extends StatelessWidget {
   }
 
   String _getLocalizedTitle(AppLocalizations l10n) {
-    // Map titleKey to localized string
     switch (item.titleKey) {
+      case 'whatsNewSortByTagTitle':
+        return l10n.whatsNewSortByTagTitle;
+      case 'whatsNewBulkAddTagsTitle':
+        return l10n.whatsNewBulkAddTagsTitle;
+      case 'whatsNewTagSuggestionsFixTitle':
+        return l10n.whatsNewTagSuggestionsFixTitle;
+      case 'whatsNewScrollbarGutterFixTitle':
+        return l10n.whatsNewScrollbarGutterFixTitle;
+      case 'whatsNewWiderDialogTitle':
+        return l10n.whatsNewWiderDialogTitle;
       case 'whatsNewSoundSupportTitle':
         return l10n.whatsNewSoundSupportTitle;
       case 'whatsNewWhatsNewFeatureTitle':
@@ -139,14 +148,38 @@ class _ReleaseItemRow extends StatelessWidget {
         return l10n.whatsNewColourSettingsTitle;
       case 'whatsNewMenuReorderTitle':
         return l10n.whatsNewMenuReorderTitle;
+      case 'whatsNewSearchFunctionTitle':
+        return l10n.whatsNewSearchFunctionTitle;
+      case 'whatsNewTaggingStarsTitle':
+        return l10n.whatsNewTaggingStarsTitle;
+      case 'whatsNewMindfulnessDelayTitle':
+        return l10n.whatsNewMindfulnessDelayTitle;
+      case 'whatsNewCreationSoundTitle':
+        return l10n.whatsNewCreationSoundTitle;
+      case 'whatsNewL10nAccessibilityFixTitle':
+        return l10n.whatsNewL10nAccessibilityFixTitle;
+      case 'whatsNewBannersWrappingFixTitle':
+        return l10n.whatsNewBannersWrappingFixTitle;
+      case 'whatsNewReminderTimezoneFixTitle':
+        return l10n.whatsNewReminderTimezoneFixTitle;
       default:
+        assert(false, 'Missing l10n case for titleKey: ${item.titleKey}');
         return item.titleKey;
     }
   }
 
   String _getLocalizedDescription(AppLocalizations l10n) {
-    // Map descriptionKey to localized string
     switch (item.descriptionKey) {
+      case 'whatsNewSortByTagDesc':
+        return l10n.whatsNewSortByTagDesc;
+      case 'whatsNewBulkAddTagsDesc':
+        return l10n.whatsNewBulkAddTagsDesc;
+      case 'whatsNewTagSuggestionsFixDesc':
+        return l10n.whatsNewTagSuggestionsFixDesc;
+      case 'whatsNewScrollbarGutterFixDesc':
+        return l10n.whatsNewScrollbarGutterFixDesc;
+      case 'whatsNewWiderDialogDesc':
+        return l10n.whatsNewWiderDialogDesc;
       case 'whatsNewSoundSupportDesc':
         return l10n.whatsNewSoundSupportDesc;
       case 'whatsNewWhatsNewFeatureDesc':
@@ -159,7 +192,22 @@ class _ReleaseItemRow extends StatelessWidget {
         return l10n.whatsNewColourSettingsDesc;
       case 'whatsNewMenuReorderDesc':
         return l10n.whatsNewMenuReorderDesc;
+      case 'whatsNewSearchFunctionDesc':
+        return l10n.whatsNewSearchFunctionDesc;
+      case 'whatsNewTaggingStarsDesc':
+        return l10n.whatsNewTaggingStarsDesc;
+      case 'whatsNewMindfulnessDelayDesc':
+        return l10n.whatsNewMindfulnessDelayDesc;
+      case 'whatsNewCreationSoundDesc':
+        return l10n.whatsNewCreationSoundDesc;
+      case 'whatsNewL10nAccessibilityFixDesc':
+        return l10n.whatsNewL10nAccessibilityFixDesc;
+      case 'whatsNewBannersWrappingFixDesc':
+        return l10n.whatsNewBannersWrappingFixDesc;
+      case 'whatsNewReminderTimezoneFixDesc':
+        return l10n.whatsNewReminderTimezoneFixDesc;
       default:
+        assert(false, 'Missing l10n case for descriptionKey: ${item.descriptionKey}');
         return item.descriptionKey;
     }
   }

@@ -35,11 +35,10 @@ class _ScrollableDialogContentState extends State<ScrollableDialogContent> {
   Widget build(BuildContext context) {
     return Scrollbar(
       controller: _scrollController,
-      // thumbVisibility: false means scrollbar only appears when scrolling
-      // This provides the best UX - visible when needed, hidden when not
-      thumbVisibility: false,
+      thumbVisibility: true,
       child: SingleChildScrollView(
         controller: _scrollController,
+        padding: const EdgeInsets.only(right: 8),
         child: widget.child,
       ),
     );

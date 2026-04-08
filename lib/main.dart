@@ -121,47 +121,62 @@ void main() async {
   runApp(GratiStellarApp());
 }
 
-class GratiStellarApp extends StatelessWidget {
+class GratiStellarApp extends StatefulWidget {
   const GratiStellarApp({super.key});
 
   @override
+  State<GratiStellarApp> createState() => _GratiStellarAppState();
+}
+
+class _GratiStellarAppState extends State<GratiStellarApp> {
+  late final AuthService _authService;
+  late final SyncStatusService _syncStatusService;
+  late final FirestoreService _firestoreService;
+  late final UserProfileManager _userProfileManager;
+  late final LocalDataSource _localDataSource;
+  late final RemoteDataSource _remoteDataSource;
+  late final GratitudeRepository _repository;
+  late final GalaxyLocalDataSource _galaxyLocalDataSource;
+  late final GalaxyRemoteDataSource _galaxyRemoteDataSource;
+  late final GalaxyRepository _galaxyRepository;
+
+  @override
+  void initState() {
+    super.initState();
+    AppLogger.start('🏗️ GratiStellarApp: creating core services once');
+
+    _authService = AuthService();
+    _syncStatusService = SyncStatusService();
+    _firestoreService = FirestoreService();
+    _userProfileManager = UserProfileManager(authService: _authService);
+
+    _localDataSource = LocalDataSource(userProfileManager: _userProfileManager);
+    _remoteDataSource = RemoteDataSource(_firestoreService);
+    _repository = GratitudeRepository(
+      localDataSource: _localDataSource,
+      remoteDataSource: _remoteDataSource,
+      authService: _authService,
+    );
+
+    _galaxyLocalDataSource =
+        GalaxyLocalDataSource(userProfileManager: _userProfileManager);
+    _galaxyRemoteDataSource = GalaxyRemoteDataSource(authService: _authService);
+    _galaxyRepository = GalaxyRepository(
+      localDataSource: _galaxyLocalDataSource,
+      remoteDataSource: _galaxyRemoteDataSource,
+      gratitudeRepository: _repository,
+      authService: _authService,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    AppLogger.start('🏗️ Building GratiStellarApp');
-
-    // Initialize services (these are singletons/static, so safe to create here)
-    final authService = AuthService();
-    final syncStatusService = SyncStatusService();
-    final firestoreService = FirestoreService();
-    
-    // Initialize user profile manager for user-scoped storage
-    final userProfileManager = UserProfileManager(authService: authService);
-    
-    final localDataSource = LocalDataSource(userProfileManager: userProfileManager);
-    final remoteDataSource = RemoteDataSource(firestoreService);
-    final repository = GratitudeRepository(
-      localDataSource: localDataSource,
-      remoteDataSource: remoteDataSource,
-      authService: authService,
-    );
-
-    // Initialize galaxy services
-    final galaxyLocalDataSource = GalaxyLocalDataSource(userProfileManager: userProfileManager);
-    final galaxyRemoteDataSource = GalaxyRemoteDataSource(
-      authService: authService,
-    );
-    final galaxyRepository = GalaxyRepository(
-      localDataSource: galaxyLocalDataSource,
-      remoteDataSource: galaxyRemoteDataSource,
-      gratitudeRepository: repository,
-      authService: authService,
-    );
-
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: AppTheme.systemUiOverlayStyle,
       child: MultiProvider(
         providers: [
-          ChangeNotifierProvider.value(value: syncStatusService),
-        ChangeNotifierProvider.value(value: userProfileManager),
+          ChangeNotifierProvider.value(value: _syncStatusService),
+        ChangeNotifierProvider.value(value: _userProfileManager),
         ChangeNotifierProvider(
           create: (_) => DailyReminderService()..initialize(),
         ),
@@ -177,8 +192,8 @@ class GratiStellarApp extends StatelessWidget {
         // Galaxy Provider FIRST
         ChangeNotifierProvider(
           create: (_) => GalaxyProvider(
-            galaxyRepository: galaxyRepository,
-            gratitudeRepository: repository,
+            galaxyRepository: _galaxyRepository,
+            gratitudeRepository: _repository,
           ),
         ),
 
@@ -186,9 +201,9 @@ class GratiStellarApp extends StatelessWidget {
         ChangeNotifierProxyProvider<GalaxyProvider, GratitudeProvider?>(
           create: (context) {
             final gratitudeProvider = GratitudeProvider(
-              repository: repository,
-              authService: authService,
-              syncStatusService: syncStatusService,
+              repository: _repository,
+              authService: _authService,
+              syncStatusService: _syncStatusService,
               random: math.Random(),
             );
 
@@ -203,9 +218,9 @@ class GratiStellarApp extends StatelessWidget {
             // Ensure gratitudeProvider exists
             if (gratitudeProvider == null) {
               gratitudeProvider = GratitudeProvider(
-                repository: repository,
-                authService: authService,
-                syncStatusService: syncStatusService,
+                repository: _repository,
+                authService: _authService,
+                syncStatusService: _syncStatusService,
                 random: math.Random(),
               );
 
@@ -450,19 +465,16 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                       SizedBox(height: 16),
                       Text(
                         l10n.initializationTimeoutTitle,
-                        style: TextStyle(
+                        style: FontScaling.getHeadingMedium(context).copyWith(
                           color: AppTheme.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: 12),
                       Text(
                         l10n.initializationTimeoutMessage,
-                        style: TextStyle(
+                        style: FontScaling.getBodyMedium(context).copyWith(
                           color: AppTheme.textSecondary,
-                          fontSize: 14,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -479,9 +491,8 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                         ),
                         child: Text(
                           l10n.tryAgainButton,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                          style: FontScaling.getButtonText(context).copyWith(
+                            fontWeight: FontScaling.boldWeight,
                           ),
                         ),
                       ),
@@ -506,18 +517,15 @@ class _SplashWrapperState extends State<_SplashWrapper> {
                     SizedBox(height: 16),
                     Text(
                       l10n.initializationFailedTitle,
-                      style: TextStyle(
+                      style: FontScaling.getHeadingMedium(context).copyWith(
                         color: AppTheme.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 12),
                     Text(
                       '$error',
-                      style: TextStyle(
+                      style: FontScaling.getBodyMedium(context).copyWith(
                         color: AppTheme.textSecondary,
-                        fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
                     ),

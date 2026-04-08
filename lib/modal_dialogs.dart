@@ -15,6 +15,7 @@ import 'widgets/edit_star_dialog.dart';
 import 'widgets/color_picker_dialog.dart';
 import 'widgets/color_grid.dart';
 import 'widgets/scrollable_dialog_content.dart';
+import 'core/utils/tag_canonicalization.dart';
 
 /// Centralized dialogs for GratiStellar app
 /// All modal dialogs are static methods that accept callbacks for actions
@@ -506,23 +507,21 @@ class GratitudeDialogs {
   static Widget _buildTagsSection({
     required BuildContext context,
     required List<String> editingTags,
-    required TextEditingController tagController,
+    required TagFieldControllerRef tagFieldRef,
     required List<GratitudeStar> allStars,
     required int maxTags,
     required int maxTagLength,
+    required bool tagSuggestionsEnabled,
+    required void Function(bool) onTagSuggestionsChanged,
+    required void Function(TextEditingController) onAutocompleteControllerReady,
     required Function(List<String>) onTagsChanged,
   }) {
     final l10n = AppLocalizations.of(context)!;
 
-    // Get all unique tags from all stars for autocomplete
-    final allTags = <String>{};
-    for (final star in allStars) {
-      allTags.addAll(star.tags);
-    }
-    // Remove tags already on this star
-    allTags.removeAll(editingTags);
-    final availableTags = allTags.toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final availableTags = availableCanonicalTagsForAutocomplete(
+      allStars: allStars,
+      editingTags: editingTags,
+    );
 
     void addTag(String tag) {
       final trimmedTag = tag.trim();
@@ -530,13 +529,17 @@ class GratitudeDialogs {
       if (trimmedTag.length > maxTagLength) return;
       if (editingTags.length >= maxTags) return;
 
-      // Case-insensitive deduplication
-      final lowerTag = trimmedTag.toLowerCase();
-      if (editingTags.any((t) => t.toLowerCase() == lowerTag)) return;
+      final canonicalMap = buildCanonicalTagMap(allStars);
+      final resolved = canonicalMap[tagComparisonKey(trimmedTag)] ?? trimmedTag;
 
-      final newTags = List<String>.from(editingTags)..add(trimmedTag);
+      if (editingTags.any((t) => tagComparisonKey(t) == tagComparisonKey(trimmedTag))) {
+        tagFieldRef.controller?.clear();
+        return;
+      }
+
+      final newTags = List<String>.from(editingTags)..add(resolved);
       onTagsChanged(newTags);
-      tagController.clear();
+      tagFieldRef.controller?.clear();
     }
 
     void removeTag(String tag) {
@@ -576,7 +579,7 @@ class GratitudeDialogs {
                       tag,
                       style: FontScaling.getBodySmall(context).copyWith(
                         color: AppTheme.textOnLight,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontScaling.mediumWeight,
                       ),
                     ),
                     deleteIcon: Icon(
@@ -606,7 +609,7 @@ class GratitudeDialogs {
           Autocomplete<String>(
             optionsBuilder: (TextEditingValue textEditingValue) {
               if (textEditingValue.text.isEmpty) {
-                return availableTags.take(5);
+                return tagSuggestionsEnabled ? availableTags.take(5) : const Iterable.empty();
               }
               final query = textEditingValue.text.toLowerCase();
               return availableTags
@@ -614,15 +617,19 @@ class GratitudeDialogs {
                   .take(5);
             },
             onSelected: (String selection) {
+              onTagSuggestionsChanged(false);
               addTag(selection);
             },
             fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+              tagFieldRef.controller = controller;
+              onAutocompleteControllerReady(controller);
               return Semantics(
                 label: l10n.tagInputLabel,
                 textField: true,
                 child: TextField(
                   controller: controller,
                   focusNode: focusNode,
+                  onTap: () => onTagSuggestionsChanged(true),
                   style: FontScaling.getInputText(context),
                   maxLength: maxTagLength,
                   decoration: InputDecoration(
@@ -657,17 +664,11 @@ class GratitudeDialogs {
                           color: AppTheme.primary,
                         ),
                         tooltip: l10n.addTagHint,
-                        onPressed: () {
-                          addTag(controller.text);
-                          controller.clear();
-                        },
+                        onPressed: () => addTag(controller.text),
                       ),
                     ),
                   ),
-                  onSubmitted: (value) {
-                    addTag(value);
-                    controller.clear();
-                  },
+                  onSubmitted: addTag,
                 ),
               );
             },
@@ -764,9 +765,11 @@ class GratitudeDialogs {
         String currentPrompt = AppLocalizations.of(context)!.defaultCreateStarHint;
         // Tags state
         List<String> editingTags = [];
-        final tagController = TextEditingController();
+        final tagFieldRef = TagFieldControllerRef();
         const int maxTags = 20;
         const int maxTagLength = 30;
+        bool tagSuggestionsEnabled = false;
+        TextEditingController? autocompleteController;
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -792,7 +795,7 @@ class GratitudeDialogs {
             return Dialog(
               backgroundColor: Colors.transparent,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 500, minWidth: 400),
+                constraints: const BoxConstraints(maxWidth: 600, minWidth: 450),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppTheme.getDialogBackground(opacity: 0.95),
@@ -816,9 +819,12 @@ class GratitudeDialogs {
                       FontScaling.getResponsiveSpacing(context, 20),
                     ),
                     child: _buildScrollableDialogContent(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+                      child: GestureDetector(
+                        onTap: () => FocusScope.of(context).unfocus(),
+                        behavior: HitTestBehavior.translucent,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                           Text(
                             AppLocalizations.of(context)!.createStarModalTitle,
                             style: FontScaling.getModalTitle(context),
@@ -1196,10 +1202,26 @@ class GratitudeDialogs {
                           _buildTagsSection(
                             context: context,
                             editingTags: editingTags,
-                            tagController: tagController,
+                            tagFieldRef: tagFieldRef,
                             allStars: allStars ?? [],
                             maxTags: maxTags,
                             maxTagLength: maxTagLength,
+                            tagSuggestionsEnabled: tagSuggestionsEnabled,
+                            onTagSuggestionsChanged: (enabled) {
+                              setState(() { tagSuggestionsEnabled = enabled; });
+                              if (enabled) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  final ctrl = autocompleteController;
+                                  if (ctrl != null && ctrl.text.isEmpty) {
+                                    ctrl.value = const TextEditingValue(text: '\u200B');
+                                    ctrl.value = TextEditingValue.empty;
+                                  }
+                                });
+                              }
+                            },
+                            onAutocompleteControllerReady: (ctrl) {
+                              autocompleteController = ctrl;
+                            },
                             onTagsChanged: (newTags) {
                               setState(() {
                                 editingTags = newTags;
@@ -1305,15 +1327,16 @@ class GratitudeDialogs {
                   ),
                 ),
               ),
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
-  // ========================================
-  // STAR EDIT DIALOG (Unified Implementation)
+// ========================================
+// STAR EDIT DIALOG (Unified Implementation)
   // ========================================
 
   /// Shows a dialog to view and edit a gratitude star.
@@ -1359,6 +1382,105 @@ class GratitudeDialogs {
         onAfterSave?.call();
       }
     });
+  }
+
+  static Future<List<String>?> showBulkTagDialog({
+    required BuildContext context,
+    required List<GratitudeStar> allStars,
+    required int selectedCount,
+  }) async {
+    List<String> tagsToAdd = [];
+    final tagFieldRef = TagFieldControllerRef();
+    TextEditingController? autocompleteController;
+    bool tagSuggestionsEnabled = false;
+
+    final result = await showDialog<List<String>>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final l10n = AppLocalizations.of(context)!;
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 500, minWidth: 350),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppTheme.getDialogBackground(opacity: 0.95),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppTheme.borderSubtle, width: 2),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 20, spreadRadius: 5)],
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(FontScaling.getResponsiveSpacing(context, 20)),
+                    child: _buildScrollableDialogContent(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(l10n.addTagsDialogTitle(selectedCount), style: FontScaling.getModalTitle(context)),
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 6)),
+                          Text(
+                            l10n.addTagsDialogSubtitle,
+                            style: FontScaling.getBodySmall(context).copyWith(color: AppTheme.textSecondary),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 16)),
+                          _buildTagsSection(
+                            context: context,
+                            editingTags: tagsToAdd,
+                            tagFieldRef: tagFieldRef,
+                            allStars: allStars,
+                            maxTags: 10,
+                            maxTagLength: 30,
+                            tagSuggestionsEnabled: tagSuggestionsEnabled,
+                            onTagSuggestionsChanged: (enabled) {
+                              setState(() { tagSuggestionsEnabled = enabled; });
+                              if (enabled) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  final ctrl = autocompleteController;
+                                  if (ctrl != null && ctrl.text.isEmpty) {
+                                    ctrl.value = const TextEditingValue(text: '\u200B');
+                                    ctrl.value = TextEditingValue.empty;
+                                  }
+                                });
+                              }
+                            },
+                            onAutocompleteControllerReady: (ctrl) { autocompleteController = ctrl; },
+                            onTagsChanged: (newTags) { setState(() { tagsToAdd = newTags; }); },
+                          ),
+                          SizedBox(height: FontScaling.getResponsiveSpacing(context, 20)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(null),
+                                child: Text(l10n.cancelButton, style: FontScaling.getButtonText(context).copyWith(color: AppTheme.textTertiary)),
+                              ),
+                              SizedBox(width: FontScaling.getResponsiveSpacing(context, 12)),
+                              ElevatedButton(
+                                onPressed: tagsToAdd.isEmpty ? null : () => Navigator.of(context).pop(List<String>.from(tagsToAdd)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primary,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                ),
+                                child: Text(l10n.applyButton, style: FontScaling.getButtonText(context).copyWith(color: AppTheme.textOnPrimary)),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    return result;
   }
 
   static Widget buildModalIconButton({

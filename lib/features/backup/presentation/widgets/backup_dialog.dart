@@ -241,7 +241,7 @@ class _BackupDialogState extends State<BackupDialog> {
               Text(
                 l10n.backupFormat,
                 style: FontScaling.getBodySmall(context).copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontScaling.boldWeight,
                 ),
               ),
               SizedBox(height: 8),
@@ -326,7 +326,7 @@ class _BackupDialogState extends State<BackupDialog> {
                               Text(
                                 l10n.backupPlaintextWarningTitle,
                                 style: FontScaling.getBodySmall(context).copyWith(
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontScaling.boldWeight,
                                   color: AppTheme.warning,
                                 ),
                               ),
@@ -366,7 +366,7 @@ class _BackupDialogState extends State<BackupDialog> {
                         Text(
                           l10n.backupWhatsIncluded,
                           style: FontScaling.getBodySmall(context).copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontScaling.boldWeight,
                             color: AppTheme.primary,
                           ),
                         ),

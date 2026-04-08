@@ -296,7 +296,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncingData => 'Syncing your data...';
 
   @override
-  String get listViewTitle => 'Your Gratitude Stars';
+  String get listViewTitle => 'My Stars';
 
   @override
   String get jumpToStarButton => 'Jump to Star';
@@ -650,6 +650,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sortByYear => 'By Year';
+
+  @override
+  String get sortByTag => 'By Tag';
+
+  @override
+  String get untaggedGroupLabel => 'Untagged';
+
+  @override
+  String get addTagsButton => 'Add Tags';
+
+  @override
+  String addTagsDialogTitle(int count) {
+    return 'Add Tags to $count Star(s)';
+  }
+
+  @override
+  String get addTagsDialogSubtitle =>
+      'Tags will be added to all selected stars.';
+
+  @override
+  String tagsAdded(int count) {
+    return 'Tags added to $count star(s)';
+  }
 
   @override
   String get feedbackMenuItem => 'Send Feedback';
@@ -2076,6 +2099,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get whatsNewBannersWrappingFixDesc =>
       'Fixed banner positioning and text wrapping at large UI scales.';
+
+  @override
+  String get whatsNewTagSuggestionsFixTitle => 'Tag Suggestions';
+
+  @override
+  String get whatsNewTagSuggestionsFixDesc =>
+      'Tapping the tag field now shows your existing tags as quick suggestions.';
+
+  @override
+  String get whatsNewScrollbarGutterFixTitle => 'Scrollbar Overlap';
+
+  @override
+  String get whatsNewScrollbarGutterFixDesc =>
+      'Fixed scrollbar overlapping dialog content on longer screens.';
+
+  @override
+  String get whatsNewWiderDialogTitle => 'Wider Add Dialog';
+
+  @override
+  String get whatsNewWiderDialogDesc =>
+      'The add-star dialog is now wider for a more comfortable writing experience.';
+
+  @override
+  String get whatsNewSortByTagTitle => 'Sort by Tag';
+
+  @override
+  String get whatsNewSortByTagDesc =>
+      'Group your stars by tag using the new \"By Tag\" sort option in List View.';
+
+  @override
+  String get whatsNewBulkAddTagsTitle => 'Bulk-Add Tags';
+
+  @override
+  String get whatsNewBulkAddTagsDesc =>
+      'Select multiple stars and tap \"Add Tags\" to apply tags to all of them at once.';
+
+  @override
+  String get whatsNewReminderTimezoneFixTitle => 'Reminder Time Fix';
+
+  @override
+  String get whatsNewReminderTimezoneFixDesc =>
+      'Fixed a bug where daily reminders could fire at the wrong time due to an incorrect timezone.';
 
   @override
   String get searchHint => 'Search by content or tags';

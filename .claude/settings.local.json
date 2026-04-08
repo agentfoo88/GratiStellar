@@ -22,7 +22,10 @@
       "Bash(find:*)",
       "Bash(findstr:*)",
       "WebFetch(domain:pub.dev)",
-      "Bash(flutter build:*)"
+      "Bash(flutter build:*)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter --version)",
+      "Bash(flutter doctor:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -44,8 +45,9 @@ class DailyReminderService extends ChangeNotifier {
       // Initialize timezone data
       tz.initializeTimeZones();
 
-      // Set local timezone
-      final String timeZoneName = DateTime.now().timeZoneName;
+      // Set local timezone using IANA timezone name
+      final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+      final String timeZoneName = timeZoneInfo.identifier;
       try {
         tz.setLocalLocation(tz.getLocation(timeZoneName));
       } catch (e) {
@@ -75,14 +77,26 @@ class DailyReminderService extends ChangeNotifier {
         requestSoundPermission: false,
       );
 
+      const LinuxInitializationSettings linuxSettings =
+          LinuxInitializationSettings(defaultActionName: 'Open');
+
+      const WindowsInitializationSettings windowsSettings =
+          WindowsInitializationSettings(
+        appName: 'GratiStellar',
+        appUserModelId: 'com.example.gratistellar',
+        guid: 'c8f8b5c0-5e2f-4f1a-9e0a-9d0f1e2a3b4c',
+      );
+
       const InitializationSettings initSettings = InitializationSettings(
         android: androidSettings,
         iOS: iOSSettings,
         macOS: macOSSettings,
+        linux: linuxSettings,
+        windows: windowsSettings,
       );
 
       await _notifications.initialize(
-        initSettings,
+        settings: initSettings,
         onDidReceiveNotificationResponse: _onNotificationTap,
       );
 
@@ -235,7 +249,7 @@ class DailyReminderService extends ChangeNotifier {
       }
 
       // Cancel any existing notification
-      await _notifications.cancel(_notificationId);
+      await _notifications.cancel(id: _notificationId);
 
       // Calculate next notification time
       final now = tz.TZDateTime.now(tz.local);
@@ -256,11 +270,9 @@ class DailyReminderService extends ChangeNotifier {
 
       // Schedule the notification
       await _notifications.zonedSchedule(
-        _notificationId,
-        'Time for gratitude ✨',
-        'Take a moment to reflect on what you\'re grateful for today.',
-        scheduledDate,
-        const NotificationDetails(
+        id: _notificationId,
+        scheduledDate: scheduledDate,
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'daily_reminders',
             'Daily Reminders',
@@ -276,8 +288,8 @@ class DailyReminderService extends ChangeNotifier {
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        title: 'Time for gratitude ✨',
+        body: 'Take a moment to reflect on what you\'re grateful for today.',
       );
 
       // Save the new time
@@ -297,7 +309,7 @@ class DailyReminderService extends ChangeNotifier {
   Future<void> cancelReminder() async {
     try {
       AppLogger.info('🔔 Cancelling daily reminder...');
-      await _notifications.cancel(_notificationId);
+      await _notifications.cancel(id: _notificationId);
       AppLogger.success('✅ Daily reminder cancelled');
     } catch (e) {
       AppLogger.error('❌ Error cancelling reminder: $e');
@@ -335,11 +347,9 @@ class DailyReminderService extends ChangeNotifier {
 
       // Schedule the notification for tomorrow
       await _notifications.zonedSchedule(
-        _notificationId,
-        'Time for gratitude ✨',
-        'Take a moment to reflect on what you\'re grateful for today.',
-        tomorrow,
-        const NotificationDetails(
+        id: _notificationId,
+        scheduledDate: tomorrow,
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'daily_reminders',
             'Daily Reminders',
@@ -355,8 +365,8 @@ class DailyReminderService extends ChangeNotifier {
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        title: 'Time for gratitude ✨',
+        body: 'Take a moment to reflect on what you\'re grateful for today.',
       );
 
       AppLogger.success(
@@ -447,10 +457,10 @@ class DailyReminderService extends ChangeNotifier {
   Future<void> _sendNotification() async {
     try {
       await _notifications.show(
-        _notificationId,
-        'Time for gratitude ✨',
-        'Take a moment to reflect on what you\'re grateful for today.',
-        const NotificationDetails(
+        id: _notificationId,
+        title: 'Time for gratitude ✨',
+        body: 'Take a moment to reflect on what you\'re grateful for today.',
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'daily_reminders',
             'Daily Reminders',

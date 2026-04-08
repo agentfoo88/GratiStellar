@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../core/theme/app_theme.dart';
 import '../font_scaling.dart';
 import '../l10n/app_localizations.dart';
+import '../core/utils/tag_canonicalization.dart';
 import '../modal_dialogs.dart'; // For showDeleteConfirmation
 import '../storage.dart'; // For GratitudeStar
 import 'color_picker_dialog.dart';
@@ -46,8 +47,8 @@ class _EditStarDialogState extends State<EditStarDialog> {
 
   // Tags editing state
   late List<String> _editingTags;
-  final TextEditingController _tagController = TextEditingController();
-  final FocusNode _tagFocusNode = FocusNode();
+  bool _tagSuggestionsEnabled = false;
+  TextEditingController? _autocompleteController;
 
   // Dialog owns its controllers (disposed when dialog closes)
   late final TextEditingController editTextController;
@@ -65,20 +66,14 @@ class _EditStarDialogState extends State<EditStarDialog> {
   void dispose() {
     editTextController.dispose();
     _focusNode.dispose();
-    _tagController.dispose();
-    _tagFocusNode.dispose();
     super.dispose();
   }
 
-  // Get all unique tags from all stars for autocomplete
   List<String> _getAllUniqueTags() {
-    final allTags = <String>{};
-    for (final star in widget.allStars) {
-      allTags.addAll(star.tags);
-    }
-    // Remove tags already on this star
-    allTags.removeAll(_editingTags);
-    return allTags.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return availableCanonicalTagsForAutocomplete(
+      allStars: widget.allStars,
+      editingTags: _editingTags,
+    );
   }
 
   void _addTag(String tag) {
@@ -87,14 +82,18 @@ class _EditStarDialogState extends State<EditStarDialog> {
     if (trimmedTag.length > maxTagLength) return;
     if (_editingTags.length >= maxTags) return;
 
-    // Case-insensitive deduplication
-    final lowerTag = trimmedTag.toLowerCase();
-    if (_editingTags.any((t) => t.toLowerCase() == lowerTag)) return;
+    final canonicalMap = buildCanonicalTagMap(widget.allStars);
+    final resolved = canonicalMap[tagComparisonKey(trimmedTag)] ?? trimmedTag;
+
+    if (_editingTags.any((t) => tagComparisonKey(t) == tagComparisonKey(trimmedTag))) {
+      _autocompleteController?.clear();
+      return;
+    }
 
     setState(() {
-      _editingTags.add(trimmedTag);
-      _tagController.clear();
+      _editingTags.add(resolved);
     });
+    _autocompleteController?.clear();
   }
 
   void _removeTag(String tag) {
@@ -137,7 +136,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
                       tag,
                       style: FontScaling.getBodySmall(context).copyWith(
                         color: AppTheme.textOnLight,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontScaling.mediumWeight,
                       ),
                     ),
                     deleteIcon: Icon(
@@ -167,7 +166,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
           Autocomplete<String>(
             optionsBuilder: (TextEditingValue textEditingValue) {
               if (textEditingValue.text.isEmpty) {
-                return availableTags.take(5);
+                return _tagSuggestionsEnabled ? availableTags.take(5) : const Iterable.empty();
               }
               final query = textEditingValue.text.toLowerCase();
               return availableTags.where((tag) =>
@@ -175,17 +174,29 @@ class _EditStarDialogState extends State<EditStarDialog> {
               ).take(5);
             },
             onSelected: (String selection) {
+              _tagSuggestionsEnabled = false;
               _addTag(selection);
             },
             fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-              // Sync the controller
-              _tagController.text = controller.text;
+              _autocompleteController = controller;
               return Semantics(
                 label: l10n.tagInputLabel,
                 textField: true,
                 child: TextField(
                 controller: controller,
                 focusNode: focusNode,
+                onTap: () {
+                  if (!_tagSuggestionsEnabled) {
+                    setState(() { _tagSuggestionsEnabled = true; });
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      final ctrl = _autocompleteController;
+                      if (ctrl != null && ctrl.text.isEmpty && mounted) {
+                        ctrl.value = const TextEditingValue(text: '\u200B');
+                        ctrl.value = TextEditingValue.empty;
+                      }
+                    });
+                  }
+                },
                 style: FontScaling.getInputText(context),
                 maxLength: maxTagLength,
                 decoration: InputDecoration(
@@ -220,17 +231,11 @@ class _EditStarDialogState extends State<EditStarDialog> {
                         color: AppTheme.primary,
                       ),
                       tooltip: l10n.addTagHint,
-                      onPressed: () {
-                        _addTag(controller.text);
-                        controller.clear();
-                      },
+                      onPressed: () => _addTag(controller.text),
                     ),
                   ),
                 ),
-                onSubmitted: (value) {
-                  _addTag(value);
-                  controller.clear();
-                },
+                onSubmitted: _addTag,
               ),
               );
             },
@@ -311,7 +316,10 @@ class _EditStarDialogState extends State<EditStarDialog> {
       }
     }
 
-    return Dialog(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
+      child: Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, minWidth: 400),
@@ -620,6 +628,7 @@ class _EditStarDialogState extends State<EditStarDialog> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

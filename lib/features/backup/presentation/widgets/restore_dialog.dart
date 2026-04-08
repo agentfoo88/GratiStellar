@@ -36,7 +36,7 @@ class _RestoreDialogState extends State<RestoreDialog> {
     try {
       // Use FileType.any because custom extensions are not reliably supported
       // on all platforms (especially Android). We'll validate the extension ourselves.
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.any,
         dialogTitle: 'Select GratiStellar Backup File',
         allowMultiple: false,
@@ -355,7 +355,7 @@ class _RestoreDialogState extends State<RestoreDialog> {
                           Text(
                             l10n.validBackup,
                             style: FontScaling.getBodySmall(context).copyWith(
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontScaling.boldWeight,
                               color: AppTheme.success,
                             ),
                           ),

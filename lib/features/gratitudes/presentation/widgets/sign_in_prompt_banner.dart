@@ -125,7 +125,7 @@ class _SignInPromptBannerState extends State<SignInPromptBanner> {
               child: Text(
                 l10n.signInPromptButton,
                 style: FontScaling.getBodySmall(context).copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontScaling.boldWeight,
                   color: AppTheme.backgroundDark,
                 ),
               ),

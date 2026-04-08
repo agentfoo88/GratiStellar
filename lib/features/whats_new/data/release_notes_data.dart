@@ -9,6 +9,58 @@ class ReleaseNotesData {
 
   /// All release notes, ordered from newest to oldest
   static final List<ReleaseNote> releaseNotes = [
+    // Version 1.1.2 (Build 30)
+    ReleaseNote(
+      version: '1.1.2',
+      buildNumber: 30,
+      releaseDate: DateTime(2026, 3, 13),
+      items: const [
+        ReleaseItem(
+          type: ReleaseItemType.bugFix,
+          titleKey: 'whatsNewReminderTimezoneFixTitle',
+          descriptionKey: 'whatsNewReminderTimezoneFixDesc',
+          icon: Icons.notifications_active,
+        ),
+      ],
+    ),
+    // Version 1.1.1 (Build 29)
+    ReleaseNote(
+      version: '1.1.1',
+      buildNumber: 29,
+      releaseDate: DateTime(2026, 3, 5),
+      items: const [
+        ReleaseItem(
+          type: ReleaseItemType.newFeature,
+          titleKey: 'whatsNewSortByTagTitle',
+          descriptionKey: 'whatsNewSortByTagDesc',
+          icon: Icons.label_outline,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.newFeature,
+          titleKey: 'whatsNewBulkAddTagsTitle',
+          descriptionKey: 'whatsNewBulkAddTagsDesc',
+          icon: Icons.label,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.bugFix,
+          titleKey: 'whatsNewTagSuggestionsFixTitle',
+          descriptionKey: 'whatsNewTagSuggestionsFixDesc',
+          icon: Icons.label,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.bugFix,
+          titleKey: 'whatsNewScrollbarGutterFixTitle',
+          descriptionKey: 'whatsNewScrollbarGutterFixDesc',
+          icon: Icons.linear_scale,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.improvement,
+          titleKey: 'whatsNewWiderDialogTitle',
+          descriptionKey: 'whatsNewWiderDialogDesc',
+          icon: Icons.open_in_full,
+        ),
+      ],
+    ),
     // Version 1.1.0 (Build 28)
     ReleaseNote(
       version: '1.1.0',
@@ -17,21 +69,39 @@ class ReleaseNotesData {
       items: const [
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewSearchTaggingTitle',
-          descriptionKey: 'whatsNewSearchTaggingDesc',
+          titleKey: 'whatsNewSearchFunctionTitle',
+          descriptionKey: 'whatsNewSearchFunctionDesc',
           icon: Icons.search,
         ),
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewStarCreationSoundTitle',
-          descriptionKey: 'whatsNewStarCreationSoundDesc',
-          icon: Icons.music_note,
+          titleKey: 'whatsNewTaggingStarsTitle',
+          descriptionKey: 'whatsNewTaggingStarsDesc',
+          icon: Icons.label,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.newFeature,
+          titleKey: 'whatsNewMindfulnessDelayTitle',
+          descriptionKey: 'whatsNewMindfulnessDelayDesc',
+          icon: Icons.self_improvement,
         ),
         ReleaseItem(
           type: ReleaseItemType.improvement,
-          titleKey: 'whatsNewAccessibilityCleanupTitle',
-          descriptionKey: 'whatsNewAccessibilityCleanupDesc',
+          titleKey: 'whatsNewCreationSoundTitle',
+          descriptionKey: 'whatsNewCreationSoundDesc',
+          icon: Icons.music_note,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.bugFix,
+          titleKey: 'whatsNewL10nAccessibilityFixTitle',
+          descriptionKey: 'whatsNewL10nAccessibilityFixDesc',
           icon: Icons.accessibility_new,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.bugFix,
+          titleKey: 'whatsNewBannersWrappingFixTitle',
+          descriptionKey: 'whatsNewBannersWrappingFixDesc',
+          icon: Icons.wrap_text,
         ),
       ],
     ),

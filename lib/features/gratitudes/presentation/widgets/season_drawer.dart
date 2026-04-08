@@ -228,7 +228,7 @@ class _SeasonDrawerState extends State<SeasonDrawer>
                                   SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
                                   Text(
                                     AppLocalizations.of(context)!.seasonTitle,
-                                    style: FontScaling.getBodyMedium(context),
+                                    style: FontScaling.getHeadingSmall(context),
                                   ),
                                   SizedBox(width: FontScaling.getResponsiveSpacing(context, 8)),
                                   Icon(

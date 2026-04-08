@@ -151,7 +151,7 @@ class FloatingGratitudeLabel extends StatelessWidget {
       // Use the smallest available style, but ensure minimum 12px
       final bodySmall = FontScaling.getBodySmall(context);
       return bodySmall.copyWith(
-        fontSize: (bodySmall.fontSize! * 0.85).clamp(12.0, bodySmall.fontSize!),
+        fontSize: (bodySmall.fontSize! * 0.85).clamp(14.0, bodySmall.fontSize!),
       );
     }
   }

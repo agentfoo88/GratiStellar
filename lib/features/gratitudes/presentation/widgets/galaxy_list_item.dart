@@ -81,7 +81,7 @@ class GalaxyListItem extends StatelessWidget {
                               fontSize: FontScaling.getBodyLarge(context)
                                   .fontSize! *
                                   UIConstants.universalUIScale,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontScaling.boldWeight,
                               color: AppTheme.textPrimary,
                             ),
                             maxLines: 1,
@@ -103,7 +103,7 @@ class GalaxyListItem extends StatelessWidget {
                               l10n.galaxyActiveBadge,
                               style: FontScaling.getCaption(context).copyWith(
                                 color: AppTheme.backgroundDark,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontScaling.boldWeight,
                                 fontSize: FontScaling.mobileCaption * 0.75,
                               ),
                             ),

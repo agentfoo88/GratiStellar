@@ -121,6 +121,7 @@ class StatsCardWidget extends StatelessWidget {
           label,
           style: FontScaling.getStatsLabel(context).copyWith(
             fontSize: FontScaling.getStatsLabel(context).fontSize! * UIConstants.statsLabelTextScale,
+            fontWeight: FontScaling.mediumWeight,
           ),
         ),
         if (value.isNotEmpty) ...[
@@ -129,6 +130,7 @@ class StatsCardWidget extends StatelessWidget {
             value,
             style: FontScaling.getStatsNumber(context).copyWith(
               fontSize: FontScaling.getStatsNumber(context).fontSize! * UIConstants.universalUIScale,
+              fontWeight: FontScaling.normalWeight,
             ),
           ),
         ],

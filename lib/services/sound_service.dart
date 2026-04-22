@@ -12,7 +12,11 @@ class SoundService extends ChangeNotifier {
   final Random _random = Random();
   bool _soundEnabled = true;
   bool _initialized = false;
-  AudioSource? _waveform;
+  // One AudioSource per frequency — handles from different sources are fully
+  // independent, so playing note N never mutates the pitch of note N-1.
+  final Map<double, AudioSource> _waveforms = {};
+  bool _isPlayingCreation = false;
+  int _lastChimeMs = 0;
 
   bool get soundEnabled => _soundEnabled;
 
@@ -22,14 +26,17 @@ class SoundService extends ChangeNotifier {
 
     try {
       await SoLoud.instance.init();
-      // Load a sine waveform for soft bell-like tones
-      // Parameters: waveform, superWave, scale, detune
-      _waveform = await SoLoud.instance.loadWaveform(
-        WaveForm.sin,
-        false,
-        0.5,
-        0.0,
-      );
+
+      for (final freq in _frequencies) {
+        final source = await SoLoud.instance.loadWaveform(
+          WaveForm.sin,
+          false,
+          0.5,
+          0.0,
+        );
+        SoLoud.instance.setWaveformFreq(source, freq);
+        _waveforms[freq] = source;
+      }
 
       // Add global reverb filter for echoing effect
       SoLoud.instance.filters.freeverbFilter.activate();
@@ -51,15 +58,15 @@ class SoundService extends ChangeNotifier {
   }
 
   Future<void> playChime() async {
-    if (!_soundEnabled || !_initialized || _waveform == null) return;
+    if (!_soundEnabled || !_initialized || _waveforms.isEmpty) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastChimeMs < 150) return;
+    _lastChimeMs = now;
 
     try {
-      // Pick random frequency from pentatonic scale
       final freq = _frequencies[_random.nextInt(_frequencies.length)];
-
-      // Set frequency on the waveform source, then play
-      SoLoud.instance.setWaveformFreq(_waveform!, freq);
-      final handle = SoLoud.instance.play(_waveform!, volume: 0.25);
+      final handle = SoLoud.instance.play(_waveforms[freq]!, volume: 0.25);
 
       // Longer duration with gradual fade for reverb tail
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -76,7 +83,9 @@ class SoundService extends ChangeNotifier {
   }
 
   Future<void> playStarCreation() async {
-    if (!_soundEnabled || !_initialized || _waveform == null) return;
+    if (!_soundEnabled || !_initialized || _waveforms.isEmpty) return;
+    if (_isPlayingCreation) return;
+    _isPlayingCreation = true;
 
     try {
       // Play ascending pentatonic sequence
@@ -86,10 +95,9 @@ class SoundService extends ChangeNotifier {
 
         await Future.delayed(Duration(milliseconds: i * 80));
 
-        SoLoud.instance.setWaveformFreq(_waveform!, freq);
         final handle = SoLoud.instance.play(
-          _waveform!,
-          volume: isLast ? 0.35 : 0.2, // Final note louder
+          _waveforms[freq]!,
+          volume: isLast ? 0.35 : 0.2,
         );
 
         // Final note rings longer
@@ -109,14 +117,17 @@ class SoundService extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('SoundService playStarCreation failed: $e');
+    } finally {
+      _isPlayingCreation = false;
     }
   }
 
   @override
   void dispose() {
-    if (_waveform != null) {
-      SoLoud.instance.disposeSource(_waveform!);
+    for (final source in _waveforms.values) {
+      SoLoud.instance.disposeSource(source);
     }
+    _waveforms.clear();
     SoLoud.instance.filters.freeverbFilter.deactivate();
     SoLoud.instance.deinit();
     super.dispose();

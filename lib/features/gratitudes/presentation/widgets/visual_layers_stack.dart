@@ -149,14 +149,25 @@ class VisualLayersStack extends StatelessWidget {
               animation: cameraController,
               builder: (context, child) {
                 return Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    // Stars layer
+                    // Stars layer — canvas expands with universeSize; OverflowBox
+                    // escapes the Positioned.fill screen-size constraint so stars
+                    // at worldX > 1.0 are not clipped before the Transform is applied.
                     Transform(
                       transform: cameraController.transform,
-                      child: StarfieldCanvas(
-                        stars: gratitudeStars,
-                        animationController: animationManager.star,
-                        glowPatterns: glowPatterns,
+                      child: OverflowBox(
+                        alignment: Alignment.topLeft,
+                        minWidth: 0,
+                        maxWidth: double.infinity,
+                        minHeight: 0,
+                        maxHeight: double.infinity,
+                        child: StarfieldCanvas(
+                          stars: gratitudeStars,
+                          animationController: animationManager.star,
+                          glowPatterns: glowPatterns,
+                          screenSize: currentSize,
+                        ),
                       ),
                     ),
                   ],
@@ -240,14 +251,31 @@ class VisualLayersStack extends StatelessWidget {
               animation: Listenable.merge(
                   [animationManager.birth!, cameraController]),
               builder: (context, child) {
-                return Transform(
-                  transform: cameraController.transform,
-                  child: AnimatedStarBirth(
-                    star: animatingStar!,
-                    animation: animationManager.birth!,
-                    cameraController: cameraController,
-                    screenSize: currentSize,
-                  ),
+                final universeSize = UniverseManager.calculateUniverseSize(gratitudeStars.length);
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Transform(
+                      transform: cameraController.transform,
+                      child: OverflowBox(
+                        alignment: Alignment.topLeft,
+                        minWidth: 0,
+                        maxWidth: double.infinity,
+                        minHeight: 0,
+                        maxHeight: double.infinity,
+                        child: SizedBox(
+                          width: universeSize * currentSize.width,
+                          height: universeSize * currentSize.height,
+                          child: AnimatedStarBirth(
+                            star: animatingStar!,
+                            animation: animationManager.birth!,
+                            cameraController: cameraController,
+                            screenSize: currentSize,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 );
               },
             ),

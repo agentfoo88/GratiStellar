@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Type of release item change
 enum ReleaseItemType {
   newFeature,
@@ -10,14 +12,14 @@ enum ReleaseItemType {
 /// Individual item within a release note
 class ReleaseItem {
   final ReleaseItemType type;
-  final String titleKey;
-  final String descriptionKey;
+  final String Function(AppLocalizations) title;
+  final String Function(AppLocalizations) description;
   final IconData icon;
 
   const ReleaseItem({
     required this.type,
-    required this.titleKey,
-    required this.descriptionKey,
+    required this.title,
+    required this.description,
     required this.icon,
   });
 }

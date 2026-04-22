@@ -770,6 +770,7 @@ class GratitudeDialogs {
         const int maxTagLength = 30;
         bool tagSuggestionsEnabled = false;
         TextEditingController? autocompleteController;
+        bool submitted = false; // Guard against double-submission (ghost tap)
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -889,42 +890,43 @@ class GratitudeDialogs {
                                 },
                                 onSubmitted: (value) {
                                   // Submit star when user presses Done/Enter (hard return)
-                                  if (!isOverLimit && value.trim().isNotEmpty) {
-                                    // Save default if checkbox is checked
-                                    if (setAsDefault) {
-                                      if (customColorPreview != null) {
-                                        StorageService.saveDefaultCustomColor(
-                                          customColorPreview!,
-                                        );
-                                      } else if (selectedColorIndex != null) {
-                                        StorageService.saveDefaultPresetColor(
-                                          selectedColorIndex!,
-                                        );
-                                      }
+                                  // Guard: ignore if already submitted (prevents ghost-tap doubling)
+                                  if (submitted || isOverLimit || value.trim().isEmpty) return;
+                                  submitted = true;
+                                  // Save default if checkbox is checked
+                                  if (setAsDefault) {
+                                    if (customColorPreview != null) {
+                                      StorageService.saveDefaultCustomColor(
+                                        customColorPreview!,
+                                      );
+                                    } else if (selectedColorIndex != null) {
+                                      StorageService.saveDefaultPresetColor(
+                                        selectedColorIndex!,
+                                      );
                                     }
+                                  }
 
-                                    // Create the star
-                                    if (showColorPicker &&
-                                        selectedColorIndex != null) {
-                                      // Map palette colour to StarColors.palette index if it exists, otherwise use as custom
-                                      final selectedColour =
-                                          selectedColorIndex! <
-                                              paletteColors.length
-                                          ? paletteColors[selectedColorIndex!]
-                                          : paletteColors[0];
-                                      final starColorsIndex = StarColors.palette
-                                          .indexOf(selectedColour);
-                                      if (starColorsIndex >= 0) {
-                                        onAdd(starColorsIndex, null, currentPrompt, editingTags.isNotEmpty ? editingTags : null);
-                                      } else {
-                                        onAdd(null, selectedColour, currentPrompt, editingTags.isNotEmpty ? editingTags : null);
-                                      }
+                                  // Create the star
+                                  if (showColorPicker &&
+                                      selectedColorIndex != null) {
+                                    // Map palette colour to StarColors.palette index if it exists, otherwise use as custom
+                                    final selectedColour =
+                                        selectedColorIndex! <
+                                            paletteColors.length
+                                        ? paletteColors[selectedColorIndex!]
+                                        : paletteColors[0];
+                                    final starColorsIndex = StarColors.palette
+                                        .indexOf(selectedColour);
+                                    if (starColorsIndex >= 0) {
+                                      onAdd(starColorsIndex, null, currentPrompt, editingTags.isNotEmpty ? editingTags : null);
                                     } else {
-                                      onAdd(null, null, currentPrompt, editingTags.isNotEmpty ? editingTags : null); // Random colour
+                                      onAdd(null, selectedColour, currentPrompt, editingTags.isNotEmpty ? editingTags : null);
                                     }
-                                    if (context.mounted) {
-                                      Navigator.of(context).pop();
-                                    }
+                                  } else {
+                                    onAdd(null, null, currentPrompt, editingTags.isNotEmpty ? editingTags : null); // Random colour
+                                  }
+                                  if (context.mounted) {
+                                    Navigator.of(context).pop();
                                   }
                                 },
                               ),
@@ -1258,9 +1260,10 @@ class GratitudeDialogs {
                                 ),
                               ),
                               ElevatedButton(
-                                onPressed: isOverLimit
+                                onPressed: (isOverLimit || submitted)
                                     ? null
                                     : () async {
+                                        submitted = true;
                                         // Save default if checkbox is checked
                                         if (setAsDefault) {
                                           if (customColorPreview != null) {

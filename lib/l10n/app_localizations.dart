@@ -3868,6 +3868,30 @@ abstract class AppLocalizations {
   /// **'Fixed a bug where daily reminders could fire at the wrong time due to an incorrect timezone.'**
   String get whatsNewReminderTimezoneFixDesc;
 
+  /// Title for large galaxy star visibility bug fix in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Large Galaxy Visibility Fix'**
+  String get whatsNewLargeGalaxyFixTitle;
+
+  /// Description for large galaxy star visibility bug fix in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed an issue where stars in galaxies with 200 or more entries were invisible. All stars now appear correctly as your galaxy grows.'**
+  String get whatsNewLargeGalaxyFixDesc;
+
+  /// Title for tag canonicalization/normalization bug fix in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Tag Consistency Fix'**
+  String get whatsNewTagNormalizationFixTitle;
+
+  /// Description for tag canonicalization/normalization bug fix in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Tags are now matched consistently regardless of capitalisation, preventing duplicate tags like \"Gratitude\" and \"gratitude\" from appearing separately.'**
+  String get whatsNewTagNormalizationFixDesc;
+
   /// Hint text for the search field in list view
   ///
   /// In en, this message translates to:

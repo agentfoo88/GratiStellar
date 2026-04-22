@@ -2143,6 +2143,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Fixed a bug where daily reminders could fire at the wrong time due to an incorrect timezone.';
 
   @override
+  String get whatsNewLargeGalaxyFixTitle => 'Large Galaxy Visibility Fix';
+
+  @override
+  String get whatsNewLargeGalaxyFixDesc =>
+      'Fixed an issue where stars in galaxies with 200 or more entries were invisible. All stars now appear correctly as your galaxy grows.';
+
+  @override
+  String get whatsNewTagNormalizationFixTitle => 'Tag Consistency Fix';
+
+  @override
+  String get whatsNewTagNormalizationFixDesc =>
+      'Tags are now matched consistently regardless of capitalisation, preventing duplicate tags like \"Gratitude\" and \"gratitude\" from appearing separately.';
+
+  @override
   String get searchHint => 'Search by content or tags';
 
   @override

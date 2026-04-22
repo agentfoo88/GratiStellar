@@ -43,12 +43,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Configure system UI for dark theme (white status bar icons)
+  // Note: statusBarColor and systemNavigationBarColor are omitted intentionally —
+  // they trigger deprecated Window APIs (flagged on Android 15 / targetSdk 35)
+  // and are ignored at runtime anyway when edge-to-edge is enforced.
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,  // White icons for Android
       statusBarBrightness: Brightness.dark,       // For iOS (dark = light icons)
-      systemNavigationBarColor: AppTheme.backgroundDarker,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );

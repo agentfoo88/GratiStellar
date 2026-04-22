@@ -344,22 +344,34 @@ class StarfieldCanvas extends StatelessWidget {
   final List<GratitudeStar> stars;
   final AnimationController animationController;
   final List<Paint> glowPatterns;
+  final Size screenSize;
 
   const StarfieldCanvas({
     super.key,
     required this.stars,
     required this.animationController,
     required this.glowPatterns,
+    required this.screenSize,
   });
 
   @override
   Widget build(BuildContext context) {
+    final universeSize = UniverseManager.calculateUniverseSize(stars.length);
     return AnimatedBuilder(
       animation: animationController,
       builder: (context, child) {
-        return CustomPaint(
-          painter: GratitudeStarPainter(stars, animationController.value, glowPatterns),
-          size: Size.infinite,
+        return SizedBox(
+          width: universeSize * screenSize.width,
+          height: universeSize * screenSize.height,
+          child: CustomPaint(
+            painter: GratitudeStarPainter(
+              stars,
+              animationController.value,
+              glowPatterns,
+              screenSize: screenSize,
+            ),
+            size: Size(universeSize * screenSize.width, universeSize * screenSize.height),
+          ),
         );
       },
     );
@@ -371,8 +383,10 @@ class GratitudeStarPainter extends CustomPainter {
   final List<GratitudeStar> stars;
   final double animationValue;
   final List<Paint> glowPatterns;
+  final Size screenSize;
 
-  GratitudeStarPainter(this.stars, this.animationValue, this.glowPatterns);
+  GratitudeStarPainter(this.stars, this.animationValue, this.glowPatterns,
+      {required this.screenSize});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -381,11 +395,12 @@ class GratitudeStarPainter extends CustomPainter {
     for (int i = 0; i < stars.length; i++) {
       final star = stars[i];
 
-      // Convert normalized world coordinates to screen coordinates
-      final screenX = star.worldX * size.width;
-      final screenY = star.worldY * size.height;
+      // Coordinate mapping: world units × screen dimensions (not canvas dimensions)
+      final screenX = star.worldX * screenSize.width;
+      final screenY = star.worldY * screenSize.height;
 
-      // Viewport culling - skip stars outside visible area (with 200px margin)
+      // Culling uses canvas size (= universeSize × screenSize) so panned-to stars
+      // in the expanded universe are never incorrectly skipped.
       const cullingMargin = 200.0;
       if (screenX < -cullingMargin || screenX > size.width + cullingMargin ||
           screenY < -cullingMargin || screenY > size.height + cullingMargin) {
@@ -618,11 +633,11 @@ class StarBirthPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Work in world coordinates - Transform wrapper handles camera conversion
-    // Start position: bottom-center in world space
-    final startWorld = Offset(size.width / 2, size.height);
+    // Start position: bottom-center of the screen (not the expanded canvas)
+    final startWorld = Offset(screenSize.width / 2, screenSize.height);
 
-    // End position: star's world position in pixels
-    final endWorld = Offset(star.worldX * size.width, star.worldY * size.height);
+    // End position: star's world position in screen pixels
+    final endWorld = Offset(star.worldX * screenSize.width, star.worldY * screenSize.height);
 
     final travelProgress = (progress / StarBirthConfig.travelPhaseEnd).clamp(0.0, 1.0);
     final currentWorld = Offset.lerp(startWorld, endWorld, travelProgress)!;

@@ -299,11 +299,13 @@ class AppTheme {
   ///
   /// Use with `AnnotatedRegion<SystemUiOverlayStyle>` to ensure proper
   /// status bar styling on screens without AppBars.
+  ///
+  /// Note: statusBarColor and systemNavigationBarColor are omitted intentionally —
+  /// they trigger deprecated Window APIs (flagged on Android 15 / targetSdk 35)
+  /// and are ignored at runtime anyway when edge-to-edge is enforced.
   static const SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,  // White icons for Android
     statusBarBrightness: Brightness.dark,       // For iOS (dark = light icons)
-    systemNavigationBarColor: Color(0xFF0A0E27),
     systemNavigationBarIconBrightness: Brightness.light,
   );
 

@@ -9,16 +9,36 @@ class ReleaseNotesData {
 
   /// All release notes, ordered from newest to oldest
   static final List<ReleaseNote> releaseNotes = [
+    // Version 1.1.3 (Build 31)
+    ReleaseNote(
+      version: '1.1.3',
+      buildNumber: 31,
+      releaseDate: DateTime(2026, 4, 12),
+      items: [
+        ReleaseItem(
+          type: ReleaseItemType.bugFix,
+          title: (l10n) => l10n.whatsNewLargeGalaxyFixTitle,
+          description: (l10n) => l10n.whatsNewLargeGalaxyFixDesc,
+          icon: Icons.auto_awesome,
+        ),
+        ReleaseItem(
+          type: ReleaseItemType.bugFix,
+          title: (l10n) => l10n.whatsNewTagNormalizationFixTitle,
+          description: (l10n) => l10n.whatsNewTagNormalizationFixDesc,
+          icon: Icons.label,
+        ),
+      ],
+    ),
     // Version 1.1.2 (Build 30)
     ReleaseNote(
       version: '1.1.2',
       buildNumber: 30,
       releaseDate: DateTime(2026, 3, 13),
-      items: const [
+      items: [
         ReleaseItem(
           type: ReleaseItemType.bugFix,
-          titleKey: 'whatsNewReminderTimezoneFixTitle',
-          descriptionKey: 'whatsNewReminderTimezoneFixDesc',
+          title: (l10n) => l10n.whatsNewReminderTimezoneFixTitle,
+          description: (l10n) => l10n.whatsNewReminderTimezoneFixDesc,
           icon: Icons.notifications_active,
         ),
       ],
@@ -28,35 +48,35 @@ class ReleaseNotesData {
       version: '1.1.1',
       buildNumber: 29,
       releaseDate: DateTime(2026, 3, 5),
-      items: const [
+      items: [
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewSortByTagTitle',
-          descriptionKey: 'whatsNewSortByTagDesc',
+          title: (l10n) => l10n.whatsNewSortByTagTitle,
+          description: (l10n) => l10n.whatsNewSortByTagDesc,
           icon: Icons.label_outline,
         ),
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewBulkAddTagsTitle',
-          descriptionKey: 'whatsNewBulkAddTagsDesc',
+          title: (l10n) => l10n.whatsNewBulkAddTagsTitle,
+          description: (l10n) => l10n.whatsNewBulkAddTagsDesc,
           icon: Icons.label,
         ),
         ReleaseItem(
           type: ReleaseItemType.bugFix,
-          titleKey: 'whatsNewTagSuggestionsFixTitle',
-          descriptionKey: 'whatsNewTagSuggestionsFixDesc',
+          title: (l10n) => l10n.whatsNewTagSuggestionsFixTitle,
+          description: (l10n) => l10n.whatsNewTagSuggestionsFixDesc,
           icon: Icons.label,
         ),
         ReleaseItem(
           type: ReleaseItemType.bugFix,
-          titleKey: 'whatsNewScrollbarGutterFixTitle',
-          descriptionKey: 'whatsNewScrollbarGutterFixDesc',
+          title: (l10n) => l10n.whatsNewScrollbarGutterFixTitle,
+          description: (l10n) => l10n.whatsNewScrollbarGutterFixDesc,
           icon: Icons.linear_scale,
         ),
         ReleaseItem(
           type: ReleaseItemType.improvement,
-          titleKey: 'whatsNewWiderDialogTitle',
-          descriptionKey: 'whatsNewWiderDialogDesc',
+          title: (l10n) => l10n.whatsNewWiderDialogTitle,
+          description: (l10n) => l10n.whatsNewWiderDialogDesc,
           icon: Icons.open_in_full,
         ),
       ],
@@ -66,41 +86,41 @@ class ReleaseNotesData {
       version: '1.1.0',
       buildNumber: 28,
       releaseDate: DateTime(2025, 2, 16),
-      items: const [
+      items: [
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewSearchFunctionTitle',
-          descriptionKey: 'whatsNewSearchFunctionDesc',
+          title: (l10n) => l10n.whatsNewSearchFunctionTitle,
+          description: (l10n) => l10n.whatsNewSearchFunctionDesc,
           icon: Icons.search,
         ),
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewTaggingStarsTitle',
-          descriptionKey: 'whatsNewTaggingStarsDesc',
+          title: (l10n) => l10n.whatsNewTaggingStarsTitle,
+          description: (l10n) => l10n.whatsNewTaggingStarsDesc,
           icon: Icons.label,
         ),
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewMindfulnessDelayTitle',
-          descriptionKey: 'whatsNewMindfulnessDelayDesc',
+          title: (l10n) => l10n.whatsNewMindfulnessDelayTitle,
+          description: (l10n) => l10n.whatsNewMindfulnessDelayDesc,
           icon: Icons.self_improvement,
         ),
         ReleaseItem(
           type: ReleaseItemType.improvement,
-          titleKey: 'whatsNewCreationSoundTitle',
-          descriptionKey: 'whatsNewCreationSoundDesc',
+          title: (l10n) => l10n.whatsNewCreationSoundTitle,
+          description: (l10n) => l10n.whatsNewCreationSoundDesc,
           icon: Icons.music_note,
         ),
         ReleaseItem(
           type: ReleaseItemType.bugFix,
-          titleKey: 'whatsNewL10nAccessibilityFixTitle',
-          descriptionKey: 'whatsNewL10nAccessibilityFixDesc',
+          title: (l10n) => l10n.whatsNewL10nAccessibilityFixTitle,
+          description: (l10n) => l10n.whatsNewL10nAccessibilityFixDesc,
           icon: Icons.accessibility_new,
         ),
         ReleaseItem(
           type: ReleaseItemType.bugFix,
-          titleKey: 'whatsNewBannersWrappingFixTitle',
-          descriptionKey: 'whatsNewBannersWrappingFixDesc',
+          title: (l10n) => l10n.whatsNewBannersWrappingFixTitle,
+          description: (l10n) => l10n.whatsNewBannersWrappingFixDesc,
           icon: Icons.wrap_text,
         ),
       ],
@@ -110,23 +130,23 @@ class ReleaseNotesData {
       version: '1.0.10',
       buildNumber: 24,
       releaseDate: DateTime(2025, 1, 31),
-      items: const [
+      items: [
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewSoundSupportTitle',
-          descriptionKey: 'whatsNewSoundSupportDesc',
+          title: (l10n) => l10n.whatsNewSoundSupportTitle,
+          description: (l10n) => l10n.whatsNewSoundSupportDesc,
           icon: Icons.volume_up,
         ),
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewWhatsNewFeatureTitle',
-          descriptionKey: 'whatsNewWhatsNewFeatureDesc',
+          title: (l10n) => l10n.whatsNewWhatsNewFeatureTitle,
+          description: (l10n) => l10n.whatsNewWhatsNewFeatureDesc,
           icon: Icons.new_releases,
         ),
         ReleaseItem(
           type: ReleaseItemType.bugFix,
-          titleKey: 'whatsNewNotificationsFixTitle',
-          descriptionKey: 'whatsNewNotificationsFixDesc',
+          title: (l10n) => l10n.whatsNewNotificationsFixTitle,
+          description: (l10n) => l10n.whatsNewNotificationsFixDesc,
           icon: Icons.notifications,
         ),
       ],
@@ -136,23 +156,23 @@ class ReleaseNotesData {
       version: '1.0.9',
       buildNumber: 23,
       releaseDate: DateTime(2025, 1, 28),
-      items: const [
+      items: [
         ReleaseItem(
           type: ReleaseItemType.newFeature,
-          titleKey: 'whatsNewTutorialPromptsTitle',
-          descriptionKey: 'whatsNewTutorialPromptsDesc',
+          title: (l10n) => l10n.whatsNewTutorialPromptsTitle,
+          description: (l10n) => l10n.whatsNewTutorialPromptsDesc,
           icon: Icons.school,
         ),
         ReleaseItem(
           type: ReleaseItemType.improvement,
-          titleKey: 'whatsNewColourSettingsTitle',
-          descriptionKey: 'whatsNewColourSettingsDesc',
+          title: (l10n) => l10n.whatsNewColourSettingsTitle,
+          description: (l10n) => l10n.whatsNewColourSettingsDesc,
           icon: Icons.palette,
         ),
         ReleaseItem(
           type: ReleaseItemType.improvement,
-          titleKey: 'whatsNewMenuReorderTitle',
-          descriptionKey: 'whatsNewMenuReorderDesc',
+          title: (l10n) => l10n.whatsNewMenuReorderTitle,
+          description: (l10n) => l10n.whatsNewMenuReorderDesc,
           icon: Icons.menu,
         ),
       ],

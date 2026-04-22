@@ -2622,6 +2622,22 @@
         "@whatsNewReminderTimezoneFixDesc": {
           "description": "Description for reminder timezone bug fix in What's New"
         },
+        "whatsNewLargeGalaxyFixTitle": "Large Galaxy Visibility Fix",
+        "@whatsNewLargeGalaxyFixTitle": {
+          "description": "Title for large galaxy star visibility bug fix in What's New"
+        },
+        "whatsNewLargeGalaxyFixDesc": "Fixed an issue where stars in galaxies with 200 or more entries were invisible. All stars now appear correctly as your galaxy grows.",
+        "@whatsNewLargeGalaxyFixDesc": {
+          "description": "Description for large galaxy star visibility bug fix in What's New"
+        },
+        "whatsNewTagNormalizationFixTitle": "Tag Consistency Fix",
+        "@whatsNewTagNormalizationFixTitle": {
+          "description": "Title for tag canonicalization/normalization bug fix in What's New"
+        },
+        "whatsNewTagNormalizationFixDesc": "Tags are now matched consistently regardless of capitalisation, preventing duplicate tags like \"Gratitude\" and \"gratitude\" from appearing separately.",
+        "@whatsNewTagNormalizationFixDesc": {
+          "description": "Description for tag canonicalization/normalization bug fix in What's New"
+        },
         "searchHint": "Search by content or tags",
         "@searchHint": {
           "description": "Hint text for the search field in list view"

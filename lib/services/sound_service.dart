@@ -3,11 +3,34 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/utils/app_logger.dart';
+
 class SoundService extends ChangeNotifier {
   static const String _soundEnabledKey = 'sound_enabled';
 
   // Pentatonic scale frequencies (C5, D5, E5, G5, A5) - always sounds pleasant
   static const List<double> _frequencies = [523.25, 587.33, 659.25, 783.99, 880.0];
+
+  /// Original pleasant mix (creation-tune era); per-frequency sources avoid doubling.
+  static const double _freeverbWet = 0.65;
+  static const double _freeverbRoom = 0.85;
+
+  /// Chime envelope: soft attack avoids “stuttery” onset; long tail lets reverb decay.
+  static const int _chimeAttackMs = 72;
+  static const double _chimePeakVolume = 0.25;
+  static const int _chimeSustainMs = 1100;
+  static const int _chimeFadeMs = 320;
+  static const int _chimeTailAfterFadeMs = 1250;
+
+  /// Creation arpeggio: shorter attack than chime so steps stay distinct.
+  static const int _creationAttackMs = 48;
+  static const int _creationInnerSustainMs = 360;
+  static const int _creationInnerFadeMs = 180;
+  static const int _creationInnerTailMs = 560;
+
+  static const int _creationFinalSustainMs = 1250;
+  static const int _creationFinalFadeMs = 400;
+  static const int _creationFinalTailMs = 980;
 
   final Random _random = Random();
   bool _soundEnabled = true;
@@ -17,8 +40,49 @@ class SoundService extends ChangeNotifier {
   final Map<double, AudioSource> _waveforms = {};
   bool _isPlayingCreation = false;
   int _lastChimeMs = 0;
+  int _debugSoundSeq = 0;
 
   bool get soundEnabled => _soundEnabled;
+
+  void _logSoundPath(String message) {
+    if (!kDebugMode) return;
+    _debugSoundSeq++;
+    AppLogger.debug('[$_debugSoundSeq] $message', 'Sound');
+  }
+
+  /// Play silent then ramp to [peakVolume] — removes clicky / “separated” attack on waveforms + reverb.
+  SoundHandle _playWithSoftAttack(
+    AudioSource source,
+    double peakVolume, {
+    required int attackMs,
+  }) {
+    final handle = SoLoud.instance.play(source, volume: 0);
+    SoLoud.instance.fadeVolume(
+      handle,
+      peakVolume,
+      Duration(milliseconds: attackMs),
+    );
+    return handle;
+  }
+
+  /// Schedules fade then [stop] only after fade completes plus [tailMs] for reverb decay.
+  /// flutter_soloud 4.x `play()` is synchronous; timing is controlled here, not via `await play`.
+  void _scheduleFadeStopTail(
+    SoundHandle handle, {
+    required int sustainMs,
+    required int fadeMs,
+    required int tailMs,
+  }) {
+    Future.delayed(Duration(milliseconds: sustainMs), () {
+      if (!SoLoud.instance.isInitialized) return;
+      SoLoud.instance.fadeVolume(handle, 0, Duration(milliseconds: fadeMs));
+    });
+    Future.delayed(Duration(milliseconds: sustainMs + fadeMs + tailMs), () {
+      if (SoLoud.instance.isInitialized) {
+        SoLoud.instance.stop(handle);
+      }
+    });
+  }
 
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
@@ -38,10 +102,9 @@ class SoundService extends ChangeNotifier {
         _waveforms[freq] = source;
       }
 
-      // Add global reverb filter for echoing effect
       SoLoud.instance.filters.freeverbFilter.activate();
-      SoLoud.instance.filters.freeverbFilter.wet.value = 0.65;      // Mix: 30% reverb
-      SoLoud.instance.filters.freeverbFilter.roomSize.value = 0.85; // Large room
+      SoLoud.instance.filters.freeverbFilter.wet.value = _freeverbWet;
+      SoLoud.instance.filters.freeverbFilter.roomSize.value = _freeverbRoom;
 
       _initialized = true;
     } catch (e) {
@@ -61,22 +124,29 @@ class SoundService extends ChangeNotifier {
     if (!_soundEnabled || !_initialized || _waveforms.isEmpty) return;
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (now - _lastChimeMs < 150) return;
+    if (now - _lastChimeMs < 150) {
+      _logSoundPath(
+        'playChime DEBOUNCED ${now - _lastChimeMs}ms since last (threshold 150ms)',
+      );
+      return;
+    }
     _lastChimeMs = now;
 
     try {
       final freq = _frequencies[_random.nextInt(_frequencies.length)];
-      final handle = SoLoud.instance.play(_waveforms[freq]!, volume: 0.25);
+      _logSoundPath('playChime SoLoud.play frequency=${freq}Hz');
+      final handle = _playWithSoftAttack(
+        _waveforms[freq]!,
+        _chimePeakVolume,
+        attackMs: _chimeAttackMs,
+      );
 
-      // Longer duration with gradual fade for reverb tail
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (SoLoud.instance.isInitialized) {
-          SoLoud.instance.fadeVolume(handle, 0, const Duration(milliseconds: 100));
-          Future.delayed(const Duration(milliseconds: 250), () {
-            SoLoud.instance.stop(handle);
-          });
-        }
-      });
+      _scheduleFadeStopTail(
+        handle,
+        sustainMs: _chimeSustainMs,
+        fadeMs: _chimeFadeMs,
+        tailMs: _chimeTailAfterFadeMs,
+      );
     } catch (e) {
       debugPrint('SoundService playChime failed: $e');
     }
@@ -84,8 +154,12 @@ class SoundService extends ChangeNotifier {
 
   Future<void> playStarCreation() async {
     if (!_soundEnabled || !_initialized || _waveforms.isEmpty) return;
-    if (_isPlayingCreation) return;
+    if (_isPlayingCreation) {
+      _logSoundPath('playStarCreation SKIP (sequence already in progress)');
+      return;
+    }
     _isPlayingCreation = true;
+    _logSoundPath('playStarCreation START (5 steps)');
 
     try {
       // Play ascending pentatonic sequence
@@ -95,30 +169,35 @@ class SoundService extends ChangeNotifier {
 
         await Future.delayed(Duration(milliseconds: i * 80));
 
-        final handle = SoLoud.instance.play(
+        _logSoundPath('playStarCreation SoLoud.play step=${i + 1}/5 frequency=${freq}Hz');
+        final peak = isLast ? 0.35 : 0.2;
+        final handle = _playWithSoftAttack(
           _waveforms[freq]!,
-          volume: isLast ? 0.35 : 0.2,
+          peak,
+          attackMs: _creationAttackMs,
         );
 
-        // Final note rings longer
-        final holdTime = isLast ? 600 : 150;
-        Future.delayed(Duration(milliseconds: holdTime), () {
-          if (SoLoud.instance.isInitialized) {
-            SoLoud.instance.fadeVolume(
-              handle,
-              0,
-              Duration(milliseconds: isLast ? 200 : 80),
-            );
-            Future.delayed(Duration(milliseconds: isLast ? 300 : 100), () {
-              SoLoud.instance.stop(handle);
-            });
-          }
-        });
+        if (isLast) {
+          _scheduleFadeStopTail(
+            handle,
+            sustainMs: _creationFinalSustainMs,
+            fadeMs: _creationFinalFadeMs,
+            tailMs: _creationFinalTailMs,
+          );
+        } else {
+          _scheduleFadeStopTail(
+            handle,
+            sustainMs: _creationInnerSustainMs,
+            fadeMs: _creationInnerFadeMs,
+            tailMs: _creationInnerTailMs,
+          );
+        }
       }
     } catch (e) {
       debugPrint('SoundService playStarCreation failed: $e');
     } finally {
       _isPlayingCreation = false;
+      _logSoundPath('playStarCreation END');
     }
   }
 

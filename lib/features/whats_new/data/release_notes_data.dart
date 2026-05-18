@@ -9,6 +9,20 @@ class ReleaseNotesData {
 
   /// All release notes, ordered from newest to oldest
   static final List<ReleaseNote> releaseNotes = [
+    // Version 1.1.4 (Build 32)
+    ReleaseNote(
+      version: '1.1.4',
+      buildNumber: 32,
+      releaseDate: DateTime(2026, 4, 22),
+      items: [
+        ReleaseItem(
+          type: ReleaseItemType.bugFix,
+          title: (l10n) => l10n.whatsNewSoundPlaybackFixTitle,
+          description: (l10n) => l10n.whatsNewSoundPlaybackFixDesc,
+          icon: Icons.graphic_eq,
+        ),
+      ],
+    ),
     // Version 1.1.3 (Build 31)
     ReleaseNote(
       version: '1.1.3',

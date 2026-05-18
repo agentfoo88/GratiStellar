@@ -3892,6 +3892,18 @@ abstract class AppLocalizations {
   /// **'Tags are now matched consistently regardless of capitalisation, preventing duplicate tags like \"Gratitude\" and \"gratitude\" from appearing separately.'**
   String get whatsNewTagNormalizationFixDesc;
 
+  /// Title for sound playback / doubled-tone bug fix in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Sound Playback Fix'**
+  String get whatsNewSoundPlaybackFixTitle;
+
+  /// Description for sound playback fix (per-note sources, reverb, tails) in What's New
+  ///
+  /// In en, this message translates to:
+  /// **'Chimes and the creation tune each use their own tones again, fixing doubled or overlapping sounds. Full reverb mix restored, with gentler fades so endings feel natural rather than clipped.'**
+  String get whatsNewSoundPlaybackFixDesc;
+
   /// Hint text for the search field in list view
   ///
   /// In en, this message translates to:

@@ -2157,6 +2157,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tags are now matched consistently regardless of capitalisation, preventing duplicate tags like \"Gratitude\" and \"gratitude\" from appearing separately.';
 
   @override
+  String get whatsNewSoundPlaybackFixTitle => 'Sound Playback Fix';
+
+  @override
+  String get whatsNewSoundPlaybackFixDesc =>
+      'Chimes and the creation tune each use their own tones again, fixing doubled or overlapping sounds. Full reverb mix restored, with gentler fades so endings feel natural rather than clipped.';
+
+  @override
   String get searchHint => 'Search by content or tags';
 
   @override

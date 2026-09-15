@@ -25,7 +25,10 @@
       "Bash(flutter build:*)",
       "Bash(flutter pub:*)",
       "Bash(flutter --version)",
-      "Bash(flutter doctor:*)"
+      "Bash(flutter doctor:*)",
+      "Bash(xargs grep *)",
+      "Bash(git status *)",
+      "Bash(grep -n -A2 \"^  device_info_plus:$\" pubspec.lock)"
     ],
     "deny": [],
     "ask": []

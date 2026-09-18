@@ -28,7 +28,8 @@
       "Bash(flutter doctor:*)",
       "Bash(xargs grep *)",
       "Bash(git status *)",
-      "Bash(grep -n -A2 \"^  device_info_plus:$\" pubspec.lock)"
+      "Bash(grep -n -A2 \"^  device_info_plus:$\" pubspec.lock)",
+      "Bash(gh api *)"
     ],
     "deny": [],
     "ask": []

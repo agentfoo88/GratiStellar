@@ -36,16 +36,13 @@ class _RestoreDialogState extends State<RestoreDialog> {
     try {
       // Use FileType.any because custom extensions are not reliably supported
       // on all platforms (especially Android). We'll validate the extension ourselves.
-      final result = await FilePicker.pickFiles(
+      final pickedFile = await FilePicker.pickFile(
         type: FileType.any,
         dialogTitle: 'Select GratiStellar Backup File',
-        allowMultiple: false,
-        withData: false,
-        withReadStream: false,
       );
 
-      if (result != null && result.files.single.path != null) {
-        final filePath = result.files.single.path!;
+      if (pickedFile != null && pickedFile.path != null) {
+        final filePath = pickedFile.path!;
 
         // Warn if extension is wrong, but still try to validate file content
         // This allows users to rename files without breaking import

@@ -9,12 +9,18 @@ class ReleaseNotesData {
 
   /// All release notes, ordered from newest to oldest
   static final List<ReleaseNote> releaseNotes = [
-    // Version 1.1.4 (Build 32)
+    // Version 1.1.4 (Build 34)
     ReleaseNote(
       version: '1.1.4',
-      buildNumber: 32,
-      releaseDate: DateTime(2026, 4, 22),
+      buildNumber: 34,
+      releaseDate: DateTime(2026, 9, 29),
       items: [
+        ReleaseItem(
+          type: ReleaseItemType.improvement,
+          title: (l10n) => l10n.whatsNewAndroidUpdateTitle,
+          description: (l10n) => l10n.whatsNewAndroidUpdateDesc,
+          icon: Icons.android,
+        ),
         ReleaseItem(
           type: ReleaseItemType.bugFix,
           title: (l10n) => l10n.whatsNewSoundPlaybackFixTitle,

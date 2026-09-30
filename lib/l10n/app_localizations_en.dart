@@ -2164,6 +2164,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Chimes and the creation tune each use their own tones again, fixing doubled or overlapping sounds. Full reverb mix restored, with gentler fades so endings feel natural rather than clipped.';
 
   @override
+  String get whatsNewAndroidUpdateTitle => 'Updated for Latest Android';
+
+  @override
+  String get whatsNewAndroidUpdateDesc =>
+      'GratiStellar has been updated for the latest version of Android for improved compatibility and stability.';
+
+  @override
   String get searchHint => 'Search by content or tags';
 
   @override
